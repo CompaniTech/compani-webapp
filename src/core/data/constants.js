@@ -125,10 +125,12 @@ export const COURSE_SMS = 'Formation';
 export const INTRA = 'intra';
 export const INTER_B2B = 'inter_b2b';
 export const INTRA_HOLDING = 'intra_holding';
+export const SINGLE = 'single';
 export const COURSE_TYPES = [
   { label: 'Intra', value: INTRA },
   { label: 'Inter B2B', value: INTER_B2B },
   { label: 'Intra société mère', value: INTRA_HOLDING },
+  { label: 'Individuelle', value: SINGLE },
 ];
 export const BLENDED = 'blended';
 export const STRICTLY_E_LEARNING = 'strictly_e_learning';
