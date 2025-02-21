@@ -32,8 +32,8 @@
         @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures"
         :error="validations.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage"
         @blur="validations.expectedBillsCount.$touch" />
-        <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
-        @update:model-value="update($event, 'certificateGenerationMode')" :options="certificateGenerationMode"
+      <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
+        @update:model-value="update($event, 'certificateGenerationMode')" :options="CERTIFICATE_GENERATION_MODE"
         :error="validations.certificateGenerationMode.$error" required-field />
       <ni-input in-modal :model-value="newCourse.misc" @update:model-value="update($event.trim(), 'misc')"
         caption="Informations Complémentaires" />
@@ -91,7 +91,6 @@ export default {
     const { programs, validations, newCourse, companies } = toRefs(props);
 
     const courseTypes = COURSE_TYPES;
-    const certificateGenerationMode = CERTIFICATE_GENERATION_MODE;
     const subProgramOptions = ref([]);
     const disableSubProgram = ref(false);
 
@@ -178,7 +177,7 @@ export default {
     return {
       // Data
       courseTypes,
-      certificateGenerationMode,
+      CERTIFICATE_GENERATION_MODE,
       subProgramOptions,
       disableSubProgram,
       // Computed
