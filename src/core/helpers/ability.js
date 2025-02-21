@@ -31,7 +31,8 @@ export const defineAbilitiesFor = (user) => {
   const companySubscriptions = company
     ? Object.keys(company.subscriptions).filter(key => company.subscriptions[key])
     : [];
-  if (clientRole || holdingRole) can('read', getClientAbilities(clientRole || holdingRole, companySubscriptions));
+  if (clientRole) can('read', getClientAbilities(clientRole, companySubscriptions));
+  if (holdingRole) can('read', getClientAbilities(holdingRole, companySubscriptions));
   if (vendorRole) can('read', getRoleAbilities(vendorRole));
   if (!clientRole && !vendorRole) can('read', 'account client');
   if (isVendorInterface && [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole)) {
