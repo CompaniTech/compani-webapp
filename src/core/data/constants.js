@@ -321,10 +321,7 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
 
 export const MONTHLY = 'monthly';
 export const GLOBAL = 'global';
-export const CERTIFICATE_GENERATION_MODE = [
-  { label: 'Mensuelle', value: MONTHLY },
-  { label: 'Globale', value: GLOBAL },
-];
+export const CERTIFICATE_GENERATION_MODE = [{ label: 'Mensuel', value: MONTHLY }, { label: 'Global', value: GLOBAL }];
 
 // COURSE_BILLS
 export const LIST = 'list';

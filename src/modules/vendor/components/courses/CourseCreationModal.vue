@@ -22,9 +22,6 @@
       <ni-select v-if="isIntraHoldingCourse" in-modal :model-value="newCourse.holding"
         @blur="validations.holding.$touch" required-field caption="Société mère" :options="holdingOptions"
         :error="validations.holding.$error" @update:model-value="update($event, 'holding')" />
-      <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
-        @update:model-value="update($event, 'certificateGenerationMode')" :options="certificateGenerationMode"
-        :error="validations.certificateGenerationMode.$error" />
       <ni-date-input caption="Date de démarrage souhaitée" :model-value="newCourse.estimatedStartDate" in-modal
         @update:model-value="update($event, 'estimatedStartDate')" />
       <ni-input v-if="isIntraCourse || isIntraHoldingCourse" in-modal required-field type="number"
@@ -35,6 +32,9 @@
         @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures"
         :error="validations.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage"
         @blur="validations.expectedBillsCount.$touch" />
+        <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
+        @update:model-value="update($event, 'certificateGenerationMode')" :options="certificateGenerationMode"
+        :error="validations.certificateGenerationMode.$error" required-field />
       <ni-input in-modal :model-value="newCourse.misc" @update:model-value="update($event.trim(), 'misc')"
         caption="Informations Complémentaires" />
       <q-checkbox in-modal :model-value="newCourse.hasCertifyingTest" label="La formation est certifiante" dense
