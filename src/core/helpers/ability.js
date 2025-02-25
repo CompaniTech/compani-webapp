@@ -11,6 +11,7 @@ import {
   INTRA_HOLDING,
   HOLDING_ADMIN,
   INTER_B2B,
+  SINGLE,
 } from '@data/constants';
 import router from 'src/router/index';
 
@@ -59,7 +60,7 @@ export const defineAbilitiesForCourse = (user) => {
     can('update', 'Course', 'sms');
     can('read', 'Course', 'history');
     if ([VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole)) {
-      can('update', 'Course', 'company_representative', { type: { $in: [INTRA, INTRA_HOLDING] } });
+      can('update', 'Course', 'company_representative', { type: { $in: [INTRA, INTRA_HOLDING, SINGLE] } });
       can('update', 'Course', 'interlocutor');
       can('read', 'Course', 'companies');
       can('update', 'Course', 'companies', { type: { $in: [INTER_B2B, INTRA_HOLDING] } });
@@ -76,7 +77,7 @@ export const defineAbilitiesForCourse = (user) => {
     const holdingRole = get(role, 'holding.name');
     const clientRole = get(role, 'client.name');
 
-    can('update', 'Course', 'company_representative', { type: INTRA });
+    can('update', 'Course', 'company_representative', { type: { $in: [INTRA, SINGLE] } });
     can('update', 'Course', 'trainees', { type: { $in: [INTRA_HOLDING, INTRA] } });
     can('update', 'Course', 'sms', { type: INTRA });
     can('read', 'Course', 'history', { type: INTRA });
