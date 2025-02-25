@@ -206,6 +206,7 @@ import {
   DELETION,
   CREATION,
   TUTOR,
+  SINGLE,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
@@ -376,7 +377,9 @@ export default {
 
     const isIntraHoldingCourse = computed(() => course.value.type === INTRA_HOLDING);
 
-    const canEditSlots = computed(() => !(isClientInterface && isCourseInter.value));
+    const singleCourse = computed(() => course.value.type === SINGLE);
+
+    const canEditSlots = computed(() => !(isClientInterface && isCourseInter.value && singleCourse.value));
 
     const isFinished = computed(() => {
       const slotsToCome = course.value.slots.filter(slot => CompaniDate().isBefore(slot.endDate));
@@ -571,7 +574,7 @@ export default {
           return;
         }
 
-        const clientsUsersAllowedtoAccessCompany = course.value.type === INTRA
+        const clientsUsersAllowedtoAccessCompany = (course.value.type === INTRA || course.value.type === SINGLE)
           ? await Users.list(
             { role: [COACH, CLIENT_ADMIN], company: courseCompanyIds.value[0], includeHoldingAdmins: true }
           )
