@@ -139,6 +139,9 @@ export const OPERATIONS = 'operations';
 export const PEDAGOGY = 'pedagogy';
 export const ARCHIVED_COURSES = 'archived_courses';
 export const UNARCHIVED_COURSES = 'unarchived_courses';
+export const MONTHLY = 'monthly';
+export const GLOBAL = 'global';
+export const CERTIFICATE_GENERATION_MODE = [{ label: 'Mensuel', value: MONTHLY }, { label: 'Global', value: GLOBAL }];
 
 // SUBPROGRAM
 export const PUBLISHED = 'published';
@@ -318,10 +321,6 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Questionnaires d\'auto-positionnement par groupe', value: SELF_POSITIONNING },
 
 ];
-
-export const MONTHLY = 'monthly';
-export const GLOBAL = 'global';
-export const CERTIFICATE_GENERATION_MODE = [{ label: 'Mensuel', value: MONTHLY }, { label: 'Global', value: GLOBAL }];
 
 // COURSE_BILLS
 export const LIST = 'list';
