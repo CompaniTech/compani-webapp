@@ -72,6 +72,7 @@ import {
   VENDOR_ADMIN,
   OPERATIONS,
   DIRECTORY,
+  GLOBAL,
 } from '@data/constants';
 import { formatAndSortOptions, formatAndSortIdentityOptions } from '@helpers/utils';
 import { minDate, maxDate, strictPositiveNumber, integerNumber, positiveNumber } from '@helpers/vuelidateCustomVal';
@@ -108,6 +109,7 @@ export default {
       expectedBillsCount: '0',
       hasCertifyingTest: false,
       salesRepresentative: '',
+      certificateGenerationMode: GLOBAL,
     });
     const companies = ref([]);
     const holdingOptions = ref([]);
@@ -179,6 +181,7 @@ export default {
         expectedBillsCount: '0',
         hasCertifyingTest: false,
         salesRepresentative: '',
+        certificateGenerationMode: GLOBAL,
       };
     };
 
@@ -287,6 +290,7 @@ export default {
         company: { required: requiredIf(isIntraCourse.value) },
         ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
         holding: { required: requiredIf(isIntraHoldingCourse.value) },
+        certificateGenerationMode: { required },
       },
       selectedStartDate: { maxDate: selectedEndDate.value ? maxDate(selectedEndDate.value) : '' },
       selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },

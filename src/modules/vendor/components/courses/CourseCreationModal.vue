@@ -32,6 +32,9 @@
         @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures"
         :error="validations.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage"
         @blur="validations.expectedBillsCount.$touch" />
+      <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
+        @update:model-value="update($event, 'certificateGenerationMode')" :options="CERTIFICATE_GENERATION_MODE"
+        :error="validations.certificateGenerationMode.$error" required-field />
       <ni-input in-modal :model-value="newCourse.misc" @update:model-value="update($event.trim(), 'misc')"
         caption="Informations Complémentaires" />
       <q-checkbox in-modal :model-value="newCourse.hasCertifyingTest" label="La formation est certifiante" dense
@@ -53,7 +56,14 @@ import CompanySelect from '@components/form/CompanySelect';
 import DateInput from '@components/form/DateInput';
 import OptionGroup from '@components/form/OptionGroup';
 import Input from '@components/form/Input';
-import { COURSE_TYPES, REQUIRED_LABEL, INTRA, INTRA_HOLDING, PUBLISHED } from '@data/constants';
+import {
+  COURSE_TYPES,
+  REQUIRED_LABEL,
+  INTRA,
+  INTRA_HOLDING,
+  PUBLISHED,
+  CERTIFICATE_GENERATION_MODE,
+} from '@data/constants';
 import { formatAndSortOptions, formatAndSortCompanyOptions } from '@helpers/utils';
 
 export default {
@@ -167,6 +177,7 @@ export default {
     return {
       // Data
       courseTypes,
+      CERTIFICATE_GENERATION_MODE,
       subProgramOptions,
       disableSubProgram,
       // Computed
