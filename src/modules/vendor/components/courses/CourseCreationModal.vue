@@ -15,7 +15,7 @@
       <ni-select in-modal :model-value="newCourse.subProgram" @update:model-value="update($event, 'subProgram')"
         @blur="validations.subProgram.$touch" required-field caption="Sous-programme" :options="subProgramOptions"
         :disable="disableSubProgram" :error="validations.subProgram.$error" />
-      <company-select v-if="isIntraCourse || isSingleCourse" in-modal :company="newCourse.company"
+      <company-select v-if="isIntraCourse" in-modal :company="newCourse.company"
         :validation="validations.company" required-field :company-options="companyOptions"
         @update="update($event, 'company')" />
       <ni-select in-modal :model-value="newCourse.salesRepresentative" caption="Chargé(e) d'accompagnement"
@@ -59,7 +59,6 @@ import CompanySelect from '@components/form/CompanySelect';
 import DateInput from '@components/form/DateInput';
 import OptionGroup from '@components/form/OptionGroup';
 import Input from '@components/form/Input';
-<<<<<<< HEAD
 import {
   COURSE_TYPES,
   REQUIRED_LABEL,
@@ -67,10 +66,8 @@ import {
   INTRA_HOLDING,
   PUBLISHED,
   CERTIFICATE_GENERATION_MODE,
+  SINGLE,
 } from '@data/constants';
-=======
-import { COURSE_TYPES, REQUIRED_LABEL, INTRA, INTRA_HOLDING, PUBLISHED, SINGLE } from '@data/constants';
->>>>>>> 98dccf67c (COM-3917: wip)
 import { formatAndSortOptions, formatAndSortCompanyOptions } from '@helpers/utils';
 
 export default {
@@ -151,7 +148,7 @@ export default {
           ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount']),
           ...(event === INTRA && { maxTrainees: '8', expectedBillsCount: '0' }),
           ...(event === INTRA_HOLDING && { maxTrainees: '8' }),
-          ...(event === SINGLE && { maxTrainees: '1', expectedBillCount: '0' }),
+          ...(event === SINGLE && { expectedBillsCount: '0' }),
           type: event,
         }
       );
@@ -184,16 +181,6 @@ export default {
         update(value, 'salesRepresentative');
       }
     );
-
-    // watch(
-    //   () => newCourse.value.trainee,
-    //   (traineeId) => {
-    //     const selectedTrainee = traineeOptions.value.find(t => t._id === traineeId);
-
-    //     const value = get(selectedTrainee, 'company') || '';
-    //     update(value, 'company');
-    //   }
-    // );
 
     return {
       // Data
