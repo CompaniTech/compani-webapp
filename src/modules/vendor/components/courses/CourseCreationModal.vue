@@ -15,8 +15,9 @@
       <ni-select in-modal :model-value="newCourse.subProgram" @update:model-value="update($event, 'subProgram')"
         @blur="validations.subProgram.$touch" required-field caption="Sous-programme" :options="subProgramOptions"
         :disable="disableSubProgram" :error="validations.subProgram.$error" />
-      <company-select v-if="isIntraCourse" in-modal :company="newCourse.company" :validation="validations.company"
-        required-field :company-options="companyOptions" @update="update($event, 'company')" />
+      <company-select v-if="isIntraCourse || isSingleCourse" in-modal :company="newCourse.company"
+        :validation="validations.company" required-field :company-options="companyOptions"
+        @update="update($event, 'company')" />
       <ni-select in-modal :model-value="newCourse.salesRepresentative" caption="Chargé(e) d'accompagnement"
         @update:model-value="update($event, 'salesRepresentative')" :options="adminUserOptions" clearable />
       <ni-select v-if="isIntraHoldingCourse" in-modal :model-value="newCourse.holding"
@@ -28,10 +29,12 @@
         caption="Nombre d'inscrits max" :model-value="newCourse.maxTrainees" @blur="validations.maxTrainees.$touch"
         :error="validations.maxTrainees.$error" :error-message="maxTraineesErrorMessage"
         @update:model-value="update($event, 'maxTrainees')" />
-      <ni-input v-if="isIntraCourse" :model-value="newCourse.expectedBillsCount" in-modal required-field type="number"
-        @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures"
+      <ni-select v-if="isSingleCourse" in-modal caption="Apprenant" :model-value="newCourse.trainee"
+        @update:model-value="update($event, 'trainee')" required-field :options="traineeOptions" />
+      <ni-input v-if="isIntraCourse || isSingleCourse" :model-value="newCourse.expectedBillsCount" type="number"
+        @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures" in-modal
         :error="validations.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage"
-        @blur="validations.expectedBillsCount.$touch" />
+        @blur="validations.expectedBillsCount.$touch" required-field />
       <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
         @update:model-value="update($event, 'certificateGenerationMode')" :options="CERTIFICATE_GENERATION_MODE"
         :error="validations.certificateGenerationMode.$error" required-field />
@@ -56,6 +59,7 @@ import CompanySelect from '@components/form/CompanySelect';
 import DateInput from '@components/form/DateInput';
 import OptionGroup from '@components/form/OptionGroup';
 import Input from '@components/form/Input';
+<<<<<<< HEAD
 import {
   COURSE_TYPES,
   REQUIRED_LABEL,
@@ -64,6 +68,9 @@ import {
   PUBLISHED,
   CERTIFICATE_GENERATION_MODE,
 } from '@data/constants';
+=======
+import { COURSE_TYPES, REQUIRED_LABEL, INTRA, INTRA_HOLDING, PUBLISHED, SINGLE } from '@data/constants';
+>>>>>>> 98dccf67c (COM-3917: wip)
 import { formatAndSortOptions, formatAndSortCompanyOptions } from '@helpers/utils';
 
 export default {
@@ -77,6 +84,7 @@ export default {
     adminUserOptions: { type: Array, default: () => [] },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
+    traineeOptions: { type: Array, default: () => [] },
   },
   components: {
     'ni-option-group': OptionGroup,
@@ -126,6 +134,8 @@ export default {
 
     const isIntraHoldingCourse = computed(() => newCourse.value.type === INTRA_HOLDING);
 
+    const isSingleCourse = computed(() => newCourse.value.type === SINGLE);
+
     const companyOptions = computed(() => formatAndSortCompanyOptions(companies.value));
 
     const hide = () => emit('hide');
@@ -141,6 +151,7 @@ export default {
           ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount']),
           ...(event === INTRA && { maxTrainees: '8', expectedBillsCount: '0' }),
           ...(event === INTRA_HOLDING && { maxTrainees: '8' }),
+          ...(event === SINGLE && { maxTrainees: '1', expectedBillCount: '0' }),
           type: event,
         }
       );
@@ -174,6 +185,16 @@ export default {
       }
     );
 
+    // watch(
+    //   () => newCourse.value.trainee,
+    //   (traineeId) => {
+    //     const selectedTrainee = traineeOptions.value.find(t => t._id === traineeId);
+
+    //     const value = get(selectedTrainee, 'company') || '';
+    //     update(value, 'company');
+    //   }
+    // );
+
     return {
       // Data
       courseTypes,
@@ -187,6 +208,7 @@ export default {
       isIntraCourse,
       isIntraHoldingCourse,
       companyOptions,
+      isSingleCourse,
       // Methods
       hide,
       input,

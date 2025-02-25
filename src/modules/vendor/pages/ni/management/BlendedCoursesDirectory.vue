@@ -38,7 +38,8 @@
 
     <course-creation-modal v-model="courseCreationModal" v-model:new-course="newCourse" :programs="programs"
       :companies="companies" :validations="v$.newCourse" :loading="modalLoading" @hide="resetCreationModal"
-      @submit="createCourse" :admin-user-options="adminUserOptions" :holding-options="holdingOptions" />
+      @submit="createCourse" :admin-user-options="adminUserOptions" :holding-options="holdingOptions"
+      :trainee-options="traineeOptions" />
   </q-page>
 </template>
 
@@ -73,8 +74,9 @@ import {
   OPERATIONS,
   DIRECTORY,
   GLOBAL,
+  SINGLE,
 } from '@data/constants';
-import { formatAndSortOptions, formatAndSortIdentityOptions } from '@helpers/utils';
+import { formatAndSortOptions, formatAndSortIdentityOptions, formatAndSortUserOptions } from '@helpers/utils';
 import { minDate, maxDate, strictPositiveNumber, integerNumber, positiveNumber } from '@helpers/vuelidateCustomVal';
 import store from 'src/store/index';
 
@@ -110,14 +112,17 @@ export default {
       hasCertifyingTest: false,
       salesRepresentative: '',
       certificateGenerationMode: GLOBAL,
+      trainee: '',
     });
     const companies = ref([]);
     const holdingOptions = ref([]);
     const programs = ref([]);
     const adminUserOptions = ref([]);
+    const traineeOptions = ref([]);
 
     const isIntraCourse = computed(() => newCourse.value.type === INTRA);
     const isIntraHoldingCourse = computed(() => newCourse.value.type === INTRA_HOLDING);
+    const isSingleCourse = computed(() => newCourse.value.type === SINGLE);
     const loggedUser = computed(() => $store.state.main.loggedUser);
 
     const refreshPrograms = async () => {
@@ -162,6 +167,16 @@ export default {
       }
     };
 
+    const refreshTrainee = async () => {
+      try {
+        const trainee = await Users.list();
+        traineeOptions.value = formatAndSortUserOptions(trainee);
+      } catch (e) {
+        console.error(e);
+        traineeOptions.value = [];
+      }
+    };
+
     const openCourseCreationModal = () => {
       newCourse.value = { ...newCourse.value, operationsRepresentative: loggedUser.value._id };
       courseCreationModal.value = true;
@@ -182,6 +197,7 @@ export default {
         hasCertifyingTest: false,
         salesRepresentative: '',
         certificateGenerationMode: GLOBAL,
+        trainee: '',
       };
     };
 
@@ -287,7 +303,7 @@ export default {
             maxTrainees: { required, strictPositiveNumber, integerNumber },
             expectedBillsCount: { required, positiveNumber, integerNumber },
           }),
-        company: { required: requiredIf(isIntraCourse.value) },
+        company: { required: requiredIf(isIntraCourse.value || isSingleCourse.value) },
         ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
         holding: { required: requiredIf(isIntraHoldingCourse.value) },
         certificateGenerationMode: { required },
@@ -305,6 +321,7 @@ export default {
         refreshCompanies(),
         refreshHoldings(),
         refreshAdminUsers(),
+        refreshTrainee(),
       ]);
     };
 
@@ -325,6 +342,7 @@ export default {
       archivedCourses,
       archiveStatusOptions,
       typeFilterOptions,
+      traineeOptions,
       // Computed
       selectedHolding,
       holdingFilterOptions,
