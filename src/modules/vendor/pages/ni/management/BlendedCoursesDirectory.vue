@@ -300,14 +300,10 @@ export default {
             maxTrainees: { required, strictPositiveNumber, integerNumber },
             expectedBillsCount: { required, positiveNumber, integerNumber },
           }),
-        company: { required: requiredIf(isIntraCourse.value || isSingleCourse.value) },
+        company: { required: requiredIf(isIntraCourse.value) },
         ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
         holding: { required: requiredIf(isIntraHoldingCourse.value) },
-        ...(isSingleCourse.value &&
-        {
-          maxTrainees: { required, strictPositiveNumber, integerNumber },
-          expectedBillsCount: { required, positiveNumber, integerNumber },
-        }),
+        ...(isSingleCourse.value && { expectedBillsCount: { required, positiveNumber, integerNumber } }),
       },
       selectedStartDate: { maxDate: selectedEndDate.value ? maxDate(selectedEndDate.value) : '' },
       selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },
