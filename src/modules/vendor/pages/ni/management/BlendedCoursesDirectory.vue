@@ -168,16 +168,20 @@ export default {
     const refreshTrainee = async () => {
       try {
         const trainee = await Users.list();
-        traineeOptions.value = formatAndSortUserOptions(trainee);
+        traineeOptions.value = formatAndSortUserOptions(trainee, true);
       } catch (e) {
         console.error(e);
         traineeOptions.value = [];
       }
     };
 
-    const openCourseCreationModal = () => {
+    const openCourseCreationModal = async () => {
       newCourse.value = { ...newCourse.value, operationsRepresentative: loggedUser.value._id };
       courseCreationModal.value = true;
+
+      if (!traineeOptions.value.length) {
+        await refreshTrainee();
+      }
     };
 
     const resetCreationModal = () => {
@@ -318,7 +322,6 @@ export default {
         refreshCompanies(),
         refreshHoldings(),
         refreshAdminUsers(),
-        refreshTrainee(),
       ]);
     };
 

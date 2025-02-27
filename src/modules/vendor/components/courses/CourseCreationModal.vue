@@ -15,9 +15,8 @@
       <ni-select in-modal :model-value="newCourse.subProgram" @update:model-value="update($event, 'subProgram')"
         @blur="validations.subProgram.$touch" required-field caption="Sous-programme" :options="subProgramOptions"
         :disable="disableSubProgram" :error="validations.subProgram.$error" />
-      <company-select v-if="isIntraCourse" in-modal :company="newCourse.company"
-        :validation="validations.company" required-field :company-options="companyOptions"
-        @update="update($event, 'company')" />
+      <company-select v-if="isIntraCourse" in-modal :company="newCourse.company" :validation="validations.company"
+        required-field :company-options="companyOptions" @update="update($event, 'company')" />
       <ni-select in-modal :model-value="newCourse.salesRepresentative" caption="Chargé(e) d'accompagnement"
         @update:model-value="update($event, 'salesRepresentative')" :options="adminUserOptions" clearable />
       <ni-select v-if="isIntraHoldingCourse" in-modal :model-value="newCourse.holding"
@@ -30,7 +29,18 @@
         :error="validations.maxTrainees.$error" :error-message="maxTraineesErrorMessage"
         @update:model-value="update($event, 'maxTrainees')" />
       <ni-select v-if="isSingleCourse" in-modal caption="Apprenant" :model-value="newCourse.trainee"
-        @update:model-value="update($event, 'trainee')" required-field :options="traineeOptions" />
+        @update:model-value="update($event, 'trainee')" required-field :options="traineeOptions" option-slot>
+        <template #option="{ scope }">
+          <q-item v-bind="scope.itemProps">
+            <q-item-section>
+              <q-item-label>{{ scope.opt.label }}</q-item-label>
+              <q-item-label class="details">
+                <div class="q-ms-xs">{{ scope.opt.company }}</div>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </ni-select>
       <ni-input v-if="isIntraCourse || isSingleCourse" :model-value="newCourse.expectedBillsCount" type="number"
         @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures" in-modal
         :error="validations.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage"
@@ -194,3 +204,9 @@ export default {
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.details
+  font-size: 14px
+  color: $copper-grey-500
+</style>
