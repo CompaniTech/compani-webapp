@@ -169,7 +169,7 @@ export default {
 
     const refreshTrainee = async () => {
       try {
-        const trainees = await Users.list();
+        const trainees = await Users.list({ withCompanyUsers: true });
         traineeOptions.value = formatAndSortUserOptions(trainees, true);
       } catch (e) {
         console.error(e);
