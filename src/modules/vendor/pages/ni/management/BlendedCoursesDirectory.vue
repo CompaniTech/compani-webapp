@@ -167,8 +167,8 @@ export default {
 
     const refreshTrainee = async () => {
       try {
-        const trainee = await Users.list();
-        traineeOptions.value = formatAndSortUserOptions(trainee, true);
+        const trainees = await Users.list();
+        traineeOptions.value = formatAndSortUserOptions(trainees, true);
       } catch (e) {
         console.error(e);
         traineeOptions.value = [];
