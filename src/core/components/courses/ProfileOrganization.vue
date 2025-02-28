@@ -379,7 +379,7 @@ export default {
 
     const singleCourse = computed(() => course.value.type === SINGLE);
 
-    const canEditSlots = computed(() => !(isClientInterface && isCourseInter.value && singleCourse.value));
+    const canEditSlots = computed(() => !(isClientInterface && (isCourseInter.value || singleCourse.value)));
 
     const isFinished = computed(() => {
       const slotsToCome = course.value.slots.filter(slot => CompaniDate().isBefore(slot.endDate));
@@ -574,7 +574,7 @@ export default {
           return;
         }
 
-        const clientsUsersAllowedtoAccessCompany = (course.value.type === INTRA || course.value.type === SINGLE)
+        const clientsUsersAllowedtoAccessCompany = ([INTRA, SINGLE].includes(course.value.type))
           ? await Users.list(
             { role: [COACH, CLIENT_ADMIN], company: courseCompanyIds.value[0], includeHoldingAdmins: true }
           )
