@@ -29,7 +29,8 @@
         :error="validations.maxTrainees.$error" :error-message="maxTraineesErrorMessage"
         @update:model-value="update($event, 'maxTrainees')" />
       <ni-select v-if="isSingleCourse" in-modal caption="Apprenant" :model-value="newCourse.trainee"
-        @update:model-value="update($event, 'trainee')" required-field :options="traineeOptions" option-slot>
+        @update:model-value="update($event, 'trainee')" required-field :options="traineeOptions" option-slot
+        :error="validations.trainee.$error">
         <template #option="{ scope }">
           <q-item v-bind="scope.itemProps">
             <q-item-section>
@@ -144,7 +145,7 @@ export default {
       emit(
         'update:new-course',
         {
-          ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount']),
+          ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount', 'trainee']),
           ...(event === INTRA && { maxTrainees: '8', expectedBillsCount: '0' }),
           ...(event === INTRA_HOLDING && { maxTrainees: '8' }),
           ...(event === SINGLE && { expectedBillsCount: '0' }),
