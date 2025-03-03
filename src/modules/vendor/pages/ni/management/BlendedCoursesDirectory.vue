@@ -311,7 +311,9 @@ export default {
         ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
         holding: { required: requiredIf(isIntraHoldingCourse.value) },
         certificateGenerationMode: { required },
-        ...(isSingleCourse.value && { expectedBillsCount: { required, positiveNumber, integerNumber } }),
+        ...(isSingleCourse.value &&
+          { trainee: { required }, expectedBillsCount: { required, positiveNumber, integerNumber } }
+        ),
       },
       selectedStartDate: { maxDate: selectedEndDate.value ? maxDate(selectedEndDate.value) : '' },
       selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },
