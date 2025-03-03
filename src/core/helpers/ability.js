@@ -79,7 +79,7 @@ export const defineAbilitiesForCourse = (user) => {
 
     can('update', 'Course', 'company_representative', { type: { $in: [INTRA, SINGLE] } });
     can('update', 'Course', 'trainees', { type: { $in: [INTRA_HOLDING, INTRA] } });
-    can('update', 'Course', 'sms', { type: INTRA });
+    can('update', 'Course', 'sms', { type: { $in: [INTRA, SINGLE] } });
     can('read', 'Course', 'history', { type: INTRA });
     can('access', 'trainee');
     can('read', 'Course', 'training_contracts');
