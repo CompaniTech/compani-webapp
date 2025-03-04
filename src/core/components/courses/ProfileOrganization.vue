@@ -49,7 +49,7 @@
         <div class="interlocutor-container">
           <interlocutor-cell v-for="tutor in course.tutors" :key="tutor._id" :interlocutor="tutor" caption="Tuteur"
             :can-update="canUpdateInterlocutor" :disable="isArchived" interlocutor-is-trainer-or-tutor clearable
-            @open-modal="openTutorModal" />
+            @open-modal="openTutorModal" display-connection-infos />
           <ni-secondary-button v-if="canUpdateInterlocutor" class="button-trainer" label="Ajouter un tuteur"
             @click="() => openTutorModal({ action: CREATION })" />
         </div>
