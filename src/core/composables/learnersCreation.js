@@ -106,7 +106,6 @@ export const useLearnersCreation = (
       company: get(user, 'company.name') || '',
       blendedCoursesCount: user.blendedCoursesCount,
       eLearningCoursesCount: user.eLearningCoursesCount,
-      activityHistoryCount: user.activityHistoryCount,
       isoDurationSinceLastActivityHistory: getISODurationSinceLastActivityHistory(user.lastActivityHistory),
     };
   };
