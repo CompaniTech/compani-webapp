@@ -18,6 +18,12 @@
             <q-icon size="xxs" name="person" class="q-mr-xs" />
             <span>Contact donné aux stagiaires</span>
           </div>
+          <div v-if="displayConnectionInfos">
+            <a v-if="interlocutor.loginCode" class="text-12">
+              Code de connexion à l'app : {{ interlocutor.loginCode }}
+            </a>
+            <connected-dot v-else-if="interlocutor.firstMobileConnectionDate" />
+          </div>
         </div>
       </div>
       <div v-if="canUpdate">
@@ -36,6 +42,7 @@ import Button from '@components/Button';
 import SecondaryButton from '@components/SecondaryButton';
 import { DEFAULT_AVATAR, EDITION, CREATION, DELETION } from '@data/constants';
 import { formatIdentity, formatPhone } from '@helpers/utils';
+import ConnectedDot from './ConnectedDot';
 
 export default {
   name: 'InterlocutorCell',
@@ -48,10 +55,12 @@ export default {
     label: { type: String, default: '' },
     clearable: { type: Boolean, default: false },
     interlocutorIsTrainerOrTutor: { type: Boolean, default: false },
+    displayConnectionInfos: { type: Boolean, default: false },
   },
   components: {
     'ni-button': Button,
     'ni-secondary-button': SecondaryButton,
+    'connected-dot': ConnectedDot,
   },
   emits: ['open-modal'],
   setup (_, { emit }) {
@@ -104,4 +113,8 @@ export default {
   margin-left: -2px
 .dot-orange
   margin: 0px 4px 0px 0px
+:deep(.dot-container)
+  justify-content: flex-start
+:deep(.q-icon)
+  margin: 0px 5px 0px 0px
 </style>
