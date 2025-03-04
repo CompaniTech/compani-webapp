@@ -88,7 +88,7 @@ import get from 'lodash/get';
 import pick from 'lodash/pick';
 import groupBy from 'lodash/groupBy';
 import Courses from '@api/Courses';
-import { TRAINER, INTRA } from '@data/constants';
+import { TRAINER, INTRA, SINGLE } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import {
   formatAndSortUserOptions,
@@ -206,14 +206,15 @@ export default {
     });
 
     const displayCompanyNames =
-      computed(() => !isIntraCourse.value && (!isClientInterface || !!loggedUser.value.role.holding));
+      computed(() => !(isIntraCourse.value || isSingleCourse.value) &&
+        (!isClientInterface || !!loggedUser.value.role.holding));
 
     const displayCertificationEdition =
       computed(() => course.value.hasCertifyingTest && canUpdateCertifyingTest.value && course.value.trainees.length);
 
     const refresh = () => emit('refresh');
 
-    const { isIntraCourse, isClientInterface, isArchived, isIntraHoldingCourse } = useCourses(course);
+    const { isIntraCourse, isSingleCourse, isClientInterface, isArchived, isIntraHoldingCourse } = useCourses(course);
 
     const {
       newLearner,
@@ -343,7 +344,7 @@ export default {
 
     const created = async () => {
       defineCourseAbilities();
-      if (course.value.type !== INTRA && canUpdateCompanies.value) await getPotentialCompanies();
+      if (![INTRA, SINGLE].includes(course.value.type) && canUpdateCompanies.value) await getPotentialCompanies();
     };
 
     created();
