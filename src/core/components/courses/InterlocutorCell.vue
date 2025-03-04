@@ -115,4 +115,6 @@ export default {
   margin: 0px 4px 0px 0px
 :deep(.dot-container)
   justify-content: flex-start
+:deep(.q-icon)
+  margin: 0px 5px 0px 0px
 </style>
