@@ -250,8 +250,6 @@ export default {
   setup (props) {
     const { profileId } = toRefs(props);
 
-    const SINGLE_COURSES_SUBPROGRAM_IDS = process.env.SINGLE_COURSES_SUBPROGRAM_IDS.split(';');
-
     const $store = useStore();
     const $router = useRouter();
     const $q = useQuasar();
@@ -321,6 +319,7 @@ export default {
       followUpMissingInfo,
       downloadAttendanceSheet,
       isIntraCourse,
+      isSingleCourse,
     } = useCourses(course);
 
     const refreshTraineeTable = async () => {
@@ -441,8 +440,6 @@ export default {
       ];
       return Object.freeze(interlocutors.map(interlocutor => formatContactOption(interlocutor)));
     });
-
-    const isSingleCourse = computed(() => SINGLE_COURSES_SUBPROGRAM_IDS.includes(course.value.subProgram._id));
 
     watch(course, async (newValue, oldValue) => {
       tmpCourse.value = pick(course.value, ['misc', 'estimatedStartDate', 'maxTrainees', 'hasCertifyingTest']);
