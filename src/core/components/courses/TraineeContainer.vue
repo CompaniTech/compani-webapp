@@ -49,8 +49,8 @@
         <q-card-actions v-if="canUpdateTrainees" align="right" class="q-pa-sm">
           <ni-button v-if="canUpdateCompanies" color="primary" icon="add" label="Rattacher une structure"
             :disable="loading" @click="openCompanyAdditionModal" />
-          <ni-button v-if="course.companies.length" color="primary" icon="add" label="Ajouter une personne"
-            :disable="loading" @click="openTraineeCreationModal" />
+          <ni-button v-if="course.companies.length && course.type !== SINGLE" color="primary" icon="add"
+            label="Ajouter une personne" :disable="loading" @click="openTraineeCreationModal" />
           <ni-button v-if="displayCertificationEdition" color="primary" icon="edit" label="Modifier les certifications"
             :disable="loading" @click="openCertificationsUpdateModal" />
         </q-card-actions>
@@ -351,6 +351,7 @@ export default {
 
     return {
       // Data
+      SINGLE,
       newLearner,
       firstStep,
       learnerCreationModalLoading,
