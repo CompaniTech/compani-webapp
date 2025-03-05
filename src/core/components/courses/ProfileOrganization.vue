@@ -519,8 +519,6 @@ export default {
 
     const refreshPotentialTrainees = async () => {
       try {
-        if (isClientInterface && course.value.type === INTER_B2B) return;
-
         potentialTrainees.value = !isEmpty(courseCompanyIds.value)
           ? Object.freeze(await Users.learnerList(
             { companies: courseCompanyIds.value, startDate: CompaniDate().toISO(), action: COURSE }
