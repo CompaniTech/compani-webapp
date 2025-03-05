@@ -92,7 +92,7 @@ export const defineAbilitiesForCourse = (user) => {
       can('update', 'Course', 'sms', { type: INTRA_HOLDING });
       can('read', 'Course', 'history', { type: INTRA_HOLDING });
     } else if ([COACH, CLIENT_ADMIN].includes(clientRole)) {
-      can('read', 'Course', 'all_trainees', { type: INTRA });
+      can('read', 'Course', 'all_trainees', { type: { type: { $in: [INTRA, SINGLE] } } });
     }
   }
 
