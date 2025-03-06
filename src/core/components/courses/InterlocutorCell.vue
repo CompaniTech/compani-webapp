@@ -2,9 +2,9 @@
   <div v-if="get(interlocutor, '_id')" class="cell-container">
     <p class="input-caption">{{ caption }}</p>
     <q-card class="interlocutor-cell row justify-between items-start">
-      <div class="row">
+      <div class="row details-container">
         <img :src="getAvatar(interlocutor.picture)" class="avatar q-my-sm">
-        <div class="q-my-sm q-ml-md">
+        <div class="q-my-sm q-ml-md infos-container">
           <div class="text-copper-grey-700">{{ formatIdentity(interlocutor.identity, 'FL') }}</div>
           <div class="text-copper-grey-500 text-14">{{ interlocutor.local.email }}</div>
           <div v-if="get(interlocutor, 'contact.phone')" class="phone">
@@ -20,7 +20,7 @@
           </div>
           <div v-if="displayConnectionInfos">
             <a v-if="interlocutor.loginCode" class="text-12">
-              Code de connexion à l'app : {{ interlocutor.loginCode }}
+              Code de connexion à l'app mobile : {{ interlocutor.loginCode }}
             </a>
             <connected-dot v-else-if="interlocutor.firstMobileConnectionDate" />
           </div>
@@ -117,4 +117,10 @@ export default {
   justify-content: flex-start
 :deep(.q-icon)
   margin: 0px 5px 0px 0px
+.details-container
+  @media screen and (max-width: 1058px) and (min-width: $breakpoint-sm-max)
+    max-width: 85%
+.infos-container
+  @media screen and (max-width: 1058px) and (min-width: $breakpoint-sm-max)
+    max-width: 75%
 </style>
