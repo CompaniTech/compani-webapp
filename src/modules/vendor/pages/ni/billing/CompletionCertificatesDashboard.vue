@@ -1,6 +1,5 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
-    {{ selectedMonths }}
     <ni-title-header title="Certificats de réalisations" class="q-mb-xl" />
     <ni-select caption="Mois de formation" :options="monthOptions" multiple :blur-on-selection="false"
       :model-value="selectedMonths" @update:model-value="updateSelectedMonths" @blur="getCompletionCertificates" />
@@ -38,23 +37,26 @@ export default {
       {
         name: 'company',
         label: 'Structure',
-        // triable,
         field: row => row.course.companies[0].name,
+        align: 'left',
       },
       {
         name: 'traineeName',
         label: 'Nom / Prénom de l’apprenant',
         field: row => formatIdentity(row.trainee.identity, 'Lf'),
+        align: 'left',
       },
       {
         name: 'course',
         label: 'Formation',
         field: row => composeCourseName(row.course),
+        align: 'left',
       },
       {
         name: 'month',
         label: 'Mois',
         field: row => monthOptions.value.find(m => m.value === row.month).label,
+        align: 'left',
       },
     ]);
 
@@ -75,7 +77,6 @@ export default {
 
     const getCompletionCertificates = async () => {
       try {
-        console.log(Array.isArray(selectedMonths.value));
         const response = await CompletionCertificates.getCompletionCertificates(
           { months: [...selectedMonths.value] }
         );
