@@ -56,7 +56,7 @@ export const menuItemsMixin = {
             {
               name: 'ni billing completion certificates',
               icon: 'picture_as_pdf',
-              label: 'Certificats réalisations mensuels',
+              label: 'Certificats réalisation mensuels',
             },
           ],
         },

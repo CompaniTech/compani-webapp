@@ -1,10 +1,10 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
-    <ni-title-header title="Certificats de réalisations" class="q-mb-xl" />
+    <ni-title-header title="Certificats de réalisation" class="q-mb-xl" />
     <ni-select caption="Mois de formation" :options="monthOptions" multiple :blur-on-selection="false"
       :model-value="selectedMonths" @update:model-value="updateSelectedMonths" @blur="getCompletionCertificates" />
-    <ni-simple-table :data="completionCertificates" :columns="columns" :loading="tableLoading"
-      v-model:pagination="pagination" />
+    <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates" :columns="columns"
+      :loading="tableLoading" v-model:pagination="pagination" />
   </q-page>
 </template>
 
@@ -35,15 +35,15 @@ export default {
     const pagination = ref({ page: 1, rowsPerPage: 15 });
     const columns = ref([
       {
-        name: 'company',
-        label: 'Structure',
-        field: row => row.course.companies[0].name,
-        align: 'left',
-      },
-      {
         name: 'traineeName',
         label: 'Nom / Prénom de l’apprenant',
         field: row => formatIdentity(row.trainee.identity, 'Lf'),
+        align: 'left',
+      },
+      {
+        name: 'company',
+        label: 'Structure',
+        field: row => row.course.companies[0].name,
         align: 'left',
       },
       {
@@ -61,6 +61,7 @@ export default {
     ]);
 
     const getMonthOptions = () => {
+      // can get monthly completion certificate from 02-2025
       const startDate = CompaniDate('2025-02-01T09:00:00.000Z').startOf(MONTH).toISO();
       const endDate = CompaniDate().startOf(MONTH).toISO();
 
@@ -77,21 +78,21 @@ export default {
 
     const getCompletionCertificates = async () => {
       try {
-        const response = await CompletionCertificates.getCompletionCertificates(
-          { months: [...selectedMonths.value] }
-        );
+        const certificates = await CompletionCertificates.list({ months: selectedMonths.value });
 
-        completionCertificates.value = response;
+        completionCertificates.value = certificates;
       } catch (error) {
         console.error('Erreur lors de la récupération des certificats', error);
       }
     };
 
-    const updateSelectedMonths = (months) => {
-      selectedMonths.value = months;
+    const updateSelectedMonths = (months) => { selectedMonths.value = months; };
+
+    const created = () => {
+      getMonthOptions();
     };
 
-    getMonthOptions();
+    created();
 
     return {
       // Data
