@@ -25,7 +25,8 @@ import SimpleTable from '@components/table/SimpleTable';
 import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { formatIdentity } from '@helpers/utils';
+import { formatIdentity, sortStrings } from '@helpers/utils';
+import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
 
 export default {
@@ -47,11 +48,15 @@ export default {
         label: 'Nom / Prénom de l’apprenant',
         field: row => formatIdentity(row.trainee.identity, 'Lf'),
         align: 'left',
+        sortable: true,
+        sort: sortStrings,
       },
       {
         name: 'company',
         label: 'Structure',
         field: row => row.course.companies[0].name,
+        sortable: true,
+        sort: sortStrings,
         align: 'left',
       },
       {
@@ -64,6 +69,13 @@ export default {
         name: 'month',
         label: 'Mois',
         field: row => monthOptions.value.find(m => m.value === row.month).label,
+        sortable: true,
+        sort: (a, b) => {
+          const valueA = monthOptions.value.find(m => m.label === a).value;
+          const valueB = monthOptions.value.find(m => m.label === b).value;
+
+          return ascendingSort(valueA, valueB);
+        },
         align: 'left',
       },
     ]);
