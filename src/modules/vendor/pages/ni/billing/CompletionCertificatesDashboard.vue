@@ -1,17 +1,25 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
-    <ni-title-header title="Certificats de réalisation" class="q-mb-xl" />
-    <ni-select caption="Mois de formation" :options="monthOptions" multiple :blur-on-selection="false"
-      :model-value="selectedMonths" @update:model-value="updateSelectedMonths" @blur="getCompletionCertificates" />
+    <ni-profile-header title="Certificats de réalisation">
+      <template #title>
+        <ni-select caption="Mois de formation" :options="monthOptions" multiple :blur-on-selection="false"
+          :model-value="selectedMonths" @update:model-value="updateSelectedMonths" @blur="getCompletionCertificates"
+          class="selector" />
+      </template>
+    </ni-profile-header>
     <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates" :columns="columns"
       :loading="tableLoading" v-model:pagination="pagination" />
+    <template v-else>
+      <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
+    </template>
   </q-page>
 </template>
 
 <script>
 import { ref } from 'vue';
 import CompletionCertificates from '@api/CompletionCertificates';
-import TitleHeader from '@components/TitleHeader';
+import { NotifyNegative } from '@components/popup/notify';
+import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
 import { MONTH, MM_YYYY } from '@data/constants';
@@ -23,7 +31,7 @@ import { composeCourseName } from '@helpers/courses';
 export default {
   name: 'CompletionCertificatesDashboard',
   components: {
-    'ni-title-header': TitleHeader,
+    'ni-profile-header': ProfileHeader,
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
   },
@@ -82,7 +90,7 @@ export default {
 
         completionCertificates.value = certificates;
       } catch (error) {
-        console.error('Erreur lors de la récupération des certificats', error);
+        NotifyNegative('Erreur lors de la récupération des certificats.', error);
       }
     };
 
@@ -109,3 +117,7 @@ export default {
   },
 };
 </script>
+<style lang="sass" scoped>
+.selector
+  width: 50%
+</style>
