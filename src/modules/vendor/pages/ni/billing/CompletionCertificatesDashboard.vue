@@ -102,7 +102,8 @@ export default {
 
         completionCertificates.value = certificates;
       } catch (error) {
-        NotifyNegative('Erreur lors de la récupération des certificats.', error);
+        console.error(error);
+        NotifyNegative('Erreur lors de la récupération des certificats.');
       }
     };
 
