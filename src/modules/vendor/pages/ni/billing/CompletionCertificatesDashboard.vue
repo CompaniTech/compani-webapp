@@ -2,9 +2,8 @@
   <q-page padding class="vendor-background q-pb-xl">
     <ni-profile-header title="Certificats de réalisation">
       <template #title>
-        <ni-select caption="Mois de formation" :options="monthOptions" multiple :blur-on-selection="false"
-          :model-value="selectedMonths" @update:model-value="updateSelectedMonths" @blur="getCompletionCertificates"
-          class="selector" />
+        <ni-select caption="Mois de formation" :options="monthOptions" multiple
+          :model-value="selectedMonths" @update:model-value="updateSelectedMonths" class="selector" />
       </template>
     </ni-profile-header>
     <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates" :columns="columns"
@@ -16,7 +15,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative } from '@components/popup/notify';
 import ProfileHeader from '@components/ProfileHeader';
@@ -115,6 +114,12 @@ export default {
 
     created();
 
+    let timeout;
+    watch(selectedMonths, () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(async () => { await getCompletionCertificates(); }, 2000);
+    });
+
     return {
       // Data
       selectedMonths,
@@ -124,7 +129,6 @@ export default {
       tableLoading,
       pagination,
       // Methods
-      getCompletionCertificates,
       updateSelectedMonths,
     };
   },
