@@ -2,8 +2,8 @@
   <q-page padding class="vendor-background q-pb-xl">
     <ni-profile-header title="Certificats de réalisation">
       <template #title>
-        <ni-select caption="Mois de formation" :options="monthOptions" multiple
-          :model-value="selectedMonths" @update:model-value="updateSelectedMonths" class="selector" />
+        <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
+          @update:model-value="updateSelectedMonths" class="selector" />
       </template>
     </ni-profile-header>
     <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates" :columns="columns"
@@ -117,7 +117,7 @@ export default {
     let timeout;
     watch(selectedMonths, () => {
       clearTimeout(timeout);
-      timeout = setTimeout(async () => { await getCompletionCertificates(); }, 2000);
+      timeout = setTimeout(async () => { await getCompletionCertificates(); }, 1000);
     });
 
     return {
