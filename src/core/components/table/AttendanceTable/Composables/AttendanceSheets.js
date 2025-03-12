@@ -6,12 +6,10 @@ import groupBy from 'lodash/groupBy';
 import useVuelidate from '@vuelidate/core';
 import { required, requiredIf } from '@vuelidate/validators';
 import AttendanceSheets from '@api/AttendanceSheets';
-import { INTER_B2B, DD_MM_YYYY, GENERATION } from '@data/constants';
+import { INTER_B2B, SINGLE, DD_MM_YYYY, GENERATION } from '@data/constants';
 import { formatIdentity, sortStrings } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
-
-const SINGLE_COURSES_SUBPROGRAM_IDS = process.env.SINGLE_COURSES_SUBPROGRAM_IDS.split(';');
 
 export const useAttendanceSheets = (
   course,
@@ -46,14 +44,14 @@ export const useAttendanceSheets = (
   ]);
   const stepsById = ref(keyBy(course.value.subProgram.steps, '_id'));
 
-  const isSingleCourse = computed(() => SINGLE_COURSES_SUBPROGRAM_IDS.includes(course.value.subProgram._id));
+  const isSingleCourse = computed(() => course.value.type === SINGLE);
 
   const attendanceSheetRules = computed(() => ({
     newAttendanceSheet: {
       file: { required },
-      trainee: { required: requiredIf(course.value.type === INTER_B2B) },
+      trainee: { required: requiredIf([INTER_B2B, SINGLE].includes(course.value.type)) },
       trainer: { required },
-      date: { required: requiredIf(course.value.type !== INTER_B2B) },
+      date: { required: requiredIf(![INTER_B2B, SINGLE].includes(course.value.type)) },
       slots: { required: requiredIf(isSingleCourse.value) },
     },
     editedAttendanceSheet: { slots: { required: requiredIf(isSingleCourse.value) } },
@@ -61,7 +59,7 @@ export const useAttendanceSheets = (
 
   const v$ = useVuelidate(attendanceSheetRules, { newAttendanceSheet, editedAttendanceSheet });
 
-  const attendanceSheetVisibleColumns = computed(() => (course.value.type === INTER_B2B
+  const attendanceSheetVisibleColumns = computed(() => ([INTER_B2B, SINGLE].includes(course.value.type)
     ? ['trainee', 'actions']
     : ['date', 'actions']));
 
@@ -82,7 +80,7 @@ export const useAttendanceSheets = (
   const traineesWithAttendanceSheet = computed(() => ([...course.value.trainees, ...unsubscribedTrainees.value]));
 
   const formattedAttendanceSheets = computed(() => {
-    if (course.value.type === INTER_B2B) {
+    if ([INTER_B2B, SINGLE].includes(course.value.type)) {
       return attendanceSheets.value.map(as => ({
         ...as,
         trainee: traineesWithAttendanceSheet.value.find(trainee => trainee._id === as.trainee._id),
@@ -142,6 +140,7 @@ export const useAttendanceSheets = (
         return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
       }
       newAttendanceSheet.value.slots = [];
+      newAttendanceSheet.value.trainee = course.value.trainees[0]._id;
     }
     if (course.value.trainers.length === 1) newAttendanceSheet.value.trainer = course.value.trainers[0]._id;
 
@@ -156,7 +155,7 @@ export const useAttendanceSheets = (
   const formatPayload = () => {
     const { course: newAttendanceSheetCourse, file, trainee, trainer, date, slots } = newAttendanceSheet.value;
     const form = new FormData();
-    course.value.type === INTER_B2B ? form.append('trainee', trainee) : form.append('date', date);
+    [INTER_B2B, SINGLE].includes(course.value.type) ? form.append('trainee', trainee) : form.append('date', date);
     form.append('course', newAttendanceSheetCourse);
     form.append('trainer', trainer);
     form.append('file', file);
