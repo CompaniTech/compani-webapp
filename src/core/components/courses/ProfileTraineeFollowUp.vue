@@ -102,7 +102,6 @@ import { useQuasar } from 'quasar';
 import Courses from '@api/Courses';
 import Attendances from '@api/Attendances';
 import Questionnaires from '@api/Questionnaires';
-import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import AttendanceTable from '@components/table/AttendanceTable';
 import ExpandingTable from '@components/table/ExpandingTable';
@@ -139,6 +138,7 @@ import { downloadZip } from '@helpers/file';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { useCourses } from '@composables/courses';
 import { useTraineeFollowUp } from '@composables/traineeFollowUp';
+import { useCompletionCertificates } from '@composables/completionCertificates';
 
 export default {
   name: 'ProfileTraineeFollowUp',
@@ -185,14 +185,13 @@ export default {
       {
         name: 'month',
         label: 'Mois',
-        field: row => CompaniDate(row.month, MM_YYYY).format('LLLL yyyy'),
         sortable: true,
-        sort: (a, b) => ascendingSort(CompaniDate(a.month, MM_YYYY), CompaniDate(b.month, MM_YYYY)),
+        field: 'month',
+        sort: (a, b) => ascendingSort(CompaniDate(a, MM_YYYY), CompaniDate(b, MM_YYYY)),
+        format: row => CompaniDate(row, MM_YYYY).format('LLLL yyyy'),
         align: 'left',
       },
     ]);
-    const tableLoading = ref(false);
-    const completionCertificatePagination = ref({ page: 1, rowsPerPage: 15 });
 
     const course = computed(() => $store.state.course.course);
 
@@ -399,22 +398,17 @@ export default {
       }
     );
 
-    const getCompletionCertificates = async () => {
-      try {
-        const certificates = await CompletionCertificates.list({ course: course.value._id });
-
-        completionCertificates.value = certificates;
-      } catch (error) {
-        console.error(error);
-        NotifyNegative('Erreur lors de la récupération des certificats.');
-      }
-    };
+    const {
+      tableLoading,
+      pagination: completionCertificatePagination,
+      getCompletionCertificates,
+    } = useCompletionCertificates(completionCertificates);
 
     const created = async () => {
       const promises = [getFollowUp(), getUnsubscribedAttendances()];
       if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
 
-      if (isMonthlyCertificateMode.value) promises.push(getCompletionCertificates());
+      if (isMonthlyCertificateMode.value) promises.push(getCompletionCertificates({ course: course.value._id }));
 
       await Promise.all(promises);
     };

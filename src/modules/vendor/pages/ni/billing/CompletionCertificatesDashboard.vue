@@ -19,9 +19,8 @@
 <script>
 import { useMeta } from 'quasar';
 import { ref, watch, computed } from 'vue';
+import get from 'lodash/get';
 import sortedUniqBy from 'lodash/sortedUniqBy';
-import CompletionCertificates from '@api/CompletionCertificates';
-import { NotifyNegative } from '@components/popup/notify';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
@@ -29,6 +28,7 @@ import CompanySelect from '@components/form/CompanySelect';
 import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
+import { useCompletionCertificates } from '@composables/completionCertificates';
 import { formatIdentity, sortStrings, formatAndSortCompanyOptions } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
@@ -46,11 +46,9 @@ export default {
     useMeta(metaInfo);
 
     const selectedMonths = ref([]);
-    const completionCertificates = ref([]);
     const monthOptions = ref([]);
     const selectedCompany = ref('');
-    const tableLoading = ref(false);
-    const pagination = ref({ page: 1, rowsPerPage: 15 });
+    const completionCertificates = ref([]);
     const columns = ref([
       {
         name: 'traineeName',
@@ -90,7 +88,7 @@ export default {
     ]);
 
     const companyOptions = computed(() => {
-      const companiesCertificates = completionCertificates.value.map(c => c.course.companies).flat();
+      const companiesCertificates = completionCertificates.value.map(c => get(c, 'course.companies', [])).flat();
       const formattedCompanies = [
         { label: 'Toutes les structures', value: '' },
         ...formatAndSortCompanyOptions(companiesCertificates),
@@ -104,10 +102,16 @@ export default {
 
       return completionCertificates.value
         .filter((c) => {
-          const companiesIds = c.course.companies.map(company => company._id);
+          const companiesIds = get(c, 'course.companies', []).map(company => company._id);
           return companiesIds.includes(selectedCompany.value);
         });
     });
+
+    const {
+      tableLoading,
+      pagination,
+      getCompletionCertificates,
+    } = useCompletionCertificates(completionCertificates, monthOptions);
 
     const getMonthOptions = () => {
       // can get monthly completion certificate from 02-2025
@@ -122,17 +126,6 @@ export default {
         const value = currentMonth.format(MM_YYYY);
 
         monthOptions.value.push({ label, value });
-      }
-    };
-
-    const getCompletionCertificates = async () => {
-      try {
-        const certificates = await CompletionCertificates.list({ months: selectedMonths.value });
-
-        completionCertificates.value = certificates;
-      } catch (error) {
-        console.error(error);
-        NotifyNegative('Erreur lors de la récupération des certificats.');
       }
     };
 
@@ -151,21 +144,27 @@ export default {
     let timeout;
     watch(selectedMonths, () => {
       clearTimeout(timeout);
-      timeout = setTimeout(async () => { await getCompletionCertificates(); }, 1000);
+      timeout = setTimeout(async () => {
+        if (selectedMonths.value.length) {
+          await getCompletionCertificates({ months: selectedMonths.value });
+        } else {
+          completionCertificates.value = [];
+        }
+      }, 1000);
     });
 
     return {
       // Data
       selectedMonths,
       monthOptions,
-      completionCertificates,
-      columns,
       tableLoading,
       pagination,
       selectedCompany,
       // Computed
       companyOptions,
       filteredCompletionCertificates,
+      columns,
+      completionCertificates,
       // Methods
       updateSelectedMonths,
       updateSelectedCompany,
