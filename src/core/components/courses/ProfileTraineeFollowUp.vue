@@ -49,8 +49,10 @@
     <elearning-follow-up-table v-if="courseHasElearningStep" :learners="learners" :loading="learnersLoading"
       class="q-mb-xl" is-blended />
     <div class="q-mb-sm">
-      <p class="text-weight-bold"> Attestations / Certificats de réalisation</p>
-      <ni-banner v-if="!get(this.course, 'subProgram.program.learningGoals')">
+      <p class="text-weight-bold" v-if="!isMonthlyCertificateMode || isRofOrVendorAdmin">
+        Attestations / Certificats de réalisation
+      </p>
+      <ni-banner v-if="!get(this.course, 'subProgram.program.learningGoals') && isRofOrVendorAdmin">
         <template #message>
           Merci de renseigner les objectifs pédagogiques du programme pour pouvoir télécharger
           les attestations de fin de formation.
@@ -63,10 +65,13 @@
           label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
           @click="downloadCompletionCertificates(OFFICIAL)" />
       </div>
-      <div v-else>
+      <div v-else-if="isRofOrVendorAdmin">
         <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates"
           :columns="completionCertificateColumns" :loading="tableLoading"
           v-model:pagination="completionCertificatePagination" />
+        <template v-else>
+          <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
+        </template>
       </div>
     </div>
     <div v-if="unsubscribedAttendances.length">
@@ -408,7 +413,9 @@ export default {
       const promises = [getFollowUp(), getUnsubscribedAttendances()];
       if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
 
-      if (isMonthlyCertificateMode.value) promises.push(getCompletionCertificates({ course: course.value._id }));
+      if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
+        promises.push(getCompletionCertificates({ course: course.value._id }));
+      }
 
       await Promise.all(promises);
     };
