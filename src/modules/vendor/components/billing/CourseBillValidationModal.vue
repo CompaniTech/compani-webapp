@@ -9,8 +9,8 @@
         <template #message>Facture pour le compte de {{ companiesName }}</template>
       </ni-banner>
     </div>
-    <ni-banner v-if="!traineesQuantity && courseType !== INTRA" icon="info_outline" icon-color="orange-700"
-      class="bg-orange-50 text-orange-900">
+    <ni-banner v-if="!traineesQuantity && ![INTRA, SINGLE].includes(courseType)" icon="info_outline"
+      icon-color="orange-700" class="bg-orange-50 text-orange-900">
       <template #message>Aucun stagiaire des structures sélectionnées n'est inscrit à la formation</template>
     </ni-banner>
    <ni-date-input caption="Date de facture" :model-value="billToValidate.billedAt" :error="validations.billedAt.$error"
