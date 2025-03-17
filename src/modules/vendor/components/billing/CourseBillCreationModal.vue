@@ -12,14 +12,14 @@
     </div>
     <company-select in-modal caption="Payeur" :company-options="payerOptions" :company="newBill.payer" required-field
       @update="update($event, 'payer')" :validation="validations.payer" />
-    <ni-option-group v-if="course.type !== INTRA" in-modal :model-value="newBill.mainFee.countUnit"
+    <ni-option-group v-if="![INTRA, SINGLE].includes(course.type)" in-modal :model-value="newBill.mainFee.countUnit"
       :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
       :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
     <ni-input in-modal :caption="priceCaption" :error="validations.mainFee.price.$error" type="number"
       :model-value="newBill.mainFee.price" @blur="validations.mainFee.price.$touch" suffix="€" required-field
       :error-message="errorMessages.price" @update:model-value="update($event, 'mainFee.price')" />
-    <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number"
-      :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" required-field
+    <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
+      :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" :disable="course.type === SINGLE"
       :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
     <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
       @update:model-value="update($event, 'mainFee.description')" />
@@ -39,7 +39,7 @@ import OptionGroup from '@components/form/OptionGroup';
 import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import Banner from '@components/Banner';
-import { INTRA, TRAINEE, GROUP } from '@data/constants';
+import { INTRA, SINGLE, TRAINEE, GROUP } from '@data/constants';
 import { formatQuantity, formatName } from '@helpers/utils';
 
 export default {
@@ -99,6 +99,7 @@ export default {
     return {
       // Data
       INTRA,
+      SINGLE,
       // Computed
       countUnitOptions,
       priceCaption,

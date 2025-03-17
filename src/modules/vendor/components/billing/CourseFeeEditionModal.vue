@@ -15,8 +15,8 @@
     <ni-input in-modal :caption="priceCaption" :error="validations.price.$error" type="number" :disable="isBilled"
       :model-value="courseFee.price" @blur="validations.price.$touch" suffix="€" required-field
       :error-message="errorMessages.price" @update:model-value="update($event, 'price')" />
-    <ni-input in-modal caption="Quantité" :error="validations.count.$error" type="number" :disable="isBilled"
-      :model-value="courseFee.count" @blur="validations.count.$touch" required-field
+    <ni-input in-modal caption="Quantité" :error="validations.count.$error" type="number" required-field
+      :model-value="courseFee.count" @blur="validations.count.$touch" :disable="isBilled || isSingleCourse"
       :error-message="errorMessages.count" @update:model-value="update($event, 'count')" />
     <ni-input in-modal caption="Description" type="textarea" :model-value="courseFee.description"
       @update:model-value="update($event, 'description')" />
@@ -52,6 +52,7 @@ export default {
     companiesName: { type: String, default: '' },
     showCountUnit: { type: Boolean, default: false },
     traineesQuantity: { type: Number, default: 1 },
+    isSingleCourse: { type: Boolean, default: false },
   },
   components: {
     'ni-modal': Modal,
@@ -62,10 +63,12 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:course-fee'],
   setup (props, { emit }) {
-    const { courseFee, traineesQuantity, showCountUnit } = toRefs(props);
+    const { courseFee, traineesQuantity, showCountUnit, isSingleCourse } = toRefs(props);
 
     const priceCaption = computed(() => {
-      if (!showCountUnit.value || courseFee.value.countUnit === GROUP) return 'Prix du groupe';
+      if (!(showCountUnit.value || isSingleCourse.value) || courseFee.value.countUnit === GROUP) {
+        return 'Prix du groupe';
+      }
       return 'Prix par stagiaire';
     });
 
