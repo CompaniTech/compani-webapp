@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="q-mt-lg q-mb-xl">
-      <p v-if="course.type !== INTRA" class="text-weight-bold">
+      <p v-if="![INTRA, SINGLE].includes(course.type)" class="text-weight-bold">
         <span v-for="(company, index) of companies" :key="company._id" class="text-weight-regular text-copper-500">
           <router-link class="redirection cursor-pointer" :to="goToCompany(company._id)">
             {{ company.name }}
@@ -10,7 +10,7 @@
         </span>
       </p>
       <div v-if="courseBills.length">
-        <p v-if="course.type === INTRA" class="text-weight-bold">
+        <p v-if="[INTRA, SINGLE].includes(course.type)" class="text-weight-bold">
           Infos de facturation -
           <span class="text-weight-regular text-copper-500">
             <router-link class="redirection cursor-pointer" :to="goToCompany(companies[0]._id)">
@@ -110,7 +110,8 @@
       @submit="editBill" :validations="validations.editedBill.mainFee" @hide="resetMainFeeEditionModal"
       :loading="billEditionLoading" :error-messages="mainFeeErrorMessages" :course-name="courseName"
       :title="courseFeeEditionModalMetaInfo.title" :is-billed="courseFeeEditionModalMetaInfo.isBilled"
-      :companies-name="companiesName" :show-count-unit="course.type !== INTRA" :trainees-quantity="traineesQuantity" />
+      :companies-name="companiesName" :show-count-unit="![INTRA, SINGLE].includes(course.type)"
+      :trainees-quantity="traineesQuantity" :is-single-course="course.type === SINGLE" />
 
     <ni-billing-purchase-addition-modal v-model="billingPurchaseAdditionModal" :course-name="courseName"
       v-model:new-billing-purchase="newBillingPurchase" @submit="addBillingPurchase"
@@ -151,7 +152,7 @@ import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
-import { COMPANY, INTRA, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/constants';
+import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/constants';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { formatPrice, formatName } from '@helpers/utils';
 import { composeCourseName } from '@helpers/courses';
@@ -279,7 +280,7 @@ export default {
 
     const companiesName = computed(() => formatName(companies.value));
 
-    const displayValidatedCourseBillsCount = computed(() => course.value.type === INTRA &&
+    const displayValidatedCourseBillsCount = computed(() => [INTRA, SINGLE].includes(course.value.type) &&
       course.value.expectedBillsCount > 1);
 
     const setEditedBill = (bill) => {
@@ -583,6 +584,7 @@ export default {
       minCourseCreditNoteDate,
       creditNoteMetaInfo,
       INTRA,
+      SINGLE,
       DD_MM_YYYY,
       COUNT_UNIT,
       // Computed
