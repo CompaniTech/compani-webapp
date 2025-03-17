@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="isIntraCourse" class="row gutter-profile">
+    <div v-if="isIntraCourse || isSingleCourse" class="row gutter-profile">
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
         @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures"
         :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
@@ -70,11 +70,13 @@ import {
   INTRA,
   FUNDING_ORGANISATION,
   GROUP,
+  TRAINEE,
   LONG_DURATION_H_MM,
   E_LEARNING,
   DD_MM_YYYY,
   DIRECTORY,
   INTER_B2B,
+  SINGLE,
 } from '@data/constants';
 import CourseBillingCard from 'src/modules/vendor/components/billing/CourseBillingCard';
 import BillCreationModal from 'src/modules/vendor/components/billing/CourseBillCreationModal';
@@ -104,14 +106,17 @@ export default {
     const billCreationModal = ref(false);
     const companiesSelectionModal = ref(false);
     const billCreationLoading = ref(false);
-    const newBill = ref({ payer: '', mainFee: { price: 0, count: 1, countUnit: GROUP, description: '' } });
     const areDetailsVisible = ref(Object.fromEntries(courseBills.value.map(bill => [bill._id, false])));
     const removeNewBillDatas = ref(true);
-    const SINGLE_COURSES_SUBPROGRAM_IDS = process.env.SINGLE_COURSES_SUBPROGRAM_IDS.split(';');
 
     const course = computed(() => $store.state.course.course);
 
-    const companiesToBill = ref(course.value.type === INTRA ? [course.value.companies[0]._id] : []);
+    const newBill = ref({
+      payer: '',
+      mainFee: { price: 0, count: 1, countUnit: course.value.type === SINGLE ? TRAINEE : GROUP, description: '' },
+    });
+
+    const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
 
     const rules = computed(() => ({
       course: {
@@ -132,8 +137,6 @@ export default {
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
     }));
-
-    const isSingleCourse = computed(() => SINGLE_COURSES_SUBPROGRAM_IDS.includes(course.value.subProgram._id));
 
     const defaultDescription = computed(() => {
       const trainersName = course.value.trainers
@@ -172,7 +175,7 @@ export default {
 
     const v$ = useVuelidate(rules, { course, newBill, companiesToBill });
 
-    const { isIntraCourse } = useCourses(course);
+    const { isIntraCourse, isSingleCourse } = useCourses(course);
 
     const { getBillErrorMessages } = useCourseBilling(courseBills, v$);
 
@@ -311,7 +314,7 @@ export default {
 
       const areCompaniesAlreadyBilled = Object.keys(billsGroupedByCompanies.value)
         .some(companies => companiesToBill.value.some(c => companies.includes(c)));
-      if (areCompaniesAlreadyBilled && course.value.type !== INTRA) {
+      if (areCompaniesAlreadyBilled && !(isIntraCourse.value || isSingleCourse.value)) {
         const message = companiesToBill.value.length > 1
           ? 'Au moins une des structures sélectionnée a déjà été facturée, souhaitez-vous la refacturer&nbsp;?'
           : 'La structure sélectionnée a déjà été facturée, souhaitez-vous la refacturer&nbsp;?';
@@ -354,14 +357,22 @@ export default {
 
     const resetBillCreationModal = () => {
       if (removeNewBillDatas.value) {
-        newBill.value = { payer: '', mainFee: { price: 0, count: 1, countUnit: GROUP, description: '' } };
+        newBill.value = {
+          payer: '',
+          mainFee: {
+            price: 0,
+            count: 1,
+            countUnit: isSingleCourse.value ? TRAINEE : GROUP,
+            description: '',
+          },
+        };
         v$.value.newBill.$reset();
         resetCompaniesSelectionModal();
       }
     };
 
     const openBillCreationModal = () => {
-      if (course.value.type === INTRA) {
+      if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         const courseBillsWithoutCreditNote = courseBills.value.filter(cb => !cb.courseCreditNote);
@@ -384,7 +395,7 @@ export default {
 
     const resetCompaniesSelectionModal = () => {
       if (!billCreationModal.value) {
-        companiesToBill.value = course.value.type === INTRA ? [course.value.companies[0]._id] : [];
+        companiesToBill.value = isIntraCourse.value || isSingleCourse.value ? [course.value.companies[0]._id] : [];
         v$.value.companiesToBill.$reset();
       }
     };
@@ -419,6 +430,7 @@ export default {
       course,
       companiesList,
       isIntraCourse,
+      isSingleCourse,
       expectedBillsCountErrorMessage,
       billsGroupedByCompanies,
       newBillErrorMessages,
