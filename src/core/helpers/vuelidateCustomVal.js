@@ -11,6 +11,12 @@ export const frPhoneNumber = (value) => {
   return /^[0]{1}[1-9]{1}[.\-\s]{0,1}([0-9]{2}[.\-\s]{0,1}){4}$/.test(value) || false;
 };
 
+export const countryCode = (value) => {
+  if (!value) return false;
+
+  return /^\+(?:[1-9]|[1-9][0-9]|[1-9][0-9][0-9])$/.test(value) || false;
+};
+
 export const frZipCode = (value) => {
   if (!value) return false;
 

@@ -27,9 +27,9 @@
             <ni-button :icon="lockIcon" @click="toggleEmailLock(!emailLock)" color="copper-grey-500" />
           </div>
         </div>
-        <ni-input v-model.trim="userProfile.contact.phone" @focus="saveTmp('contact.phone')"
-          error-message="Numéro de téléphone invalide." @blur="updateUser('contact.phone')" caption="Téléphone"
-          :error="v$.userProfile.contact.phone.$error" />
+        <div class="col-xs-12 col-md-6">
+          <phone-select :contact="userPhone" :validation="v$.userPhone" @update="updatePhone" @blur="onPhoneBlur" />
+        </div>
       </div>
       <div class="account-button">
         <ni-button @click="newPasswordModal = true" color="white" class="bg-copper-500" icon="mdi-lock-reset"
@@ -63,12 +63,13 @@ import set from 'lodash/set';
 import Authentication from '@api/Authentication';
 import TitleHeader from '@components/TitleHeader';
 import Input from '@components/form/Input';
+import PhoneSelect from '@components/form/PhoneSelect';
 import Button from '@components/Button';
 import { NotifyWarning, NotifyPositive, NotifyNegative } from '@components/popup/notify';
 import PictureUploader from '@components/PictureUploader';
 import { useUser } from '@composables/user';
 import { usePassword } from '@composables/password';
-import { frPhoneNumber } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode } from '@helpers/vuelidateCustomVal';
 import { logOutAndRedirectToLogin } from 'src/router/redirect';
 import NewPasswordModal from 'src/core/pages/NewPasswordModal';
 
@@ -78,6 +79,7 @@ export default {
     'ni-title-header': TitleHeader,
     'ni-button': Button,
     'ni-input': Input,
+    'phone-select': PhoneSelect,
     'ni-picture-uploader': PictureUploader,
     'new-password-modal': NewPasswordModal,
   },
@@ -98,6 +100,11 @@ export default {
 
     const userProfile = computed(() => $store.state.main.loggedUser);
 
+    const userPhone = ref({
+      countryCode: userProfile.value.contact.countryCode || '+33',
+      phone: userProfile.value.contact.phone || '',
+    });
+
     const refreshUser = async () => {
       await $store.dispatch('main/fetchLoggedUser', userProfile.value._id);
     };
@@ -114,9 +121,10 @@ export default {
         password: { ...passwordValidation.value },
         confirm: { required, sameAs: sameAs(newPassword.value.password) },
       },
+      userPhone: { phone: { frPhoneNumber }, countryCode: { countryCode } },
     }));
 
-    const v$ = useVuelidate(rules, { userProfile, newPassword });
+    const v$ = useVuelidate(rules, { userProfile, newPassword, userPhone });
 
     const {
       toggleEmailLock,
@@ -124,7 +132,10 @@ export default {
       emailError,
       lockIcon,
       userEmail,
-    } = useUser(refreshUser, v$, emailLock, tmpInput);
+      onPhoneBlur,
+      savePhone,
+      updatePhone,
+    } = useUser(refreshUser, v$, emailLock, tmpInput, userPhone);
 
     const saveTmp = (path) => {
       if (tmpInput.value === '') tmpInput.value = get(userProfile.value, path);
@@ -180,6 +191,7 @@ export default {
       lockIcon,
       passwordError,
       passwordConfirmError,
+      userPhone,
       // Computed
       userProfile,
       // Methods
@@ -189,6 +201,9 @@ export default {
       resetForm,
       logout,
       submitPasswordChange,
+      updatePhone,
+      savePhone,
+      onPhoneBlur,
     };
   },
 };
@@ -204,5 +219,4 @@ export default {
 .photo-caption
   font-size: 12px
   margin: 0 0 4px 0
-
 </style>

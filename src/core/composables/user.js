@@ -8,7 +8,7 @@ import { useValidations } from '@composables/validations';
 import { REQUIRED_LABEL } from '@data/constants';
 import { formatPhoneForPayload } from '@helpers/utils';
 
-export const useUser = (refreshUser, v$, emailLock, tmpInput) => {
+export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
   const userEmail = useTemplateRef('userEmail');
 
   const $store = useStore();
@@ -86,6 +86,34 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput) => {
     return '';
   };
 
+  const updatePhone = (path, event) => { userPhone.value[path] = event; };
+
+  const onPhoneBlur = async (path) => {
+    v$.value.userPhone[path].$touch();
+    if (!!userPhone.value.phone && !!userPhone.value.countryCode) {
+      await savePhone(
+        path,
+        { contact: { phone: formatPhoneForPayload(userPhone.value.phone), countryCode: userPhone.value.countryCode } }
+      );
+    } else if (path === 'phone' && !userPhone.value.phone) {
+      await savePhone(path, { contact: { phone: '', countryCode: '' } });
+    }
+  };
+
+  const savePhone = async (path, payload) => {
+    try {
+      const isValid = await waitForValidation(v$.value.userPhone, path);
+      if (!isValid) return NotifyWarning('Champ(s) invalide(s)');
+      await Users.updateById(userProfile.value._id, payload);
+      await refreshUser();
+      NotifyPositive('Modification enregistrée.');
+    } catch (e) {
+      console.error(e);
+      NotifyNegative('Erreur lors de la modification.');
+      throw e;
+    }
+  };
+
   return {
     // Data
     emailLock,
@@ -99,5 +127,8 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput) => {
     updateUser,
     emailErrorHandler,
     emailError,
+    updatePhone,
+    onPhoneBlur,
+    savePhone,
   };
 };
