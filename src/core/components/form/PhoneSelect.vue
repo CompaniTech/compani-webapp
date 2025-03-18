@@ -46,7 +46,7 @@ export default {
   setup (_, { emit }) {
     const countryCodeOptions = computed(() => COUNTRY_CODES.map(el => ({ ...el, additionalFilters: [el.country] })));
 
-    const update = (event, path) => emit('update', path, event);
+    const update = (event, path) => emit('update', event, path);
 
     const blur = path => emit('blur', path);
 
@@ -63,18 +63,11 @@ export default {
 
 <style lang="sass" scoped>
 .country-code
-  width: 15%
+  width: 100px
   padding-right: 4px
-  @media screen and (max-width: $breakpoint-sm-max)
-    width: 30%
-    padding-right: 4px
-  @media screen and (max-width: 1318px) and (min-width: 1024px)
-    width: 30%
-    padding-right: 4px
 .phone
-  width: 85%
-  @media screen and (max-width: $breakpoint-sm-max)
-    width: 70%
-  @media screen and (max-width: 1318px) and (min-width: 1024px)
-    width: 70%
+  flex: 1
+  white-space: nowrap
+:deep(.q-field__messages)
+  margin-left: -100px
 </style>

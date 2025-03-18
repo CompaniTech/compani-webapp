@@ -26,7 +26,7 @@ import {
   formatPhoneForPayload,
   getLastVersion,
 } from '@helpers/utils';
-import { frPhoneNumber } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode } from '@helpers/vuelidateCustomVal';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 
 export const useLearnersCreation = (
@@ -38,7 +38,7 @@ export const useLearnersCreation = (
 ) => {
   const newLearner = ref({
     identity: { firstname: '', lastname: '' },
-    contact: { phone: '' },
+    contact: { phone: '', countryCode: '+33' },
     local: { email: '' },
     company: '',
     userCompanyStartDate: CompaniDate().startOf(DAY).toISO(),
@@ -69,7 +69,10 @@ export const useLearnersCreation = (
     newLearner: {
       identity: { lastname: { required } },
       local: { email: { required, email } },
-      contact: { phone: { required: requiredIf(!disableUserInfoEdition.value), frPhoneNumber } },
+      contact: {
+        phone: { required: requiredIf(!disableUserInfoEdition.value), frPhoneNumber },
+        countryCode: { required: requiredIf(!disableUserInfoEdition.value), countryCode },
+      },
       company: { required },
       userCompanyStartDate: { required },
     },

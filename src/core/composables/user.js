@@ -104,7 +104,7 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
     return '';
   };
 
-  const updatePhone = (path, event) => { userPhone.value[path] = event; };
+  const updatePhone = (event, path) => { userPhone.value[path] = event; };
 
   const onPhoneBlur = async (path) => {
     v$.value.userPhone[path].$touch();
