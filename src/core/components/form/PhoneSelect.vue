@@ -1,25 +1,22 @@
 <template>
-  <p :class="['caption', { required: requiredField }]">Téléphone</p>
-  <div class="row">
-    <div class="country-code">
-      <ni-select :in-modal="inModal" :model-value="contact.countryCode" @blur="blur('countryCode')"
-        :required-field="requiredField" :disable="disable" :options="countryCodeOptions"
-        :error="validation.countryCode.$error" @update:model-value="update($event, 'countryCode')" :last="last"
-        option-slot>
-        <template #option="{ scope }">
-          <q-item v-bind="scope.itemProps">
-            <q-item-section>
-              <q-item-label>{{ scope.opt.label }} - {{ scope.opt.country }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </ni-select>
-    </div>
-    <div class="phone">
-      <ni-input :in-modal="inModal" :model-value="contact.phone" :required-field="requiredField" caption="  "
-        @blur="blur('phone')" :error="validation.phone.$error" error-message="Numéro de téléphone invalide"
-        @update:model-value="update($event, 'phone')" :disable="disable" />
-    </div>
+  <div class="country-code">
+    <ni-select :in-modal="inModal" :model-value="contact.countryCode" @blur="blur('countryCode')"
+      :required-field="requiredField" :disable="disable" :options="countryCodeOptions" caption="Téléphone"
+      :error="validation.countryCode.$error" @update:model-value="update($event, 'countryCode')" :last="last"
+      option-slot>
+      <template #option="{ scope }">
+        <q-item v-bind="scope.itemProps">
+          <q-item-section>
+            <q-item-label>{{ scope.opt.label }} - {{ scope.opt.country }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </ni-select>
+  </div>
+  <div class="phone">
+    <ni-input :in-modal="inModal" :model-value="contact.phone" caption="&#8203;" @blur="blur('phone')"
+      :error="validation.phone.$error" :error-message="errorMessage" @update:model-value="update($event, 'phone')"
+      :disable="disable" />
   </div>
 </template>
 
@@ -39,6 +36,7 @@ export default {
     clearable: { type: Boolean, default: false },
     inModal: { type: Boolean, default: false },
     last: { type: Boolean, default: false },
+    errorMessage: { type: String, default: 'Numéro de téléphone invalide' },
   },
   components: {
     'ni-select': Select,
@@ -64,14 +62,14 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-.caption
-  font-size: 12px
-  margin: 0
-  color: $copper-grey-500
 .country-code
-  width: 20%
-  padding-right: 16px
-  margin-top: 4px
+  width: 15%
+  padding-right: 4px
+  @media screen and (max-width: $breakpoint-sm-max)
+    width: 30%
+    padding-right: 4px
 .phone
-  width: 80%
+  width: 85%
+  @media screen and (max-width: $breakpoint-sm-max)
+    width: 70%
 </style>

@@ -27,7 +27,7 @@
             <ni-button :icon="lockIcon" @click="toggleEmailLock(!emailLock)" color="copper-grey-500" />
           </div>
         </div>
-        <div class="col-xs-12 col-md-6">
+        <div class="col-xs-12 row col-md-6">
           <phone-select :contact="userPhone" :validation="v$.userPhone" @update="updatePhone" @blur="onPhoneBlur" />
         </div>
       </div>

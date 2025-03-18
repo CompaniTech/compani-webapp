@@ -1,5 +1,6 @@
 import { computed, nextTick, useTemplateRef } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import Users from '@api/Users';
@@ -11,8 +12,13 @@ import { formatPhoneForPayload } from '@helpers/utils';
 export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
   const userEmail = useTemplateRef('userEmail');
 
+  const $router = useRouter();
   const $store = useStore();
-  const userProfile = computed(() => $store.state.main.loggedUser);
+  const userProfile = computed(() => (
+    /\/account/.test($router.currentRoute.value.path)
+      ? $store.state.main.loggedUser
+      : $store.state.userProfile.userProfile
+  ));
 
   const { waitForValidation } = useValidations();
 
@@ -86,6 +92,14 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
     return '';
   };
 
+  const phoneNbrError = (validationObj) => {
+    if (get(validationObj, 'phone.required.$response') === false) return REQUIRED_LABEL;
+    if (get(validationObj, 'phone.frPhoneNumber.$response') === false) {
+      return 'Numéro de téléphone non valide';
+    }
+    return '';
+  };
+
   const updatePhone = (path, event) => { userPhone.value[path] = event; };
 
   const onPhoneBlur = async (path) => {
@@ -130,5 +144,6 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
     updatePhone,
     onPhoneBlur,
     savePhone,
+    phoneNbrError,
   };
 };
