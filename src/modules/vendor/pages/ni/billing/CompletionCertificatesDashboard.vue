@@ -17,6 +17,7 @@
 </template>
 
 <script>
+import { useMeta } from 'quasar';
 import { ref, watch, computed } from 'vue';
 import sortedUniqBy from 'lodash/sortedUniqBy';
 import CompletionCertificates from '@api/CompletionCertificates';
@@ -41,6 +42,9 @@ export default {
     'company-select': CompanySelect,
   },
   setup () {
+    const metaInfo = { title: 'Certificats réalisations mensuels' };
+    useMeta(metaInfo);
+
     const selectedMonths = ref([]);
     const completionCertificates = ref([]);
     const monthOptions = ref([]);
@@ -96,7 +100,7 @@ export default {
     });
 
     const filteredCompletionCertificates = computed(() => {
-      if (!selectedCompany.value) { return completionCertificates.value; }
+      if (!selectedCompany.value) return completionCertificates.value;
 
       return completionCertificates.value.filter((c) => {
         const companiesIds = c.course.companies.map(company => company._id);
@@ -131,16 +135,15 @@ export default {
       }
     };
 
-    const updateSelectedMonths = (months) => {
-      selectedMonths.value = months;
-      selectedCompany.value = null;
-    };
+    watch(completionCertificates, () => {
+      if (!completionCertificates.value.length) selectedCompany.value = '';
+    });
+
+    const updateSelectedMonths = months => (selectedMonths.value = months);
 
     const updateSelectedCompany = value => (selectedCompany.value = value);
 
-    const created = () => {
-      getMonthOptions();
-    };
+    const created = () => getMonthOptions();
 
     created();
 
