@@ -4,9 +4,11 @@
       <template #title>
         <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
           @update:model-value="updateSelectedMonths" class="selector" />
+        <company-select v-if="filteredCompletionCertificates.length" label="Structure" :company-options="companyOptions"
+          :company="selectedCompany" @update="updateSelectedCompany" />
       </template>
     </ni-profile-header>
-    <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates" :columns="columns"
+    <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
       :loading="tableLoading" v-model:pagination="pagination" />
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
@@ -15,16 +17,18 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import { sortedUniqBy } from 'lodash';
 import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative } from '@components/popup/notify';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
+import CompanySelect from '@components/form/CompanySelect';
 import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { formatIdentity, sortStrings } from '@helpers/utils';
+import { formatIdentity, sortStrings, formatAndSortCompanyOptions } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
 
@@ -34,11 +38,13 @@ export default {
     'ni-profile-header': ProfileHeader,
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
+    'company-select': CompanySelect,
   },
   setup () {
     const selectedMonths = ref([]);
     const completionCertificates = ref([]);
     const monthOptions = ref([]);
+    const selectedCompany = ref('');
     const tableLoading = ref(false);
     const pagination = ref({ page: 1, rowsPerPage: 15 });
     const columns = ref([
@@ -79,6 +85,25 @@ export default {
       },
     ]);
 
+    const companyOptions = computed(() => {
+      const companiesCertificates = completionCertificates.value.map(c => c.course.companies).flat();
+      const formattedCompanies = formatAndSortCompanyOptions(companiesCertificates);
+      const filteredCompanies = sortedUniqBy(formattedCompanies, 'value');
+
+      return filteredCompanies;
+    });
+
+    const filteredCompletionCertificates = computed(() => {
+      if (!selectedCompany.value) {
+        return completionCertificates.value;
+      }
+
+      return completionCertificates.value
+        .filter(c => c.course.companies
+          .map(company => company._id)
+          .includes(selectedCompany.value));
+    });
+
     const getMonthOptions = () => {
       // can get monthly completion certificate from 02-2025
       const startDate = CompaniDate('2025-02-01T09:00:00.000Z').startOf(MONTH).toISO();
@@ -108,6 +133,8 @@ export default {
 
     const updateSelectedMonths = (months) => { selectedMonths.value = months; };
 
+    const updateSelectedCompany = value => (selectedCompany.value = value);
+
     const created = () => {
       getMonthOptions();
     };
@@ -128,8 +155,13 @@ export default {
       columns,
       tableLoading,
       pagination,
+      selectedCompany,
+      // Computed
+      companyOptions,
+      filteredCompletionCertificates,
       // Methods
       updateSelectedMonths,
+      updateSelectedCompany,
     };
   },
 };
