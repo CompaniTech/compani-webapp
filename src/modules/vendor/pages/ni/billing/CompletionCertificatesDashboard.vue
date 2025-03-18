@@ -2,12 +2,12 @@
   <q-page padding class="vendor-background q-pb-xl">
     <ni-profile-header title="Certificats de réalisation">
       <template #title>
-        <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
-          @update:model-value="updateSelectedMonths" class="selector" />
-        <company-select v-if="filteredCompletionCertificates.length" label="Structure" :company-options="companyOptions"
-          :company="selectedCompany" @update="updateSelectedCompany" />
+          <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
+            @update:model-value="updateSelectedMonths" class="selector" />
       </template>
     </ni-profile-header>
+    <company-select v-if="filteredCompletionCertificates.length" label="Structure" clearable class="company-select"
+      :company-options="companyOptions" :company="selectedCompany" @update="updateSelectedCompany" />
     <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
       :loading="tableLoading" v-model:pagination="pagination" />
     <template v-else>
@@ -18,7 +18,7 @@
 
 <script>
 import { ref, watch, computed } from 'vue';
-import { sortedUniqBy } from 'lodash';
+import sortedUniqBy from 'lodash/sortedUniqBy';
 import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative } from '@components/popup/notify';
 import ProfileHeader from '@components/ProfileHeader';
@@ -87,21 +87,21 @@ export default {
 
     const companyOptions = computed(() => {
       const companiesCertificates = completionCertificates.value.map(c => c.course.companies).flat();
-      const formattedCompanies = formatAndSortCompanyOptions(companiesCertificates);
-      const filteredCompanies = sortedUniqBy(formattedCompanies, 'value');
+      const formattedCompanies = [
+        { label: 'Toutes les structures', value: '' },
+        ...formatAndSortCompanyOptions(companiesCertificates),
+      ];
 
-      return filteredCompanies;
+      return sortedUniqBy(formattedCompanies, 'value');
     });
 
     const filteredCompletionCertificates = computed(() => {
-      if (!selectedCompany.value) {
-        return completionCertificates.value;
-      }
+      if (!selectedCompany.value) { return completionCertificates.value; }
 
-      return completionCertificates.value
-        .filter(c => c.course.companies
-          .map(company => company._id)
-          .includes(selectedCompany.value));
+      return completionCertificates.value.filter((c) => {
+        const companiesIds = c.course.companies.map(company => company._id);
+        return companiesIds.includes(selectedCompany.value);
+      });
     });
 
     const getMonthOptions = () => {
@@ -131,7 +131,10 @@ export default {
       }
     };
 
-    const updateSelectedMonths = (months) => { selectedMonths.value = months; };
+    const updateSelectedMonths = (months) => {
+      selectedMonths.value = months;
+      selectedCompany.value = null;
+    };
 
     const updateSelectedCompany = value => (selectedCompany.value = value);
 
@@ -169,4 +172,7 @@ export default {
 <style lang="sass" scoped>
 .selector
   width: 50%
+
+.company-select
+  width: 30%
 </style>
