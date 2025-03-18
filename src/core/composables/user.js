@@ -6,7 +6,7 @@ import set from 'lodash/set';
 import Users from '@api/Users';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useValidations } from '@composables/validations';
-import { REQUIRED_LABEL } from '@data/constants';
+import { REQUIRED_LABEL, TRAINER } from '@data/constants';
 import { formatPhoneForPayload } from '@helpers/utils';
 
 export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
@@ -14,11 +14,15 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
 
   const $router = useRouter();
   const $store = useStore();
-  const userProfile = computed(() => (
-    /\/account/.test($router.currentRoute.value.path)
+  const userProfile = computed(() => {
+    const isAccountInfos = /\/account/.test($router.currentRoute.value.path);
+    const isTrainerInTrainerInfos = /\/trainers\/info/.test($router.currentRoute.value.path) &&
+      TRAINER === get($store.state.main.loggedUser, 'role.vendor.name');
+
+    return isAccountInfos || isTrainerInTrainerInfos
       ? $store.state.main.loggedUser
-      : $store.state.userProfile.userProfile
-  ));
+      : $store.state.userProfile.userProfile;
+  });
 
   const { waitForValidation } = useValidations();
 
@@ -143,7 +147,6 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
     emailError,
     updatePhone,
     onPhoneBlur,
-    savePhone,
     phoneNbrError,
   };
 };

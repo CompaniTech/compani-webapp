@@ -133,7 +133,6 @@ export default {
       lockIcon,
       userEmail,
       onPhoneBlur,
-      savePhone,
       updatePhone,
     } = useUser(refreshUser, v$, emailLock, tmpInput, userPhone);
 
@@ -202,7 +201,6 @@ export default {
       logout,
       submitPasswordChange,
       updatePhone,
-      savePhone,
       onPhoneBlur,
     };
   },

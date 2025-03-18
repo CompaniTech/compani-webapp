@@ -68,8 +68,13 @@ export default {
   @media screen and (max-width: $breakpoint-sm-max)
     width: 30%
     padding-right: 4px
+  @media screen and (max-width: 1318px) and (min-width: 1024px)
+    width: 30%
+    padding-right: 4px
 .phone
   width: 85%
   @media screen and (max-width: $breakpoint-sm-max)
+    width: 70%
+  @media screen and (max-width: 1318px) and (min-width: 1024px)
     width: 70%
 </style>

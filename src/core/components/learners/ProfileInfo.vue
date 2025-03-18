@@ -24,8 +24,8 @@
         </div>
       </div>
       <div class="col-xs-12 row col-md-6">
-          <phone-select :contact="userPhone" :validation="v$.userPhone" @update="updatePhone" @blur="onPhoneBlur"
-            required-field :error-message="phoneNbrError(v$.userPhone)" />
+        <phone-select :contact="userPhone" :validation="v$.userPhone" @update="updatePhone" @blur="onPhoneBlur"
+          required-field :error-message="phoneNbrError(v$.userPhone)" />
       </div>
     </div>
   </div>
@@ -84,7 +84,6 @@ export default {
       emailError,
       lockIcon,
       onPhoneBlur,
-      savePhone,
       updatePhone,
       phoneNbrError,
     } = useUser(refreshUser, v$, emailLock, tmpInput, userPhone);
@@ -115,7 +114,6 @@ export default {
       emailError,
       toggleEmailLock,
       onPhoneBlur,
-      savePhone,
       updatePhone,
       phoneNbrError,
     };
