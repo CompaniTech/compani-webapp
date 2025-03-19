@@ -49,10 +49,10 @@
     <elearning-follow-up-table v-if="courseHasElearningStep" :learners="learners" :loading="learnersLoading"
       class="q-mb-xl" is-blended />
     <div class="q-mb-sm">
-      <p class="text-weight-bold" v-if="!isMonthlyCertificateMode || isRofOrVendorAdmin">
+      <p class="text-weight-bold" v-if="!isMonthlyCertificateMode || (isRofOrVendorAdmin && isVendorInterface)">
         Attestations / Certificats de réalisation
       </p>
-      <ni-banner v-if="!get(this.course, 'subProgram.program.learningGoals') && isRofOrVendorAdmin">
+      <ni-banner v-if="!get(course, 'subProgram.program.learningGoals') && isRofOrVendorAdmin && isVendorInterface">
         <template #message>
           Merci de renseigner les objectifs pédagogiques du programme pour pouvoir télécharger
           les attestations de fin de formation.
@@ -65,7 +65,7 @@
           label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
           @click="downloadCompletionCertificates(OFFICIAL)" />
       </div>
-      <div v-else-if="isRofOrVendorAdmin">
+      <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
         <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates"
           :columns="completionCertificateColumns" :loading="tableLoading"
           v-model:pagination="completionCertificatePagination" />
@@ -212,6 +212,7 @@ export default {
       followUpMissingInfo,
       downloadAttendanceSheet,
       vendorRole,
+      isVendorInterface,
     } = useCourses(course);
     const { learners, getFollowUp, learnersLoading } = useTraineeFollowUp(profileId);
 
@@ -443,6 +444,7 @@ export default {
       completionCertificatePagination,
       completionCertificateColumns,
       tableLoading,
+      isVendorInterface,
       // Computed
       course,
       courseHasElearningStep,
