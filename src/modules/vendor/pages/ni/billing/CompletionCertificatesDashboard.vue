@@ -42,7 +42,7 @@ export default {
     'company-select': CompanySelect,
   },
   setup () {
-    const metaInfo = { title: 'Certificats réalisations mensuels' };
+    const metaInfo = { title: 'Certificats réalisation mensuels' };
     useMeta(metaInfo);
 
     const selectedMonths = ref([]);
@@ -102,10 +102,11 @@ export default {
     const filteredCompletionCertificates = computed(() => {
       if (!selectedCompany.value) return completionCertificates.value;
 
-      return completionCertificates.value.filter((c) => {
-        const companiesIds = c.course.companies.map(company => company._id);
-        return companiesIds.includes(selectedCompany.value);
-      });
+      return completionCertificates.value
+        .filter((c) => {
+          const companiesIds = c.course.companies.map(company => company._id);
+          return companiesIds.includes(selectedCompany.value);
+        });
     });
 
     const getMonthOptions = () => {
