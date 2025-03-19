@@ -6,8 +6,11 @@
             @update:model-value="updateSelectedMonths" class="selector" />
       </template>
     </ni-profile-header>
-    <company-select v-if="filteredCompletionCertificates.length" label="Structure" clearable class="company-select"
-      :company-options="companyOptions" :company="selectedCompany" @update="updateSelectedCompany" />
+    <div v-if="filteredCompletionCertificates.length" class="filters-container">
+      <company-select label="Structure" clearable :company-options="companyOptions" :company="selectedCompany"
+        @update="updateSelectedCompany" />
+      <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
+    </div>
     <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
       :loading="tableLoading" v-model:pagination="pagination" />
     <template v-else>
@@ -29,7 +32,7 @@ import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { useCompletionCertificates } from '@composables/completionCertificates';
-import { formatIdentity, sortStrings, formatAndSortCompanyOptions } from '@helpers/utils';
+import { formatIdentity, sortStrings, formatAndSortCompanyOptions, formatAndSortOptions } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
 
@@ -49,6 +52,7 @@ export default {
     const monthOptions = ref([]);
     const selectedCompany = ref('');
     const completionCertificates = ref([]);
+    const selectedHolding = ref('');
     const columns = ref([
       {
         name: 'traineeName',
@@ -97,14 +101,39 @@ export default {
       return sortedUniqBy(formattedCompanies, 'value');
     });
 
-    const filteredCompletionCertificates = computed(() => {
-      if (!selectedCompany.value) return completionCertificates.value;
+    const holdingOptions = computed(() => {
+      const holdingCertificates = completionCertificates.value
+        .map(c => c.course.companies
+          .filter(company => company.holding)
+          .map(company => company.holding))
+        .flat();
+      const formattedHolding = [
+        { label: 'Toutes les sociétés mères', value: '' },
+        ...formatAndSortOptions(holdingCertificates, 'name'),
+      ];
 
-      return completionCertificates.value
-        .filter((c) => {
-          const companiesIds = get(c, 'course.companies', []).map(company => company._id);
-          return companiesIds.includes(selectedCompany.value);
+      return sortedUniqBy(formattedHolding, 'value');
+    });
+
+    const filteredCompletionCertificates = computed(() => {
+      if (selectedCompany.value) {
+        return completionCertificates.value
+          .filter((c) => {
+            const companiesIds = c.course.companies.map(company => company._id);
+            return companiesIds.includes(selectedCompany.value);
+          });
+      }
+
+      if (selectedHolding.value) {
+        return completionCertificates.value.filter((c) => {
+          const holdingCertificates = c.course.companies
+            .filter(company => company.holding).map(company => company.holding._id);
+
+          return holdingCertificates.includes(selectedHolding.value);
         });
+      }
+
+      return completionCertificates.value;
     });
 
     const {
@@ -131,6 +160,7 @@ export default {
 
     watch(completionCertificates, () => {
       if (!completionCertificates.value.length) selectedCompany.value = '';
+      if (!completionCertificates.value.length) selectedHolding.value = '';
     });
 
     const updateSelectedMonths = months => (selectedMonths.value = months);
@@ -160,11 +190,13 @@ export default {
       tableLoading,
       pagination,
       selectedCompany,
+      selectedHolding,
       // Computed
       companyOptions,
       filteredCompletionCertificates,
       columns,
       completionCertificates,
+      holdingOptions,
       // Methods
       updateSelectedMonths,
       updateSelectedCompany,
@@ -175,7 +207,4 @@ export default {
 <style lang="sass" scoped>
 .selector
   width: 50%
-
-.company-select
-  width: 30%
 </style>
