@@ -49,18 +49,30 @@
     <elearning-follow-up-table v-if="courseHasElearningStep" :learners="learners" :loading="learnersLoading"
       class="q-mb-xl" is-blended />
     <div class="q-mb-sm">
-      <p class="text-weight-bold">Attestations de formation</p>
-      <ni-banner v-if="!get(this.course, 'subProgram.program.learningGoals')">
+      <p class="text-weight-bold" v-if="!isMonthlyCertificateMode || (isRofOrVendorAdmin && isVendorInterface)">
+        Attestations / Certificats de réalisation
+      </p>
+      <ni-banner v-if="!get(course, 'subProgram.program.learningGoals') && isRofOrVendorAdmin && isVendorInterface">
         <template #message>
           Merci de renseigner les objectifs pédagogiques du programme pour pouvoir télécharger
           les attestations de fin de formation.
         </template>
       </ni-banner>
-      <ni-bi-color-button icon="file_download" label="Attestations"
-        :disable="disableDownloadCompletionCertificates" @click="downloadCompletionCertificates(CUSTOM)" size="16px" />
-      <ni-bi-color-button v-if="canReadCompletionCertificate" icon="file_download" class="q-my-md"
-        label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
-        @click="downloadCompletionCertificates(OFFICIAL)" />
+      <div v-if="!isMonthlyCertificateMode">
+        <ni-bi-color-button icon="file_download" label="Attestations" size="16px"
+          :disable="disableDownloadCompletionCertificates" @click="downloadCompletionCertificates(CUSTOM)" />
+        <ni-bi-color-button v-if="canReadCompletionCertificate" icon="file_download" class="q-my-md"
+          label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
+          @click="downloadCompletionCertificates(OFFICIAL)" />
+      </div>
+      <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
+        <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates"
+          :columns="completionCertificateColumns" :loading="tableLoading"
+          v-model:pagination="completionCertificatePagination" />
+        <template v-else>
+          <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
+        </template>
+      </div>
     </div>
     <div v-if="unsubscribedAttendances.length">
       <div class="text-italic q-ma-xs">
@@ -103,6 +115,7 @@ import QuestionnaireAnswersCell from '@components/courses/QuestionnaireAnswersCe
 import BiColorButton from '@components/BiColorButton';
 import Banner from '@components/Banner';
 import QuestionnaireQRCodeCell from '@components/courses/QuestionnaireQRCodeCell';
+import SimpleTable from '@components/table/SimpleTable';
 import {
   E_LEARNING,
   SHORT_DURATION_H_MM,
@@ -118,6 +131,8 @@ import {
   VENDOR_ADMIN,
   START_COURSE,
   END_COURSE,
+  MONTHLY,
+  MM_YYYY,
 } from '@data/constants';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -128,6 +143,7 @@ import { downloadZip } from '@helpers/file';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { useCourses } from '@composables/courses';
 import { useTraineeFollowUp } from '@composables/traineeFollowUp';
+import { useCompletionCertificates } from '@composables/completionCertificates';
 
 export default {
   name: 'ProfileTraineeFollowUp',
@@ -139,6 +155,7 @@ export default {
     'ni-bi-color-button': BiColorButton,
     'ni-banner': Banner,
     'ni-questionnaire-qrcode-cell': QuestionnaireQRCodeCell,
+    'ni-simple-table': SimpleTable,
   },
   props: {
     profileId: { type: String, required: true },
@@ -160,6 +177,26 @@ export default {
     const pagination = ref({ sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 });
     const questionnaireQRCodes = ref([]);
     const questionnaireTypes = ref([]);
+    const completionCertificates = ref([]);
+    const completionCertificateColumns = ref([
+      {
+        name: 'traineeName',
+        label: 'Prénom / Nom de l’apprenant',
+        field: row => formatIdentity(row.trainee.identity, 'FL'),
+        align: 'left',
+        sortable: true,
+        sort: sortStrings,
+      },
+      {
+        name: 'month',
+        label: 'Mois',
+        sortable: true,
+        field: 'month',
+        sort: (a, b) => ascendingSort(CompaniDate(a, MM_YYYY), CompaniDate(b, MM_YYYY)),
+        format: row => CompaniDate(row, MM_YYYY).format('LLLL yyyy'),
+        align: 'left',
+      },
+    ]);
 
     const course = computed(() => $store.state.course.course);
 
@@ -175,6 +212,7 @@ export default {
       followUpMissingInfo,
       downloadAttendanceSheet,
       vendorRole,
+      isVendorInterface,
     } = useCourses(course);
     const { learners, getFollowUp, learnersLoading } = useTraineeFollowUp(profileId);
 
@@ -229,6 +267,8 @@ export default {
     const selfPositionningHistoryValidatedCount = computed(() => questionnaires.value
       .flatMap(q => q.histories.filter(h => !!h.isValidated))
       .length);
+
+    const isMonthlyCertificateMode = computed(() => course.value.certificateGenerationMode === MONTHLY);
 
     const goToQuestionnaireAnswers = questionnaireType => ({
       name: 'ni pedagogy questionnaire answers',
@@ -364,9 +404,19 @@ export default {
       }
     );
 
+    const {
+      tableLoading,
+      pagination: completionCertificatePagination,
+      getCompletionCertificates,
+    } = useCompletionCertificates(completionCertificates);
+
     const created = async () => {
       const promises = [getFollowUp(), getUnsubscribedAttendances()];
       if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
+
+      if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
+        promises.push(getCompletionCertificates({ course: course.value._id }));
+      }
 
       await Promise.all(promises);
     };
@@ -390,6 +440,11 @@ export default {
       OFFICIAL,
       CUSTOM,
       START_COURSE,
+      completionCertificates,
+      completionCertificatePagination,
+      completionCertificateColumns,
+      tableLoading,
+      isVendorInterface,
       // Computed
       course,
       courseHasElearningStep,
@@ -408,6 +463,7 @@ export default {
       loggedUserIsCourseTrainer,
       endSelfPositionningHistoryCount,
       selfPositionningHistoryValidatedCount,
+      isMonthlyCertificateMode,
       // Methods
       get,
       formatQuantity,
