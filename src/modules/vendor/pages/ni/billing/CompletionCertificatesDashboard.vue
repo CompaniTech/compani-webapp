@@ -2,11 +2,13 @@
   <q-page padding class="vendor-background q-pb-xl">
     <ni-profile-header title="Certificats de réalisation">
       <template #title>
-        <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
-          @update:model-value="updateSelectedMonths" class="selector" />
+          <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
+            @update:model-value="updateSelectedMonths" class="selector" />
       </template>
     </ni-profile-header>
-    <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates" :columns="columns"
+    <company-select v-if="filteredCompletionCertificates.length" label="Structure" clearable class="company-select"
+      :company-options="companyOptions" :company="selectedCompany" @update="updateSelectedCompany" />
+    <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
       :loading="tableLoading" v-model:pagination="pagination" />
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
@@ -15,16 +17,19 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { useMeta } from 'quasar';
+import { ref, watch, computed } from 'vue';
+import sortedUniqBy from 'lodash/sortedUniqBy';
 import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative } from '@components/popup/notify';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
+import CompanySelect from '@components/form/CompanySelect';
 import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { formatIdentity, sortStrings } from '@helpers/utils';
+import { formatIdentity, sortStrings, formatAndSortCompanyOptions } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
 
@@ -34,11 +39,16 @@ export default {
     'ni-profile-header': ProfileHeader,
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
+    'company-select': CompanySelect,
   },
   setup () {
+    const metaInfo = { title: 'Certificats réalisation mensuels' };
+    useMeta(metaInfo);
+
     const selectedMonths = ref([]);
     const completionCertificates = ref([]);
     const monthOptions = ref([]);
+    const selectedCompany = ref('');
     const tableLoading = ref(false);
     const pagination = ref({ page: 1, rowsPerPage: 15 });
     const columns = ref([
@@ -79,6 +89,26 @@ export default {
       },
     ]);
 
+    const companyOptions = computed(() => {
+      const companiesCertificates = completionCertificates.value.map(c => c.course.companies).flat();
+      const formattedCompanies = [
+        { label: 'Toutes les structures', value: '' },
+        ...formatAndSortCompanyOptions(companiesCertificates),
+      ];
+
+      return sortedUniqBy(formattedCompanies, 'value');
+    });
+
+    const filteredCompletionCertificates = computed(() => {
+      if (!selectedCompany.value) return completionCertificates.value;
+
+      return completionCertificates.value
+        .filter((c) => {
+          const companiesIds = c.course.companies.map(company => company._id);
+          return companiesIds.includes(selectedCompany.value);
+        });
+    });
+
     const getMonthOptions = () => {
       // can get monthly completion certificate from 02-2025
       const startDate = CompaniDate('2025-02-01T09:00:00.000Z').startOf(MONTH).toISO();
@@ -106,11 +136,15 @@ export default {
       }
     };
 
-    const updateSelectedMonths = (months) => { selectedMonths.value = months; };
+    watch(completionCertificates, () => {
+      if (!completionCertificates.value.length) selectedCompany.value = '';
+    });
 
-    const created = () => {
-      getMonthOptions();
-    };
+    const updateSelectedMonths = months => (selectedMonths.value = months);
+
+    const updateSelectedCompany = value => (selectedCompany.value = value);
+
+    const created = () => getMonthOptions();
 
     created();
 
@@ -128,8 +162,13 @@ export default {
       columns,
       tableLoading,
       pagination,
+      selectedCompany,
+      // Computed
+      companyOptions,
+      filteredCompletionCertificates,
       // Methods
       updateSelectedMonths,
+      updateSelectedCompany,
     };
   },
 };
@@ -137,4 +176,7 @@ export default {
 <style lang="sass" scoped>
 .selector
   width: 50%
+
+.company-select
+  width: 30%
 </style>
