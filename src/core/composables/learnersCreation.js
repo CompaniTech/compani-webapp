@@ -280,7 +280,11 @@ export const useLearnersCreation = (
 
   const resetLearnerCreationModal = () => {
     firstStep.value = true;
-    newLearner.value = { ...clear(newLearner.value), userCompanyStartDate: CompaniDate().startOf(DAY).toISO() };
+    newLearner.value = {
+      ...clear(newLearner.value),
+      contact: { phone: '', countryCode: '+33' },
+      userCompanyStartDate: CompaniDate().startOf(DAY).toISO(),
+    };
     learnerValidation.value.newLearner.$reset();
     learnerAlreadyExists.value = false;
     disableUserInfoEdition.value = false;

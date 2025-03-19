@@ -16,7 +16,8 @@
         <div class="row">
           <phone-select in-modal :contact="newUser.contact" :required-field="!disableUserInfo"
             @blur="validations.contact.phone.$touch" :validation="validations.contact" :disable="disableUserInfo"
-            :error-message="phoneNbrError(validations.contact)" @update="update($event.trim(), 'contact.phone')" />
+            :error-message="phoneNbrError(validations.contact)"
+            @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
         </div>
         <company-select in-modal :company-options="companyOptions" :company="newUser.company"
           @update="update($event.trim(), 'company')" required-field :validation="validations.company"
