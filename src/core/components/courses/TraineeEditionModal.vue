@@ -9,11 +9,9 @@
       <ni-input in-modal caption="Nom" :model-value="editedTrainee.identity.lastname"
         :error="validations.identity.lastname.$error" @blur="validations.identity.lastname.$touch"
         required-field @update:model-value="update($event, 'identity.lastname')" />
-      <div class="row">
-        <phone-select in-modal :contact="editedTrainee.contact" required-field @blur="validations.contact.phone.$touch"
-          :validation="validations.contact" :error-message="phoneNbrError(validations.contact)"
-          @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
-      </div>
+      <phone-select in-modal :contact="editedTrainee.contact" required-field @blur="validations.contact.phone.$touch"
+        :validation="validations.contact" :error-message="phoneNbrError(validations.contact)"
+        @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" label="Éditer la personne" icon-right="add" color="white"
           :loading="loading" @click="submit" />

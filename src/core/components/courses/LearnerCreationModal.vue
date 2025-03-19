@@ -13,12 +13,10 @@
         <ni-input in-modal :model-value="newUser.identity.lastname" :error="validations.identity.lastname.$error"
           required-field @blur="validations.identity.lastname.$touch" caption="Nom"
           @update:model-value="update($event, 'identity.lastname')" :disable="disableUserInfo" />
-        <div class="row">
-          <phone-select in-modal :contact="newUser.contact" :required-field="!disableUserInfo"
-            @blur="validations.contact.phone.$touch" :validation="validations.contact" :disable="disableUserInfo"
-            :error-message="phoneNbrError(validations.contact)"
-            @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
-        </div>
+        <phone-select in-modal :contact="newUser.contact" :required-field="!disableUserInfo"
+          @blur="validations.contact.phone.$touch" :validation="validations.contact" :disable="disableUserInfo"
+          :error-message="phoneNbrError(validations.contact)"
+          @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
         <company-select in-modal :company-options="companyOptions" :company="newUser.company"
           @update="update($event.trim(), 'company')" required-field :validation="validations.company"
           :disable="disableCompany" />
