@@ -161,7 +161,10 @@ export const useLearnersCreation = (
       firstname: get(user, 'identity.firstname'),
       lastname: get(user, 'identity.lastname'),
     };
-    newLearner.value.contact = { phone: get(user, 'contact.phone') };
+    newLearner.value.contact = {
+      phone: get(user, 'contact.phone'),
+      countryCode: get(user, 'contact.countryCode') || '+33',
+    };
 
     if (lastUserCompany && lastUserCompany.endDate && CompaniDate().isBefore(lastUserCompany.endDate)) {
       newLearner.value.userCompanyStartDate = CompaniDate(lastUserCompany.endDate).startOf(DAY).add('P1D').toISO();
