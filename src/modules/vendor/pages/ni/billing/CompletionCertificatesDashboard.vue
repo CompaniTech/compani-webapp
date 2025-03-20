@@ -6,10 +6,10 @@
             @update:model-value="updateSelectedMonths" class="selector" />
       </template>
     </ni-profile-header>
-    <div v-if="filteredCompletionCertificates.length" class="filters-container">
+    <div v-if="displayFilters" class="filters-container">
+      <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
       <company-select label="Structure" clearable :company-options="companyOptions" :company="selectedCompany"
         @update="updateSelectedCompany" />
-      <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
     </div>
     <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
       :loading="tableLoading" v-model:pagination="pagination" />
@@ -91,6 +91,9 @@ export default {
       },
     ]);
 
+    const displayFilters = computed(() => filteredCompletionCertificates.value.length ||
+      selectedCompany.value || selectedHolding.value);
+
     const companyOptions = computed(() => {
       const companiesCertificates = completionCertificates.value.map(c => get(c, 'course.companies', [])).flat();
       const formattedCompanies = [
@@ -103,7 +106,7 @@ export default {
 
     const holdingOptions = computed(() => {
       const holdingCertificates = completionCertificates.value
-        .map(c => c.course.companies
+        .map(c => get(c, 'course.companies', [])
           .filter(company => company.holding)
           .map(company => company.holding))
         .flat();
@@ -116,24 +119,25 @@ export default {
     });
 
     const filteredCompletionCertificates = computed(() => {
+      let filteredCC = completionCertificates.value;
       if (selectedCompany.value) {
-        return completionCertificates.value
-          .filter((c) => {
-            const companiesIds = c.course.companies.map(company => company._id);
-            return companiesIds.includes(selectedCompany.value);
-          });
+        filteredCC = filteredCC.filter((cc) => {
+          const companiesIds = get(cc, 'course.companies', []).map(company => company._id);
+
+          return companiesIds.includes(selectedCompany.value);
+        });
       }
 
       if (selectedHolding.value) {
-        return completionCertificates.value.filter((c) => {
-          const holdingCertificates = c.course.companies
+        filteredCC = filteredCC.filter((cc) => {
+          const holdingCertificates = get(cc, 'course.companies', [])
             .filter(company => company.holding).map(company => company.holding._id);
 
           return holdingCertificates.includes(selectedHolding.value);
         });
       }
 
-      return completionCertificates.value;
+      return filteredCC;
     });
 
     const {
@@ -197,6 +201,7 @@ export default {
       columns,
       completionCertificates,
       holdingOptions,
+      displayFilters,
       // Methods
       updateSelectedMonths,
       updateSelectedCompany,
