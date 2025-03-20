@@ -39,7 +39,7 @@ import { required, email } from '@vuelidate/validators';
 import get from 'lodash/get';
 import { TRAINEE } from '@data/constants';
 import { formatPhone } from '@helpers/utils';
-import { frPhoneNumber } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode } from '@helpers/vuelidateCustomVal';
 import Button from '@components/Button';
 import TesterCreationModal from 'src/modules/vendor/components/programs/TesterCreationModal';
 import ResponsiveTable from '@components/table/ResponsiveTable';
@@ -96,7 +96,7 @@ export default {
     const newTester = ref({
       local: { email: '' },
       identity: { firstname: '', lastname: '' },
-      contact: { phone: '' },
+      contact: { phone: '', countryCode: '+33' },
     });
     const firstStep = ref(true);
     const modalLoading = ref(false);
@@ -105,7 +105,7 @@ export default {
       newTester: {
         local: { email: { required, email } },
         identity: { lastname: { required } },
-        contact: { phone: { required, frPhoneNumber } },
+        contact: { phone: { required, frPhoneNumber }, countryCode: { required, countryCode } },
       },
     }));
 
@@ -173,7 +173,7 @@ export default {
       newTester.value = {
         local: { email: '' },
         identity: { firstname: '', lastname: '' },
-        contact: { phone: '' },
+        contact: { phone: '', countryCode: '+33' },
       };
       v$.value.newTester.$reset();
     };

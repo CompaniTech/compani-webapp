@@ -12,9 +12,9 @@
         <ni-input in-modal :model-value="newTester.identity.lastname" required-field caption="Nom"
           @blur="validations.identity.lastname.$touch" :error="validations.identity.lastname.$error"
           @update:model-value="update($event, 'identity.lastname')" />
-        <ni-input in-modal :model-value="newTester.contact.phone" last required-field caption="Téléphone"
-          @blur="validations.contact.phone.$touch" :error="validations.contact.phone.$error"
-          :error-message="phoneNbrError(validations)" @update:model-value="update($event.trim(), 'contact.phone')" />
+        <phone-select in-modal :contact="newTester.contact" required-field :validation="validations.contact"
+          @blur="validations.contact.phone.$touch" :error-message="phoneNbrError(validations.contact)" last
+          @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
       </template>
       <template #footer>
         <q-btn v-if="firstStep" no-caps class="full-width modal-btn" label="Suivant" color="primary"
@@ -26,14 +26,15 @@
 </template>
 
 <script>
+import { toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
+import PhoneSelect from '@components/form/PhoneSelect';
 import Input from '@components/form/Input';
-import { userMixin } from '@mixins/userMixin';
+import { useUser } from '@composables/user';
 import set from 'lodash/set';
 
 export default {
   name: 'TesterCreationModal',
-  mixins: [userMixin],
   props: {
     modelValue: { type: Boolean, default: false },
     firstStep: { type: Boolean, default: true },
@@ -45,23 +46,33 @@ export default {
   components: {
     'ni-input': Input,
     'ni-modal': Modal,
+    'phone-select': PhoneSelect,
   },
-  methods: {
-    hide () {
-      this.$emit('hide');
-    },
-    input (event) {
-      this.$emit('update:model-value', event);
-    },
-    nextStep () {
-      this.$emit('next-step');
-    },
-    submit () {
-      this.$emit('submit');
-    },
-    update (event, path) {
-      this.$emit('update:new-tester', set({ ...this.newTester }, path, event));
-    },
+  setup (props, { emit }) {
+    const { newTester } = toRefs(props);
+
+    const { emailError, phoneNbrError } = useUser();
+
+    const hide = () => emit('hide');
+
+    const input = event => emit('update:model-value', event);
+
+    const nextStep = () => emit('next-step');
+
+    const submit = () => emit('submit');
+
+    const update = (event, path) => emit('update:new-tester', set({ ...newTester.value }, path, event));
+
+    return {
+      // Methods
+      hide,
+      input,
+      nextStep,
+      submit,
+      update,
+      emailError,
+      phoneNbrError,
+    };
   },
 };
 </script>
