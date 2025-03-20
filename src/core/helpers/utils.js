@@ -104,8 +104,9 @@ export const formatIdentity = (identity, format) => {
   return values.join(' ');
 };
 
-export const formatPhone = phoneNumber => (phoneNumber
-  ? phoneNumber.replace(/^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5')
+export const formatPhone = contact => (contact.phone
+  ? `${contact.countryCode} ${contact.phone.substring(1)
+    .replace(/^(\d{1})(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5')}`
   : '');
 
 export const formatPhoneForPayload = phoneNumber => (phoneNumber

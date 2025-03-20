@@ -101,7 +101,7 @@ export default {
         name: 'phone',
         label: 'Téléphone',
         align: 'left',
-        field: row => get(row, 'contact.phone') || '',
+        field: row => (get(row, 'contact.phone') ? row.contact : ''),
         format: formatPhone,
       },
       {

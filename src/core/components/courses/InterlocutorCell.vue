@@ -8,7 +8,7 @@
           <div class="text-copper-grey-700">{{ formatIdentity(interlocutor.identity, 'FL') }}</div>
           <div class="text-copper-grey-500 text-14">{{ interlocutor.local.email }}</div>
           <div v-if="get(interlocutor, 'contact.phone')" class="phone">
-            {{ formatPhone(interlocutor.contact.phone) }}
+            {{ formatPhone(interlocutor.contact) }}
           </div>
           <div v-else class="row items-center text-14">
             <div class="dot dot-orange" />
