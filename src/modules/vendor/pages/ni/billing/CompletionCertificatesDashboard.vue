@@ -12,7 +12,26 @@
         @update="updateSelectedCompany" />
     </div>
     <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
-      :loading="tableLoading" v-model:pagination="pagination" />
+      :loading="tableLoading" v-model:pagination="pagination">
+      <template #body="{ props }">
+        <q-tr :props="props">
+          <q-td :props="props" v-for="col in props.cols" :key="col.name" :data-label="col.label" :class="col.name"
+            :style="col.style">
+              <template v-if="col.name === 'actions'">
+                <div v-if="has(props, 'row.file.link')">
+                  <ni-button icon="file_download" color="primary" type="a" :href="props.row.file.link" />
+                </div>
+                <div v-else>
+                  <ni-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
+                </div>
+              </template>
+              <template v-else>
+                {{ col.value }}
+              </template>
+          </q-td>
+        </q-tr>
+      </template>
+    </ni-simple-table>
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
     </template>
@@ -23,18 +42,22 @@
 import { useMeta } from 'quasar';
 import { ref, watch, computed } from 'vue';
 import get from 'lodash/get';
+import has from 'lodash/has';
 import sortedUniqBy from 'lodash/sortedUniqBy';
+import CompletionCertificates from '@api/CompletionCertificates';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
 import CompanySelect from '@components/form/CompanySelect';
-import { MONTH, MM_YYYY } from '@data/constants';
+import Button from '@components/Button';
+import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { useCompletionCertificates } from '@composables/completionCertificates';
 import { formatIdentity, sortStrings, formatAndSortCompanyOptions, formatAndSortOptions } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
+import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 
 export default {
   name: 'CompletionCertificatesDashboard',
@@ -43,6 +66,7 @@ export default {
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
     'company-select': CompanySelect,
+    'ni-button': Button,
   },
   setup () {
     const metaInfo = { title: 'Certificats réalisation mensuels' };
@@ -88,6 +112,12 @@ export default {
           return ascendingSort(valueA, valueB);
         },
         align: 'left',
+      },
+      {
+        name: 'actions',
+        label: '',
+        field: '',
+        align: 'right',
       },
     ]);
 
@@ -173,6 +203,19 @@ export default {
 
     const updateSelectedCompany = value => (selectedCompany.value = value);
 
+    const generateCompletionCertificate = async (completionCertificateId) => {
+      try {
+        console.log('je passe ici')
+        const completion = await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
+        console.log('completion', completion);
+        NotifyPositive('Certificat de réalisation généré.');
+        await getCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la génération du certificat.');
+      }
+    };
+
     const created = () => getMonthOptions();
 
     created();
@@ -207,6 +250,9 @@ export default {
       // Methods
       updateSelectedMonths,
       updateSelectedCompany,
+      generateCompletionCertificate,
+      get,
+      has,
     };
   },
 };
