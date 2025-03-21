@@ -88,7 +88,7 @@ export default {
       phoneNbrError,
     } = useUser(refreshUser, v$, emailLock, tmpInput, userPhone);
 
-    const mounted = async () => {
+    const created = async () => {
       v$.value.userProfile.$touch();
     };
 
@@ -96,7 +96,7 @@ export default {
       if (tmpInput.value === '') tmpInput.value = get(userProfile.value, path);
     };
 
-    mounted();
+    created();
 
     return {
       // Data

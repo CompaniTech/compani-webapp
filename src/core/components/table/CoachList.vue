@@ -168,9 +168,7 @@ export default {
       try {
         loading.value = true;
         v$.value.newCoach.local.email.$touch();
-        if (v$.value.newCoach.local.email.$error || !newCoach.value.local.email) {
-          return NotifyWarning('Champs invalides');
-        }
+        if (v$.value.newCoach.local.email.$error) return NotifyWarning('Champs invalides');
         const userInfo = await Users.exists({ email: newCoach.value.local.email });
         const { user } = userInfo;
 

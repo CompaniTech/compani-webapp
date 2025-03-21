@@ -16,8 +16,8 @@
         @blur="validations.identity.lastname.$touch" @update:model-value="update($event, 'identity.lastname')"
         required-field caption="Nom" />
       <phone-select in-modal :contact="newCoach.contact" :validation="validations.contact"
-        @blur="validations.contact.phone.$touch" :error-message="phoneNbrError"
-        @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
+        @blur="path => validations.contact[path].$touch()" :error-message="phoneNbrError"
+        @update="($event, path) => update($event.trim(), `contact.${path}`)" />
     </template>
     <q-checkbox dense label="Envoyer un email à la création du compte" :model-value="newCoach.sendEmail"
       @update:model-value="update($event, 'sendEmail')" class="margin-input last" />

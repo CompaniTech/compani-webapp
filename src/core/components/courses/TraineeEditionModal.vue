@@ -9,9 +9,9 @@
       <ni-input in-modal caption="Nom" :model-value="editedTrainee.identity.lastname"
         :error="validations.identity.lastname.$error" @blur="validations.identity.lastname.$touch"
         required-field @update:model-value="update($event, 'identity.lastname')" />
-      <phone-select in-modal :contact="editedTrainee.contact" required-field @blur="validations.contact.phone.$touch"
-        :validation="validations.contact" :error-message="phoneNbrError(validations.contact)"
-        @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
+      <phone-select in-modal :contact="editedTrainee.contact" required-field :validation="validations.contact"
+        @blur="path => validations.contact[path].$touch()" :error-message="phoneNbrError(validations.contact)"
+        @update="($event, path) => update($event.trim(), `contact.${path}`)" />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" label="Éditer la personne" icon-right="add" color="white"
           :loading="loading" @click="submit" />
@@ -47,21 +47,13 @@ export default {
     const { editedTrainee } = toRefs(props);
     const { emailError, phoneNbrError } = useUser();
 
-    const hide = () => {
-      emit('hide');
-    };
+    const hide = () => emit('hide');
 
-    const input = (event) => {
-      emit('update:model-value', event);
-    };
+    const input = event => emit('update:model-value', event);
 
-    const submit = () => {
-      emit('submit');
-    };
+    const submit = () => emit('submit');
 
-    const update = (event, path) => {
-      emit('update:edited-trainee', set({ ...editedTrainee.value }, path, event));
-    };
+    const update = (event, path) => emit('update:edited-trainee', set({ ...editedTrainee.value }, path, event));
 
     return {
       // Methods

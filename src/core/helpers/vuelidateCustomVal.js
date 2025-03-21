@@ -14,7 +14,7 @@ export const frPhoneNumber = (value) => {
 export const countryCode = (value) => {
   if (!value) return false;
 
-  return /^\+(?:[1-9]|[1-9][0-9]|[1-9][0-9][0-9])$/.test(value) || false;
+  return /^\+([1-9][0-9]{0,2})$/.test(value) || false;
 };
 
 export const frZipCode = (value) => {

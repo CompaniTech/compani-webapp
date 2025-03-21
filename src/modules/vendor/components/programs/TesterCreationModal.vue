@@ -13,8 +13,8 @@
           @blur="validations.identity.lastname.$touch" :error="validations.identity.lastname.$error"
           @update:model-value="update($event, 'identity.lastname')" />
         <phone-select in-modal :contact="newTester.contact" required-field :validation="validations.contact"
-          @blur="validations.contact.phone.$touch" :error-message="phoneNbrError(validations.contact)" last
-          @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
+          @blur="path => validations.contact[path].$touch()" :error-message="phoneNbrError(validations.contact)" last
+          @update="($event, path) => update($event.trim(), `contact.${path}`)" />
       </template>
       <template #footer>
         <q-btn v-if="firstStep" no-caps class="full-width modal-btn" label="Suivant" color="primary"

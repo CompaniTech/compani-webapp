@@ -14,9 +14,9 @@
           required-field @blur="validations.identity.lastname.$touch" caption="Nom"
           @update:model-value="update($event, 'identity.lastname')" :disable="disableUserInfo" />
         <phone-select in-modal :contact="newUser.contact" :required-field="!disableUserInfo"
-          @blur="validations.contact.phone.$touch" :validation="validations.contact" :disable="disableUserInfo"
-          :error-message="phoneNbrError(validations.contact)"
-          @update="($event, path) => update($event.trim(), `contact[${path}]`)" />
+          @blur="path => validations.contact[path].$touch()" :validation="validations.contact"
+          :disable="disableUserInfo" :error-message="phoneNbrError(validations.contact)"
+          @update="($event, path) => update($event.trim(), `contact.${path}`)" />
         <company-select in-modal :company-options="companyOptions" :company="newUser.company"
           @update="update($event.trim(), 'company')" required-field :validation="validations.company"
           :disable="disableCompany" />
@@ -72,25 +72,15 @@ export default {
 
     const { emailError, phoneNbrError } = useUser();
 
-    const hide = () => {
-      emit('hide');
-    };
+    const hide = () => emit('hide');
 
-    const input = (event) => {
-      emit('update:model-value', event);
-    };
+    const input = event => emit('update:model-value', event);
 
-    const nextStep = () => {
-      emit('next-step');
-    };
+    const nextStep = () => emit('next-step');
 
-    const submit = () => {
-      emit('submit');
-    };
+    const submit = () => emit('submit');
 
-    const update = (event, path) => {
-      emit('update:new-user', set({ ...newUser.value }, path, event));
-    };
+    const update = (event, path) => emit('update:new-user', set({ ...newUser.value }, path, event));
 
     return {
       // Computed
