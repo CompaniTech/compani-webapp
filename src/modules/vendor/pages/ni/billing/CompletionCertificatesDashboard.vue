@@ -2,8 +2,8 @@
   <q-page padding class="vendor-background q-pb-xl">
     <ni-profile-header title="Certificats de réalisation">
       <template #title>
-          <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
-            @update:model-value="updateSelectedMonths" class="selector" />
+        <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
+          @update:model-value="updateSelectedMonths" class="selector" />
       </template>
     </ni-profile-header>
     <div v-if="displayFilters" class="filters-container">
@@ -163,8 +163,7 @@ export default {
     };
 
     watch(completionCertificates, () => {
-      if (!completionCertificates.value.length) selectedCompany.value = '';
-      if (!completionCertificates.value.length) selectedHolding.value = '';
+      if (!completionCertificates.value.length) (selectedCompany.value = '') && (selectedHolding.value = '');
     });
 
     const updateSelectedMonths = months => (selectedMonths.value = months);
