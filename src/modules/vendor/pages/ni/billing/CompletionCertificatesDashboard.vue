@@ -163,7 +163,10 @@ export default {
     };
 
     watch(completionCertificates, () => {
-      if (!completionCertificates.value.length) (selectedCompany.value = '') && (selectedHolding.value = '');
+      if (!completionCertificates.value.length) {
+        selectedCompany.value = '';
+        selectedHolding.value = '';
+      }
     });
 
     const updateSelectedMonths = months => (selectedMonths.value = months);
