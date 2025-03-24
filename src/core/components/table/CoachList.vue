@@ -281,8 +281,8 @@ export default {
         )
       );
       if (get(user, 'contact.phone')) userPayload.contact.phone = formatPhoneForPayload(user.contact.phone);
-      else if (has(user, 'contact.phone')) userPayload.contact.countryCode = '';
-      else return omit(userPayload, 'contact.countryCode');
+      else if (!has(user, 'contact.phone')) return omit(userPayload, 'contact.countryCode');
+
       return userPayload;
     };
 
