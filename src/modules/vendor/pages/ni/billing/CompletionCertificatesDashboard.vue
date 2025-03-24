@@ -19,7 +19,7 @@
             :style="col.style">
               <template v-if="col.name === 'actions'">
                 <div v-if="has(props, 'row.file.link')">
-                  <ni-button icon="file_download" color="primary" type="a" :href="props.row.file.link" />
+                  <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
                 </div>
                 <div v-else>
                   <ni-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
@@ -203,13 +203,16 @@ export default {
 
     const updateSelectedCompany = value => (selectedCompany.value = value);
 
+    const refreshCompletionCertificates = async () => {
+      await getCompletionCertificates({ months: selectedMonths.value });
+    };
+
     const generateCompletionCertificate = async (completionCertificateId) => {
       try {
-        console.log('je passe ici')
-        const completion = await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
-        console.log('completion', completion);
+        await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
         NotifyPositive('Certificat de réalisation généré.');
-        await getCompletionCertificates();
+
+        await refreshCompletionCertificates();
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la génération du certificat.');
