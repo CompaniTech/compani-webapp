@@ -114,7 +114,7 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
         { contact: { phone: formatPhoneForPayload(userPhone.value.phone), countryCode: userPhone.value.countryCode } }
       );
     } else if (path === 'phone' && !userPhone.value.phone) {
-      await savePhone(path, { contact: { phone: '', countryCode: '' } });
+      await savePhone(path, { contact: { phone: '' } });
     }
   };
 
