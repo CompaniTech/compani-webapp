@@ -25,9 +25,7 @@
                   <ni-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
                 </div>
               </template>
-              <template v-else>
-                {{ col.value }}
-              </template>
+              <template v-else> {{ col.value }} </template>
           </q-td>
         </q-tr>
       </template>
@@ -50,6 +48,7 @@ import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
 import CompanySelect from '@components/form/CompanySelect';
 import Button from '@components/Button';
+import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -57,7 +56,6 @@ import { useCompletionCertificates } from '@composables/completionCertificates';
 import { formatIdentity, sortStrings, formatAndSortCompanyOptions, formatAndSortOptions } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
-import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 
 export default {
   name: 'CompletionCertificatesDashboard',
