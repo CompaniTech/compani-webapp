@@ -26,7 +26,7 @@ import {
   formatPhoneForPayload,
   getLastVersion,
 } from '@helpers/utils';
-import { frPhoneNumber } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode } from '@helpers/vuelidateCustomVal';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 
 export const useLearnersCreation = (
@@ -38,7 +38,7 @@ export const useLearnersCreation = (
 ) => {
   const newLearner = ref({
     identity: { firstname: '', lastname: '' },
-    contact: { phone: '' },
+    contact: { phone: '', countryCode: '+33' },
     local: { email: '' },
     company: '',
     userCompanyStartDate: CompaniDate().startOf(DAY).toISO(),
@@ -69,7 +69,10 @@ export const useLearnersCreation = (
     newLearner: {
       identity: { lastname: { required } },
       local: { email: { required, email } },
-      contact: { phone: { required: requiredIf(!disableUserInfoEdition.value), frPhoneNumber } },
+      contact: {
+        phone: { required: requiredIf(!disableUserInfoEdition.value), frPhoneNumber },
+        countryCode: { required: requiredIf(!disableUserInfoEdition.value), countryCode },
+      },
       company: { required },
       userCompanyStartDate: { required },
     },
@@ -158,7 +161,10 @@ export const useLearnersCreation = (
       firstname: get(user, 'identity.firstname'),
       lastname: get(user, 'identity.lastname'),
     };
-    newLearner.value.contact = { phone: get(user, 'contact.phone') };
+    newLearner.value.contact = {
+      phone: get(user, 'contact.phone'),
+      countryCode: get(user, 'contact.countryCode') || '+33',
+    };
 
     if (lastUserCompany && lastUserCompany.endDate && CompaniDate().isBefore(lastUserCompany.endDate)) {
       newLearner.value.userCompanyStartDate = CompaniDate(lastUserCompany.endDate).startOf(DAY).add('P1D').toISO();
@@ -277,7 +283,11 @@ export const useLearnersCreation = (
 
   const resetLearnerCreationModal = () => {
     firstStep.value = true;
-    newLearner.value = { ...clear(newLearner.value), userCompanyStartDate: CompaniDate().startOf(DAY).toISO() };
+    newLearner.value = {
+      ...clear(newLearner.value),
+      contact: { phone: '', countryCode: '+33' },
+      userCompanyStartDate: CompaniDate().startOf(DAY).toISO(),
+    };
     learnerValidation.value.newLearner.$reset();
     learnerAlreadyExists.value = false;
     disableUserInfoEdition.value = false;

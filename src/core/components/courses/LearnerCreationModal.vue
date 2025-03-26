@@ -13,10 +13,10 @@
         <ni-input in-modal :model-value="newUser.identity.lastname" :error="validations.identity.lastname.$error"
           required-field @blur="validations.identity.lastname.$touch" caption="Nom"
           @update:model-value="update($event, 'identity.lastname')" :disable="disableUserInfo" />
-        <ni-input in-modal :model-value="newUser.contact.phone" :required-field="!disableUserInfo"
-          caption="Téléphone" @blur="validations.contact.phone.$touch" :error="validations.contact.phone.$error"
-          :error-message="phoneNbrError(validations)" @update:model-value="update($event.trim(), 'contact.phone')"
-          :disable="disableUserInfo" />
+        <phone-select in-modal :contact="newUser.contact" :required-field="!disableUserInfo"
+          @blur="path => validations.contact[path].$touch()" :validation="validations.contact"
+          :disable="disableUserInfo" :error-message="phoneNbrError(validations.contact)"
+          @update="($event, path) => update($event.trim(), `contact.${path}`)" />
         <company-select in-modal :company-options="companyOptions" :company="newUser.company"
           @update="update($event.trim(), 'company')" required-field :validation="validations.company"
           :disable="disableCompany" />
@@ -34,17 +34,18 @@
 </template>
 
 <script>
+import { computed, toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
 import CompanySelect from '@components/form/CompanySelect';
+import PhoneSelect from '@components/form/PhoneSelect';
 import Input from '@components/form/Input';
 import DateInput from '@components/form/DateInput';
 import Button from '@components/Button';
-import { userMixin } from '@mixins/userMixin';
+import { useUser } from '@composables/user';
 import set from 'lodash/set';
 
 export default {
   name: 'LearnerCreationModal',
-  mixins: [userMixin],
   props: {
     modelValue: { type: Boolean, default: false },
     firstStep: { type: Boolean, default: true },
@@ -60,31 +61,39 @@ export default {
     'ni-input': Input,
     'ni-modal': Modal,
     'company-select': CompanySelect,
+    'phone-select': PhoneSelect,
     'ni-button': Button,
     'ni-date-input': DateInput,
   },
-  computed: {
-    secondStepFooterLabel () {
-      return this.learnerEdition ? 'Suivant' : 'Ajouter la personne';
-    },
-  },
   emits: ['hide', 'update:model-value', 'submit', 'next-step', 'update:new-user'],
-  methods: {
-    hide () {
-      this.$emit('hide');
-    },
-    input (event) {
-      this.$emit('update:model-value', event);
-    },
-    nextStep () {
-      this.$emit('next-step');
-    },
-    submit () {
-      this.$emit('submit');
-    },
-    update (event, path) {
-      this.$emit('update:new-user', set({ ...this.newUser }, path, event));
-    },
+  setup (props, { emit }) {
+    const { newUser, learnerEdition } = toRefs(props);
+    const secondStepFooterLabel = computed(() => (learnerEdition.value ? 'Suivant' : 'Ajouter la personne'));
+
+    const { emailError, phoneNbrError } = useUser();
+
+    const hide = () => emit('hide');
+
+    const input = event => emit('update:model-value', event);
+
+    const nextStep = () => emit('next-step');
+
+    const submit = () => emit('submit');
+
+    const update = (event, path) => emit('update:new-user', set({ ...newUser.value }, path, event));
+
+    return {
+      // Computed
+      secondStepFooterLabel,
+      // Methods
+      hide,
+      input,
+      nextStep,
+      submit,
+      update,
+      emailError,
+      phoneNbrError,
+    };
   },
 };
 </script>

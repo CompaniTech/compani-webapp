@@ -52,7 +52,7 @@ import Button from '@components/Button';
 import TraineeEditionModal from '@components/courses/TraineeEditionModal';
 import ResponsiveTable from '@components/table/ResponsiveTable';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
-import { frPhoneNumber } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode } from '@helpers/vuelidateCustomVal';
 import ConnectedDot from './ConnectedDot';
 
 export default {
@@ -101,7 +101,7 @@ export default {
         name: 'phone',
         label: 'Téléphone',
         align: 'left',
-        field: row => get(row, 'contact.phone') || '',
+        field: row => (get(row, 'contact.phone') ? row.contact : ''),
         format: formatPhone,
       },
       {
@@ -125,7 +125,7 @@ export default {
     const traineeRules = {
       editedTrainee: {
         identity: { lastname: { required } },
-        contact: { phone: { required, frPhoneNumber } },
+        contact: { phone: { required, frPhoneNumber }, countryCode: { required, countryCode } },
       },
     };
 
@@ -148,7 +148,11 @@ export default {
     const openTraineeEditionModal = async (trainee) => {
       editedTrainee.value = {
         ...editedTrainee.value,
-        ...pick(trainee, ['_id', 'identity.firstname', 'identity.lastname', 'local.email', 'contact.phone']),
+        ...(!trainee.contact.countryCode && { contact: { countryCode: '+33' } }),
+        ...pick(
+          trainee,
+          ['_id', 'identity.firstname', 'identity.lastname', 'local.email', 'contact.phone', 'contact.countryCode']
+        ),
       };
       traineeEditionModal.value = true;
     };
