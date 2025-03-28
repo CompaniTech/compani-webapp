@@ -22,7 +22,7 @@
                   <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
                 </div>
                 <div v-else>
-                  <ni-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
+                  <ni-primary-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
                 </div>
               </template>
               <template v-else> {{ col.value }} </template>
@@ -48,6 +48,7 @@ import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
 import CompanySelect from '@components/form/CompanySelect';
 import Button from '@components/Button';
+import PrimaryButton from '@components/PrimaryButton';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -65,6 +66,7 @@ export default {
     'ni-simple-table': SimpleTable,
     'company-select': CompanySelect,
     'ni-button': Button,
+    'ni-primary-button': PrimaryButton,
   },
   setup () {
     const metaInfo = { title: 'Certificats réalisation mensuels' };
@@ -110,12 +112,14 @@ export default {
           return ascendingSort(valueA, valueB);
         },
         align: 'left',
+        style: 'width: 10%',
       },
       {
         name: 'actions',
         label: '',
         field: '',
         align: 'right',
+        style: 'width: 15%',
       },
     ]);
 
