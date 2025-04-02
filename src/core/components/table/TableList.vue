@@ -4,7 +4,7 @@
       :pagination="pagination" class="table-list" :rows-per-page-options="rowsPerPageOptions"
       @update:pagination="update($event)" :visible-columns="formattedVisibleColumns" :hide-header="hideHeader">
       <template #body="props">
-        <q-tr v-if="isDisplayed(props.row._id)" :no-hover="disabled" :props="props" @click="click(props.row)">
+        <q-tr :no-hover="disabled" :props="props" @click="click(props.row)">
           <q-td v-for="col in props.cols" :key="col.name" :props="props" :data-label="col.label" :style="col.style"
             :class="col.name">
             <router-link :class="{ 'no-event': isEmpty(path), 'directory-text': true }" :to="goTo(props.row)">
@@ -49,7 +49,6 @@ export default {
     rowsPerPageOptions: { type: Array, default: () => [15, 50, 100, 200] },
     path: { type: Object, default: () => ({}) },
     hideHeader: { type: Boolean, default: false },
-    displayRows: { type: Object, default: () => ({}) },
   },
   components: {
     'ni-pagination': Pagination,
@@ -75,9 +74,6 @@ export default {
       if (isEmpty(this.path) || !row._id) return {};
 
       return { name: this.path.name, params: { [this.path.params]: row._id } };
-    },
-    isDisplayed (id) {
-      return isEmpty(this.displayRows) || this.displayRows[id];
     },
     isEmpty,
   },
