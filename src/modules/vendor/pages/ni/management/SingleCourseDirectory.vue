@@ -1,6 +1,6 @@
 <template>
   <q-page class="vendor-background" padding>
-    <ni-directory-header title="Formations de groupe" :display-search-bar="false" />
+    <ni-directory-header title="Formations individuelles" :display-search-bar="false" />
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
       <ni-select :options="holdingFilterOptions" :model-value="selectedHolding" clearable
@@ -9,119 +9,150 @@
         @update="updateSelectedCompany" caption="" />
       <ni-select :options="trainerFilterOptions" :model-value="selectedTrainer" clearable
         @update:model-value="updateSelectedTrainer" />
+      <ni-select :options="traineeFilterOptions" :model-value="selectedTrainee" clearable
+        @update:model-value="updateSelectedTrainee" />
       <ni-select :options="programFilterOptions" :model-value="selectedProgram" clearable
         @update:model-value="updateSelectedProgram" />
-      <ni-select :options="operationsRepresentativeFilterOptions" :model-value="selectedOperationsRepresentative"
-        @update:model-value="updateSelectedOperationsRepresentative" clearable />
-      <ni-select :options="salesRepresentativeFilterOptions" :model-value="selectedSalesRepresentative"
-        @update:model-value="updateSelectedSalesRepresentative" clearable />
-      <ni-date-input :model-value="selectedStartDate" @update:model-value="updateSelectedStartDate"
-        placeholder="Début de période" :max="selectedEndDate" :error="v$.selectedStartDate.$error"
-        error-message="La date de début doit être antérieure à la date de fin" @blur="v$.selectedStartDate.$touch" />
-      <ni-date-input :model-value="selectedEndDate" @update:model-value="updateSelectedEndDate"
-        placeholder="Fin de période" :min="selectedStartDate" :error="v$.selectedEndDate.$error"
-        error-message="La date de fin doit être postérieure à la date de début" @blur="v$.selectedEndDate.$touch" />
-      <ni-select :options="typeFilterOptions" clearable :model-value="selectedType"
-        @update:model-value="updateSelectedType" />
       <ni-select :options="archiveStatusOptions" :model-value="selectedArchiveStatus"
         @update:model-value="updateSelectedArchiveStatus" />
     </div>
-    <div class="q-mb-lg filters-container checkboxes">
-      <q-checkbox dense :model-value="selectedNoAddressInSlots" color="primary" label="Aucune adresse"
-        @update:model-value="updateSelectedNoAddressInSlots" />
-      <q-checkbox dense :model-value="selectedMissingTrainees" color="primary" label="Apprenant(s) manquant(s) (INTRA)"
-        @update:model-value="updateSelectedMissingTrainees" />
-    </div>
-    <ni-trello :active-courses="activeCourses" :archived-courses="archivedCourses" />
+    <ni-table-list :data="courses" :columns="columns" :loading="tableLoading" v-model:pagination="pagination"
+      :path="path" :display-rows="isDisplayed">
+      <template #body="{ col }">
+        <q-item v-if="col.name === 'archived' && !!col.value" class="items-center">
+          <q-icon size="12px" name="circle" class="info-archived" />
+          Archivée
+        </q-item>
+        <q-item v-else>{{ col.value }}</q-item>
+      </template>
+    </ni-table-list>
     <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Ajouter une formation"
       @click="openCourseCreationModal" />
 
     <course-creation-modal v-model="courseCreationModal" v-model:new-course="newCourse" :programs="programs"
-      :companies="companies" :validations="v$.newCourse" :loading="modalLoading" @hide="resetCreationModal"
-      @submit="createCourse" :admin-user-options="adminUserOptions" :holding-options="holdingOptions"
-      :course-types="GROUP_COURSE_TYPES" />
+      :validations="v$.newCourse" :loading="modalLoading" @hide="resetCreationModal"
+      @submit="createCourse" :admin-user-options="adminUserOptions"
+      :trainee-options="traineeOptions" :course-types="SINGLE_TYPE" />
   </q-page>
 </template>
 
 <script>
-import { computed, ref, watch } from 'vue';
 import { useMeta } from 'quasar';
+import { computed, ref, watch } from 'vue';
+import TableList from '@components/table/TableList';
+import DirectoryHeader from '@components/DirectoryHeader';
+import {
+  formatAndSortOptions,
+  formatAndSortIdentityOptions,
+  formatAndSortUserOptions,
+  sortStrings,
+  formatIdentity,
+} from '@helpers/utils';
 import { useStore } from 'vuex';
 import { onBeforeRouteLeave } from 'vue-router';
 import useVuelidate from '@vuelidate/core';
-import { required, requiredIf } from '@vuelidate/validators';
+import { required } from '@vuelidate/validators';
+import compact from 'lodash/compact';
+import get from 'lodash/get';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import Courses from '@api/Courses';
-import Companies from '@api/Companies';
 import Holdings from '@api/Holdings';
 import Programs from '@api/Programs';
 import Users from '@api/Users';
-import DirectoryHeader from '@components/DirectoryHeader';
-import DateInput from '@components/form/DateInput';
 import Select from '@components/form/Select';
 import CompanySelect from '@components/form/CompanySelect';
 import CourseCreationModal from 'src/modules/vendor/components/courses/CourseCreationModal';
-import Trello from '@components/courses/Trello';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseFilters } from '@composables/courseFilters';
 import {
-  INTRA,
-  INTRA_HOLDING,
-  INTER_B2B,
   BLENDED,
   TRAINING_ORGANISATION_MANAGER,
   VENDOR_ADMIN,
   OPERATIONS,
-  DIRECTORY,
   GLOBAL,
+  SINGLE,
   ARCHIVED_COURSES,
-  GROUP_COURSE_TYPES,
+  SINGLE_TYPE,
+  WITHOUT_TRAINER,
+  UNARCHIVED_COURSES,
 } from '@data/constants';
-import { formatAndSortOptions, formatAndSortIdentityOptions } from '@helpers/utils';
-import { minDate, maxDate, strictPositiveNumber, integerNumber, positiveNumber } from '@helpers/vuelidateCustomVal';
+import { integerNumber, positiveNumber } from '@helpers/vuelidateCustomVal';
 import store from 'src/store/index';
 
 export default {
-  name: 'BlendedCoursesDirectory',
+  name: 'SingleCourseDirectory',
   components: {
     'ni-directory-header': DirectoryHeader,
-    'ni-select': Select,
     'company-select': CompanySelect,
+    'ni-select': Select,
+    'ni-table-list': TableList,
     'course-creation-modal': CourseCreationModal,
-    'ni-trello': Trello,
-    'ni-date-input': DateInput,
   },
   setup () {
     const $store = useStore();
-    const metaInfo = { title: 'Kanban formations mixtes' };
+    const metaInfo = { title: 'Kanban formations individuelles' };
     useMeta(metaInfo);
 
-    /* COURSE CREATION */
+    const path = { name: 'ni management blended courses info', params: 'courseId' };
+
     const courseCreationModal = ref(false);
+    const tableLoading = ref(false);
     const modalLoading = ref(false);
     const newCourse = ref({
       program: '',
       subProgram: '',
-      company: '',
-      holding: '',
       misc: '',
-      type: INTRA,
+      type: SINGLE,
       operationsRepresentative: '',
       estimatedStartDate: '',
-      maxTrainees: '8',
       expectedBillsCount: '0',
       hasCertifyingTest: false,
       salesRepresentative: '',
       certificateGenerationMode: GLOBAL,
+      trainee: '',
     });
-    const companies = ref([]);
     const holdingOptions = ref([]);
     const programs = ref([]);
     const adminUserOptions = ref([]);
+    const traineeOptions = ref([]);
+    const companiesHoldings = ref([]);
 
-    const isIntraCourse = computed(() => newCourse.value.type === INTRA);
-    const isIntraHoldingCourse = computed(() => newCourse.value.type === INTRA_HOLDING);
+    const pagination = ref({ sortBy: 'name', descending: false, page: 1, rowsPerPage: 15 });
+    const columns = ref([
+      {
+        name: 'traineeName',
+        label: 'Nom de l\'apprenant',
+        field: row => row.trainees[0],
+        format: value => formatIdentity(value.identity, 'FL'),
+        align: 'left',
+        sortable: true,
+        style: 'width: 30%',
+        sort: (a, b) => sortStrings(a.identity.lastname, b.identity.lastname),
+      },
+      {
+        name: 'program',
+        label: 'Programme',
+        field: row => row.subProgram.program,
+        format: value => value.name,
+        align: 'left',
+        sortable: true,
+        style: 'width: 30%',
+        sort: (a, b) => sortStrings(a.name, b.name),
+      },
+      {
+        name: 'company',
+        label: 'Structure',
+        align: 'center',
+        field: row => row.companies[0],
+        format: value => value.name,
+        sortable: true,
+        style: 'width: 30%',
+        sort: (a, b) => sortStrings(a.name, b.name),
+      },
+      { name: 'archived', label: '', align: 'right', field: 'archivedAt' },
+    ]);
+
     const loggedUser = computed(() => $store.state.main.loggedUser);
 
     const refreshPrograms = async () => {
@@ -133,22 +164,12 @@ export default {
       }
     };
 
-    const refreshCompanies = async () => {
-      try {
-        companies.value = await Companies.list({ action: DIRECTORY });
-      } catch (e) {
-        console.error(e);
-        companies.value = [];
-      }
-    };
-
     const refreshHoldings = async () => {
       try {
         const holdings = await Holdings.list();
-        const companiesHoldings = holdings
+        companiesHoldings.value = holdings
           .flatMap(h => h.companies.map(c => ({ [c]: h._id })))
           .reduce((acc, obj) => ({ ...acc, ...obj }), {});
-        $store.dispatch('course/setCompaniesHoldings', { companiesHoldings });
         holdingOptions.value = formatAndSortOptions(holdings, 'name');
       } catch (e) {
         console.error(e);
@@ -166,26 +187,39 @@ export default {
       }
     };
 
+    const refreshTrainee = async () => {
+      try {
+        const trainees = await Users.list({ withCompanyUsers: true });
+        traineeOptions.value = formatAndSortUserOptions(trainees, true);
+      } catch (e) {
+        console.error(e);
+        traineeOptions.value = [];
+      }
+    };
+
     const openCourseCreationModal = async () => {
       newCourse.value = { ...newCourse.value, operationsRepresentative: loggedUser.value._id };
       courseCreationModal.value = true;
+
+      if (!traineeOptions.value.length) {
+        await refreshTrainee();
+      }
     };
 
     const resetCreationModal = () => {
       v$.value.newCourse.$reset();
       newCourse.value = {
         program: '',
-        company: '',
-        holding: '',
+        subProgram: '',
         misc: '',
-        type: INTRA,
+        type: SINGLE,
         operationsRepresentative: '',
         estimatedStartDate: '',
-        maxTrainees: '8',
         expectedBillsCount: '0',
         hasCertifyingTest: false,
         salesRepresentative: '',
         certificateGenerationMode: GLOBAL,
+        trainee: '',
       };
     };
 
@@ -216,69 +250,95 @@ export default {
     const activeCourses = ref([]);
     const archivedCourses = ref([]);
 
+    const courses = computed(() => [...activeCourses.value, ...archivedCourses.value]);
+
     const {
-      typeFilterOptions,
       selectedHolding,
       holdingFilterOptions,
       selectedCompany,
       companyFilterOptions,
       selectedTrainer,
       trainerFilterOptions,
+      selectedTrainee,
+      traineeFilterOptions,
       selectedProgram,
       programFilterOptions,
-      selectedOperationsRepresentative,
-      operationsRepresentativeFilterOptions,
-      selectedStartDate,
-      selectedEndDate,
-      selectedType,
-      selectedNoAddressInSlots,
-      selectedMissingTrainees,
       archiveStatusOptions,
       selectedArchiveStatus,
       updateSelectedHolding,
       updateSelectedCompany,
       updateSelectedTrainer,
+      updateSelectedTrainee,
       updateSelectedProgram,
-      updateSelectedOperationsRepresentative,
-      updateSelectedStartDate,
-      updateSelectedEndDate,
-      updateSelectedType,
-      updateSelectedNoAddressInSlots,
-      updateSelectedMissingTrainees,
       updateSelectedArchiveStatus,
       resetFilters,
-      selectedSalesRepresentative,
-      updateSelectedSalesRepresentative,
-      salesRepresentativeFilterOptions,
-    } = useCourseFilters(activeCourses, archivedCourses, holdingOptions, GROUP_COURSE_TYPES);
+    } = useCourseFilters(activeCourses, archivedCourses, holdingOptions, SINGLE_TYPE);
+
+    const isValid = (course) => {
+      if (selectedProgram.value && course.subProgram.program._id !== selectedProgram.value) return false;
+      if (selectedTrainer.value) {
+        const courseTrainerIds = course.trainers ? course.trainers.map(trainer => trainer._id) : [];
+
+        if (selectedTrainer.value === WITHOUT_TRAINER && courseTrainerIds.length) return false;
+        if (selectedTrainer.value !== WITHOUT_TRAINER && !courseTrainerIds.includes(selectedTrainer.value)) {
+          return false;
+        }
+      }
+      if (selectedTrainee.value && course.trainees[0]._id !== selectedTrainee.value) return false;
+      const companiesIds = course.companies.map(company => company._id);
+      if (selectedCompany.value && !companiesIds.includes(selectedCompany.value)) return false;
+
+      const holdingId = get(course, 'holding._id');
+      const holdingsLinkedToCourse = compact(
+        [...new Set(companiesIds.map(companyId => companiesHoldings.value[companyId]))]
+      );
+      if (selectedHolding.value && holdingId !== selectedHolding.value &&
+          !holdingsLinkedToCourse.includes(selectedHolding.value)) {
+        return false;
+      }
+      if (selectedArchiveStatus.value === UNARCHIVED_COURSES && course.archivedAt) return false;
+
+      if (selectedArchiveStatus.value === ARCHIVED_COURSES && !course.archivedAt) return false;
+
+      return true;
+    };
+
+    const isDisplayed = computed(() => courses.value.reduce((acc, course) => {
+      acc[course._id] = isValid(course);
+      return acc;
+    }, {}));
 
     const refreshActiveCourses = async () => {
       try {
-        const courseList = await Courses
-          .list({ format: BLENDED, action: OPERATIONS, isArchived: false, type: [INTRA, INTRA_HOLDING, INTER_B2B] });
+        tableLoading.value = true;
+        const courseList = await Courses.list({ format: BLENDED, action: OPERATIONS, isArchived: false, type: SINGLE });
         activeCourses.value = courseList;
       } catch (e) {
         console.error(e);
         activeCourses.value = [];
+      } finally {
+        tableLoading.value = false;
       }
     };
 
     const refreshArchivedCourses = async () => {
       try {
         if (![ARCHIVED_COURSES, ''].includes(selectedArchiveStatus.value) || archivedCourses.value.length) return;
+        tableLoading.value = true;
         const archivedCourseList = await Courses
-          .list({ format: BLENDED, action: OPERATIONS, isArchived: true, type: [INTRA, INTRA_HOLDING, INTER_B2B] });
+          .list({ format: BLENDED, action: OPERATIONS, isArchived: true, type: SINGLE });
         archivedCourses.value = archivedCourseList;
       } catch (e) {
         console.error(e);
         archivedCourses.value = [];
+      } finally {
+        tableLoading.value = false;
       }
     };
 
     onBeforeRouteLeave((to) => {
       if (to.name !== 'ni management blended courses info') {
         resetFilters();
-        $store.dispatch('course/resetCompaniesHoldings');
       }
     });
 
@@ -289,20 +349,12 @@ export default {
         subProgram: { required },
         type: { required },
         operationsRepresentative: { required },
-        ...(isIntraCourse.value &&
-          {
-            maxTrainees: { required, strictPositiveNumber, integerNumber },
-            expectedBillsCount: { required, positiveNumber, integerNumber },
-          }),
-        company: { required: requiredIf(isIntraCourse.value) },
-        ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
-        holding: { required: requiredIf(isIntraHoldingCourse.value) },
         certificateGenerationMode: { required },
+        trainee: { required },
+        expectedBillsCount: { required, positiveNumber, integerNumber },
       },
-      selectedStartDate: { maxDate: selectedEndDate.value ? maxDate(selectedEndDate.value) : '' },
-      selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },
     }));
-    const v$ = useVuelidate(rules, { newCourse, selectedStartDate, selectedEndDate });
+    const v$ = useVuelidate(rules, { newCourse });
 
     watch(selectedArchiveStatus, async () => refreshArchivedCourses());
 
@@ -311,7 +363,6 @@ export default {
         refreshActiveCourses(),
         refreshArchivedCourses(),
         refreshPrograms(),
-        refreshCompanies(),
         refreshHoldings(),
         refreshAdminUsers(),
       ]);
@@ -323,18 +374,18 @@ export default {
       // Validation
       v$,
       // Data
-      GROUP_COURSE_TYPES,
+      SINGLE_TYPE,
+      path,
+      pagination,
+      columns,
       courseCreationModal,
       modalLoading,
+      tableLoading,
       newCourse,
-      companies,
-      holdingOptions,
       programs,
       adminUserOptions,
-      activeCourses,
-      archivedCourses,
       archiveStatusOptions,
-      typeFilterOptions,
+      traineeOptions,
       // Computed
       selectedHolding,
       holdingFilterOptions,
@@ -342,18 +393,13 @@ export default {
       companyFilterOptions,
       selectedTrainer,
       trainerFilterOptions,
+      selectedTrainee,
+      traineeFilterOptions,
       selectedProgram,
       programFilterOptions,
-      selectedOperationsRepresentative,
-      operationsRepresentativeFilterOptions,
-      selectedStartDate,
-      selectedEndDate,
-      selectedType,
-      selectedNoAddressInSlots,
-      selectedMissingTrainees,
       selectedArchiveStatus,
-      selectedSalesRepresentative,
-      salesRepresentativeFilterOptions,
+      courses,
+      isDisplayed,
       // Methods
       openCourseCreationModal,
       resetCreationModal,
@@ -361,16 +407,10 @@ export default {
       updateSelectedHolding,
       updateSelectedCompany,
       updateSelectedTrainer,
+      updateSelectedTrainee,
       updateSelectedProgram,
-      updateSelectedOperationsRepresentative,
-      updateSelectedStartDate,
-      updateSelectedEndDate,
-      updateSelectedType,
-      updateSelectedNoAddressInSlots,
-      updateSelectedMissingTrainees,
       updateSelectedArchiveStatus,
       resetFilters,
-      updateSelectedSalesRepresentative,
     };
   },
   beforeRouteEnter (_, from, next) {
@@ -382,8 +422,3 @@ export default {
   },
 };
 </script>
-
-<style lang="sass" scoped>
-.checkboxes
-  grid-gap: 12px 10px
-</style>

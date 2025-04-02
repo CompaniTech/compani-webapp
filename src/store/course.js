@@ -11,6 +11,7 @@ export default {
     course: null,
     companiesHoldings: null,
     selectedTrainer: '',
+    selectedTrainee: '',
     selectedProgram: '',
     selectedHolding: '',
     selectedCompany: '',
@@ -27,6 +28,7 @@ export default {
     SET_COURSE: (state, data) => { state.course = data ? ({ ...data }) : data; },
     SET_COMPANIES_HOLDINGS: (state, data) => { state.companiesHoldings = data ? ({ ...data }) : data; },
     SET_SELECTED_TRAINER: (state, data) => { state.selectedTrainer = data; },
+    SET_SELECTED_TRAINEE: (state, data) => { state.selectedTrainee = data; },
     SET_SELECTED_PROGRAM: (state, data) => { state.selectedProgram = data; },
     SET_SELECTED_HOLDING: (state, data) => { state.selectedHolding = data; },
     SET_SELECTED_COMPANY: (state, data) => { state.selectedCompany = data; },
@@ -68,6 +70,7 @@ export default {
     setCompaniesHoldings: ({ commit }, params) => { commit('SET_COMPANIES_HOLDINGS', params.companiesHoldings); },
     resetCompaniesHoldings: ({ commit }) => { commit('SET_COMPANIES_HOLDINGS', null); },
     setSelectedTrainer: ({ commit }, params) => { commit('SET_SELECTED_TRAINER', params.trainerId); },
+    setSelectedTrainee: ({ commit }, params) => { commit('SET_SELECTED_TRAINEE', params.traineeId); },
     setSelectedProgram: ({ commit }, params) => { commit('SET_SELECTED_PROGRAM', params.programId); },
     setSelectedHolding: ({ commit }, params) => { commit('SET_SELECTED_HOLDING', params.holdingId); },
     setSelectedCompany: ({ commit }, params) => { commit('SET_SELECTED_COMPANY', params.companyId); },
@@ -85,6 +88,7 @@ export default {
     },
     resetFilters: ({ commit }, params = {}) => {
       commit('SET_SELECTED_TRAINER', '');
+      commit('SET_SELECTED_TRAINEE', '');
       commit('SET_SELECTED_PROGRAM', '');
       commit('SET_SELECTED_HOLDING', '');
       commit('SET_SELECTED_COMPANY', '');
