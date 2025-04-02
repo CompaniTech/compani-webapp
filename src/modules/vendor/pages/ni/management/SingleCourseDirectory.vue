@@ -76,8 +76,10 @@ import {
   SINGLE_TYPE,
   WITHOUT_TRAINER,
   UNARCHIVED_COURSES,
+  DD_MM_YYYY,
 } from '@data/constants';
 import { integerNumber, positiveNumber } from '@helpers/vuelidateCustomVal';
+import CompaniDate from '@helpers/dates/companiDates';
 import store from 'src/store/index';
 
 export default {
@@ -127,7 +129,7 @@ export default {
         format: value => formatIdentity(value.identity, 'FL'),
         align: 'left',
         sortable: true,
-        style: 'width: 30%',
+        style: 'width: 20%',
         sort: (a, b) => sortStrings(a.identity.lastname, b.identity.lastname),
       },
       {
@@ -137,20 +139,28 @@ export default {
         format: value => value.name,
         align: 'left',
         sortable: true,
-        style: 'width: 30%',
+        style: 'width: 25%',
         sort: (a, b) => sortStrings(a.name, b.name),
       },
       {
         name: 'company',
         label: 'Structure',
-        align: 'center',
+        align: 'left',
         field: row => row.companies[0],
         format: value => value.name,
         sortable: true,
-        style: 'width: 30%',
+        style: 'width: 25%',
         sort: (a, b) => sortStrings(a.name, b.name),
       },
-      { name: 'archived', label: '', align: 'right', field: 'archivedAt' },
+      {
+        name: 'startDate',
+        label: 'Date de début',
+        align: 'left',
+        field: row => row.startDate,
+        sortable: true,
+        style: 'width: 15%',
+      },
+      { name: 'archived', label: '', align: 'right', field: 'archivedAt', style: 'width: 10%' },
     ]);
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
@@ -250,7 +260,12 @@ export default {
     const activeCourses = ref([]);
     const archivedCourses = ref([]);
 
-    const courses = computed(() => [...activeCourses.value, ...archivedCourses.value]);
+    const courses = computed(() => [...activeCourses.value, ...archivedCourses.value].map((c) => {
+      let startDate = '';
+      if (c.slots.length) startDate = CompaniDate(c.slots[0].startDate).format(DD_MM_YYYY);
+      if (c.estimatedStartDate) startDate = CompaniDate(c.estimatedStartDate).format(DD_MM_YYYY);
+      return { ...c, startDate };
+    }));
 
     const {
       selectedHolding,
