@@ -17,7 +17,7 @@
         @update:model-value="updateSelectedArchiveStatus" />
     </div>
     <ni-table-list :data="courses" :columns="columns" :loading="tableLoading" v-model:pagination="pagination"
-      :path="path" :display-rows="isDisplayed">
+      :path="path">
       <template #body="{ col }">
         <q-item v-if="col.name === 'archived' && !!col.value" class="items-center">
           <q-icon size="12px" name="circle" class="info-archived" />
@@ -260,12 +260,14 @@ export default {
     const activeCourses = ref([]);
     const archivedCourses = ref([]);
 
-    const courses = computed(() => [...activeCourses.value, ...archivedCourses.value].map((c) => {
-      let startDate = '';
-      if (c.slots.length) startDate = CompaniDate(c.slots[0].startDate).format(DD_MM_YYYY);
-      if (c.estimatedStartDate) startDate = CompaniDate(c.estimatedStartDate).format(DD_MM_YYYY);
-      return { ...c, startDate };
-    }));
+    const courses = computed(() => [...activeCourses.value, ...archivedCourses.value]
+      .filter(isDisplayed)
+      .map((c) => {
+        let startDate = '';
+        if (c.slots.length) startDate = CompaniDate(c.slots[0].startDate).format(DD_MM_YYYY);
+        if (c.estimatedStartDate) startDate = CompaniDate(c.estimatedStartDate).format(DD_MM_YYYY);
+        return { ...c, startDate };
+      }));
 
     const {
       selectedHolding,
@@ -289,7 +291,7 @@ export default {
       resetFilters,
     } = useCourseFilters(activeCourses, archivedCourses, holdingOptions, SINGLE_TYPE);
 
-    const isValid = (course) => {
+    const isDisplayed = (course) => {
       if (selectedProgram.value && course.subProgram.program._id !== selectedProgram.value) return false;
       if (selectedTrainer.value) {
         const courseTrainerIds = course.trainers ? course.trainers.map(trainer => trainer._id) : [];
@@ -317,11 +319,6 @@ export default {
 
       return true;
     };
-
-    const isDisplayed = computed(() => courses.value.reduce((acc, course) => {
-      acc[course._id] = isValid(course);
-      return acc;
-    }, {}));
 
     const refreshActiveCourses = async () => {
       try {
@@ -411,7 +408,6 @@ export default {
       programFilterOptions,
       selectedArchiveStatus,
       courses,
-      isDisplayed,
       // Methods
       openCourseCreationModal,
       resetCreationModal,
