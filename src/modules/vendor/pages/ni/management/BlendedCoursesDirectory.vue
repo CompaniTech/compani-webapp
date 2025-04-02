@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useMeta } from 'quasar';
 import { useStore } from 'vuex';
 import { onBeforeRouteLeave } from 'vue-router';
@@ -75,7 +75,6 @@ import {
   OPERATIONS,
   DIRECTORY,
   GLOBAL,
-  ARCHIVED_COURSES,
   GROUP_COURSE_TYPES,
 } from '@data/constants';
 import { formatAndSortOptions, formatAndSortIdentityOptions } from '@helpers/utils';
@@ -265,7 +264,6 @@ export default {
 
     const refreshArchivedCourses = async () => {
       try {
-        if (![ARCHIVED_COURSES, ''].includes(selectedArchiveStatus.value) || archivedCourses.value.length) return;
         const archivedCourseList = await Courses
           .list({ format: BLENDED, action: OPERATIONS, isArchived: true, type: [INTRA, INTRA_HOLDING, INTER_B2B] });
         archivedCourses.value = archivedCourseList;
@@ -303,8 +301,6 @@ export default {
       selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },
     }));
     const v$ = useVuelidate(rules, { newCourse, selectedStartDate, selectedEndDate });
-
-    watch(selectedArchiveStatus, async () => refreshArchivedCourses());
 
     const created = async () => {
       await Promise.all([
