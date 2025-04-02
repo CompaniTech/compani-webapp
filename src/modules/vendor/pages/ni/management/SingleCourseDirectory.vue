@@ -38,7 +38,7 @@
 
 <script>
 import { useMeta } from 'quasar';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import TableList from '@components/table/TableList';
 import DirectoryHeader from '@components/DirectoryHeader';
 import {
@@ -323,7 +323,6 @@ export default {
 
     const refreshArchivedCourses = async () => {
       try {
-        if (![ARCHIVED_COURSES, ''].includes(selectedArchiveStatus.value) || archivedCourses.value.length) return;
         tableLoading.value = true;
         const archivedCourseList = await Courses
           .list({ format: BLENDED, action: OPERATIONS, isArchived: true, type: SINGLE });
@@ -355,8 +354,6 @@ export default {
       },
     }));
     const v$ = useVuelidate(rules, { newCourse });
-
-    watch(selectedArchiveStatus, async () => refreshArchivedCourses());
 
     const created = async () => {
       await Promise.all([
