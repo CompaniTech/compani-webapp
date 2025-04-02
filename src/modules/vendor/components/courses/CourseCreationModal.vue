@@ -93,6 +93,7 @@ export default {
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
     traineeOptions: { type: Array, default: () => [] },
+    courseTypes: { type: Array, default: () => COURSE_TYPES },
   },
   components: {
     'ni-option-group': OptionGroup,
@@ -106,7 +107,6 @@ export default {
   setup (props, { emit }) {
     const { programs, validations, newCourse, companies } = toRefs(props);
 
-    const courseTypes = COURSE_TYPES;
     const subProgramOptions = ref([]);
     const disableSubProgram = ref(false);
 
@@ -195,7 +195,6 @@ export default {
 
     return {
       // Data
-      courseTypes,
       CERTIFICATE_GENERATION_MODE,
       subProgramOptions,
       disableSubProgram,

@@ -17,7 +17,8 @@ export const menuItemsMixin = {
           ref: 'management',
           label: 'Gestion',
           children: [
-            { name: 'ni management blended courses', icon: 'mdi-teach', label: 'Formations mixtes' },
+            { name: 'ni management blended courses', icon: 'mdi-teach', label: 'Formations de groupe' },
+            { name: 'ni management single courses', icon: 'mdi-numeric-1-box', label: 'Formations individuelles' },
             { name: 'ni management elearning courses', icon: 'stay_primary_portrait', label: 'Formations eLearning' },
           ],
         },
