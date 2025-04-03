@@ -26,6 +26,13 @@
                   <ni-primary-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
                 </div>
               </template>
+              <template v-else-if="col.name === 'course'">
+                <div @click="$event.stopPropagation()">
+                  <router-link :to="goToCourseProfile(get(props, 'row.course._id'))" class="clickable-name">
+                    {{ col.value }}
+                  </router-link>
+                </div>
+              </template>
               <template v-else> {{ col.value }} </template>
           </q-td>
         </q-tr>
@@ -82,8 +89,8 @@ export default {
     const columns = ref([
       {
         name: 'traineeName',
-        label: 'Nom / Prénom de l’apprenant',
-        field: row => formatIdentity(row.trainee.identity, 'Lf'),
+        label: 'Apprenant',
+        field: row => formatIdentity(row.trainee.identity, 'FL'),
         align: 'left',
         sortable: true,
         sort: sortStrings,
@@ -234,6 +241,12 @@ export default {
       }
     };
 
+    const goToCourseProfile = (courseId) => ({
+      name: 'ni management blended courses info',
+      params: { courseId: courseId },
+      query: { defaultTab: 'traineeFollowUp' },
+    });
+
     const created = () => getMonthOptions();
 
     created();
@@ -273,6 +286,7 @@ export default {
       generateCompletionCertificate,
       get,
       has,
+      goToCourseProfile,
     };
   },
 };
