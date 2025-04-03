@@ -62,7 +62,13 @@ import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { useCompletionCertificates } from '@composables/completionCertificates';
-import { formatIdentity, sortStrings, formatAndSortCompanyOptions, formatAndSortOptions, formatAndSortIdentityOptions } from '@helpers/utils';
+import {
+  formatIdentity,
+  sortStrings,
+  formatAndSortCompanyOptions,
+  formatAndSortOptions,
+  formatAndSortIdentityOptions,
+} from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
 
@@ -185,7 +191,7 @@ export default {
       }
 
       if (selectedTrainee.value) {
-        filteredCC = filteredCC.filter((c) => c.trainee._id === selectedTrainee.value);
+        filteredCC = filteredCC.filter(c => c.trainee._id === selectedTrainee.value);
       }
 
       return filteredCC;
@@ -241,9 +247,9 @@ export default {
       }
     };
 
-    const goToCourseProfile = (courseId) => ({
+    const goToCourseProfile = courseId => ({
       name: 'ni management blended courses info',
-      params: { courseId: courseId },
+      params: { courseId },
       query: { defaultTab: 'traineeFollowUp' },
     });
 
