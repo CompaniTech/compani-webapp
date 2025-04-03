@@ -16,7 +16,7 @@
       <ni-select :options="archiveStatusOptions" :model-value="selectedArchiveStatus"
         @update:model-value="updateSelectedArchiveStatus" />
     </div>
-    <ni-table-list :data="courses" :columns="columns" :loading="tableLoading" v-model:pagination="pagination"
+    <ni-table-list :data="courses" :columns="columns" v-model:pagination="pagination"
       :path="path">
       <template #body="{ col }">
         <q-item v-if="col.name === 'archived' && !!col.value" class="items-center">
@@ -31,7 +31,7 @@
 
     <course-creation-modal v-model="courseCreationModal" v-model:new-course="newCourse" :programs="programs"
       :validations="v$.newCourse" :loading="modalLoading" @hide="resetCreationModal"
-      @submit="createCourse" :admin-user-options="adminUserOptions"
+      @submit="createCourse([SINGLE])" :admin-user-options="adminUserOptions"
       :trainee-options="traineeOptions" :course-types="SINGLE_TYPE" />
   </q-page>
 </template>
@@ -54,23 +54,18 @@ import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import compact from 'lodash/compact';
 import get from 'lodash/get';
-import omit from 'lodash/omit';
-import pickBy from 'lodash/pickBy';
-import Courses from '@api/Courses';
 import Holdings from '@api/Holdings';
 import Programs from '@api/Programs';
 import Users from '@api/Users';
 import Select from '@components/form/Select';
 import CompanySelect from '@components/form/CompanySelect';
 import CourseCreationModal from 'src/modules/vendor/components/courses/CourseCreationModal';
-import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
+import { useCourseCreation } from '@composables/courseCreation';
 import { useCourseFilters } from '@composables/courseFilters';
 import {
-  BLENDED,
   TRAINING_ORGANISATION_MANAGER,
   VENDOR_ADMIN,
-  OPERATIONS,
-  GLOBAL,
+  MONTHLY,
   SINGLE,
   ARCHIVED_COURSES,
   SINGLE_TYPE,
@@ -98,9 +93,6 @@ export default {
 
     const path = { name: 'ni management blended courses info', params: 'courseId' };
 
-    const courseCreationModal = ref(false);
-    const tableLoading = ref(false);
-    const modalLoading = ref(false);
     const newCourse = ref({
       program: '',
       subProgram: '',
@@ -111,7 +103,7 @@ export default {
       expectedBillsCount: '0',
       hasCertifyingTest: false,
       salesRepresentative: '',
-      certificateGenerationMode: GLOBAL,
+      certificateGenerationMode: MONTHLY,
       trainee: '',
     });
     const holdingOptions = ref([]);
@@ -119,6 +111,8 @@ export default {
     const adminUserOptions = ref([]);
     const traineeOptions = ref([]);
     const companiesHoldings = ref([]);
+    const activeCourses = ref([]);
+    const archivedCourses = ref([]);
 
     const pagination = ref({ sortBy: 'name', descending: false, page: 1, rowsPerPage: 15 });
     const columns = ref([
@@ -164,6 +158,27 @@ export default {
     ]);
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
+
+    const rules = computed(() => ({
+      newCourse: {
+        program: { required },
+        subProgram: { required },
+        type: { required },
+        operationsRepresentative: { required },
+        certificateGenerationMode: { required },
+        trainee: { required },
+        expectedBillsCount: { required, positiveNumber, integerNumber },
+      },
+    }));
+    const v$ = useVuelidate(rules, { newCourse });
+
+    const {
+      refreshActiveCourses,
+      refreshArchivedCourses,
+      createCourse,
+      modalLoading,
+      courseCreationModal,
+    } = useCourseCreation(newCourse, activeCourses, archivedCourses, v$);
 
     const refreshPrograms = async () => {
       try {
@@ -228,37 +243,10 @@ export default {
         expectedBillsCount: '0',
         hasCertifyingTest: false,
         salesRepresentative: '',
-        certificateGenerationMode: GLOBAL,
+        certificateGenerationMode: MONTHLY,
         trainee: '',
       };
     };
-
-    const createCourse = async () => {
-      try {
-        v$.value.newCourse.$touch();
-        if (v$.value.newCourse.$error) return NotifyWarning('Champ(s) invalide(s)');
-
-        modalLoading.value = true;
-        await Courses.create({
-          ...pickBy(omit(newCourse.value, 'program')),
-          hasCertifyingTest: newCourse.value.hasCertifyingTest,
-        });
-
-        courseCreationModal.value = false;
-        NotifyPositive('Formation créée.');
-
-        await refreshActiveCourses();
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Impossible de créer la formation.');
-      } finally {
-        modalLoading.value = false;
-      }
-    };
-
-    /* FILTERS */
-    const activeCourses = ref([]);
-    const archivedCourses = ref([]);
 
     const courses = computed(() => [...activeCourses.value, ...archivedCourses.value]
       .filter(isDisplayed)
@@ -320,33 +308,6 @@ export default {
       return true;
     };
 
-    const refreshActiveCourses = async () => {
-      try {
-        tableLoading.value = true;
-        const courseList = await Courses.list({ format: BLENDED, action: OPERATIONS, isArchived: false, type: SINGLE });
-        activeCourses.value = courseList;
-      } catch (e) {
-        console.error(e);
-        activeCourses.value = [];
-      } finally {
-        tableLoading.value = false;
-      }
-    };
-
-    const refreshArchivedCourses = async () => {
-      try {
-        tableLoading.value = true;
-        const archivedCourseList = await Courses
-          .list({ format: BLENDED, action: OPERATIONS, isArchived: true, type: SINGLE });
-        archivedCourses.value = archivedCourseList;
-      } catch (e) {
-        console.error(e);
-        archivedCourses.value = [];
-      } finally {
-        tableLoading.value = false;
-      }
-    };
-
     onBeforeRouteLeave((to) => {
       if (to.name !== 'ni management blended courses info') {
         resetFilters();
@@ -354,23 +315,10 @@ export default {
     });
 
     /* MAIN */
-    const rules = computed(() => ({
-      newCourse: {
-        program: { required },
-        subProgram: { required },
-        type: { required },
-        operationsRepresentative: { required },
-        certificateGenerationMode: { required },
-        trainee: { required },
-        expectedBillsCount: { required, positiveNumber, integerNumber },
-      },
-    }));
-    const v$ = useVuelidate(rules, { newCourse });
-
     const created = async () => {
       await Promise.all([
-        refreshActiveCourses(),
-        refreshArchivedCourses(),
+        refreshActiveCourses([SINGLE]),
+        refreshArchivedCourses([SINGLE]),
         refreshPrograms(),
         refreshHoldings(),
         refreshAdminUsers(),
@@ -384,12 +332,12 @@ export default {
       v$,
       // Data
       SINGLE_TYPE,
+      SINGLE,
       path,
       pagination,
       columns,
       courseCreationModal,
       modalLoading,
-      tableLoading,
       newCourse,
       programs,
       adminUserOptions,
