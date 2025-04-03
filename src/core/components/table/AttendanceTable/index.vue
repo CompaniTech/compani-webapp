@@ -87,8 +87,9 @@
       <div v-if="!courseHasSlot" class="text-center text-italic q-pa-lg no-data">
         Aucun créneau n'a été ajouté à cette formation
       </div>
-      <ni-button v-if="courseHasSlot && canUpdate" color="primary" icon="add" class="q-mb-sm" :disable="loading"
-        label="Ajouter un·e participant·e non inscrit·e" @click="openTraineeAttendanceAdditionModal" />
+      <ni-button v-if="courseHasSlot && canUpdate && !isSingleCourse" color="primary" icon="add" class="q-mb-sm"
+        :disable="loading" label="Ajouter un·e participant·e non inscrit·e"
+        @click="openTraineeAttendanceAdditionModal" />
     </q-card>
 
     <ni-simple-table :data="formattedAttendanceSheets" :columns="attendanceSheetColumns"
@@ -321,7 +322,7 @@ export default {
       await Promise.all([
         refreshAttendances({ course: course.value._id }),
         refreshAttendanceSheets(),
-        getPotentialTrainees(),
+        ...!isSingleCourse.value ? [getPotentialTrainees()] : [],
       ]);
     };
 

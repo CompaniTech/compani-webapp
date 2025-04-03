@@ -505,8 +505,11 @@ export default {
     };
 
     const created = async () => {
-      const promises = [getFollowUp(), getUnsubscribedAttendances()];
-      if (!isClientInterface && !isSingleCourse.value) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
+      const promises = [getFollowUp()];
+      if (!isSingleCourse.value) {
+        promises.push(getUnsubscribedAttendances());
+        if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
+      }
 
       if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
         promises.push(getCompletionCertificates({ course: course.value._id }));
