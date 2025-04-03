@@ -53,7 +53,7 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
       .sort((a, b) => a.label.localeCompare(b.label));
 
     return [
-      { label: 'Tous les stagiaires', value: '' },
+      { label: 'Tous les apprenants', value: '' },
       ...sortedUniqBy(trainees, 'value'),
     ];
   });
