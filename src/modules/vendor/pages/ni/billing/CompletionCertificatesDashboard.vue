@@ -10,6 +10,7 @@
       <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
       <company-select label="Structure" clearable :company-options="companyOptions" :company="selectedCompany"
         @update="updateSelectedCompany" />
+      <ni-select v-model="selectedTrainee" caption="Apprenant" :options="traineeOptions" clearable />
     </div>
     <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
       :loading="tableLoading" v-model:pagination="pagination">
@@ -23,6 +24,13 @@
                 </div>
                 <div v-else>
                   <ni-primary-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
+                </div>
+              </template>
+              <template v-else-if="col.name === 'course'">
+                <div @click="$event.stopPropagation()">
+                  <router-link :to="goToCourseProfile(get(props, 'row.course._id'))" class="clickable-name">
+                    {{ col.value }}
+                  </router-link>
                 </div>
               </template>
               <template v-else> {{ col.value }} </template>
@@ -54,7 +62,13 @@ import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { useCompletionCertificates } from '@composables/completionCertificates';
-import { formatIdentity, sortStrings, formatAndSortCompanyOptions, formatAndSortOptions } from '@helpers/utils';
+import {
+  formatIdentity,
+  sortStrings,
+  formatAndSortCompanyOptions,
+  formatAndSortOptions,
+  formatAndSortIdentityOptions,
+} from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
 
@@ -77,11 +91,12 @@ export default {
     const selectedCompany = ref('');
     const completionCertificates = ref([]);
     const selectedHolding = ref('');
+    const selectedTrainee = ref('');
     const columns = ref([
       {
         name: 'traineeName',
-        label: 'Nom / Prénom de l’apprenant',
-        field: row => formatIdentity(row.trainee.identity, 'Lf'),
+        label: 'Apprenant',
+        field: row => formatIdentity(row.trainee.identity, 'FL'),
         align: 'left',
         sortable: true,
         sort: sortStrings,
@@ -150,6 +165,12 @@ export default {
       return sortedUniqBy(formattedHolding, 'value');
     });
 
+    const traineeOptions = computed(() => {
+      const traineeWithCertificates = formatAndSortIdentityOptions(completionCertificates.value.map(c => c.trainee));
+
+      return [{ label: 'Tous les apprenants', value: '' }, ...sortedUniqBy(traineeWithCertificates, 'value')];
+    });
+
     const filteredCompletionCertificates = computed(() => {
       let filteredCC = completionCertificates.value;
       if (selectedCompany.value) {
@@ -167,6 +188,10 @@ export default {
 
           return holdingCertificates.includes(selectedHolding.value);
         });
+      }
+
+      if (selectedTrainee.value) {
+        filteredCC = filteredCC.filter(c => c.trainee._id === selectedTrainee.value);
       }
 
       return filteredCC;
@@ -198,6 +223,7 @@ export default {
       if (!completionCertificates.value.length) {
         selectedCompany.value = '';
         selectedHolding.value = '';
+        selectedTrainee.value = '';
       }
     });
 
@@ -220,6 +246,12 @@ export default {
         NotifyNegative('Erreur lors de la génération du certificat.');
       }
     };
+
+    const goToCourseProfile = courseId => ({
+      name: 'ni management blended courses info',
+      params: { courseId },
+      query: { defaultTab: 'traineeFollowUp' },
+    });
 
     const created = () => getMonthOptions();
 
@@ -245,6 +277,7 @@ export default {
       pagination,
       selectedCompany,
       selectedHolding,
+      selectedTrainee,
       // Computed
       companyOptions,
       filteredCompletionCertificates,
@@ -252,12 +285,14 @@ export default {
       completionCertificates,
       holdingOptions,
       displayFilters,
+      traineeOptions,
       // Methods
       updateSelectedMonths,
       updateSelectedCompany,
       generateCompletionCertificate,
       get,
       has,
+      goToCourseProfile,
     };
   },
 };
