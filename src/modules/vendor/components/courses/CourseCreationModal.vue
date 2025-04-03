@@ -71,7 +71,7 @@ import DateInput from '@components/form/DateInput';
 import OptionGroup from '@components/form/OptionGroup';
 import Input from '@components/form/Input';
 import {
-  COURSE_TYPES,
+  GROUP_COURSE_TYPES,
   REQUIRED_LABEL,
   INTRA,
   INTRA_HOLDING,
@@ -93,7 +93,7 @@ export default {
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
     traineeOptions: { type: Array, default: () => [] },
-    courseTypes: { type: Array, default: () => COURSE_TYPES },
+    courseTypes: { type: Array, default: () => GROUP_COURSE_TYPES },
   },
   components: {
     'ni-option-group': OptionGroup,

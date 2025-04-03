@@ -38,8 +38,8 @@
 
     <course-creation-modal v-model="courseCreationModal" v-model:new-course="newCourse" :programs="programs"
       :companies="companies" :validations="v$.newCourse" :loading="modalLoading" @hide="resetCreationModal"
-      @submit="createCourse" :admin-user-options="adminUserOptions" :holding-options="holdingOptions"
-      :course-types="GROUP_COURSE_TYPES" />
+      @submit="createCourse([INTRA, INTER_B2B, INTRA_HOLDING])" :admin-user-options="adminUserOptions"
+      :holding-options="holdingOptions" />
   </q-page>
 </template>
 
@@ -50,9 +50,6 @@ import { useStore } from 'vuex';
 import { onBeforeRouteLeave } from 'vue-router';
 import useVuelidate from '@vuelidate/core';
 import { required, requiredIf } from '@vuelidate/validators';
-import omit from 'lodash/omit';
-import pickBy from 'lodash/pickBy';
-import Courses from '@api/Courses';
 import Companies from '@api/Companies';
 import Holdings from '@api/Holdings';
 import Programs from '@api/Programs';
@@ -63,16 +60,14 @@ import Select from '@components/form/Select';
 import CompanySelect from '@components/form/CompanySelect';
 import CourseCreationModal from 'src/modules/vendor/components/courses/CourseCreationModal';
 import Trello from '@components/courses/Trello';
-import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
+import { useCourseCreation } from '@composables/courseCreation';
 import { useCourseFilters } from '@composables/courseFilters';
 import {
   INTRA,
   INTRA_HOLDING,
   INTER_B2B,
-  BLENDED,
   TRAINING_ORGANISATION_MANAGER,
   VENDOR_ADMIN,
-  OPERATIONS,
   DIRECTORY,
   GLOBAL,
   GROUP_COURSE_TYPES,
@@ -97,8 +92,6 @@ export default {
     useMeta(metaInfo);
 
     /* COURSE CREATION */
-    const courseCreationModal = ref(false);
-    const modalLoading = ref(false);
     const newCourse = ref({
       program: '',
       subProgram: '',
@@ -118,10 +111,77 @@ export default {
     const holdingOptions = ref([]);
     const programs = ref([]);
     const adminUserOptions = ref([]);
+    const activeCourses = ref([]);
+    const archivedCourses = ref([]);
 
     const isIntraCourse = computed(() => newCourse.value.type === INTRA);
     const isIntraHoldingCourse = computed(() => newCourse.value.type === INTRA_HOLDING);
     const loggedUser = computed(() => $store.state.main.loggedUser);
+
+    const {
+      typeFilterOptions,
+      selectedHolding,
+      holdingFilterOptions,
+      selectedCompany,
+      companyFilterOptions,
+      selectedTrainer,
+      trainerFilterOptions,
+      selectedProgram,
+      programFilterOptions,
+      selectedOperationsRepresentative,
+      operationsRepresentativeFilterOptions,
+      selectedStartDate,
+      selectedEndDate,
+      selectedType,
+      selectedNoAddressInSlots,
+      selectedMissingTrainees,
+      archiveStatusOptions,
+      selectedArchiveStatus,
+      updateSelectedHolding,
+      updateSelectedCompany,
+      updateSelectedTrainer,
+      updateSelectedProgram,
+      updateSelectedOperationsRepresentative,
+      updateSelectedStartDate,
+      updateSelectedEndDate,
+      updateSelectedType,
+      updateSelectedNoAddressInSlots,
+      updateSelectedMissingTrainees,
+      updateSelectedArchiveStatus,
+      resetFilters,
+      selectedSalesRepresentative,
+      updateSelectedSalesRepresentative,
+      salesRepresentativeFilterOptions,
+    } = useCourseFilters(activeCourses, archivedCourses, holdingOptions, GROUP_COURSE_TYPES);
+
+    const rules = computed(() => ({
+      newCourse: {
+        program: { required },
+        subProgram: { required },
+        type: { required },
+        operationsRepresentative: { required },
+        ...(isIntraCourse.value &&
+          {
+            maxTrainees: { required, strictPositiveNumber, integerNumber },
+            expectedBillsCount: { required, positiveNumber, integerNumber },
+          }),
+        company: { required: requiredIf(isIntraCourse.value) },
+        ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
+        holding: { required: requiredIf(isIntraHoldingCourse.value) },
+        certificateGenerationMode: { required },
+      },
+      selectedStartDate: { maxDate: selectedEndDate.value ? maxDate(selectedEndDate.value) : '' },
+      selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },
+    }));
+    const v$ = useVuelidate(rules, { newCourse, selectedStartDate, selectedEndDate });
+
+    const {
+      refreshActiveCourses,
+      refreshArchivedCourses,
+      createCourse,
+      modalLoading,
+      courseCreationModal,
+    } = useCourseCreation(newCourse, activeCourses, archivedCourses, v$);
 
     const refreshPrograms = async () => {
       try {
@@ -188,91 +248,6 @@ export default {
       };
     };
 
-    const createCourse = async () => {
-      try {
-        v$.value.newCourse.$touch();
-        if (v$.value.newCourse.$error) return NotifyWarning('Champ(s) invalide(s)');
-
-        modalLoading.value = true;
-        await Courses.create({
-          ...pickBy(omit(newCourse.value, 'program')),
-          hasCertifyingTest: newCourse.value.hasCertifyingTest,
-        });
-
-        courseCreationModal.value = false;
-        NotifyPositive('Formation créée.');
-
-        await refreshActiveCourses();
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Impossible de créer la formation.');
-      } finally {
-        modalLoading.value = false;
-      }
-    };
-
-    /* FILTERS */
-    const activeCourses = ref([]);
-    const archivedCourses = ref([]);
-
-    const {
-      typeFilterOptions,
-      selectedHolding,
-      holdingFilterOptions,
-      selectedCompany,
-      companyFilterOptions,
-      selectedTrainer,
-      trainerFilterOptions,
-      selectedProgram,
-      programFilterOptions,
-      selectedOperationsRepresentative,
-      operationsRepresentativeFilterOptions,
-      selectedStartDate,
-      selectedEndDate,
-      selectedType,
-      selectedNoAddressInSlots,
-      selectedMissingTrainees,
-      archiveStatusOptions,
-      selectedArchiveStatus,
-      updateSelectedHolding,
-      updateSelectedCompany,
-      updateSelectedTrainer,
-      updateSelectedProgram,
-      updateSelectedOperationsRepresentative,
-      updateSelectedStartDate,
-      updateSelectedEndDate,
-      updateSelectedType,
-      updateSelectedNoAddressInSlots,
-      updateSelectedMissingTrainees,
-      updateSelectedArchiveStatus,
-      resetFilters,
-      selectedSalesRepresentative,
-      updateSelectedSalesRepresentative,
-      salesRepresentativeFilterOptions,
-    } = useCourseFilters(activeCourses, archivedCourses, holdingOptions, GROUP_COURSE_TYPES);
-
-    const refreshActiveCourses = async () => {
-      try {
-        const courseList = await Courses
-          .list({ format: BLENDED, action: OPERATIONS, isArchived: false, type: [INTRA, INTRA_HOLDING, INTER_B2B] });
-        activeCourses.value = courseList;
-      } catch (e) {
-        console.error(e);
-        activeCourses.value = [];
-      }
-    };
-
-    const refreshArchivedCourses = async () => {
-      try {
-        const archivedCourseList = await Courses
-          .list({ format: BLENDED, action: OPERATIONS, isArchived: true, type: [INTRA, INTRA_HOLDING, INTER_B2B] });
-        archivedCourses.value = archivedCourseList;
-      } catch (e) {
-        console.error(e);
-        archivedCourses.value = [];
-      }
-    };
-
     onBeforeRouteLeave((to) => {
       if (to.name !== 'ni management blended courses info') {
         resetFilters();
@@ -281,31 +256,10 @@ export default {
     });
 
     /* MAIN */
-    const rules = computed(() => ({
-      newCourse: {
-        program: { required },
-        subProgram: { required },
-        type: { required },
-        operationsRepresentative: { required },
-        ...(isIntraCourse.value &&
-          {
-            maxTrainees: { required, strictPositiveNumber, integerNumber },
-            expectedBillsCount: { required, positiveNumber, integerNumber },
-          }),
-        company: { required: requiredIf(isIntraCourse.value) },
-        ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
-        holding: { required: requiredIf(isIntraHoldingCourse.value) },
-        certificateGenerationMode: { required },
-      },
-      selectedStartDate: { maxDate: selectedEndDate.value ? maxDate(selectedEndDate.value) : '' },
-      selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },
-    }));
-    const v$ = useVuelidate(rules, { newCourse, selectedStartDate, selectedEndDate });
-
     const created = async () => {
       await Promise.all([
-        refreshActiveCourses(),
-        refreshArchivedCourses(),
+        refreshActiveCourses([INTRA, INTER_B2B, INTRA_HOLDING]),
+        refreshArchivedCourses([INTRA, INTER_B2B, INTRA_HOLDING]),
         refreshPrograms(),
         refreshCompanies(),
         refreshHoldings(),
@@ -319,7 +273,9 @@ export default {
       // Validation
       v$,
       // Data
-      GROUP_COURSE_TYPES,
+      INTRA,
+      INTER_B2B,
+      INTRA_HOLDING,
       courseCreationModal,
       modalLoading,
       newCourse,
