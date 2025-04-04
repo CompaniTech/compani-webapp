@@ -25,7 +25,7 @@
         <ni-banner icon="edit">
           <template #message>
             Pour valider les réponses aux questionnaires d’auto-positionnement de fin de formation, veuillez
-              <a class="clickable-name cursor-pointer" @click="goToSelfPositionningAnswers">cliquer ici</a>
+            <a class="clickable-name cursor-pointer" @click="goToSelfPositionningAnswers">cliquer ici</a>
           </template>
         </ni-banner>
       </div>
@@ -42,7 +42,7 @@
       <div v-if="areQuestionnaireAnswersVisible" class="questionnaires-container">
         <router-link v-for="questionnaire in filteredQuestionnaires" :key="questionnaire._id"
           :to="goToQuestionnaireAnswers(questionnaire.type)">
-            <questionnaire-answers-cell :questionnaire="questionnaire" />
+          <questionnaire-answers-cell :questionnaire="questionnaire" />
         </router-link>
       </div>
     </div>
@@ -72,6 +72,7 @@
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
+        <ni-button icon="add" label="Ajouter un certificat de réalisation" @click="openCompletionCertificatesModal" />
       </div>
     </div>
     <div v-if="unsubscribedAttendances.length">
@@ -93,6 +94,11 @@
         </template>
       </ni-expanding-table>
     </div>
+
+    <completion-certificate-addition-modal v-model="completionCertificateAdditionModal" :loading="modalLoading"
+      @hide="resetCompletionCertificateAdditionModal" v-model:new-completion-certificate="newCompletionCertificate"
+      @submit="addCompletionCertificate" :validations="v$.newCompletionCertificate" :course="course"
+      :month-options="monthOptions" />
   </div>
 </template>
 
@@ -100,20 +106,23 @@
 import { subject } from '@casl/ability';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
+import groupBy from 'lodash/groupBy';
 import { computed, ref, toRefs } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import CompletionCertificates from '@api/CompletionCertificates';
 import Courses from '@api/Courses';
 import Attendances from '@api/Attendances';
 import Questionnaires from '@api/Questionnaires';
-import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
+import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import AttendanceTable from '@components/table/AttendanceTable';
 import ExpandingTable from '@components/table/ExpandingTable';
 import ElearningFollowUpTable from '@components/courses/ElearningFollowUpTable';
 import QuestionnaireAnswersCell from '@components/courses/QuestionnaireAnswersCell';
 import BiColorButton from '@components/BiColorButton';
 import Banner from '@components/Banner';
+import Button from '@components/Button';
 import QuestionnaireQRCodeCell from '@components/courses/QuestionnaireQRCodeCell';
 import SimpleTable from '@components/table/SimpleTable';
 import {
@@ -134,6 +143,8 @@ import {
   MONTHLY,
   MM_YYYY,
 } from '@data/constants';
+import CompletionCertificateAdditionModal
+  from 'src/modules/vendor/components/courses/CompletionCertificateAdditionModal';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
 import { getISOTotalDuration, ascendingSort } from '@helpers/dates/utils';
@@ -144,6 +155,8 @@ import { defineAbilitiesForCourse } from '@helpers/ability';
 import { useCourses } from '@composables/courses';
 import { useTraineeFollowUp } from '@composables/traineeFollowUp';
 import { useCompletionCertificates } from '@composables/completionCertificates';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 
 export default {
   name: 'ProfileTraineeFollowUp',
@@ -156,6 +169,8 @@ export default {
     'ni-banner': Banner,
     'ni-questionnaire-qrcode-cell': QuestionnaireQRCodeCell,
     'ni-simple-table': SimpleTable,
+    'ni-button': Button,
+    'completion-certificate-addition-modal': CompletionCertificateAdditionModal,
   },
   props: {
     profileId: { type: String, required: true },
@@ -197,6 +212,9 @@ export default {
         align: 'left',
       },
     ]);
+    const newCompletionCertificate = ref({ trainee: '', month: '' });
+    const completionCertificateAdditionModal = ref(false);
+    const modalLoading = ref(false);
 
     const course = computed(() => $store.state.course.course);
 
@@ -223,7 +241,7 @@ export default {
     const areQuestionnaireQRCodeVisible = computed(() => questionnaireQRCodes.value.length);
 
     const areQuestionnaireVisible = computed(() => (!isClientInterface &&
-      (areQuestionnaireAnswersVisible.value || areQuestionnaireQRCodeVisible.value)));
+    (areQuestionnaireAnswersVisible.value || areQuestionnaireQRCodeVisible.value)));
 
     const courseHasElearningStep = computed(() => course.value.subProgram.steps.some(step => step.type === E_LEARNING));
 
@@ -235,6 +253,14 @@ export default {
 
     const disableDownloadCompletionCertificates =
       computed(() => disableDocDownload.value || !get(course.value, 'subProgram.program.learningGoals'));
+
+    const hasCompletionCertificate = computed(() => (completionCertificates.value || []).length);
+
+    const rules = computed(() => ({
+      newCompletionCertificate: { trainee: { required }, month: { required } },
+    }));
+
+    const v$ = useVuelidate(rules, { newCompletionCertificate });
 
     const refreshQuestionnaires = async () => {
       try {
@@ -273,6 +299,17 @@ export default {
     const goToQuestionnaireAnswers = questionnaireType => ({
       name: 'ni pedagogy questionnaire answers',
       query: { courseId: course.value._id, questionnaireType },
+    });
+
+    const monthOptions = computed(() => {
+      const monthWithSlots = [...new Set(course.value.slots.map(slot => CompaniDate(slot.startDate).format(MM_YYYY)))];
+      const monthWithCertificate = [...new Set((completionCertificates.value || [])
+        .map(certificate => certificate.month))];
+      const completionCertificatesByMonth = groupBy(completionCertificates.value, 'month');
+
+      return monthWithSlots
+        .filter(month => !monthWithCertificate.includes(month) ||
+        course.value.trainees.length !== completionCertificatesByMonth[month].length);
     });
 
     const formatTraineeAttendances = (attendancesGroupedByTrainee, traineeId) => ({
@@ -410,6 +447,59 @@ export default {
       getCompletionCertificates,
     } = useCompletionCertificates(completionCertificates);
 
+    const openCompletionCertificatesModal = () => {
+      const hasCourseSlots = course.value.slots.length;
+      const hasCourseTrainees = course.value.trainees.length;
+
+      if (hasCourseSlots && hasCourseTrainees && monthOptions.value.length) {
+        if (course.value.trainees.length === 1) newCompletionCertificate.value.trainee = course.value.trainees[0]._id;
+
+        completionCertificateAdditionModal.value = true;
+      }
+    };
+
+    const resetCompletionCertificateAdditionModal = () => {
+      newCompletionCertificate.value = { trainee: '', month: '' };
+      v$.value.newCompletionCertificate.$reset();
+    };
+
+    const refreshCompletionCertificates = async () => {
+      try {
+        await getCompletionCertificates({ course: course.value._id });
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des certificats de réalisations');
+      }
+    };
+
+    const addCompletionCertificate = async () => {
+      try {
+        v$.value.newCompletionCertificate.$touch();
+        if (v$.value.newCompletionCertificate.$error) return NotifyWarning('Champs requis');
+
+        modalLoading.value = true;
+        await CompletionCertificates.create({
+          trainee: newCompletionCertificate.value.trainee,
+          course: course.value._id,
+          month: newCompletionCertificate.value.month,
+        });
+
+        completionCertificateAdditionModal.value = false;
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        if (e.status === 403 && !!e.data.message) {
+          NotifyNegative(
+            'Ajout impossible : l\'apprenant n\'a ni émargé un créneau ni réalisé une activité sur le mois.'
+          );
+        } else {
+          NotifyNegative('Erreur lors de l\'ajout du certificat.');
+        }
+      } finally {
+        modalLoading.value = false;
+      }
+    };
+
     const created = async () => {
       const promises = [getFollowUp(), getUnsubscribedAttendances()];
       if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
@@ -424,6 +514,8 @@ export default {
     created();
 
     return {
+      // Validation
+      v$,
       // Data
       questionnaires,
       unsubscribedAttendances,
@@ -445,6 +537,9 @@ export default {
       completionCertificateColumns,
       tableLoading,
       isVendorInterface,
+      completionCertificateAdditionModal,
+      newCompletionCertificate,
+      modalLoading,
       // Computed
       course,
       courseHasElearningStep,
@@ -464,6 +559,8 @@ export default {
       endSelfPositionningHistoryCount,
       selfPositionningHistoryValidatedCount,
       isMonthlyCertificateMode,
+      monthOptions,
+      hasCompletionCertificate,
       // Methods
       get,
       formatQuantity,
@@ -473,6 +570,9 @@ export default {
       goToQuestionnaireProfile,
       goToSelfPositionningAnswers,
       filterQuestionnaireTypes,
+      openCompletionCertificatesModal,
+      resetCompletionCertificateAdditionModal,
+      addCompletionCertificate,
     };
   },
 };

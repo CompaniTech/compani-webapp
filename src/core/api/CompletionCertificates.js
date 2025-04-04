@@ -7,4 +7,7 @@ export default {
 
     return completionCertificates.data.data.completionCertificates;
   },
+  async create (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/completioncertificates`, payload);
+  },
 };
