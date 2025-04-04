@@ -148,7 +148,7 @@ export default {
 
     const getMonthOptions = () => {
       // can get monthly completion certificate from 02-2025
-      const startDate = CompaniDate('2025-02-01T09:00:00.000Z').startOf(MONTH).toISO();
+      const startDate = CompaniDate('2024-03-01T09:00:00.000Z').startOf(MONTH).toISO();
       const endDate = CompaniDate().startOf(MONTH).toISO();
 
       const monthDiff = CompaniDuration(CompaniDate(endDate).diff(startDate, MONTH)).asMonths();
