@@ -10,4 +10,7 @@ export default {
   async create (payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/completioncertificates`, payload);
   },
+  async update (completionCertificateId, payload) {
+    await alenviAxios.put(`${process.env.API_HOSTNAME}/completioncertificates/${completionCertificateId}`, payload);
+  },
 };
