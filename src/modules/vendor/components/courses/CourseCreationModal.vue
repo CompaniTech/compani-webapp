@@ -71,7 +71,7 @@ import DateInput from '@components/form/DateInput';
 import OptionGroup from '@components/form/OptionGroup';
 import Input from '@components/form/Input';
 import {
-  COURSE_TYPES,
+  GROUP_COURSE_TYPES,
   REQUIRED_LABEL,
   INTRA,
   INTRA_HOLDING,
@@ -93,6 +93,7 @@ export default {
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
     traineeOptions: { type: Array, default: () => [] },
+    courseTypes: { type: Array, default: () => GROUP_COURSE_TYPES },
   },
   components: {
     'ni-option-group': OptionGroup,
@@ -106,7 +107,6 @@ export default {
   setup (props, { emit }) {
     const { programs, validations, newCourse, companies } = toRefs(props);
 
-    const courseTypes = COURSE_TYPES;
     const subProgramOptions = ref([]);
     const disableSubProgram = ref(false);
 
@@ -195,7 +195,6 @@ export default {
 
     return {
       // Data
-      courseTypes,
       CERTIFICATE_GENERATION_MODE,
       subProgramOptions,
       disableSubProgram,

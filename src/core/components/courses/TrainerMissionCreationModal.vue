@@ -42,6 +42,8 @@ import {
   IMAGE_EXTENSIONS,
   INTER_B2B,
   INTRA,
+  SINGLE,
+  INTRA_HOLDING,
   UPLOAD,
   CREATION_METHOD_OPTIONS,
   GENERATION,
@@ -82,14 +84,17 @@ export default {
       let info = '';
       switch (course.type) {
         case INTRA:
+        case SINGLE:
           info = course.companies[0].name;
           break;
         case INTER_B2B:
           info = 'INTER';
           break;
-        default:
+        case INTRA_HOLDING:
           info = course.holding.name;
           break;
+        default:
+          info = '';
       }
       return `${info}${course.misc ? ` - ${course.misc}` : ''}`;
     };

@@ -132,6 +132,8 @@ export const COURSE_TYPES = [
   { label: 'Intra société mère', value: INTRA_HOLDING },
   { label: 'Individuelle', value: SINGLE },
 ];
+export const GROUP_COURSE_TYPES = COURSE_TYPES.filter(type => type.value !== SINGLE);
+export const SINGLE_TYPE = [{ label: 'Individuelle', value: SINGLE }];
 export const BLENDED = 'blended';
 export const STRICTLY_E_LEARNING = 'strictly_e_learning';
 export const FORTHCOMING = 'forthcoming';

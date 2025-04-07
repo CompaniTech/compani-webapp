@@ -123,7 +123,6 @@ module.exports = configure(ctx => ({
       GA_TRACKING_ID: process.env.GA_TRACKING_ID,
       BULB_LINK: process.env.BULB_LINK,
       DETACHMENT_ALLOWED_COMPANY_IDS: process.env.DETACHMENT_ALLOWED_COMPANY_IDS,
-      SINGLE_COURSES_SUBPROGRAM_IDS: process.env.SINGLE_COURSES_SUBPROGRAM_IDS,
     },
   },
   devServer: { open: true },
