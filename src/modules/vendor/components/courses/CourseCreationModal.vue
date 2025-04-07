@@ -49,8 +49,8 @@
       <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
         @update:model-value="update($event, 'certificateGenerationMode')" :options="CERTIFICATE_GENERATION_MODE"
         :error="validations.certificateGenerationMode.$error" required-field />
-      <ni-input in-modal :model-value="newCourse.misc" @update:model-value="update($event.trim(), 'misc')"
-        caption="Informations Complémentaires" />
+      <ni-input v-if="!isSingleCourse" in-modal :model-value="newCourse.misc"
+        @update:model-value="update($event.trim(), 'misc')" caption="Informations Complémentaires" />
       <q-checkbox in-modal :model-value="newCourse.hasCertifyingTest" label="La formation est certifiante" dense
         @update:model-value="update($event, 'hasCertifyingTest')" class="q-mb-lg" />
       <template #footer>
@@ -105,7 +105,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-course'],
   setup (props, { emit }) {
-    const { programs, validations, newCourse, companies } = toRefs(props);
+    const { programs, validations, newCourse, companies, traineeOptions } = toRefs(props);
 
     const subProgramOptions = ref([]);
     const disableSubProgram = ref(false);
@@ -165,7 +165,14 @@ export default {
       );
     };
 
-    const update = (event, prop) => emit('update:new-course', { ...newCourse.value, [prop]: event });
+    const update = (event, prop) => emit(
+      'update:new-course',
+      {
+        ...newCourse.value,
+        [prop]: event,
+        ...(prop === 'trainee' && { misc: traineeOptions.value.find(o => o.value === event).label }),
+      }
+    );
 
     watch(
       () => newCourse.value.program,
