@@ -133,7 +133,7 @@ export const COURSE_TYPES = [
   { label: 'Individuelle', value: SINGLE },
 ];
 export const GROUP_COURSE_TYPES = COURSE_TYPES.filter(type => type.value !== SINGLE);
-export const SINGLE_TYPE = COURSE_TYPES.filter(type => type.value === SINGLE);
+export const SINGLE_TYPE = [{ label: 'Individuelle', value: SINGLE }];
 export const BLENDED = 'blended';
 export const STRICTLY_E_LEARNING = 'strictly_e_learning';
 export const FORTHCOMING = 'forthcoming';
