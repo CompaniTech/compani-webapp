@@ -113,6 +113,8 @@ import groupBy from 'lodash/groupBy';
 import { computed, ref, toRefs } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import { useQuasar } from 'quasar';
 import CompletionCertificates from '@api/CompletionCertificates';
 import Courses from '@api/Courses';
@@ -164,8 +166,6 @@ import { defineAbilitiesForCourse } from '@helpers/ability';
 import { useCourses } from '@composables/courses';
 import { useTraineeFollowUp } from '@composables/traineeFollowUp';
 import { useCompletionCertificates } from '@composables/completionCertificates';
-import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
 
 export default {
   name: 'ProfileTraineeFollowUp',
@@ -294,11 +294,10 @@ export default {
 
     const monthOptions = computed(() => {
       const monthWithSlots = [...new Set(course.value.slots.map(slot => CompaniDate(slot.startDate).format(MM_YYYY)))];
-      const monthWithCertificate = [...new Set((completionCertificates.value || []).map(c => c.month))];
       const completionCertificatesByMonth = groupBy(completionCertificates.value, 'month');
 
       return monthWithSlots
-        .filter(month => !monthWithCertificate.includes(month) ||
+        .filter(month => !completionCertificatesByMonth[month] ||
           course.value.trainees.length !== completionCertificatesByMonth[month].length)
         .map(month => ({ label: CompaniDate(month, MM_YYYY).format('MMMM yyyy'), value: month }));
     });
@@ -465,6 +464,7 @@ export default {
       }
 
       if (course.value.trainees.length === 1) newCompletionCertificate.value.trainee = course.value.trainees[0]._id;
+      if (monthOptions.value.length === 1) newCompletionCertificate.value.month = monthOptions.value[0].value;
 
       completionCertificateAdditionModal.value = true;
     };
@@ -479,7 +479,7 @@ export default {
         await getCompletionCertificates({ course: course.value._id });
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la récupération des certificats de réalisations');
+        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
       }
     };
 
@@ -489,8 +489,7 @@ export default {
         if (v$.value.newCompletionCertificate.$error) return NotifyWarning('Champs requis');
 
         modalLoading.value = true;
-        const { trainee, month } = newCompletionCertificate.value;
-        await CompletionCertificates.create({ trainee, course: course.value._id, month });
+        await CompletionCertificates.create({ ...newCompletionCertificate.value, course: course.value._id });
 
         completionCertificateAdditionModal.value = false;
         await refreshCompletionCertificates();
