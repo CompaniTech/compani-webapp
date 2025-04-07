@@ -42,6 +42,7 @@ import {
   IMAGE_EXTENSIONS,
   INTER_B2B,
   INTRA,
+  SINGLE,
   INTRA_HOLDING,
   UPLOAD,
   CREATION_METHOD_OPTIONS,
@@ -83,6 +84,7 @@ export default {
       let info = '';
       switch (course.type) {
         case INTRA:
+        case SINGLE:
           info = course.companies[0].name;
           break;
         case INTER_B2B:

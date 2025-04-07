@@ -75,6 +75,7 @@ import {
 } from '@data/constants';
 import { integerNumber, positiveNumber } from '@helpers/vuelidateCustomVal';
 import CompaniDate from '@helpers/dates/companiDates';
+import { ascendingSort } from '@helpers/dates/utils';
 import store from 'src/store/index';
 
 export default {
@@ -151,6 +152,12 @@ export default {
         label: 'Date de début',
         align: 'left',
         field: row => row.startDate,
+        sort: (a, b) => {
+          if (!a && !b) return 0;
+          if (!a) return 1;
+          if (!b) return -1;
+          return ascendingSort(CompaniDate(a, DD_MM_YYYY), CompaniDate(b, DD_MM_YYYY));
+        },
         sortable: true,
         style: 'width: 15%',
       },
@@ -212,7 +219,7 @@ export default {
       }
     };
 
-    const refreshTrainee = async () => {
+    const refreshTrainees = async () => {
       try {
         const trainees = await Users.list({ withCompanyUsers: true });
         traineeOptions.value = formatAndSortUserOptions(trainees, true);
@@ -226,9 +233,7 @@ export default {
       newCourse.value = { ...newCourse.value, operationsRepresentative: loggedUser.value._id };
       courseCreationModal.value = true;
 
-      if (!traineeOptions.value.length) {
-        await refreshTrainee();
-      }
+      if (!traineeOptions.value.length) await refreshTrainees();
     };
 
     const resetCreationModal = () => {
