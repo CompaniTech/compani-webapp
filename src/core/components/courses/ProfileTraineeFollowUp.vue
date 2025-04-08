@@ -152,7 +152,7 @@ import CompletionCertificateAdditionModal
   from 'src/modules/vendor/components/courses/CompletionCertificateAdditionModal';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
-import { getISOTotalDuration, ascendingSort } from '@helpers/dates/utils';
+import { getISOTotalDuration, ascendingSort, descendingSortBy } from '@helpers/dates/utils';
 import {
   formatIdentity,
   formatQuantity,
@@ -299,7 +299,8 @@ export default {
       return monthWithSlots
         .filter(month => !completionCertificatesByMonth[month] ||
           course.value.trainees.length !== completionCertificatesByMonth[month].length)
-        .map(month => ({ label: CompaniDate(month, MM_YYYY).format('MMMM yyyy'), value: month }));
+        .map(month => ({ label: CompaniDate(month, MM_YYYY).format('MMMM yyyy'), value: month }))
+        .sort(descendingSortBy('value', MM_YYYY));
     });
 
     const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
