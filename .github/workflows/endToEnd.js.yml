@@ -37,6 +37,7 @@ jobs:
       - run: cd api && yarn install
         env:
           DETACHMENT_ALLOWED_COMPANY_IDS : ${{ secrets.DETACHMENT_ALLOWED_COMPANY_IDS }}
+          SINGLE_COURSES_SUBPROGRAM_IDS : ${{ secrets.SINGLE_COURSES_SUBPROGRAM_IDS }}
       - uses: actions/checkout@v3
         with:
           path: 'webapp'
@@ -53,3 +54,4 @@ jobs:
           API_HOSTNAME: ${{ secrets.API_HOSTNAME }}
           TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
           DETACHMENT_ALLOWED_COMPANY_IDS : ${{ secrets.DETACHMENT_ALLOWED_COMPANY_IDS }}
+          SINGLE_COURSES_SUBPROGRAM_IDS : ${{ secrets.SINGLE_COURSES_SUBPROGRAM_IDS }}

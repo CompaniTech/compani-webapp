@@ -240,6 +240,7 @@ export default {
       downloadAttendanceSheet,
       vendorRole,
       isVendorInterface,
+      isSingleCourse,
     } = useCourses(course);
     const { learners, getFollowUp, learnersLoading } = useTraineeFollowUp(profileId);
 
@@ -249,7 +250,7 @@ export default {
 
     const areQuestionnaireQRCodeVisible = computed(() => questionnaireQRCodes.value.length);
 
-    const areQuestionnaireVisible = computed(() => (!isClientInterface &&
+    const areQuestionnaireVisible = computed(() => (!isClientInterface && !isSingleCourse.value &&
       (areQuestionnaireAnswersVisible.value || areQuestionnaireQRCodeVisible.value)));
 
     const courseHasElearningStep = computed(() => course.value.subProgram.steps.some(step => step.type === E_LEARNING));
@@ -505,7 +506,7 @@ export default {
 
     const created = async () => {
       const promises = [getFollowUp(), getUnsubscribedAttendances()];
-      if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
+      if (!isClientInterface && !isSingleCourse.value) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
 
       if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
         promises.push(getCompletionCertificates({ course: course.value._id }));
