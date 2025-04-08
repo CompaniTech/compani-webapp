@@ -27,13 +27,11 @@ import { ref, watch, computed } from 'vue';
 import get from 'lodash/get';
 import has from 'lodash/has';
 import sortedUniqBy from 'lodash/sortedUniqBy';
-import CompletionCertificates from '@api/CompletionCertificates';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import CompanySelect from '@components/form/CompanySelect';
-import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
-import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
+import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { useCompletionCertificates } from '@composables/completionCertificates';
@@ -110,7 +108,6 @@ export default {
         style: 'width: 15%',
       },
     ]);
-    const disableButton = ref(false);
 
     const displayFilters = computed(() => filteredCompletionCertificates.value.length ||
       selectedCompany.value || selectedHolding.value);
@@ -171,7 +168,16 @@ export default {
       return filteredCC;
     });
 
-    const { tableLoading, getCompletionCertificates } = useCompletionCertificates(completionCertificates, monthOptions);
+    const refreshCompletionCertificates = async () => {
+      await getCompletionCertificates({ months: selectedMonths.value });
+    };
+
+    const {
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificate,
+    } = useCompletionCertificates(completionCertificates, refreshCompletionCertificates, monthOptions);
 
     const getMonthOptions = () => {
       // can get monthly completion certificate from 03-2024
@@ -201,25 +207,6 @@ export default {
     const updateSelectedMonths = months => (selectedMonths.value = months);
 
     const updateSelectedCompany = value => (selectedCompany.value = value);
-
-    const refreshCompletionCertificates = async () => {
-      await getCompletionCertificates({ months: selectedMonths.value });
-    };
-
-    const generateCompletionCertificate = async (completionCertificateId) => {
-      try {
-        disableButton.value = true;
-        await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
-        NotifyPositive('Certificat de réalisation généré.');
-
-        await refreshCompletionCertificates();
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la génération du certificat.');
-      } finally {
-        disableButton.value = false;
-      }
-    };
 
     const created = () => getMonthOptions();
 

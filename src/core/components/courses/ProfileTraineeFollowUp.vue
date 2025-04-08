@@ -147,7 +147,6 @@ import {
   END_COURSE,
   MONTHLY,
   MM_YYYY,
-  GENERATION,
 } from '@data/constants';
 import CompletionCertificateAdditionModal
   from 'src/modules/vendor/components/courses/CompletionCertificateAdditionModal';
@@ -226,7 +225,6 @@ export default {
     const newCompletionCertificate = ref({ trainee: '', month: '' });
     const completionCertificateAdditionModal = ref(false);
     const modalLoading = ref(false);
-    const disableButton = ref(false);
 
     const course = computed(() => $store.state.course.course);
 
@@ -452,7 +450,21 @@ export default {
       }
     );
 
-    const { tableLoading, getCompletionCertificates } = useCompletionCertificates(completionCertificates);
+    const refreshCompletionCertificates = async () => {
+      try {
+        await getCompletionCertificates({ course: course.value._id });
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
+      }
+    };
+
+    const {
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificate,
+    } = useCompletionCertificates(completionCertificates, refreshCompletionCertificates);
 
     const openCompletionCertificatesModal = () => {
       const hasCourseSlots = course.value.slots.length;
@@ -474,15 +486,6 @@ export default {
       v$.value.newCompletionCertificate.$reset();
     };
 
-    const refreshCompletionCertificates = async () => {
-      try {
-        await getCompletionCertificates({ course: course.value._id });
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
-      }
-    };
-
     const addCompletionCertificate = async () => {
       try {
         v$.value.newCompletionCertificate.$touch();
@@ -499,21 +502,6 @@ export default {
         else NotifyNegative('Erreur lors de l\'ajout du certificat.');
       } finally {
         modalLoading.value = false;
-      }
-    };
-
-    const generateCompletionCertificate = async (completionCertificateId) => {
-      try {
-        disableButton.value = true;
-        await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
-        NotifyPositive('Certificat de réalisation généré.');
-
-        await refreshCompletionCertificates();
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la génération du certificat.');
-      } finally {
-        disableButton.value = false;
       }
     };
 
