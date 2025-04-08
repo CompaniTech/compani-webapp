@@ -99,7 +99,8 @@
             pour assurer le suivi de la formation : {{ followUpMissingInfo.join(', ') }}.
           </template>
         </ni-banner>
-        <ni-course-info-link :disable-link="disableDocDownload" @download="downloadConvocation" />
+        <ni-course-info-link v-if="!isSingleCourse" :disable-link="disableDocDownload"
+          @download="downloadConvocation" />
       </div>
       <div v-if="isIntraOrIntraHoldingOrVendor">
         <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
