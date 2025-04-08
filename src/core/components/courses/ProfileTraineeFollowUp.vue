@@ -66,9 +66,9 @@
           @click="downloadCompletionCertificates(OFFICIAL)" />
       </div>
       <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
-        <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates"
-          :columns="completionCertificateColumns" :loading="tableLoading"
-          v-model:pagination="completionCertificatePagination" />
+        <completion-certificate-table v-if="completionCertificates.length"
+          :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
+          @generate="generateCompletionCertificate" :disabled-button="disableButton" />
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
@@ -129,7 +129,7 @@ import BiColorButton from '@components/BiColorButton';
 import Banner from '@components/Banner';
 import PrimaryButton from '@components/PrimaryButton';
 import QuestionnaireQRCodeCell from '@components/courses/QuestionnaireQRCodeCell';
-import SimpleTable from '@components/table/SimpleTable';
+import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
 import {
   E_LEARNING,
   SHORT_DURATION_H_MM,
@@ -147,6 +147,7 @@ import {
   END_COURSE,
   MONTHLY,
   MM_YYYY,
+  GENERATION,
 } from '@data/constants';
 import CompletionCertificateAdditionModal
   from 'src/modules/vendor/components/courses/CompletionCertificateAdditionModal';
@@ -177,7 +178,7 @@ export default {
     'ni-bi-color-button': BiColorButton,
     'ni-banner': Banner,
     'ni-questionnaire-qrcode-cell': QuestionnaireQRCodeCell,
-    'ni-simple-table': SimpleTable,
+    'completion-certificate-table': CompletionCertificateTable,
     'ni-primary-button': PrimaryButton,
     'completion-certificate-addition-modal': CompletionCertificateAdditionModal,
   },
@@ -220,10 +221,12 @@ export default {
         format: row => CompaniDate(row, MM_YYYY).format('LLLL yyyy'),
         align: 'left',
       },
+      { name: 'actions', label: '', field: '', align: 'right' },
     ]);
     const newCompletionCertificate = ref({ trainee: '', month: '' });
     const completionCertificateAdditionModal = ref(false);
     const modalLoading = ref(false);
+    const disableButton = ref(false);
 
     const course = computed(() => $store.state.course.course);
 
@@ -449,11 +452,7 @@ export default {
       }
     );
 
-    const {
-      tableLoading,
-      pagination: completionCertificatePagination,
-      getCompletionCertificates,
-    } = useCompletionCertificates(completionCertificates);
+    const { tableLoading, getCompletionCertificates } = useCompletionCertificates(completionCertificates);
 
     const openCompletionCertificatesModal = () => {
       const hasCourseSlots = course.value.slots.length;
@@ -503,6 +502,21 @@ export default {
       }
     };
 
+    const generateCompletionCertificate = async (completionCertificateId) => {
+      try {
+        disableButton.value = true;
+        await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
+        NotifyPositive('Certificat de réalisation généré.');
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la génération du certificat.');
+      } finally {
+        disableButton.value = false;
+      }
+    };
+
     const created = async () => {
       const promises = [getFollowUp(), getUnsubscribedAttendances()];
       if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
@@ -536,13 +550,13 @@ export default {
       CUSTOM,
       START_COURSE,
       completionCertificates,
-      completionCertificatePagination,
       completionCertificateColumns,
       tableLoading,
       isVendorInterface,
       completionCertificateAdditionModal,
       newCompletionCertificate,
       modalLoading,
+      disableButton,
       // Computed
       course,
       courseHasElearningStep,
@@ -577,6 +591,7 @@ export default {
       openCompletionCertificatesModal,
       resetCompletionCertificateAdditionModal,
       addCompletionCertificate,
+      generateCompletionCertificate,
     };
   },
 };

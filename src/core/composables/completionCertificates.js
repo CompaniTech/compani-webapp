@@ -4,7 +4,6 @@ import { NotifyNegative } from '@components/popup/notify';
 
 export const useCompletionCertificates = (completionCertificates, monthOptions = []) => {
   const tableLoading = ref(false);
-  const pagination = ref({ page: 1, rowsPerPage: 15 });
 
   const getCompletionCertificates = async (query) => {
     try {
@@ -23,7 +22,6 @@ export const useCompletionCertificates = (completionCertificates, monthOptions =
   return {
     // Data
     tableLoading,
-    pagination,
     // Methods
     getCompletionCertificates,
   };

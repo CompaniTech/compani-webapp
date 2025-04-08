@@ -12,32 +12,9 @@
         @update="updateSelectedCompany" />
       <ni-select v-model="selectedTrainee" caption="Apprenant" :options="traineeOptions" clearable />
     </div>
-    <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
-      :loading="tableLoading" v-model:pagination="pagination">
-      <template #body="{ props }">
-        <q-tr :props="props">
-          <q-td :props="props" v-for="col in props.cols" :key="col.name" :data-label="col.label" :class="col.name"
-            :style="col.style">
-              <template v-if="col.name === 'actions'">
-                <div v-if="has(props, 'row.file.link')">
-                  <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
-                </div>
-                <div v-else>
-                  <ni-primary-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
-                </div>
-              </template>
-              <template v-else-if="col.name === 'course'">
-                <div @click="$event.stopPropagation()">
-                  <router-link :to="goToCourseProfile(get(props, 'row.course._id'))" class="clickable-name">
-                    {{ col.value }}
-                  </router-link>
-                </div>
-              </template>
-              <template v-else> {{ col.value }} </template>
-          </q-td>
-        </q-tr>
-      </template>
-    </ni-simple-table>
+    <completion-certificate-table v-if="completionCertificates.length" :columns="columns"
+      :completion-certificates="filteredCompletionCertificates" @generate="generateCompletionCertificate"
+      :disabled-button="disableButton" />
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
     </template>
@@ -53,11 +30,9 @@ import sortedUniqBy from 'lodash/sortedUniqBy';
 import CompletionCertificates from '@api/CompletionCertificates';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
-import SimpleTable from '@components/table/SimpleTable';
 import CompanySelect from '@components/form/CompanySelect';
-import Button from '@components/Button';
-import PrimaryButton from '@components/PrimaryButton';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
+import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
 import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -77,10 +52,8 @@ export default {
   components: {
     'ni-profile-header': ProfileHeader,
     'ni-select': Select,
-    'ni-simple-table': SimpleTable,
+    'completion-certificate-table': CompletionCertificateTable,
     'company-select': CompanySelect,
-    'ni-button': Button,
-    'ni-primary-button': PrimaryButton,
   },
   setup () {
     const metaInfo = { title: 'Certificats réalisation mensuels' };
@@ -137,6 +110,7 @@ export default {
         style: 'width: 15%',
       },
     ]);
+    const disableButton = ref(false);
 
     const displayFilters = computed(() => filteredCompletionCertificates.value.length ||
       selectedCompany.value || selectedHolding.value);
@@ -197,11 +171,7 @@ export default {
       return filteredCC;
     });
 
-    const {
-      tableLoading,
-      pagination,
-      getCompletionCertificates,
-    } = useCompletionCertificates(completionCertificates, monthOptions);
+    const { tableLoading, getCompletionCertificates } = useCompletionCertificates(completionCertificates, monthOptions);
 
     const getMonthOptions = () => {
       // can get monthly completion certificate from 03-2024
@@ -238,6 +208,7 @@ export default {
 
     const generateCompletionCertificate = async (completionCertificateId) => {
       try {
+        disableButton.value = true;
         await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
         NotifyPositive('Certificat de réalisation généré.');
 
@@ -245,14 +216,10 @@ export default {
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la génération du certificat.');
+      } finally {
+        disableButton.value = false;
       }
     };
-
-    const goToCourseProfile = courseId => ({
-      name: 'ni management blended courses info',
-      params: { courseId },
-      query: { defaultTab: 'traineeFollowUp' },
-    });
 
     const created = () => getMonthOptions();
 
@@ -275,10 +242,10 @@ export default {
       selectedMonths,
       monthOptions,
       tableLoading,
-      pagination,
       selectedCompany,
       selectedHolding,
       selectedTrainee,
+      disableButton,
       // Computed
       companyOptions,
       filteredCompletionCertificates,
@@ -293,7 +260,6 @@ export default {
       generateCompletionCertificate,
       get,
       has,
-      goToCourseProfile,
     };
   },
 };
