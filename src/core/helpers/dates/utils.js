@@ -15,7 +15,12 @@ export const ascendingSortBy = key => (a, b) => {
   return CompaniDate(a[key]).isAfter(b[key]) ? 1 : -1;
 };
 
-export const descendingSortBy = key => (a, b) => {
+export const descendingSortBy = (key, format = '') => (a, b) => {
+  if (format) {
+    if (CompaniDate(a[key], format).isSame(CompaniDate(b[key], format))) return 0;
+
+    return CompaniDate(a[key], format).isBefore(CompaniDate(b[key], format)) ? 1 : -1;
+  }
   if (CompaniDate(a[key]).isSame(b[key])) return 0;
 
   return CompaniDate(a[key]).isBefore(b[key]) ? 1 : -1;

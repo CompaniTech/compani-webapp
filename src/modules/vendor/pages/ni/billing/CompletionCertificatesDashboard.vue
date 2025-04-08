@@ -69,7 +69,7 @@ import {
   formatAndSortOptions,
   formatAndSortIdentityOptions,
 } from '@helpers/utils';
-import { ascendingSort } from '@helpers/dates/utils';
+import { ascendingSort, descendingSortBy } from '@helpers/dates/utils';
 import { composeCourseName } from '@helpers/courses';
 
 export default {
@@ -204,8 +204,8 @@ export default {
     } = useCompletionCertificates(completionCertificates, monthOptions);
 
     const getMonthOptions = () => {
-      // can get monthly completion certificate from 02-2025
-      const startDate = CompaniDate('2025-02-01T09:00:00.000Z').startOf(MONTH).toISO();
+      // can get monthly completion certificate from 03-2024
+      const startDate = CompaniDate('2024-03-01T09:00:00.000Z').startOf(MONTH).toISO();
       const endDate = CompaniDate().startOf(MONTH).toISO();
 
       const monthDiff = CompaniDuration(CompaniDate(endDate).diff(startDate, MONTH)).asMonths();
@@ -217,6 +217,7 @@ export default {
 
         monthOptions.value.push({ label, value });
       }
+      monthOptions.value.sort(descendingSortBy('value', MM_YYYY));
     };
 
     watch(completionCertificates, () => {
