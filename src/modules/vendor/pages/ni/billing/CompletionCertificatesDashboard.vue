@@ -12,32 +12,9 @@
         @update="updateSelectedCompany" />
       <ni-select v-model="selectedTrainee" caption="Apprenant" :options="traineeOptions" clearable />
     </div>
-    <ni-simple-table v-if="completionCertificates.length" :data="filteredCompletionCertificates" :columns="columns"
-      :loading="tableLoading" v-model:pagination="pagination">
-      <template #body="{ props }">
-        <q-tr :props="props">
-          <q-td :props="props" v-for="col in props.cols" :key="col.name" :data-label="col.label" :class="col.name"
-            :style="col.style">
-              <template v-if="col.name === 'actions'">
-                <div v-if="has(props, 'row.file.link')">
-                  <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
-                </div>
-                <div v-else>
-                  <ni-primary-button label="Générer" icon="add" @click="generateCompletionCertificate(props.row._id)" />
-                </div>
-              </template>
-              <template v-else-if="col.name === 'course'">
-                <div @click="$event.stopPropagation()">
-                  <router-link :to="goToCourseProfile(get(props, 'row.course._id'))" class="clickable-name">
-                    {{ col.value }}
-                  </router-link>
-                </div>
-              </template>
-              <template v-else> {{ col.value }} </template>
-          </q-td>
-        </q-tr>
-      </template>
-    </ni-simple-table>
+    <completion-certificate-table v-if="completionCertificates.length" :columns="columns"
+      :completion-certificates="filteredCompletionCertificates" @generate="generateCompletionCertificate"
+      :disabled-button="disableButton" />
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
     </template>
@@ -50,15 +27,12 @@ import { ref, watch, computed } from 'vue';
 import get from 'lodash/get';
 import has from 'lodash/has';
 import sortedUniqBy from 'lodash/sortedUniqBy';
-import CompletionCertificates from '@api/CompletionCertificates';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
-import SimpleTable from '@components/table/SimpleTable';
 import CompanySelect from '@components/form/CompanySelect';
-import Button from '@components/Button';
-import PrimaryButton from '@components/PrimaryButton';
-import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
-import { MONTH, MM_YYYY, GENERATION } from '@data/constants';
+import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
+import { NotifyNegative } from '@components/popup/notify';
+import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { useCompletionCertificates } from '@composables/completionCertificates';
@@ -77,10 +51,8 @@ export default {
   components: {
     'ni-profile-header': ProfileHeader,
     'ni-select': Select,
-    'ni-simple-table': SimpleTable,
+    'completion-certificate-table': CompletionCertificateTable,
     'company-select': CompanySelect,
-    'ni-button': Button,
-    'ni-primary-button': PrimaryButton,
   },
   setup () {
     const metaInfo = { title: 'Certificats réalisation mensuels' };
@@ -89,7 +61,6 @@ export default {
     const selectedMonths = ref([]);
     const monthOptions = ref([]);
     const selectedCompany = ref('');
-    const completionCertificates = ref([]);
     const selectedHolding = ref('');
     const selectedTrainee = ref('');
     const columns = ref([
@@ -140,6 +111,14 @@ export default {
 
     const displayFilters = computed(() => filteredCompletionCertificates.value.length ||
       selectedCompany.value || selectedHolding.value);
+
+    const {
+      completionCertificates,
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificateFile,
+    } = useCompletionCertificates();
 
     const companyOptions = computed(() => {
       const companiesCertificates = completionCertificates.value.map(c => get(c, 'course.companies', [])).flat();
@@ -197,11 +176,25 @@ export default {
       return filteredCC;
     });
 
-    const {
-      tableLoading,
-      pagination,
-      getCompletionCertificates,
-    } = useCompletionCertificates(completionCertificates, monthOptions);
+    const refreshCompletionCertificates = async () => {
+      try {
+        await getCompletionCertificates({ months: selectedMonths.value });
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
+      }
+    };
+
+    const generateCompletionCertificate = async (completionCertificateId) => {
+      try {
+        await generateCompletionCertificateFile(completionCertificateId);
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la génération des certificats de réalisation.');
+      }
+    };
 
     const getMonthOptions = () => {
       // can get monthly completion certificate from 03-2024
@@ -232,28 +225,6 @@ export default {
 
     const updateSelectedCompany = value => (selectedCompany.value = value);
 
-    const refreshCompletionCertificates = async () => {
-      await getCompletionCertificates({ months: selectedMonths.value });
-    };
-
-    const generateCompletionCertificate = async (completionCertificateId) => {
-      try {
-        await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
-        NotifyPositive('Certificat de réalisation généré.');
-
-        await refreshCompletionCertificates();
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la génération du certificat.');
-      }
-    };
-
-    const goToCourseProfile = courseId => ({
-      name: 'ni management blended courses info',
-      params: { courseId },
-      query: { defaultTab: 'traineeFollowUp' },
-    });
-
     const created = () => getMonthOptions();
 
     created();
@@ -275,15 +246,15 @@ export default {
       selectedMonths,
       monthOptions,
       tableLoading,
-      pagination,
       selectedCompany,
       selectedHolding,
       selectedTrainee,
+      disableButton,
+      completionCertificates,
       // Computed
       companyOptions,
       filteredCompletionCertificates,
       columns,
-      completionCertificates,
       holdingOptions,
       displayFilters,
       traineeOptions,
@@ -293,7 +264,6 @@ export default {
       generateCompletionCertificate,
       get,
       has,
-      goToCourseProfile,
     };
   },
 };

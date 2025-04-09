@@ -66,9 +66,9 @@
           @click="downloadCompletionCertificates(OFFICIAL)" />
       </div>
       <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
-        <ni-simple-table v-if="completionCertificates.length" :data="completionCertificates"
-          :columns="completionCertificateColumns" :loading="tableLoading"
-          v-model:pagination="completionCertificatePagination" />
+        <completion-certificate-table v-if="completionCertificates.length"
+          :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
+          @generate="generateCompletionCertificate" :disabled-button="disableButton" />
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
@@ -129,7 +129,7 @@ import BiColorButton from '@components/BiColorButton';
 import Banner from '@components/Banner';
 import PrimaryButton from '@components/PrimaryButton';
 import QuestionnaireQRCodeCell from '@components/courses/QuestionnaireQRCodeCell';
-import SimpleTable from '@components/table/SimpleTable';
+import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
 import {
   E_LEARNING,
   SHORT_DURATION_H_MM,
@@ -177,7 +177,7 @@ export default {
     'ni-bi-color-button': BiColorButton,
     'ni-banner': Banner,
     'ni-questionnaire-qrcode-cell': QuestionnaireQRCodeCell,
-    'ni-simple-table': SimpleTable,
+    'completion-certificate-table': CompletionCertificateTable,
     'ni-primary-button': PrimaryButton,
     'completion-certificate-addition-modal': CompletionCertificateAdditionModal,
   },
@@ -201,7 +201,6 @@ export default {
     const pagination = ref({ sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 });
     const questionnaireQRCodes = ref([]);
     const questionnaireTypes = ref([]);
-    const completionCertificates = ref([]);
     const completionCertificateColumns = ref([
       {
         name: 'traineeName',
@@ -220,6 +219,7 @@ export default {
         format: row => CompaniDate(row, MM_YYYY).format('LLLL yyyy'),
         align: 'left',
       },
+      { name: 'actions', label: '', field: '', align: 'right' },
     ]);
     const newCompletionCertificate = ref({ trainee: '', month: '' });
     const completionCertificateAdditionModal = ref(false);
@@ -262,6 +262,14 @@ export default {
 
     const disableDownloadCompletionCertificates =
       computed(() => disableDocDownload.value || !get(course.value, 'subProgram.program.learningGoals'));
+
+    const {
+      completionCertificates,
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificateFile,
+    } = useCompletionCertificates();
 
     const hasCompletionCertificate = computed(() => (completionCertificates.value || []).length);
 
@@ -449,11 +457,25 @@ export default {
       }
     );
 
-    const {
-      tableLoading,
-      pagination: completionCertificatePagination,
-      getCompletionCertificates,
-    } = useCompletionCertificates(completionCertificates);
+    const refreshCompletionCertificates = async () => {
+      try {
+        await getCompletionCertificates({ course: course.value._id });
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
+      }
+    };
+
+    const generateCompletionCertificate = async (completionCertificateId) => {
+      try {
+        await generateCompletionCertificateFile(completionCertificateId);
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la génération des certificats de réalisation.');
+      }
+    };
 
     const openCompletionCertificatesModal = () => {
       const hasCourseSlots = course.value.slots.length;
@@ -473,15 +495,6 @@ export default {
     const resetCompletionCertificateAdditionModal = () => {
       newCompletionCertificate.value = { trainee: '', month: '' };
       v$.value.newCompletionCertificate.$reset();
-    };
-
-    const refreshCompletionCertificates = async () => {
-      try {
-        await getCompletionCertificates({ course: course.value._id });
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
-      }
     };
 
     const addCompletionCertificate = async () => {
@@ -536,13 +549,13 @@ export default {
       CUSTOM,
       START_COURSE,
       completionCertificates,
-      completionCertificatePagination,
       completionCertificateColumns,
       tableLoading,
       isVendorInterface,
       completionCertificateAdditionModal,
       newCompletionCertificate,
       modalLoading,
+      disableButton,
       // Computed
       course,
       courseHasElearningStep,
@@ -577,6 +590,7 @@ export default {
       openCompletionCertificatesModal,
       resetCompletionCertificateAdditionModal,
       addCompletionCertificate,
+      generateCompletionCertificate,
     };
   },
 };
