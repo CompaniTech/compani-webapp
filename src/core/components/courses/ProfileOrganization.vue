@@ -90,7 +90,7 @@
           size="16px" :disable="!traineesEmails" />
       </div>
     </div>
-    <div class="q-mb-xl">
+    <div v-if="!(isSingleCourse && isClientInterface)" class="q-mb-xl">
       <p class="text-weight-bold">Documents utiles</p>
       <div class="q-mb-sm">
         <ni-banner v-if="followUpDisabled">
