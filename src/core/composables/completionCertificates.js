@@ -3,7 +3,8 @@ import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { GENERATION } from '@data/constants';
 
-export const useCompletionCertificates = (completionCertificates) => {
+export const useCompletionCertificates = () => {
+  const completionCertificates = ref([]);
   const tableLoading = ref(false);
   const disableButton = ref(false);
 
@@ -36,6 +37,7 @@ export const useCompletionCertificates = (completionCertificates) => {
 
   return {
     // Data
+    completionCertificates,
     tableLoading,
     disableButton,
     // Methods

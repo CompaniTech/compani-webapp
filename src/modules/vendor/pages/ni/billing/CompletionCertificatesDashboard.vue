@@ -61,7 +61,6 @@ export default {
     const selectedMonths = ref([]);
     const monthOptions = ref([]);
     const selectedCompany = ref('');
-    const completionCertificates = ref([]);
     const selectedHolding = ref('');
     const selectedTrainee = ref('');
     const columns = ref([
@@ -112,6 +111,14 @@ export default {
 
     const displayFilters = computed(() => filteredCompletionCertificates.value.length ||
       selectedCompany.value || selectedHolding.value);
+
+    const {
+      completionCertificates,
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificateFile,
+    } = useCompletionCertificates();
 
     const companyOptions = computed(() => {
       const companiesCertificates = completionCertificates.value.map(c => get(c, 'course.companies', [])).flat();
@@ -178,13 +185,6 @@ export default {
       }
     };
 
-    const {
-      tableLoading,
-      disableButton,
-      getCompletionCertificates,
-      generateCompletionCertificateFile,
-    } = useCompletionCertificates(completionCertificates);
-
     const generateCompletionCertificate = async (completionCertificateId) => {
       try {
         await generateCompletionCertificateFile(completionCertificateId);
@@ -250,11 +250,11 @@ export default {
       selectedHolding,
       selectedTrainee,
       disableButton,
+      completionCertificates,
       // Computed
       companyOptions,
       filteredCompletionCertificates,
       columns,
-      completionCertificates,
       holdingOptions,
       displayFilters,
       traineeOptions,

@@ -201,7 +201,6 @@ export default {
     const pagination = ref({ sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 });
     const questionnaireQRCodes = ref([]);
     const questionnaireTypes = ref([]);
-    const completionCertificates = ref([]);
     const completionCertificateColumns = ref([
       {
         name: 'traineeName',
@@ -263,6 +262,14 @@ export default {
 
     const disableDownloadCompletionCertificates =
       computed(() => disableDocDownload.value || !get(course.value, 'subProgram.program.learningGoals'));
+
+    const {
+      completionCertificates,
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificateFile,
+    } = useCompletionCertificates();
 
     const hasCompletionCertificate = computed(() => (completionCertificates.value || []).length);
 
@@ -449,13 +456,6 @@ export default {
         query: { courseId: course.value._id },
       }
     );
-
-    const {
-      tableLoading,
-      disableButton,
-      getCompletionCertificates,
-      generateCompletionCertificateFile,
-    } = useCompletionCertificates(completionCertificates);
 
     const refreshCompletionCertificates = async () => {
       try {
