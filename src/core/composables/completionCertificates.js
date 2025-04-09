@@ -1,5 +1,4 @@
 import { ref } from 'vue';
-import { useQuasar } from 'quasar';
 import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { GENERATION } from '@data/constants';
@@ -8,8 +7,6 @@ export const useCompletionCertificates = () => {
   const completionCertificates = ref([]);
   const tableLoading = ref(false);
   const disableButton = ref(false);
-
-  const $q = useQuasar();
 
   const getCompletionCertificates = async (query) => {
     try {
@@ -38,30 +35,6 @@ export const useCompletionCertificates = () => {
     }
   };
 
-  const deleteCompletionCertificateFile = async (completionCertificateId) => {
-    try {
-      disableButton.value = true;
-      await CompletionCertificates.deleteFile(completionCertificateId);
-      NotifyPositive('Certificat de réalisation supprimé.');
-    } catch (e) {
-      console.error(e);
-      NotifyNegative('Erreur lors de la suppression du certificat.');
-    } finally {
-      disableButton.value = false;
-    }
-  };
-
-  const validateDateCompletionCertificateDeletionFile = async (completionCertificateId) => {
-    $q.dialog({
-      title: 'Confirmation',
-      message: 'Êtes-vous sûr(e) de vouloir supprimer ce certificat&nbsp;?',
-      html: true,
-      ok: true,
-      cancel: 'Annuler',
-    }).onOk(() => deleteCompletionCertificateFile(completionCertificateId))
-      .onCancel(() => NotifyPositive('Suppression annulée.'));
-  };
-
   return {
     // Data
     completionCertificates,
@@ -70,6 +43,5 @@ export const useCompletionCertificates = () => {
     // Methods
     getCompletionCertificates,
     generateCompletionCertificateFile,
-    validateDateCompletionCertificateDeletionFile,
   };
 };

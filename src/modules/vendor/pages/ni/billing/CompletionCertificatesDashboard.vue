@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { useMeta } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import { ref, watch, computed } from 'vue';
 import get from 'lodash/get';
 import has from 'lodash/has';
@@ -31,7 +31,8 @@ import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import CompanySelect from '@components/form/CompanySelect';
 import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
-import { NotifyNegative } from '@components/popup/notify';
+import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
+import CompletionCertificates from '@api/CompletionCertificates';
 import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -57,6 +58,8 @@ export default {
   setup () {
     const metaInfo = { title: 'Certificats réalisation mensuels' };
     useMeta(metaInfo);
+
+    const $q = useQuasar();
 
     const selectedMonths = ref([]);
     const monthOptions = ref([]);
@@ -118,8 +121,7 @@ export default {
       disableButton,
       getCompletionCertificates,
       generateCompletionCertificateFile,
-      validateDateCompletionCertificateDeletionFile,
-    } = useCompletionCertificates();
+    } = useCompletionCertificates({ months: selectedMonths.value });
 
     const companyOptions = computed(() => {
       const companiesCertificates = completionCertificates.value.map(c => get(c, 'course.companies', [])).flat();
@@ -197,11 +199,31 @@ export default {
       }
     };
 
-    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+    const deleteCompletionCertificateFile = async (completionCertificateId) => {
       try {
-        await validateDateCompletionCertificateDeletionFile(completionCertificateId);
+        disableButton.value = true;
+        await CompletionCertificates.deleteFile(completionCertificateId);
+        NotifyPositive('Certificat de réalisation supprimé.');
 
         await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du certificat.');
+      } finally {
+        disableButton.value = false;
+      }
+    };
+
+    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+      try {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Êtes-vous sûr(e) de vouloir supprimer ce certificat&nbsp;?',
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+        }).onOk(() => deleteCompletionCertificateFile(completionCertificateId))
+          .onCancel(() => NotifyPositive('Suppression annulée.'));
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la suppression du certificat de réalisation.');

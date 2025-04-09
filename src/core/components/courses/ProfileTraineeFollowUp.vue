@@ -68,7 +68,7 @@
       <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
         <completion-certificate-table v-if="completionCertificates.length" :disabled-button="disableButton"
           :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
-          @generate="generateCompletionCertificate" @remove="validateCompletionCertificateDeletion" />
+          @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
@@ -269,7 +269,6 @@ export default {
       disableButton,
       getCompletionCertificates,
       generateCompletionCertificateFile,
-      validateDateCompletionCertificateDeletionFile,
     } = useCompletionCertificates();
 
     const hasCompletionCertificate = computed(() => (completionCertificates.value || []).length);
@@ -478,11 +477,31 @@ export default {
       }
     };
 
-    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+    const deleteCompletionCertificateFile = async (completionCertificateId) => {
       try {
-        await validateDateCompletionCertificateDeletionFile(completionCertificateId);
+        disableButton.value = true;
+        await CompletionCertificates.deleteFile(completionCertificateId);
+        NotifyPositive('Certificat de réalisation supprimé.');
 
         await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du certificat.');
+      } finally {
+        disableButton.value = false;
+      }
+    };
+
+    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+      try {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Êtes-vous sûr(e) de vouloir supprimer ce certificat&nbsp;?',
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+        }).onOk(() => deleteCompletionCertificateFile(completionCertificateId))
+          .onCancel(() => NotifyPositive('Suppression annulée.'));
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la suppression du certificat de réalisation.');
