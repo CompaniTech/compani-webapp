@@ -201,6 +201,7 @@ export default {
         NotifyPositive('Stagiaire supprimé(e).');
       } catch (e) {
         console.error(e);
+        if (e.status === 403 && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la suppression du/de la stagiaire.');
       }
     };
