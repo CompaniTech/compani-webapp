@@ -13,8 +13,8 @@
       <ni-select v-model="selectedTrainee" caption="Apprenant" :options="traineeOptions" clearable />
     </div>
     <completion-certificate-table v-if="completionCertificates.length" :columns="columns"
-      :completion-certificates="filteredCompletionCertificates" @generate="generateCompletionCertificate"
-      :disabled-button="disableButton" />
+      :completion-certificates="filteredCompletionCertificates" :disabled-button="disableButton"
+      @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
     </template>
@@ -118,6 +118,7 @@ export default {
       disableButton,
       getCompletionCertificates,
       generateCompletionCertificateFile,
+      validateDateCompletionCertificateDeletionFile,
     } = useCompletionCertificates();
 
     const companyOptions = computed(() => {
@@ -196,6 +197,17 @@ export default {
       }
     };
 
+    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+      try {
+        await validateDateCompletionCertificateDeletionFile(completionCertificateId);
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du certificat de réalisation.');
+      }
+    };
+
     const getMonthOptions = () => {
       // can get monthly completion certificate from 03-2024
       const startDate = CompaniDate('2024-03-01T09:00:00.000Z').startOf(MONTH).toISO();
@@ -264,6 +276,7 @@ export default {
       generateCompletionCertificate,
       get,
       has,
+      validateCompletionCertificateDeletion,
     };
   },
 };

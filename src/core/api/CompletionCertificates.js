@@ -13,4 +13,7 @@ export default {
   async update (completionCertificateId, payload) {
     await alenviAxios.put(`${process.env.API_HOSTNAME}/completioncertificates/${completionCertificateId}`, payload);
   },
+  async deleteFile (completionCertificateId) {
+    await alenviAxios.delete(`${process.env.API_HOSTNAME}/completioncertificates/${completionCertificateId}/file`);
+  },
 };

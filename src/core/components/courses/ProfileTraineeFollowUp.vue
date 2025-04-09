@@ -66,9 +66,9 @@
           @click="downloadCompletionCertificates(OFFICIAL)" />
       </div>
       <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
-        <completion-certificate-table v-if="completionCertificates.length"
+        <completion-certificate-table v-if="completionCertificates.length" :disabled-button="disableButton"
           :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
-          @generate="generateCompletionCertificate" :disabled-button="disableButton" />
+          @generate="generateCompletionCertificate" @remove="validateCompletionCertificateDeletion" />
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
@@ -269,6 +269,7 @@ export default {
       disableButton,
       getCompletionCertificates,
       generateCompletionCertificateFile,
+      validateDateCompletionCertificateDeletionFile,
     } = useCompletionCertificates();
 
     const hasCompletionCertificate = computed(() => (completionCertificates.value || []).length);
@@ -477,6 +478,17 @@ export default {
       }
     };
 
+    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+      try {
+        await validateDateCompletionCertificateDeletionFile(completionCertificateId);
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du certificat de réalisation.');
+      }
+    };
+
     const openCompletionCertificatesModal = () => {
       const hasCourseSlots = course.value.slots.length;
       const hasCourseTrainees = course.value.trainees.length;
@@ -591,6 +603,7 @@ export default {
       resetCompletionCertificateAdditionModal,
       addCompletionCertificate,
       generateCompletionCertificate,
+      validateCompletionCertificateDeletion,
     };
   },
 };
