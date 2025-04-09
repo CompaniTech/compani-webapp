@@ -450,6 +450,13 @@ export default {
       }
     );
 
+    const {
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificateFile,
+    } = useCompletionCertificates(completionCertificates);
+
     const refreshCompletionCertificates = async () => {
       try {
         await getCompletionCertificates({ course: course.value._id });
@@ -459,12 +466,16 @@ export default {
       }
     };
 
-    const {
-      tableLoading,
-      disableButton,
-      getCompletionCertificates,
-      generateCompletionCertificate,
-    } = useCompletionCertificates(completionCertificates, refreshCompletionCertificates);
+    const generateCompletionCertificate = async (completionCertificateId) => {
+      try {
+        await generateCompletionCertificateFile(completionCertificateId);
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la génération des certificats de réalisation.');
+      }
+    };
 
     const openCompletionCertificatesModal = () => {
       const hasCourseSlots = course.value.slots.length;

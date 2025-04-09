@@ -3,7 +3,7 @@ import CompletionCertificates from '@api/CompletionCertificates';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { GENERATION } from '@data/constants';
 
-export const useCompletionCertificates = (completionCertificates, refreshCompletionCertificates, monthOptions = []) => {
+export const useCompletionCertificates = (completionCertificates) => {
   const tableLoading = ref(false);
   const disableButton = ref(false);
 
@@ -21,13 +21,11 @@ export const useCompletionCertificates = (completionCertificates, refreshComplet
     }
   };
 
-  const generateCompletionCertificate = async (completionCertificateId) => {
+  const generateCompletionCertificateFile = async (completionCertificateId) => {
     try {
       disableButton.value = true;
       await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
       NotifyPositive('Certificat de réalisation généré.');
-
-      await refreshCompletionCertificates();
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de la génération du certificat.');
@@ -42,6 +40,6 @@ export const useCompletionCertificates = (completionCertificates, refreshComplet
     disableButton,
     // Methods
     getCompletionCertificates,
-    generateCompletionCertificate,
+    generateCompletionCertificateFile,
   };
 };

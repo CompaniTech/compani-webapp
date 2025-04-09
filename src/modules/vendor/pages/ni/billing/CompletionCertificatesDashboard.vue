@@ -31,6 +31,7 @@ import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import CompanySelect from '@components/form/CompanySelect';
 import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
+import { NotifyNegative } from '@components/popup/notify';
 import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -169,15 +170,31 @@ export default {
     });
 
     const refreshCompletionCertificates = async () => {
-      await getCompletionCertificates({ months: selectedMonths.value });
+      try {
+        await getCompletionCertificates({ months: selectedMonths.value });
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
+      }
     };
 
     const {
       tableLoading,
       disableButton,
       getCompletionCertificates,
-      generateCompletionCertificate,
-    } = useCompletionCertificates(completionCertificates, refreshCompletionCertificates, monthOptions);
+      generateCompletionCertificateFile,
+    } = useCompletionCertificates(completionCertificates);
+
+    const generateCompletionCertificate = async (completionCertificateId) => {
+      try {
+        await generateCompletionCertificateFile(completionCertificateId);
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la génération des certificats de réalisation.');
+      }
+    };
 
     const getMonthOptions = () => {
       // can get monthly completion certificate from 03-2024
