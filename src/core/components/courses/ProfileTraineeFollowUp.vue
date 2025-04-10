@@ -481,12 +481,12 @@ export default {
       try {
         disableButton.value = true;
         await CompletionCertificates.deleteFile(completionCertificateId);
-        NotifyPositive('Certificat de réalisation supprimé.');
+        NotifyPositive('Document supprimé.');
 
         await refreshCompletionCertificates();
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la suppression du certificat.');
+        NotifyNegative('Erreur lors de la suppression du document.');
       } finally {
         disableButton.value = false;
       }
@@ -496,7 +496,7 @@ export default {
       try {
         $q.dialog({
           title: 'Confirmation',
-          message: 'Êtes-vous sûr(e) de vouloir supprimer ce certificat&nbsp;?',
+          message: 'Êtes-vous sûr(e) de vouloir supprimer ce document&nbsp;?',
           html: true,
           ok: true,
           cancel: 'Annuler',
@@ -504,7 +504,7 @@ export default {
           .onCancel(() => NotifyPositive('Suppression annulée.'));
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la suppression du certificat de réalisation.');
+        NotifyNegative('Erreur lors de la suppression du document.');
       }
     };
 
