@@ -330,7 +330,7 @@ export default {
         emit('refresh');
       } catch (e) {
         console.error(e);
-        if (e.status === 409) return NotifyNegative(e.data.message);
+        if ([403, 409].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la modification du créneau.');
       } finally {
         modalLoading.value = false;
