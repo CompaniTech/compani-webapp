@@ -66,9 +66,9 @@
           @click="downloadCompletionCertificates(OFFICIAL)" />
       </div>
       <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
-        <completion-certificate-table v-if="completionCertificates.length"
+        <completion-certificate-table v-if="completionCertificates.length" :disabled-button="disableButton"
           :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
-          @generate="generateCompletionCertificate" :disabled-button="disableButton" />
+          @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
@@ -477,6 +477,37 @@ export default {
       }
     };
 
+    const deleteCompletionCertificateFile = async (completionCertificateId) => {
+      try {
+        disableButton.value = true;
+        await CompletionCertificates.deleteFile(completionCertificateId);
+        NotifyPositive('Document supprimé.');
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du document.');
+      } finally {
+        disableButton.value = false;
+      }
+    };
+
+    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+      try {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Êtes-vous sûr(e) de vouloir supprimer ce document&nbsp;?',
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+        }).onOk(() => deleteCompletionCertificateFile(completionCertificateId))
+          .onCancel(() => NotifyPositive('Suppression annulée.'));
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du document.');
+      }
+    };
+
     const openCompletionCertificatesModal = () => {
       const hasCourseSlots = course.value.slots.length;
       const hasCourseTrainees = course.value.trainees.length;
@@ -591,6 +622,7 @@ export default {
       resetCompletionCertificateAdditionModal,
       addCompletionCertificate,
       generateCompletionCertificate,
+      validateCompletionCertificateDeletion,
     };
   },
 };

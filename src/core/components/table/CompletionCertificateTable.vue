@@ -8,6 +8,7 @@
             <template v-if="col.name === 'actions'">
               <div v-if="has(props, 'row.file.link')">
                 <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
+                <ni-button icon="delete" color="primary" type="a" @click="removeFile(props.row._id)" />
               </div>
               <div v-else>
                 <ni-primary-button label="Générer" icon="add" @click="generate(props.row._id)"
@@ -49,11 +50,13 @@ export default {
     'ni-button': Button,
     'ni-primary-button': PrimaryButton,
   },
-  emits: ['generate'],
+  emits: ['generate', 'removeFile'],
   setup (_, { emit }) {
     const pagination = ref({ page: 1, rowsPerPage: 15 });
 
     const generate = event => emit('generate', event);
+
+    const removeFile = event => emit('removeFile', event);
 
     const goToCourseProfile = courseId => ({
       name: 'ni management blended courses info',
@@ -69,6 +72,7 @@ export default {
       goToCourseProfile,
       get,
       has,
+      removeFile,
     };
   },
 };

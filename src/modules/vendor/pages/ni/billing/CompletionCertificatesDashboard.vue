@@ -13,8 +13,8 @@
       <ni-select v-model="selectedTrainee" caption="Apprenant" :options="traineeOptions" clearable />
     </div>
     <completion-certificate-table v-if="completionCertificates.length" :columns="columns"
-      :completion-certificates="filteredCompletionCertificates" @generate="generateCompletionCertificate"
-      :disabled-button="disableButton" />
+      :completion-certificates="filteredCompletionCertificates" :disabled-button="disableButton"
+      @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
     </template>
@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { useMeta } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import { ref, watch, computed } from 'vue';
 import get from 'lodash/get';
 import has from 'lodash/has';
@@ -31,7 +31,8 @@ import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import CompanySelect from '@components/form/CompanySelect';
 import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
-import { NotifyNegative } from '@components/popup/notify';
+import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
+import CompletionCertificates from '@api/CompletionCertificates';
 import { MONTH, MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -57,6 +58,8 @@ export default {
   setup () {
     const metaInfo = { title: 'Certificats réalisation mensuels' };
     useMeta(metaInfo);
+
+    const $q = useQuasar();
 
     const selectedMonths = ref([]);
     const monthOptions = ref([]);
@@ -196,6 +199,37 @@ export default {
       }
     };
 
+    const deleteCompletionCertificateFile = async (completionCertificateId) => {
+      try {
+        disableButton.value = true;
+        await CompletionCertificates.deleteFile(completionCertificateId);
+        NotifyPositive('Document supprimé.');
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du document.');
+      } finally {
+        disableButton.value = false;
+      }
+    };
+
+    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+      try {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Êtes-vous sûr(e) de vouloir supprimer ce document&nbsp;?',
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+        }).onOk(() => deleteCompletionCertificateFile(completionCertificateId))
+          .onCancel(() => NotifyPositive('Suppression annulée.'));
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du document.');
+      }
+    };
+
     const getMonthOptions = () => {
       // can get monthly completion certificate from 03-2024
       const startDate = CompaniDate('2024-03-01T09:00:00.000Z').startOf(MONTH).toISO();
@@ -264,6 +298,7 @@ export default {
       generateCompletionCertificate,
       get,
       has,
+      validateCompletionCertificateDeletion,
     };
   },
 };
