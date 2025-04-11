@@ -181,6 +181,15 @@ const routes = [
         },
       },
       {
+        path: 'ni/management/single-courses',
+        name: 'ni management single courses',
+        component: () => import('src/modules/vendor/pages/ni/management/SingleCourseDirectory'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'management',
+        },
+      },
+      {
         path: 'ni/management/blended-courses/:courseId',
         name: 'ni management blended courses info',
         component: () => import('src/modules/vendor/pages/ni/management/BlendedCourseProfile'),

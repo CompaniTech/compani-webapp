@@ -49,8 +49,8 @@
         <q-card-actions v-if="canUpdateTrainees" align="right" class="q-pa-sm">
           <ni-button v-if="canUpdateCompanies" color="primary" icon="add" label="Rattacher une structure"
             :disable="loading" @click="openCompanyAdditionModal" />
-          <ni-button v-if="course.companies.length" color="primary" icon="add" label="Ajouter une personne"
-            :disable="loading" @click="openTraineeCreationModal" />
+          <ni-button v-if="course.companies.length && course.type !== SINGLE" color="primary" icon="add"
+            label="Ajouter une personne" :disable="loading" @click="openTraineeCreationModal" />
           <ni-button v-if="displayCertificationEdition" color="primary" icon="edit" label="Modifier les certifications"
             :disable="loading" @click="openCertificationsUpdateModal" />
         </q-card-actions>
@@ -88,7 +88,7 @@ import get from 'lodash/get';
 import pick from 'lodash/pick';
 import groupBy from 'lodash/groupBy';
 import Courses from '@api/Courses';
-import { TRAINER, INTRA } from '@data/constants';
+import { TRAINER, INTRA, SINGLE } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import {
   formatAndSortUserOptions,
@@ -206,14 +206,15 @@ export default {
     });
 
     const displayCompanyNames =
-      computed(() => !isIntraCourse.value && (!isClientInterface || !!loggedUser.value.role.holding));
+      computed(() => !(isIntraCourse.value || isSingleCourse.value) &&
+        (!isClientInterface || !!loggedUser.value.role.holding));
 
     const displayCertificationEdition =
       computed(() => course.value.hasCertifyingTest && canUpdateCertifyingTest.value && course.value.trainees.length);
 
     const refresh = () => emit('refresh');
 
-    const { isIntraCourse, isClientInterface, isArchived, isIntraHoldingCourse } = useCourses(course);
+    const { isIntraCourse, isSingleCourse, isClientInterface, isArchived, isIntraHoldingCourse } = useCourses(course);
 
     const {
       newLearner,
@@ -343,13 +344,14 @@ export default {
 
     const created = async () => {
       defineCourseAbilities();
-      if (course.value.type !== INTRA && canUpdateCompanies.value) await getPotentialCompanies();
+      if (![INTRA, SINGLE].includes(course.value.type) && canUpdateCompanies.value) await getPotentialCompanies();
     };
 
     created();
 
     return {
       // Data
+      SINGLE,
       newLearner,
       firstStep,
       learnerCreationModalLoading,

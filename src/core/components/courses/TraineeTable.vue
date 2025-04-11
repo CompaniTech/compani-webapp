@@ -17,7 +17,8 @@
           <template v-if="col.name === 'actions' && canUpdateTrainees">
             <div>
               <ni-button icon="edit" @click="openTraineeEditionModal(props.row)" :disable="!!course.archivedAt" />
-              <ni-button icon="close" @click="validateTraineeDeletion(props.row._id)" :disable="!!course.archivedAt" />
+              <ni-button v-if="course.type !== SINGLE" icon="close" @click="validateTraineeDeletion(props.row._id)"
+                :disable="!!course.archivedAt" />
             </div>
           </template>
           <template v-else-if="col.name === 'connectionInfos'">
@@ -49,6 +50,7 @@ import { formatPhone, formatPhoneForPayload } from '@helpers/utils';
 import Courses from '@api/Courses';
 import Users from '@api/Users';
 import Button from '@components/Button';
+import { SINGLE } from '@data/constants';
 import TraineeEditionModal from '@components/courses/TraineeEditionModal';
 import ResponsiveTable from '@components/table/ResponsiveTable';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
@@ -208,6 +210,7 @@ export default {
 
     return {
       // Data
+      SINGLE,
       traineeColumns,
       traineePagination,
       traineeEditionModal,

@@ -90,7 +90,7 @@
           size="16px" :disable="!traineesEmails" />
       </div>
     </div>
-    <div class="q-mb-xl">
+    <div v-if="!(isSingleCourse && isClientInterface)" class="q-mb-xl">
       <p class="text-weight-bold">Documents utiles</p>
       <div class="q-mb-sm">
         <ni-banner v-if="followUpDisabled">
@@ -99,7 +99,8 @@
             pour assurer le suivi de la formation : {{ followUpMissingInfo.join(', ') }}.
           </template>
         </ni-banner>
-        <ni-course-info-link :disable-link="disableDocDownload" @download="downloadConvocation" />
+        <ni-course-info-link v-if="!isSingleCourse" :disable-link="disableDocDownload"
+          @download="downloadConvocation" />
       </div>
       <div v-if="isIntraOrIntraHoldingOrVendor">
         <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
@@ -206,6 +207,7 @@ import {
   DELETION,
   CREATION,
   TUTOR,
+  SINGLE,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
@@ -248,8 +250,6 @@ export default {
   },
   setup (props) {
     const { profileId } = toRefs(props);
-
-    const SINGLE_COURSES_SUBPROGRAM_IDS = process.env.SINGLE_COURSES_SUBPROGRAM_IDS.split(';');
 
     const $store = useStore();
     const $router = useRouter();
@@ -320,6 +320,7 @@ export default {
       followUpMissingInfo,
       downloadAttendanceSheet,
       isIntraCourse,
+      isSingleCourse,
     } = useCourses(course);
 
     const refreshTraineeTable = async () => {
@@ -376,7 +377,9 @@ export default {
 
     const isIntraHoldingCourse = computed(() => course.value.type === INTRA_HOLDING);
 
-    const canEditSlots = computed(() => !(isClientInterface && isCourseInter.value));
+    const singleCourse = computed(() => course.value.type === SINGLE);
+
+    const canEditSlots = computed(() => !(isClientInterface && (isCourseInter.value || singleCourse.value)));
 
     const isFinished = computed(() => {
       const slotsToCome = course.value.slots.filter(slot => CompaniDate().isBefore(slot.endDate));
@@ -438,8 +441,6 @@ export default {
       ];
       return Object.freeze(interlocutors.map(interlocutor => formatContactOption(interlocutor)));
     });
-
-    const isSingleCourse = computed(() => SINGLE_COURSES_SUBPROGRAM_IDS.includes(course.value.subProgram._id));
 
     watch(course, async (newValue, oldValue) => {
       tmpCourse.value = pick(course.value, ['misc', 'estimatedStartDate', 'maxTrainees', 'hasCertifyingTest']);
@@ -519,8 +520,6 @@ export default {
 
     const refreshPotentialTrainees = async () => {
       try {
-        if (isClientInterface && course.value.type === INTER_B2B) return;
-
         potentialTrainees.value = !isEmpty(courseCompanyIds.value)
           ? Object.freeze(await Users.learnerList(
             { companies: courseCompanyIds.value, startDate: CompaniDate().toISO(), action: COURSE }
@@ -571,7 +570,7 @@ export default {
           return;
         }
 
-        const clientsUsersAllowedtoAccessCompany = course.value.type === INTRA
+        const clientsUsersAllowedtoAccessCompany = ([INTRA, SINGLE].includes(course.value.type))
           ? await Users.list(
             { role: [COACH, CLIENT_ADMIN], company: courseCompanyIds.value[0], includeHoldingAdmins: true }
           )

@@ -28,15 +28,29 @@
         caption="Nombre d'inscrits max" :model-value="newCourse.maxTrainees" @blur="validations.maxTrainees.$touch"
         :error="validations.maxTrainees.$error" :error-message="maxTraineesErrorMessage"
         @update:model-value="update($event, 'maxTrainees')" />
-      <ni-input v-if="isIntraCourse" :model-value="newCourse.expectedBillsCount" in-modal required-field type="number"
-        @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures"
+      <ni-select v-if="isSingleCourse" in-modal caption="Apprenant" :model-value="newCourse.trainee"
+        @update:model-value="update($event, 'trainee')" required-field :options="traineeOptions" option-slot
+        :error="validations.trainee.$error">
+        <template #option="{ scope }">
+          <q-item v-bind="scope.itemProps">
+            <q-item-section>
+              <q-item-label>{{ scope.opt.label }}</q-item-label>
+              <q-item-label class="details">
+                <div class="q-ms-xs">{{ scope.opt.company }}</div>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </ni-select>
+      <ni-input v-if="isIntraCourse || isSingleCourse" :model-value="newCourse.expectedBillsCount" type="number"
+        @update:model-value="update($event, 'expectedBillsCount')" caption="Nombre de factures" in-modal
         :error="validations.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage"
-        @blur="validations.expectedBillsCount.$touch" />
+        @blur="validations.expectedBillsCount.$touch" required-field />
       <ni-select :model-value="newCourse.certificateGenerationMode" caption="Mode de génération des certificats"
         @update:model-value="update($event, 'certificateGenerationMode')" :options="CERTIFICATE_GENERATION_MODE"
         :error="validations.certificateGenerationMode.$error" required-field />
-      <ni-input in-modal :model-value="newCourse.misc" @update:model-value="update($event.trim(), 'misc')"
-        caption="Informations Complémentaires" />
+      <ni-input v-if="!isSingleCourse" in-modal :model-value="newCourse.misc"
+        @update:model-value="update($event.trim(), 'misc')" caption="Informations Complémentaires" />
       <q-checkbox in-modal :model-value="newCourse.hasCertifyingTest" label="La formation est certifiante" dense
         @update:model-value="update($event, 'hasCertifyingTest')" class="q-mb-lg" />
       <template #footer>
@@ -57,12 +71,13 @@ import DateInput from '@components/form/DateInput';
 import OptionGroup from '@components/form/OptionGroup';
 import Input from '@components/form/Input';
 import {
-  COURSE_TYPES,
+  GROUP_COURSE_TYPES,
   REQUIRED_LABEL,
   INTRA,
   INTRA_HOLDING,
   PUBLISHED,
   CERTIFICATE_GENERATION_MODE,
+  SINGLE,
 } from '@data/constants';
 import { formatAndSortOptions, formatAndSortCompanyOptions } from '@helpers/utils';
 
@@ -77,6 +92,8 @@ export default {
     adminUserOptions: { type: Array, default: () => [] },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
+    traineeOptions: { type: Array, default: () => [] },
+    courseTypes: { type: Array, default: () => GROUP_COURSE_TYPES },
   },
   components: {
     'ni-option-group': OptionGroup,
@@ -88,9 +105,8 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-course'],
   setup (props, { emit }) {
-    const { programs, validations, newCourse, companies } = toRefs(props);
+    const { programs, validations, newCourse, companies, traineeOptions } = toRefs(props);
 
-    const courseTypes = COURSE_TYPES;
     const subProgramOptions = ref([]);
     const disableSubProgram = ref(false);
 
@@ -126,6 +142,8 @@ export default {
 
     const isIntraHoldingCourse = computed(() => newCourse.value.type === INTRA_HOLDING);
 
+    const isSingleCourse = computed(() => newCourse.value.type === SINGLE);
+
     const companyOptions = computed(() => formatAndSortCompanyOptions(companies.value));
 
     const hide = () => emit('hide');
@@ -138,15 +156,23 @@ export default {
       emit(
         'update:new-course',
         {
-          ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount']),
+          ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount', 'trainee']),
           ...(event === INTRA && { maxTrainees: '8', expectedBillsCount: '0' }),
           ...(event === INTRA_HOLDING && { maxTrainees: '8' }),
+          ...(event === SINGLE && { expectedBillsCount: '0' }),
           type: event,
         }
       );
     };
 
-    const update = (event, prop) => emit('update:new-course', { ...newCourse.value, [prop]: event });
+    const update = (event, prop) => emit(
+      'update:new-course',
+      {
+        ...newCourse.value,
+        [prop]: event,
+        ...(prop === 'trainee' && { misc: traineeOptions.value.find(o => o.value === event).label }),
+      }
+    );
 
     watch(
       () => newCourse.value.program,
@@ -176,7 +202,6 @@ export default {
 
     return {
       // Data
-      courseTypes,
       CERTIFICATE_GENERATION_MODE,
       subProgramOptions,
       disableSubProgram,
@@ -187,6 +212,7 @@ export default {
       isIntraCourse,
       isIntraHoldingCourse,
       companyOptions,
+      isSingleCourse,
       // Methods
       hide,
       input,
@@ -197,3 +223,9 @@ export default {
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.details
+  font-size: 14px
+  color: $copper-grey-500
+</style>
