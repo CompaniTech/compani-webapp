@@ -310,7 +310,13 @@ export default {
                 .flatMap(a => a.activityHistories.map(ah => CompaniDate(ah.date).format(MM_YYYY)))))
         ),
       ];
-      const monthWithSlots = [...new Set(course.value.slots.map(slot => CompaniDate(slot.startDate).format(MM_YYYY)))];
+      const monthWithSlots = [
+        ...new Set(
+          course.value.slots
+            .filter(slot => CompaniDate().isSameOrAfter(CompaniDate(slot.startDate).startOf('month')))
+            .map(slot => CompaniDate(slot.startDate).format(MM_YYYY))
+        ),
+      ];
       const completionCertificatesByMonth = groupBy(completionCertificates.value, 'month');
 
       return [...new Set([...monthWithSlots, ...monthWithHistories])]
