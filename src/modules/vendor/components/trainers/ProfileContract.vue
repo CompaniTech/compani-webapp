@@ -1,15 +1,21 @@
 <template>
   <div>
-    <div class="clickable-name text-italic q-mb-md">
-      <router-link :to="gotToCourseDirectory()" @click="setSelectedTrainer">
-        {{ canUpdateTrainerMissions ? 'Voir les formations du formateur' : 'Voir mes formations' }}
+    <div v-if="canUpdateTrainerMissions" class="clickable-name text-italic q-mb-md">
+      <router-link v-if="hasGroupCourses" :to="goToGroupCourseDirectory()" @click="setSelectedTrainer" class="q-mr-md">
+        Voir les formations de groupe du formateur
       </router-link>
+      <router-link v-if="hasSingleCourses" :to="goToSingleCourseDirectory()" @click="setSelectedTrainer">
+        Voir les formations individuelles du formateur
+      </router-link>
+    </div>
+    <div v-else-if="courseList.length" class="clickable-name text-italic q-mb-md">
+      <router-link :to="goToGroupCourseDirectory()" @click="setSelectedTrainer">Voir mes formations</router-link>
     </div>
     <trainer-mission-table :trainer-missions="trainerMissions" :loading="missionCreationLoading"
       @refresh="refreshTrainerMissions" :can-update="canUpdateTrainerMissions" />
     <q-btn v-if="canUpdateTrainerMissions" class="fixed fab-custom" no-caps rounded icon="add"
       label="Créer un ordre de mission" color="primary" @click="openTrainerMissionCreationModal"
-      :loading="missionCreationLoading" :disable="!courseList.length" />
+      :loading="missionCreationLoading" :disable="!activeCourseList.length" />
 
     <trainer-mission-creation-modal v-model="missionCreationModal" v-model:trainer-mission="newTrainerMission"
       @submit="nextStep" :validations="v$.newTrainerMission" @hide="resetMissionCreationModal"
@@ -35,7 +41,7 @@ import { defineAbilitiesForCourse } from '@helpers/ability';
 import Courses from '@api/Courses';
 import TrainerMissions from '@api/TrainerMissions';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { TRAINER, BLENDED, OPERATIONS, UPLOAD } from '@data/constants';
+import { TRAINER, BLENDED, OPERATIONS, UPLOAD, SINGLE } from '@data/constants';
 import TrainerMissionCreationModal from '@components/courses/TrainerMissionCreationModal';
 import TrainerMissionTable from '@components/courses/TrainerMissionTable';
 import TrainerMissionInfosModal from '@components/courses/TrainerMissionInfosModal';
@@ -53,6 +59,7 @@ export default {
     const missionCreationModal = ref(false);
     const missionCreationLoading = ref(false);
     const newTrainerMission = ref({ courses: [], fee: 0, program: '', file: '' });
+    const activeCourseList = ref([]);
     const courseList = ref([]);
     const trainerMissions = ref([]);
     const creationMethod = ref(UPLOAD);
@@ -63,8 +70,12 @@ export default {
     const canUpdateTrainerMissions = computed(() => {
       const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
 
-      return ability.can('update', subject('Courses', courseList.value), 'trainer_missions');
+      return ability.can('update', subject('Courses', activeCourseList.value), 'trainer_missions');
     });
+
+    const hasGroupCourses = computed(() => courseList.value.some(c => c.type !== SINGLE));
+
+    const hasSingleCourses = computed(() => courseList.value.some(c => c.type === SINGLE));
 
     const rules = computed(() => ({
       newTrainerMission: {
@@ -87,10 +98,10 @@ export default {
         .map(tm => tm.courses.map(c => c._id))
         .flat();
 
-      return courseList.value.filter(c => !coursesWithActiveTrainerMissions.includes(c._id));
+      return activeCourseList.value.filter(c => !coursesWithActiveTrainerMissions.includes(c._id));
     });
 
-    const selectedCourses = computed(() => courseList.value
+    const selectedCourses = computed(() => activeCourseList.value
       .filter(c => newTrainerMission.value.courses.includes(c._id)));
 
     const refreshCourses = async () => {
@@ -99,12 +110,12 @@ export default {
           trainer: trainer.value._id,
           format: BLENDED,
           action: OPERATIONS,
-          isArchived: false,
         });
         courseList.value = courses;
+        activeCourseList.value = courses.filter(c => !c.archivedAt);
       } catch (e) {
         console.error(e);
-        courseList.value = [];
+        activeCourseList.value = [];
         NotifyNegative('Erreur lors de la récupération des formations.');
       }
     };
@@ -178,8 +189,12 @@ export default {
     };
     const setSelectedTrainer = () => $store.dispatch('course/setSelectedTrainer', { trainerId: trainer.value._id });
 
-    const gotToCourseDirectory = () => (
+    const goToGroupCourseDirectory = () => (
       canUpdateTrainerMissions.value ? { name: 'ni management blended courses' } : { name: 'trainers courses' }
+    );
+
+    const goToSingleCourseDirectory = () => (
+      { name: 'ni management single courses' }
     );
 
     const created = async () => {
@@ -196,7 +211,10 @@ export default {
       missionCreationLoading,
       newTrainerMission,
       trainerMissions,
+      activeCourseList,
       courseList,
+      hasGroupCourses,
+      hasSingleCourses,
       creationMethod,
       trainerMissionInfosModal,
       // Computed
@@ -208,7 +226,8 @@ export default {
       openTrainerMissionCreationModal,
       createTrainerMission,
       resetMissionCreationModal,
-      gotToCourseDirectory,
+      goToGroupCourseDirectory,
+      goToSingleCourseDirectory,
       setSelectedTrainer,
       nextStep,
       refreshTrainerMissions,

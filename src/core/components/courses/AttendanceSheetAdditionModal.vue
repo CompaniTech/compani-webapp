@@ -6,9 +6,10 @@
     <ni-select :model-value="newAttendanceSheet.trainer" :error="validations.trainer.$error"
       @update:model-value="update($event, 'trainer')" in-modal required-field caption="Intervenant·e"
       :options="trainerOptions" @blur="validations.trainer.$touch" :disable="course.trainers.length < 2" />
-    <ni-select v-if="course.type === INTER_B2B" :model-value="newAttendanceSheet.trainee"
+    <ni-select v-if="[INTER_B2B, SINGLE].includes(course.type)" :model-value="newAttendanceSheet.trainee"
       :error="validations.trainee.$error" @update:model-value="update($event, 'trainee')" in-modal required-field
-      caption="Participant·e" :options="traineeOptions" @blur="validations.trainee.$touch" />
+      caption="Participant·e" :options="traineeOptions" @blur="validations.trainee.$touch"
+      :disable="course.type === SINGLE" />
     <ni-select v-else :model-value="newAttendanceSheet.date" @blur="validations.date.$touch"
       :error="validations.date.$error" @update:model-value="update($event, 'date')" :options="dateOptions"
       required-field in-modal caption="Date" />
@@ -34,7 +35,7 @@ import Select from '@components/form/Select';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
 import MultipleOptionGroup from '@components/form/MultipleOptionGroup';
-import { INTER_B2B, DOC_EXTENSIONS, IMAGE_EXTENSIONS, DD_MM_YYYY, HH_MM } from '@data/constants';
+import { INTER_B2B, SINGLE, DOC_EXTENSIONS, IMAGE_EXTENSIONS, DD_MM_YYYY, HH_MM } from '@data/constants';
 import { formatAndSortIdentityOptions } from '@helpers/utils';
 import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -107,6 +108,7 @@ export default {
     return {
       // Data
       INTER_B2B,
+      SINGLE,
       DOC_EXTENSIONS,
       IMAGE_EXTENSIONS,
       // Computed

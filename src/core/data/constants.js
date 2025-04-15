@@ -125,11 +125,15 @@ export const COURSE_SMS = 'Formation';
 export const INTRA = 'intra';
 export const INTER_B2B = 'inter_b2b';
 export const INTRA_HOLDING = 'intra_holding';
+export const SINGLE = 'single';
 export const COURSE_TYPES = [
   { label: 'Intra', value: INTRA },
   { label: 'Inter B2B', value: INTER_B2B },
   { label: 'Intra société mère', value: INTRA_HOLDING },
+  { label: 'Individuelle', value: SINGLE },
 ];
+export const GROUP_COURSE_TYPES = COURSE_TYPES.filter(type => type.value !== SINGLE);
+export const SINGLE_TYPE = [{ label: 'Individuelle', value: SINGLE }];
 export const BLENDED = 'blended';
 export const STRICTLY_E_LEARNING = 'strictly_e_learning';
 export const FORTHCOMING = 'forthcoming';
@@ -139,6 +143,9 @@ export const OPERATIONS = 'operations';
 export const PEDAGOGY = 'pedagogy';
 export const ARCHIVED_COURSES = 'archived_courses';
 export const UNARCHIVED_COURSES = 'unarchived_courses';
+export const MONTHLY = 'monthly';
+export const GLOBAL = 'global';
+export const CERTIFICATE_GENERATION_MODE = [{ label: 'Mensuel', value: MONTHLY }, { label: 'Global', value: GLOBAL }];
 
 // SUBPROGRAM
 export const PUBLISHED = 'published';

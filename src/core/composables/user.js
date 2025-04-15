@@ -1,18 +1,28 @@
 import { computed, nextTick, useTemplateRef } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import Users from '@api/Users';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useValidations } from '@composables/validations';
-import { REQUIRED_LABEL } from '@data/constants';
+import { REQUIRED_LABEL, TRAINER } from '@data/constants';
 import { formatPhoneForPayload } from '@helpers/utils';
 
-export const useUser = (refreshUser, v$, emailLock, tmpInput) => {
+export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
   const userEmail = useTemplateRef('userEmail');
 
+  const $router = useRouter();
   const $store = useStore();
-  const userProfile = computed(() => $store.state.main.loggedUser);
+  const userProfile = computed(() => {
+    const isAccountInfos = /\/account/.test($router.currentRoute.value.path);
+    const isTrainerInTrainerInfos = /\/trainers\/info/.test($router.currentRoute.value.path) &&
+      TRAINER === get($store.state.main.loggedUser, 'role.vendor.name');
+
+    return isAccountInfos || isTrainerInTrainerInfos
+      ? $store.state.main.loggedUser
+      : $store.state.userProfile.userProfile;
+  });
 
   const { waitForValidation } = useValidations();
 
@@ -86,6 +96,42 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput) => {
     return '';
   };
 
+  const phoneNbrError = (validationObj) => {
+    if (get(validationObj, 'phone.required.$response') === false) return REQUIRED_LABEL;
+    if (get(validationObj, 'phone.frPhoneNumber.$response') === false) {
+      return 'Numéro de téléphone non valide';
+    }
+    return '';
+  };
+
+  const updatePhone = (event, path) => { userPhone.value[path] = event; };
+
+  const onPhoneBlur = async (path) => {
+    v$.value.userPhone[path].$touch();
+    if (!!userPhone.value.phone && !!userPhone.value.countryCode) {
+      await savePhone(
+        path,
+        { contact: { phone: formatPhoneForPayload(userPhone.value.phone), countryCode: userPhone.value.countryCode } }
+      );
+    } else if (path === 'phone' && !userPhone.value.phone) {
+      await savePhone(path, { contact: { phone: '' } });
+    }
+  };
+
+  const savePhone = async (path, payload) => {
+    try {
+      const isValid = await waitForValidation(v$.value.userPhone, path);
+      if (!isValid) return NotifyWarning('Champ(s) invalide(s)');
+      await Users.updateById(userProfile.value._id, payload);
+      await refreshUser();
+      NotifyPositive('Modification enregistrée.');
+    } catch (e) {
+      console.error(e);
+      NotifyNegative('Erreur lors de la modification.');
+      throw e;
+    }
+  };
+
   return {
     // Data
     emailLock,
@@ -99,5 +145,8 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput) => {
     updateUser,
     emailErrorHandler,
     emailError,
+    updatePhone,
+    onPhoneBlur,
+    phoneNbrError,
   };
 };

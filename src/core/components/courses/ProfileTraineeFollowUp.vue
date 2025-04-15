@@ -25,7 +25,7 @@
         <ni-banner icon="edit">
           <template #message>
             Pour valider les réponses aux questionnaires d’auto-positionnement de fin de formation, veuillez
-              <a class="clickable-name cursor-pointer" @click="goToSelfPositionningAnswers">cliquer ici</a>
+            <a class="clickable-name cursor-pointer" @click="goToSelfPositionningAnswers">cliquer ici</a>
           </template>
         </ni-banner>
       </div>
@@ -42,25 +42,41 @@
       <div v-if="areQuestionnaireAnswersVisible" class="questionnaires-container">
         <router-link v-for="questionnaire in filteredQuestionnaires" :key="questionnaire._id"
           :to="goToQuestionnaireAnswers(questionnaire.type)">
-            <questionnaire-answers-cell :questionnaire="questionnaire" />
+          <questionnaire-answers-cell :questionnaire="questionnaire" />
         </router-link>
       </div>
     </div>
     <elearning-follow-up-table v-if="courseHasElearningStep" :learners="learners" :loading="learnersLoading"
       class="q-mb-xl" is-blended />
     <div class="q-mb-sm">
-      <p class="text-weight-bold">Attestations de formation</p>
-      <ni-banner v-if="!get(this.course, 'subProgram.program.learningGoals')">
+      <p class="text-weight-bold" v-if="!isMonthlyCertificateMode || (isRofOrVendorAdmin && isVendorInterface)">
+        Attestations / Certificats de réalisation
+      </p>
+      <ni-banner v-if="!get(course, 'subProgram.program.learningGoals') && isRofOrVendorAdmin && isVendorInterface">
         <template #message>
           Merci de renseigner les objectifs pédagogiques du programme pour pouvoir télécharger
           les attestations de fin de formation.
         </template>
       </ni-banner>
-      <ni-bi-color-button icon="file_download" label="Attestations"
-        :disable="disableDownloadCompletionCertificates" @click="downloadCompletionCertificates(CUSTOM)" size="16px" />
-      <ni-bi-color-button v-if="canReadCompletionCertificate" icon="file_download" class="q-my-md"
-        label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
-        @click="downloadCompletionCertificates(OFFICIAL)" />
+      <div v-if="!isMonthlyCertificateMode">
+        <ni-bi-color-button icon="file_download" label="Attestations" size="16px"
+          :disable="disableDownloadCompletionCertificates" @click="downloadCompletionCertificates(CUSTOM)" />
+        <ni-bi-color-button v-if="canReadCompletionCertificate" icon="file_download" class="q-my-md"
+          label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
+          @click="downloadCompletionCertificates(OFFICIAL)" />
+      </div>
+      <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
+        <completion-certificate-table v-if="completionCertificates.length" :disabled-button="disableButton"
+          :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
+          @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
+        <template v-else>
+          <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
+        </template>
+        <div class="flex justify-end q-mt-md">
+          <ni-primary-button icon="add" label="Ajouter un certificat de réalisation"
+            @click="openCompletionCertificatesModal" />
+        </div>
+      </div>
     </div>
     <div v-if="unsubscribedAttendances.length">
       <div class="text-italic q-ma-xs">
@@ -81,6 +97,11 @@
         </template>
       </ni-expanding-table>
     </div>
+
+    <completion-certificate-addition-modal v-model="completionCertificateAdditionModal" :loading="modalLoading"
+      @hide="resetCompletionCertificateAdditionModal" v-model:new-completion-certificate="newCompletionCertificate"
+      @submit="addCompletionCertificate" :validations="v$.newCompletionCertificate" :trainee-options="traineeOptions"
+      :month-options="monthOptions" />
   </div>
 </template>
 
@@ -88,21 +109,27 @@
 import { subject } from '@casl/ability';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
+import groupBy from 'lodash/groupBy';
 import { computed, ref, toRefs } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import { useQuasar } from 'quasar';
+import CompletionCertificates from '@api/CompletionCertificates';
 import Courses from '@api/Courses';
 import Attendances from '@api/Attendances';
 import Questionnaires from '@api/Questionnaires';
-import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
+import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import AttendanceTable from '@components/table/AttendanceTable';
 import ExpandingTable from '@components/table/ExpandingTable';
 import ElearningFollowUpTable from '@components/courses/ElearningFollowUpTable';
 import QuestionnaireAnswersCell from '@components/courses/QuestionnaireAnswersCell';
 import BiColorButton from '@components/BiColorButton';
 import Banner from '@components/Banner';
+import PrimaryButton from '@components/PrimaryButton';
 import QuestionnaireQRCodeCell from '@components/courses/QuestionnaireQRCodeCell';
+import CompletionCertificateTable from '@components/table/CompletionCertificateTable';
 import {
   E_LEARNING,
   SHORT_DURATION_H_MM,
@@ -118,16 +145,27 @@ import {
   VENDOR_ADMIN,
   START_COURSE,
   END_COURSE,
+  MONTHLY,
+  MM_YYYY,
 } from '@data/constants';
+import CompletionCertificateAdditionModal
+  from 'src/modules/vendor/components/courses/CompletionCertificateAdditionModal';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
-import { getISOTotalDuration, ascendingSort } from '@helpers/dates/utils';
-import { formatIdentity, formatQuantity, formatDownloadName, sortStrings } from '@helpers/utils';
+import { getISOTotalDuration, ascendingSort, descendingSortBy } from '@helpers/dates/utils';
+import {
+  formatIdentity,
+  formatQuantity,
+  formatDownloadName,
+  sortStrings,
+  formatAndSortIdentityOptions,
+} from '@helpers/utils';
 import { composeCourseName, formatSlotSchedule } from '@helpers/courses';
 import { downloadZip } from '@helpers/file';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { useCourses } from '@composables/courses';
 import { useTraineeFollowUp } from '@composables/traineeFollowUp';
+import { useCompletionCertificates } from '@composables/completionCertificates';
 
 export default {
   name: 'ProfileTraineeFollowUp',
@@ -139,6 +177,9 @@ export default {
     'ni-bi-color-button': BiColorButton,
     'ni-banner': Banner,
     'ni-questionnaire-qrcode-cell': QuestionnaireQRCodeCell,
+    'completion-certificate-table': CompletionCertificateTable,
+    'ni-primary-button': PrimaryButton,
+    'completion-certificate-addition-modal': CompletionCertificateAdditionModal,
   },
   props: {
     profileId: { type: String, required: true },
@@ -160,6 +201,29 @@ export default {
     const pagination = ref({ sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 });
     const questionnaireQRCodes = ref([]);
     const questionnaireTypes = ref([]);
+    const completionCertificateColumns = ref([
+      {
+        name: 'traineeName',
+        label: 'Prénom / Nom de l’apprenant',
+        field: row => formatIdentity(row.trainee.identity, 'FL'),
+        align: 'left',
+        sortable: true,
+        sort: sortStrings,
+      },
+      {
+        name: 'month',
+        label: 'Mois',
+        sortable: true,
+        field: 'month',
+        sort: (a, b) => ascendingSort(CompaniDate(a, MM_YYYY), CompaniDate(b, MM_YYYY)),
+        format: row => CompaniDate(row, MM_YYYY).format('LLLL yyyy'),
+        align: 'left',
+      },
+      { name: 'actions', label: '', field: '', align: 'right' },
+    ]);
+    const newCompletionCertificate = ref({ trainee: '', month: '' });
+    const completionCertificateAdditionModal = ref(false);
+    const modalLoading = ref(false);
 
     const course = computed(() => $store.state.course.course);
 
@@ -175,6 +239,8 @@ export default {
       followUpMissingInfo,
       downloadAttendanceSheet,
       vendorRole,
+      isVendorInterface,
+      isSingleCourse,
     } = useCourses(course);
     const { learners, getFollowUp, learnersLoading } = useTraineeFollowUp(profileId);
 
@@ -184,7 +250,7 @@ export default {
 
     const areQuestionnaireQRCodeVisible = computed(() => questionnaireQRCodes.value.length);
 
-    const areQuestionnaireVisible = computed(() => (!isClientInterface &&
+    const areQuestionnaireVisible = computed(() => (!isClientInterface && !isSingleCourse.value &&
       (areQuestionnaireAnswersVisible.value || areQuestionnaireQRCodeVisible.value)));
 
     const courseHasElearningStep = computed(() => course.value.subProgram.steps.some(step => step.type === E_LEARNING));
@@ -198,15 +264,18 @@ export default {
     const disableDownloadCompletionCertificates =
       computed(() => disableDocDownload.value || !get(course.value, 'subProgram.program.learningGoals'));
 
-    const refreshQuestionnaires = async () => {
-      try {
-        questionnaires.value = await Courses.getCourseQuestionnaires(course.value._id);
-      } catch (e) {
-        console.error(e);
-        questionnaires.value = [];
-        NotifyNegative('Erreur lors de la récupération des questionnaires.');
-      }
-    };
+    const {
+      completionCertificates,
+      tableLoading,
+      disableButton,
+      getCompletionCertificates,
+      generateCompletionCertificateFile,
+    } = useCompletionCertificates();
+
+    const hasCompletionCertificate = computed(() => (completionCertificates.value || []).length);
+
+    const rules = computed(() => ({ newCompletionCertificate: { trainee: { required }, month: { required } } }));
+    const v$ = useVuelidate(rules, { newCompletionCertificate });
 
     const loggedUserIsCourseTrainer = computed(() => course.value.trainers
       .map(t => t._id)
@@ -229,6 +298,31 @@ export default {
     const selfPositionningHistoryValidatedCount = computed(() => questionnaires.value
       .flatMap(q => q.histories.filter(h => !!h.isValidated))
       .length);
+
+    const isMonthlyCertificateMode = computed(() => course.value.certificateGenerationMode === MONTHLY);
+
+    const monthOptions = computed(() => {
+      const monthWithSlots = [...new Set(course.value.slots.map(slot => CompaniDate(slot.startDate).format(MM_YYYY)))];
+      const completionCertificatesByMonth = groupBy(completionCertificates.value, 'month');
+
+      return monthWithSlots
+        .filter(month => !completionCertificatesByMonth[month] ||
+          course.value.trainees.length !== completionCertificatesByMonth[month].length)
+        .map(month => ({ label: CompaniDate(month, MM_YYYY).format('MMMM yyyy'), value: month }))
+        .sort(descendingSortBy('value', MM_YYYY));
+    });
+
+    const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
+
+    const refreshQuestionnaires = async () => {
+      try {
+        questionnaires.value = await Courses.getCourseQuestionnaires(course.value._id);
+      } catch (e) {
+        console.error(e);
+        questionnaires.value = [];
+        NotifyNegative('Erreur lors de la récupération des questionnaires.');
+      }
+    };
 
     const goToQuestionnaireAnswers = questionnaireType => ({
       name: 'ni pedagogy questionnaire answers',
@@ -364,9 +458,106 @@ export default {
       }
     );
 
+    const refreshCompletionCertificates = async () => {
+      try {
+        await getCompletionCertificates({ course: course.value._id });
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
+      }
+    };
+
+    const generateCompletionCertificate = async (completionCertificateId) => {
+      try {
+        await generateCompletionCertificateFile(completionCertificateId);
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la génération des certificats de réalisation.');
+      }
+    };
+
+    const deleteCompletionCertificateFile = async (completionCertificateId) => {
+      try {
+        disableButton.value = true;
+        await CompletionCertificates.deleteFile(completionCertificateId);
+        NotifyPositive('Document supprimé.');
+
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du document.');
+      } finally {
+        disableButton.value = false;
+      }
+    };
+
+    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+      try {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Êtes-vous sûr(e) de vouloir supprimer ce document&nbsp;?',
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+        }).onOk(() => deleteCompletionCertificateFile(completionCertificateId))
+          .onCancel(() => NotifyPositive('Suppression annulée.'));
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du document.');
+      }
+    };
+
+    const openCompletionCertificatesModal = () => {
+      const hasCourseSlots = course.value.slots.length;
+      const hasCourseTrainees = course.value.trainees.length;
+      if (!hasCourseSlots) return NotifyWarning('Au moins un créneau doit être rattaché à la formation.');
+      if (!hasCourseTrainees) return NotifyWarning('Au moins un·e apprenant·e doit être rattaché·e à la formation.');
+      if (!monthOptions.value.length) {
+        return NotifyWarning('Il existe déjà un certificat par apprenant pour tous les mois de formation.');
+      }
+
+      if (course.value.trainees.length === 1) newCompletionCertificate.value.trainee = course.value.trainees[0]._id;
+      if (monthOptions.value.length === 1) newCompletionCertificate.value.month = monthOptions.value[0].value;
+
+      completionCertificateAdditionModal.value = true;
+    };
+
+    const resetCompletionCertificateAdditionModal = () => {
+      newCompletionCertificate.value = { trainee: '', month: '' };
+      v$.value.newCompletionCertificate.$reset();
+    };
+
+    const addCompletionCertificate = async () => {
+      try {
+        v$.value.newCompletionCertificate.$touch();
+        if (v$.value.newCompletionCertificate.$error) return NotifyWarning('Champs requis');
+
+        modalLoading.value = true;
+        await CompletionCertificates.create({ ...newCompletionCertificate.value, course: course.value._id });
+
+        completionCertificateAdditionModal.value = false;
+        await refreshCompletionCertificates();
+      } catch (e) {
+        console.error(e);
+        if (!!e.data.message && (e.status === 403 || e.status === 409)) NotifyNegative(e.data.message);
+        else NotifyNegative('Erreur lors de l\'ajout du certificat.');
+      } finally {
+        modalLoading.value = false;
+      }
+    };
+
     const created = async () => {
-      const promises = [getFollowUp(), getUnsubscribedAttendances()];
-      if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
+      const promises = [getFollowUp()];
+      if (!isSingleCourse.value) {
+        promises.push(getUnsubscribedAttendances());
+        if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
+      }
+
+      if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
+        promises.push(getCompletionCertificates({ course: course.value._id }));
+      }
 
       await Promise.all(promises);
     };
@@ -374,6 +565,8 @@ export default {
     created();
 
     return {
+      // Validation
+      v$,
       // Data
       questionnaires,
       unsubscribedAttendances,
@@ -390,6 +583,14 @@ export default {
       OFFICIAL,
       CUSTOM,
       START_COURSE,
+      completionCertificates,
+      completionCertificateColumns,
+      tableLoading,
+      isVendorInterface,
+      completionCertificateAdditionModal,
+      newCompletionCertificate,
+      modalLoading,
+      disableButton,
       // Computed
       course,
       courseHasElearningStep,
@@ -408,6 +609,10 @@ export default {
       loggedUserIsCourseTrainer,
       endSelfPositionningHistoryCount,
       selfPositionningHistoryValidatedCount,
+      isMonthlyCertificateMode,
+      monthOptions,
+      hasCompletionCertificate,
+      traineeOptions,
       // Methods
       get,
       formatQuantity,
@@ -417,6 +622,11 @@ export default {
       goToQuestionnaireProfile,
       goToSelfPositionningAnswers,
       filterQuestionnaireTypes,
+      openCompletionCertificatesModal,
+      resetCompletionCertificateAdditionModal,
+      addCompletionCertificate,
+      generateCompletionCertificate,
+      validateCompletionCertificateDeletion,
     };
   },
 };

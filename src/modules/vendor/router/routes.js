@@ -181,6 +181,15 @@ const routes = [
         },
       },
       {
+        path: 'ni/management/single-courses',
+        name: 'ni management single courses',
+        component: () => import('src/modules/vendor/pages/ni/management/SingleCourseDirectory'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'management',
+        },
+      },
+      {
         path: 'ni/management/blended-courses/:courseId',
         name: 'ni management blended courses info',
         component: () => import('src/modules/vendor/pages/ni/management/BlendedCourseProfile'),
@@ -310,9 +319,18 @@ const routes = [
         },
       },
       {
-        path: 'ni/config/main',
-        name: 'ni config main',
-        component: () => import('src/modules/vendor/pages/ni/config/MainConfig'),
+        path: 'ni/billing/main',
+        name: 'ni billing config',
+        component: () => import('src/modules/vendor/pages/ni/billing/MainConfig'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'configuration',
+        },
+      },
+      {
+        path: 'ni/billing/completion-certificates',
+        name: 'ni billing completion certificates',
+        component: () => import('src/modules/vendor/pages/ni/billing/CompletionCertificatesDashboard'),
         meta: {
           cookies: ['alenvi_token', 'refresh_token'],
           parent: 'configuration',

@@ -17,7 +17,8 @@
           <template v-if="col.name === 'actions' && canUpdateTrainees">
             <div>
               <ni-button icon="edit" @click="openTraineeEditionModal(props.row)" :disable="!!course.archivedAt" />
-              <ni-button icon="close" @click="validateTraineeDeletion(props.row._id)" :disable="!!course.archivedAt" />
+              <ni-button v-if="course.type !== SINGLE" icon="close" @click="validateTraineeDeletion(props.row._id)"
+                :disable="!!course.archivedAt" />
             </div>
           </template>
           <template v-else-if="col.name === 'connectionInfos'">
@@ -49,10 +50,11 @@ import { formatPhone, formatPhoneForPayload } from '@helpers/utils';
 import Courses from '@api/Courses';
 import Users from '@api/Users';
 import Button from '@components/Button';
+import { SINGLE } from '@data/constants';
 import TraineeEditionModal from '@components/courses/TraineeEditionModal';
 import ResponsiveTable from '@components/table/ResponsiveTable';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
-import { frPhoneNumber } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode } from '@helpers/vuelidateCustomVal';
 import ConnectedDot from './ConnectedDot';
 
 export default {
@@ -101,12 +103,12 @@ export default {
         name: 'phone',
         label: 'Téléphone',
         align: 'left',
-        field: row => get(row, 'contact.phone') || '',
+        field: row => (get(row, 'contact.phone') ? row.contact : ''),
         format: formatPhone,
       },
       {
         name: 'connectionInfos',
-        label: 'Code de connexion à l\'app',
+        label: 'Code de connexion à l\'app mobile',
         field: 'loginCode',
         align: 'center',
       },
@@ -125,7 +127,7 @@ export default {
     const traineeRules = {
       editedTrainee: {
         identity: { lastname: { required } },
-        contact: { phone: { required, frPhoneNumber } },
+        contact: { phone: { required, frPhoneNumber }, countryCode: { required, countryCode } },
       },
     };
 
@@ -148,7 +150,11 @@ export default {
     const openTraineeEditionModal = async (trainee) => {
       editedTrainee.value = {
         ...editedTrainee.value,
-        ...pick(trainee, ['_id', 'identity.firstname', 'identity.lastname', 'local.email', 'contact.phone']),
+        ...(!trainee.contact.countryCode && { contact: { countryCode: '+33' } }),
+        ...pick(
+          trainee,
+          ['_id', 'identity.firstname', 'identity.lastname', 'local.email', 'contact.phone', 'contact.countryCode']
+        ),
       };
       traineeEditionModal.value = true;
     };
@@ -197,12 +203,14 @@ export default {
         NotifyPositive('Stagiaire supprimé(e).');
       } catch (e) {
         console.error(e);
+        if (e.status === 403 && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la suppression du/de la stagiaire.');
       }
     };
 
     return {
       // Data
+      SINGLE,
       traineeColumns,
       traineePagination,
       traineeEditionModal,

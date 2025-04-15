@@ -87,8 +87,9 @@
       <div v-if="!courseHasSlot" class="text-center text-italic q-pa-lg no-data">
         Aucun créneau n'a été ajouté à cette formation
       </div>
-      <ni-button v-if="courseHasSlot && canUpdate" color="primary" icon="add" class="q-mb-sm" :disable="loading"
-        label="Ajouter un·e participant·e non inscrit·e" @click="openTraineeAttendanceAdditionModal" />
+      <ni-button v-if="courseHasSlot && canUpdate && !isSingleCourse" color="primary" icon="add" class="q-mb-sm"
+        :disable="loading" label="Ajouter un·e participant·e non inscrit·e"
+        @click="openTraineeAttendanceAdditionModal" />
     </q-card>
 
     <ni-simple-table :data="formattedAttendanceSheets" :columns="attendanceSheetColumns"
@@ -99,10 +100,12 @@
           <q-td :props="props" v-for="col in props.cols" :key="col.name" :data-label="col.label" :class="col.name"
             :style="col.style">
             <template v-if="col.name === 'actions'">
-              <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex">
+              <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex items-center">
                 <div v-if="!props.row.signatures.trainee" class="text-italic text-primary">En attente de signature</div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
                   @click="generateAttendanceSheet(props.row._id)" />
+                <ni-button v-if="canUpdate" icon="delete" color="primary"
+                  @click="validateAttendanceSheetDeletion(props.row)" :disable="!!course.archivedAt" />
               </div>
               <div v-else class="row no-wrap table-actions justify-end">
                 <ni-button v-if="canUpdate && isSingleCourse" icon="edit" color="primary"
@@ -319,7 +322,7 @@ export default {
       await Promise.all([
         refreshAttendances({ course: course.value._id }),
         refreshAttendanceSheets(),
-        getPotentialTrainees(),
+        ...!isSingleCourse.value ? [getPotentialTrainees()] : [],
       ]);
     };
 

@@ -15,9 +15,9 @@
       <ni-input in-modal :model-value="newCoach.identity.lastname" :error="validations.identity.lastname.$error"
         @blur="validations.identity.lastname.$touch" @update:model-value="update($event, 'identity.lastname')"
         required-field caption="Nom" />
-      <ni-input in-modal :model-value="newCoach.contact.phone" :error="validations.contact.phone.$error"
-        caption="Téléphone" @blur="validations.contact.phone.$touch" :error-message="phoneNbrError"
-        @update:model-value="update($event.trim(), 'contact.phone')" />
+      <phone-select in-modal :contact="newCoach.contact" :validation="validations.contact"
+        @blur="path => validations.contact[path].$touch()" :error-message="phoneNbrError"
+        @update="($event, path) => update($event.trim(), `contact.${path}`)" />
     </template>
     <q-checkbox dense label="Envoyer un email à la création du compte" :model-value="newCoach.sendEmail"
       @update:model-value="update($event, 'sendEmail')" class="margin-input last" />
@@ -31,8 +31,10 @@
 </template>
 
 <script>
+import { toRefs } from 'vue';
 import set from 'lodash/set';
 import Modal from '@components/modal/Modal';
+import PhoneSelect from '@components/form/PhoneSelect';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
@@ -52,29 +54,35 @@ export default {
   components: {
     'ni-input': Input,
     'ni-select': Select,
+    'phone-select': PhoneSelect,
     'ni-modal': Modal,
     'ni-button': Button,
   },
   emits: ['hide', 'show', 'submit', 'update:model-value', 'go-to-next-step', 'update:new-coach'],
-  methods: {
-    hide () {
-      this.$emit('hide');
-    },
-    show () {
-      this.$emit('show');
-    },
-    input (event) {
-      this.$emit('update:model-value', event);
-    },
-    submit () {
-      this.$emit('submit');
-    },
-    goToNextStep () {
-      this.$emit('go-to-next-step');
-    },
-    update (event, path) {
-      this.$emit('update:new-coach', set({ ...this.newCoach }, path, event));
-    },
+  setup (props, { emit }) {
+    const { newCoach } = toRefs(props);
+
+    const hide = () => emit('hide');
+
+    const show = () => emit('show');
+
+    const input = event => emit('update:model-value', event);
+
+    const submit = () => emit('submit');
+
+    const goToNextStep = () => emit('go-to-next-step');
+
+    const update = (event, path) => emit('update:new-coach', set({ ...newCoach.value }, path, event));
+
+    return {
+      // Methods
+      hide,
+      show,
+      input,
+      submit,
+      goToNextStep,
+      update,
+    };
   },
 };
 </script>

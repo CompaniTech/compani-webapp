@@ -45,13 +45,6 @@ export const useLearnerDirectory = () => {
       sortable: true,
     },
     {
-      name: 'activityHistoryCount',
-      label: 'Nombre d\'activités réalisées',
-      field: 'activityHistoryCount',
-      align: 'center',
-      sortable: true,
-    },
-    {
       name: 'isoDurationSinceLastActivityHistory',
       label: 'Dernière activité il y a...',
       field: 'isoDurationSinceLastActivityHistory',

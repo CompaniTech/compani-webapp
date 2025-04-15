@@ -2,13 +2,13 @@
   <div v-if="get(interlocutor, '_id')" class="cell-container">
     <p class="input-caption">{{ caption }}</p>
     <q-card class="interlocutor-cell row justify-between items-start">
-      <div class="row">
+      <div class="row details-container">
         <img :src="getAvatar(interlocutor.picture)" class="avatar q-my-sm">
-        <div class="q-my-sm q-ml-md">
+        <div class="q-my-sm q-ml-md infos-container">
           <div class="text-copper-grey-700">{{ formatIdentity(interlocutor.identity, 'FL') }}</div>
           <div class="text-copper-grey-500 text-14">{{ interlocutor.local.email }}</div>
           <div v-if="get(interlocutor, 'contact.phone')" class="phone">
-            {{ formatPhone(interlocutor.contact.phone) }}
+            {{ formatPhone(interlocutor.contact) }}
           </div>
           <div v-else class="row items-center text-14">
             <div class="dot dot-orange" />
@@ -17,6 +17,12 @@
           <div v-if="contact._id === interlocutor._id" class="contact">
             <q-icon size="xxs" name="person" class="q-mr-xs" />
             <span>Contact donné aux stagiaires</span>
+          </div>
+          <div v-if="displayConnectionInfos">
+            <a v-if="interlocutor.loginCode" class="text-12">
+              Code de connexion à l'app mobile : {{ interlocutor.loginCode }}
+            </a>
+            <connected-dot v-else-if="interlocutor.firstMobileConnectionDate" />
           </div>
         </div>
       </div>
@@ -36,6 +42,7 @@ import Button from '@components/Button';
 import SecondaryButton from '@components/SecondaryButton';
 import { DEFAULT_AVATAR, EDITION, CREATION, DELETION } from '@data/constants';
 import { formatIdentity, formatPhone } from '@helpers/utils';
+import ConnectedDot from './ConnectedDot';
 
 export default {
   name: 'InterlocutorCell',
@@ -48,10 +55,12 @@ export default {
     label: { type: String, default: '' },
     clearable: { type: Boolean, default: false },
     interlocutorIsTrainerOrTutor: { type: Boolean, default: false },
+    displayConnectionInfos: { type: Boolean, default: false },
   },
   components: {
     'ni-button': Button,
     'ni-secondary-button': SecondaryButton,
+    'connected-dot': ConnectedDot,
   },
   emits: ['open-modal'],
   setup (_, { emit }) {
@@ -104,4 +113,14 @@ export default {
   margin-left: -2px
 .dot-orange
   margin: 0px 4px 0px 0px
+:deep(.dot-container)
+  justify-content: flex-start
+:deep(.q-icon)
+  margin: 0px 5px 0px 0px
+.details-container
+  @media screen and (max-width: 1058px) and (min-width: $breakpoint-sm-max)
+    max-width: 85%
+.infos-container
+  @media screen and (max-width: 1058px) and (min-width: $breakpoint-sm-max)
+    max-width: 75%
 </style>

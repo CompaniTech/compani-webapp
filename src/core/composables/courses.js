@@ -6,7 +6,7 @@ import get from 'lodash/get';
 import pick from 'lodash/pick';
 import Courses from '@api/Courses';
 import { NotifyNegative } from '@components/popup/notify';
-import { INTRA, COURSE_TYPES, INTRA_HOLDING, INTER_B2B } from '@data/constants';
+import { INTRA, COURSE_TYPES, INTRA_HOLDING, INTER_B2B, SINGLE } from '@data/constants';
 import {
   formatIdentity,
   formatDownloadName,
@@ -27,6 +27,8 @@ export const useCourses = (course) => {
   const isInterCourse = computed(() => (get(course.value, 'type') === INTER_B2B));
 
   const isIntraHoldingCourse = computed(() => (get(course.value, 'type') === INTRA_HOLDING));
+
+  const isSingleCourse = computed(() => (get(course.value, 'type') === SINGLE));
 
   const isVendorInterface = /\/ad\//.test($router.currentRoute.value.path);
 
@@ -107,6 +109,7 @@ export const useCourses = (course) => {
     isIntraCourse,
     isInterCourse,
     isIntraHoldingCourse,
+    isSingleCourse,
     headerInfo,
     vendorRole,
     disableDocDownload,

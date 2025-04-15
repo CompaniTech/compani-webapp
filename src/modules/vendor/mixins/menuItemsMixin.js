@@ -6,7 +6,7 @@ export const menuItemsMixin = {
         users: { open: false },
         pedagogy: { open: false },
         exports: { open: false },
-        configuration: { open: false },
+        facturation: { open: false },
       },
       trainerActiveRoutes: {
         administrative: { open: false },
@@ -17,7 +17,8 @@ export const menuItemsMixin = {
           ref: 'management',
           label: 'Gestion',
           children: [
-            { name: 'ni management blended courses', icon: 'mdi-teach', label: 'Formations mixtes' },
+            { name: 'ni management blended courses', icon: 'mdi-teach', label: 'Formations de groupe' },
+            { name: 'ni management single courses', icon: 'mdi-numeric-1-box', label: 'Formations individuelles' },
             { name: 'ni management elearning courses', icon: 'stay_primary_portrait', label: 'Formations eLearning' },
           ],
         },
@@ -49,10 +50,15 @@ export const menuItemsMixin = {
           ],
         },
         {
-          ref: 'configuration',
-          label: 'Configuration',
+          ref: 'facturation',
+          label: 'Facturation',
           children: [
-            { name: 'ni config main', icon: 'settings', label: 'Configuration générale' },
+            { name: 'ni billing config', icon: 'settings', label: 'Configuration' },
+            {
+              name: 'ni billing completion certificates',
+              icon: 'picture_as_pdf',
+              label: 'Certificats réalisation mensuels',
+            },
           ],
         },
       ],

@@ -14,7 +14,7 @@ import {
   TRAINER,
 } from '@data/constants';
 
-export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions = []) => {
+export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions = [], courseTypes = COURSE_TYPES) => {
   const $store = useStore();
   const $router = useRouter();
 
@@ -43,6 +43,22 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
   });
 
   const updateSelectedTrainer = trainerId => $store.dispatch('course/setSelectedTrainer', { trainerId });
+
+  /* TRAINEE */
+  const selectedTrainee = computed(() => $store.state.course.selectedTrainee);
+
+  const traineeFilterOptions = computed(() => {
+    const trainees = courses.value
+      .flatMap(course => formatAndSortIdentityOptions(course.trainees))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    return [
+      { label: 'Tous les apprenants', value: '' },
+      ...sortedUniqBy(trainees, 'value'),
+    ];
+  });
+
+  const updateSelectedTrainee = traineeId => $store.dispatch('course/setSelectedTrainee', { traineeId });
 
   /* PROGRAM */
   const selectedProgram = computed(() => $store.state.course.selectedProgram);
@@ -120,7 +136,7 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
   /* TYPE */
   const selectedType = computed(() => $store.state.course.selectedType);
 
-  const typeFilterOptions = ref([{ label: 'Tous les types', value: '' }, ...COURSE_TYPES]);
+  const typeFilterOptions = ref([{ label: 'Tous les types', value: '' }, ...courseTypes]);
 
   const updateSelectedType = type => $store.dispatch('course/setSelectedType', { type });
 
@@ -180,6 +196,8 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
     // Computed
     selectedTrainer,
     trainerFilterOptions,
+    selectedTrainee,
+    traineeFilterOptions,
     selectedProgram,
     programFilterOptions,
     selectedHolding,
@@ -198,6 +216,7 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
     salesRepresentativeFilterOptions,
     // Methods
     updateSelectedTrainer,
+    updateSelectedTrainee,
     updateSelectedProgram,
     updateSelectedHolding,
     updateSelectedCompany,

@@ -55,12 +55,14 @@ const trainingOrganisationManagerRoutes = [
   { name: 'ni pedagogy questionnaire profile' },
   { name: 'ni pedagogy questionnaire answers' },
   { name: 'ni management blended courses' },
+  { name: 'ni management single courses' },
   { name: 'ni management blended courses info' },
   { name: 'ni management elearning courses' },
   { name: 'ni management elearning courses info' },
   { name: 'account vendor' },
   { name: 'ni exports history vendor' },
-  { name: 'ni config main' },
+  { name: 'ni billing config' },
+  { name: 'ni billing completion certificates' },
 ];
 const vendorAdminRoutes = [...trainingOrganisationManagerRoutes];
 const trainerRoutes = [

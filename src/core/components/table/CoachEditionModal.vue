@@ -13,9 +13,9 @@
     <ni-input :model-value="selectedCoach.identity.lastname" :error="validations.identity.lastname.$error" caption="Nom"
       @blur="validations.identity.lastname.$touch" @update:model-value="update($event, 'identity.lastname')"
       in-modal required-field />
-    <ni-input in-modal :model-value="selectedCoach.contact.phone" :error="validations.contact.phone.$error"
-      @blur="validations.contact.phone.$touch" @update:model-value="update($event.trim(), 'contact.phone')" last
-      :error-message="phoneNbrError" caption="Téléphone" />
+    <phone-select in-modal :contact="selectedCoach.contact" :validation="validations.contact" last
+      @blur="path => validations.contact[path].$touch()" :error-message="phoneNbrError"
+      @update="($event, path) => update($event.trim(), `contact.${path}`)" />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Éditer la personne" icon-right="check" color="white"
         :loading="loading" @click="submit" />
@@ -24,8 +24,10 @@
 </template>
 
 <script>
+import { toRefs } from 'vue';
 import set from 'lodash/set';
 import Modal from '@components/modal/Modal';
+import PhoneSelect from '@components/form/PhoneSelect';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
@@ -44,23 +46,29 @@ export default {
   components: {
     'ni-input': Input,
     'ni-select': Select,
+    'phone-select': PhoneSelect,
     'ni-button': Button,
     'ni-modal': Modal,
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:selected-coach'],
-  methods: {
-    hide () {
-      this.$emit('hide');
-    },
-    input (event) {
-      this.$emit('update:model-value', event);
-    },
-    submit () {
-      this.$emit('submit');
-    },
-    update (event, path) {
-      this.$emit('update:selected-coach', set({ ...this.selectedCoach }, path, event));
-    },
+  setup (props, { emit }) {
+    const { selectedCoach } = toRefs(props);
+
+    const hide = () => emit('hide');
+
+    const input = event => emit('update:model-value', event);
+
+    const submit = () => emit('submit');
+
+    const update = (event, path) => emit('update:selected-coach', set({ ...selectedCoach.value }, path, event));
+
+    return {
+      // Methods
+      hide,
+      input,
+      submit,
+      update,
+    };
   },
 };
 </script>

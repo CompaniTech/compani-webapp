@@ -86,7 +86,7 @@ export default {
       },
       {
         name: 'connectionInfos',
-        label: 'Code de connexion à l\'app',
+        label: 'Code de connexion à l\'app mobile',
         field: 'loginCode',
         align: 'center',
       },
