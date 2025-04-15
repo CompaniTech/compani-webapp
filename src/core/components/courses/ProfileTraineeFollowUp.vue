@@ -302,10 +302,24 @@ export default {
     const isMonthlyCertificateMode = computed(() => course.value.certificateGenerationMode === MONTHLY);
 
     const monthOptions = computed(() => {
-      const monthWithSlots = [...new Set(course.value.slots.map(slot => CompaniDate(slot.startDate).format(MM_YYYY)))];
+      const monthWithHistories = [
+        ...new Set(
+          learners.value
+            .flatMap(l => l.steps
+              .flatMap(s => s.activities
+                .flatMap(a => a.activityHistories.map(ah => CompaniDate(ah.date).format(MM_YYYY)))))
+        ),
+      ];
+      const monthWithSlots = [
+        ...new Set(
+          course.value.slots
+            .filter(slot => CompaniDate().isSameOrAfter(CompaniDate(slot.startDate).startOf('month')))
+            .map(slot => CompaniDate(slot.startDate).format(MM_YYYY))
+        ),
+      ];
       const completionCertificatesByMonth = groupBy(completionCertificates.value, 'month');
 
-      return monthWithSlots
+      return [...new Set([...monthWithSlots, ...monthWithHistories])]
         .filter(month => !completionCertificatesByMonth[month] ||
           course.value.trainees.length !== completionCertificatesByMonth[month].length)
         .map(month => ({ label: CompaniDate(month, MM_YYYY).format('MMMM yyyy'), value: month }))
