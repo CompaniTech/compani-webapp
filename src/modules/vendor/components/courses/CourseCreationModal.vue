@@ -159,7 +159,6 @@ export default {
           ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount', 'trainee']),
           ...(event === INTRA && { maxTrainees: '8', expectedBillsCount: '0' }),
           ...(event === INTRA_HOLDING && { maxTrainees: '8' }),
-          ...(event === SINGLE && { expectedBillsCount: '0' }),
           type: event,
         }
       );
