@@ -170,16 +170,6 @@ export const readAPIResponseWithTypeArrayBuffer = (response) => {
   return decodedResponse;
 };
 
-export const getBillingItemsPrice = service => service.billingItems
-  .reduce((acc, bi) => (acc += bi.defaultUnitAmount), 0);
-
-export const getBillingItemsName = (service) => {
-  if (!get(service, 'billingItems.length')) return [];
-
-  const billingItemsName = service.billingItems.reduce((acc, bi) => (acc += `${bi.name}, `), '');
-  return [billingItemsName.slice(0, -2)];
-};
-
 export const formatDownloadName = name => name.replaceAll(/ - | |'/g, '_');
 
 export const formatIdentityAndDocType = (identity, type) => `${identity.lastname} ${identity.firstname} ${type}`;
