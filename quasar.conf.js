@@ -87,7 +87,6 @@ module.exports = configure(ctx => ({
     },
     extendWebpack (cfg) {
       cfg.module.rules.push({ test: /\.html$/, use: { loader: 'html-loader' } });
-      // eslint-disable-next-line no-param-reassign
       cfg.resolve.alias = {
         ...cfg.resolve.alias,
         '@components': path.resolve(__dirname, './src/core/components'),

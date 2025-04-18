@@ -65,7 +65,7 @@ const rules = {
 };
 
 export default defineConfig([
-  globalIgnores(['dist', 'eslint.config.mjs', '.quasar', '.postcssrc.js']),
+  globalIgnores(['dist', 'eslint.config.mjs', '.quasar', '.postcssrc.js', './test/cypress/support/component.js']),
   ...airbnb,
   ...compat.extends(
     'plugin:cypress/recommended',

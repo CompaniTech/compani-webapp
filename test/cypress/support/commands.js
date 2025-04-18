@@ -7,10 +7,13 @@ Cypress.Commands.add('initiateTest', (data) => {
   cy.task('seedDb', seedType);
 
   if (credentials) {
-    cy.task('login', credentials).then((resp) => {
-      cy.setCookie('alenvi_token', `${resp.token}`);
-      cy.setCookie('refresh_token', `${resp.refreshToken}`);
-      cy.setCookie('user_id', `${resp.user._id}`);
-    });
+    cy.task('login', credentials)
+      .then((resp) => {
+        cy.setCookie('alenvi_token', `${resp.token}`);
+        cy.setCookie('refresh_token', `${resp.refreshToken}`);
+        cy.setCookie('user_id', `${resp.user._id}`);
+        return null;
+      })
+      .catch(e => cy.task('log', e));
   }
 });
