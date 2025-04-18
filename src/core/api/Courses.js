@@ -38,7 +38,7 @@ export default {
   async sendSMS (courseId, payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/courses/${courseId}/sms`, payload);
   },
-  async getSMSHistory (courseId, payload) {
+  async getSMSHistory (courseId) {
     const sms = await alenviAxios.get(`${process.env.API_HOSTNAME}/courses/${courseId}/sms`);
     return sms.data.data.sms;
   },
