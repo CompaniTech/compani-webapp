@@ -12,10 +12,10 @@
     <ni-datetime-range caption="Dates et heures" :model-value="editedCourseSlot.dates" disable-end-date
       :error="validations.dates.$error" @blur="validations.dates.$touch" @update:model-value="update($event, 'dates')"
       required-field />
-    <ni-search-address v-if="getType(this.editedCourseSlot.step) === ON_SITE" :model-value="editedCourseSlot.address"
+    <ni-search-address v-if="getType(editedCourseSlot.step) === ON_SITE" :model-value="editedCourseSlot.address"
       error-message="Adresse non valide" in-modal last @blur="validations.address.$touch"
       :error="validations.address.$error" @update:model-value="update($event, 'address')" />
-    <ni-input v-if="getType(this.editedCourseSlot.step) === REMOTE" :model-value="editedCourseSlot.meetingLink"
+    <ni-input v-if="getType(editedCourseSlot.step) === REMOTE" :model-value="editedCourseSlot.meetingLink"
       @update:model-value="update($event, 'meetingLink')" caption="Lien vers la visio" in-modal
       :error-message="linkErrorMessage" :error="validations.meetingLink.$error" />
     <template #footer>
@@ -26,6 +26,7 @@
 </template>
 
 <script>
+import { toRefs, ref } from 'vue';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
@@ -35,6 +36,7 @@ import { NotifyPositive } from '@components/popup/notify';
 import { ON_SITE, REMOTE, DD_MM_YYYY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatIntervalHourly } from '@helpers/dates/utils';
+import { useQuasar } from 'quasar';
 
 export default {
   name: 'SlotEditionModal',
@@ -57,16 +59,14 @@ export default {
     'ni-input': Input,
   },
   emits: ['hide', 'update:model-value', 'submit', 'delete', 'update', 'unplan-slot'],
-  data () {
-    return {
-      linkErrorMessage: 'Le lien doit commencer par http:// ou https://',
-      ON_SITE,
-      REMOTE,
-    };
-  },
-  methods: {
-    validateDatesDeletion (slot) {
-      this.$q.dialog({
+  setup (props, { emit }) {
+    const { stepTypes } = toRefs(props);
+    const $q = useQuasar();
+
+    const linkErrorMessage = ref('Le lien doit commencer par http:// ou https://');
+
+    const validateDatesDeletion = (slot) => {
+      $q.dialog({
         title: 'Supprimer une date',
         message: `Êtes-vous sûr(e) de vouloir supprimer la date du 
           ${CompaniDate(slot.dates.startDate).format(DD_MM_YYYY)} (${formatIntervalHourly(slot.dates)})&nbsp;?<br />
@@ -74,40 +74,51 @@ export default {
         html: true,
         ok: 'Oui',
         cancel: 'Non',
-      }).onOk(() => this.unplanSlot(slot._id))
+      }).onOk(() => unplanSlot(slot._id))
         .onCancel(() => NotifyPositive('Suppression annulée.'));
-    },
-    validateDeletion (slotId) {
-      this.$q.dialog({
+    };
+
+    const validateDeletion = (slotId) => {
+      $q.dialog({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir supprimer ce créneau&nbsp;?',
         html: true,
         ok: true,
         cancel: 'Annuler',
-      }).onOk(() => this.delete(slotId))
+      }).onOk(() => deleteSlotId(slotId))
         .onCancel(() => NotifyPositive('Suppression annulée.'));
-    },
-    hide () {
-      this.$emit('hide');
-    },
-    input (event) {
-      this.$emit('update:model-value', event);
-    },
-    submit () {
-      this.$emit('submit');
-    },
-    delete (slotId) {
-      this.$emit('delete', slotId);
-    },
-    update (value, path) {
-      this.$emit('update', { path, value });
-    },
-    getType (step) {
-      return step ? this.stepTypes.find(item => item.value === step).type : '';
-    },
-    unplanSlot (slotId) {
-      this.$emit('unplan-slot', slotId);
-    },
+    };
+
+    const hide = () => emit('hide');
+
+    const input = event => emit('update:model-value', event);
+
+    const submit = () => emit('submit');
+
+    const deleteSlotId = slotId => emit('delete', slotId);
+
+    const update = (value, path) => emit('update', { path, value });
+
+    const getType = step => (step ? stepTypes.value.find(item => item.value === step).type : '');
+
+    const unplanSlot = slotId => emit('unplan-slot', slotId);
+
+    return {
+      // Data
+      linkErrorMessage,
+      ON_SITE,
+      REMOTE,
+      // Methods
+      validateDatesDeletion,
+      validateDeletion,
+      hide,
+      input,
+      submit,
+      deleteSlotId,
+      update,
+      getType,
+      unplanSlot,
+    };
   },
 };
 </script>
