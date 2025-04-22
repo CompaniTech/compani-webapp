@@ -76,8 +76,8 @@ export default {
     switchInterface () {
       if (!this.accessBothInterface) return;
 
-      if (this.interfaceType === CLIENT) this.$router.push({ path: '/ad' }).catch((e) => {});
-      else this.$router.push({ path: '/ni/courses' }).catch((e) => {});
+      if (this.interfaceType === CLIENT) this.$router.push({ path: '/ad' }).catch(() => {});
+      else this.$router.push({ path: '/ni/courses' }).catch(() => {});
     },
   },
 };

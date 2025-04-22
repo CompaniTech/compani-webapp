@@ -100,7 +100,7 @@ export default {
     updateInputFile () {
       this.$emit('update:model-value', this.$refs.inputFile.files[0]);
     },
-    onBlur (event) {
+    onBlur () {
       if (this.type === 'number') this.$nextTick(() => this.$emit('blur'));
       else this.$emit('blur');
     },

@@ -21,8 +21,8 @@ export const useLogin = () => {
     if (!loggedUser.value) throw new Error('Error on login');
 
     if ($route.query.from) return $router.replace({ path: $route.query.from });
-    if (vendorRole.value) return $router.replace('/ad').catch((e) => {});
-    return $router.replace('/').catch((e) => {});
+    if (vendorRole.value) return $router.replace('/ad').catch(() => {});
+    return $router.replace('/').catch(() => {});
   };
 
   return {
