@@ -48,8 +48,9 @@ import { computed, ref } from 'vue';
 import { useMeta } from 'quasar';
 import { useStore } from 'vuex';
 import { onBeforeRouteLeave } from 'vue-router';
+import get from 'lodash/get';
 import useVuelidate from '@vuelidate/core';
-import { required, requiredIf } from '@vuelidate/validators';
+import { required, requiredIf, or } from '@vuelidate/validators';
 import Companies from '@api/Companies';
 import Holdings from '@api/Holdings';
 import Programs from '@api/Programs';
@@ -106,6 +107,7 @@ export default {
       hasCertifyingTest: false,
       salesRepresentative: '',
       certificateGenerationMode: GLOBAL,
+      prices: { global: '', trainerFees: '' },
     });
     const companies = ref([]);
     const holdingOptions = ref([]);
@@ -164,6 +166,13 @@ export default {
           {
             maxTrainees: { required, strictPositiveNumber, integerNumber },
             expectedBillsCount: { required, positiveNumber, integerNumber },
+            prices: {
+              global: {
+                strictPositiveNumber: or(strictPositiveNumber, value => value === ''),
+                required: requiredIf(get(newCourse.value, 'prices.trainerFees')),
+              },
+              trainerFees: { strictPositiveNumber: or(strictPositiveNumber, value => value === '') },
+            },
           }),
         company: { required: requiredIf(isIntraCourse.value) },
         ...(isIntraHoldingCourse.value && { maxTrainees: { required, strictPositiveNumber, integerNumber } }),
@@ -245,6 +254,7 @@ export default {
         hasCertifyingTest: false,
         salesRepresentative: '',
         certificateGenerationMode: GLOBAL,
+        prices: { global: '', trainerFees: '' },
       };
     };
 
