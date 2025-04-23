@@ -1,7 +1,6 @@
 require('dotenv').config();
 const path = require('path');
 const webpack = require('webpack');
-const ESLintPlugin = require('eslint-webpack-plugin');
 const { configure } = require('quasar/wrappers');
 
 module.exports = configure(ctx => ({
@@ -88,7 +87,6 @@ module.exports = configure(ctx => ({
     },
     extendWebpack (cfg) {
       cfg.module.rules.push({ test: /\.html$/, use: { loader: 'html-loader' } });
-      // eslint-disable-next-line no-param-reassign
       cfg.resolve.alias = {
         ...cfg.resolve.alias,
         '@components': path.resolve(__dirname, './src/core/components'),
@@ -99,7 +97,6 @@ module.exports = configure(ctx => ({
         '@composables': path.resolve(__dirname, './src/core/composables'),
       };
       cfg.plugins.push(
-        new ESLintPlugin({ fix: true }),
         // Select moment locale files
         new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /fr/),
         new webpack.IgnorePlugin({

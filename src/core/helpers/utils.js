@@ -64,7 +64,7 @@ export const getLastVersion = (versions, dateKey) => {
 
 export const getLastDocument = (docs) => {
   if (!docs || !Array.isArray(docs) || docs.length === 0) return [];
-  const sortedDocs = docs.sort((a, b) => descendingSort(a.createdAt, a.createdAt));
+  const sortedDocs = docs.sort((a, b) => descendingSort(a.createdAt, b.createdAt));
   return [sortedDocs[0]];
 };
 
@@ -168,16 +168,6 @@ export const readAPIResponseWithTypeArrayBuffer = (response) => {
   const decodedResponse = JSON.parse(decoder.decode(dataView));
 
   return decodedResponse;
-};
-
-export const getBillingItemsPrice = service => service.billingItems
-  .reduce((acc, bi) => (acc += bi.defaultUnitAmount), 0);
-
-export const getBillingItemsName = (service) => {
-  if (!get(service, 'billingItems.length')) return [];
-
-  const billingItemsName = service.billingItems.reduce((acc, bi) => (acc += `${bi.name}, `), '');
-  return [billingItemsName.slice(0, -2)];
 };
 
 export const formatDownloadName = name => name.replaceAll(/ - | |'/g, '_');

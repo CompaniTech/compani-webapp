@@ -670,7 +670,7 @@ export default {
       + '\nBonne formation,\nCompani';
     };
 
-    const setOtherMessage = () => (newSms.value.content = '');
+    const setOtherMessage = () => { newSms.value.content = ''; };
 
     const updateMessage = (newMessageType) => {
       if (newMessageType === CONVOCATION) setConvocationMessage();

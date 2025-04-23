@@ -205,6 +205,7 @@ export const useCardTemplate = (card, v$, refreshCard, cardParent) => {
       await refreshCard();
       NotifyPositive('Média envoyé');
     } catch (e) {
+      console.error(e);
       NotifyNegative('Erreur lors de l\'envoi du média');
     }
   };
@@ -223,7 +224,7 @@ export const useCardTemplate = (card, v$, refreshCard, cardParent) => {
     }
   };
 
-  const validateMediaDeletion = (path) => {
+  const validateMediaDeletion = () => {
     $q.dialog({
       title: 'Confirmation',
       message: 'Êtes-vous sûr(e) de vouloir supprimer ce média&nbsp;?',
