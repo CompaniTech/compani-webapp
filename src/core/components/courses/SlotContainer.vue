@@ -119,7 +119,14 @@ import DateInput from '@components/form/DateInput';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import { useCourses } from '@composables/courses';
 import { useValidations } from '@composables/validations';
-import { E_LEARNING, ON_SITE, REMOTE, DAY_MONTH_YEAR, HH_MM, DD_MM_YYYY, SHORT_DURATION_H_MM } from '@data/constants';
+import { E_LEARNING,
+  ON_SITE,
+  REMOTE,
+  DAY_MONTH_YEAR,
+  HH_MM,
+  DD_MM_YYYY,
+  SHORT_DURATION_H_MM,
+  SINGLE } from '@data/constants';
 import { formatQuantity } from '@helpers/utils';
 import { getStepTypeLabel, formatSlotSchedule } from '@helpers/courses';
 import { ascendingSort, getISOTotalDuration } from '@helpers/dates/utils';
@@ -270,18 +277,31 @@ export default {
         return NotifyWarning('Vous ne pouvez pas éditer un créneau d\'une formation archivée.');
       }
 
-      const defaultDate = has(slot, 'startDate')
-        ? pick(slot, ['startDate', 'endDate'])
-        : {
+      const defaultDate = () => {
+        if (course.value.type === SINGLE && !has(slot, 'startDate')) {
+          return {
+            startDate: CompaniDate().set({ hour: 14, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+            endDate: CompaniDate().set({ hour: 15, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+          };
+        }
+        if (has(slot, 'startDate')) {
+          return pick(slot, ['startDate', 'endDate']);
+        }
+
+        return {
           startDate: CompaniDate().set({ hour: 9, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
           endDate: CompaniDate().set({ hour: 12, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
         };
+      };
+
+      const dates = defaultDate();
+
       editedCourseSlot.value = {
         _id: slot._id,
         dates: {
-          ...defaultDate,
-          startHour: CompaniDate(defaultDate.startDate).format(HH_MM),
-          endHour: CompaniDate(defaultDate.endDate).format(HH_MM),
+          ...dates,
+          startHour: CompaniDate(dates.startDate).format(HH_MM),
+          endHour: CompaniDate(dates.endDate).format(HH_MM),
         },
         address: {},
         meetingLink: get(slot, 'meetingLink') || '',

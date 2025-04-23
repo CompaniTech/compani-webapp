@@ -9,6 +9,8 @@
       <ni-button class="bg-copper-grey-100" color="copper-grey-800" v-if="isPlannedSlot" label="Supprimer la date"
       @click="validateDatesDeletion(editedCourseSlot)" />
     </div>
+    <ni-btn-toggle in-modal :model-value="selectedDuration" :options="durationOptions"
+      @update:model-value="updateDuration" />
     <ni-datetime-range caption="Dates et heures" :model-value="editedCourseSlot.dates" disable-end-date
       :error="validations.dates.$error" @blur="validations.dates.$touch" @update:model-value="update($event, 'dates')"
       required-field />
@@ -26,17 +28,19 @@
 </template>
 
 <script>
-import { toRefs, ref } from 'vue';
+import { toRefs, ref, computed, watch } from 'vue';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
 import DateTimeRange from '@components/form/DatetimeRange';
 import SearchAddress from '@components/form/SearchAddress';
+import ButtonToggle from '@components/ButtonToggle';
 import { NotifyPositive } from '@components/popup/notify';
-import { ON_SITE, REMOTE, DD_MM_YYYY } from '@data/constants';
+import { ON_SITE, REMOTE, DD_MM_YYYY, MINUTE, HH_MM } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatIntervalHourly } from '@helpers/dates/utils';
 import { useQuasar } from 'quasar';
+import get from 'lodash/get';
 
 export default {
   name: 'SlotEditionModal',
@@ -57,13 +61,46 @@ export default {
     'ni-search-address': SearchAddress,
     'ni-modal': Modal,
     'ni-input': Input,
+    'ni-btn-toggle': ButtonToggle,
   },
   emits: ['hide', 'update:model-value', 'submit', 'delete', 'update', 'unplan-slot'],
   setup (props, { emit }) {
-    const { stepTypes } = toRefs(props);
+    const { stepTypes, editedCourseSlot } = toRefs(props);
     const $q = useQuasar();
 
     const linkErrorMessage = ref('Le lien doit commencer par http:// ou https://');
+    const selectedDuration = ref(editedCourseSlot.value.dates
+      ? CompaniDate(editedCourseSlot.value.dates.endHour, HH_MM)
+        .diff(CompaniDate(editedCourseSlot.value.dates.startHour, HH_MM), MINUTE)
+      : 'PT0M');
+
+    const durationOptions = computed(() => ([
+      { label: '0H30', value: 'PT30M' },
+      { label: '1H', value: 'PT60M' },
+      { label: '1H30', value: 'PT90M' },
+      { label: '2H', value: 'PT120M' },
+      { label: '2H30', value: 'PT150M' },
+      { label: '3H', value: 'PT180M' },
+      { label: '3H30', value: 'PT210M' },
+    ]));
+
+    watch(() => selectedDuration.value, (newDuration) => {
+      if (get(editedCourseSlot.value, 'dates.startHour') && newDuration) {
+        editedCourseSlot.value.dates.endHour = CompaniDate(editedCourseSlot.value.dates.startHour, HH_MM)
+          .add(newDuration).format(HH_MM);
+      }
+    });
+
+    watch(
+      () => [get(editedCourseSlot.value, 'dates.startHour'), get(editedCourseSlot.value, 'dates.endHour')],
+      () => {
+        const startHour = get(editedCourseSlot.value, 'dates.startHour');
+        const endHour = get(editedCourseSlot.value, 'dates.endHour');
+        if (startHour && endHour) {
+          selectedDuration.value = CompaniDate(endHour, HH_MM).diff(CompaniDate(startHour, HH_MM), MINUTE);
+        }
+      }
+    );
 
     const validateDatesDeletion = (slot) => {
       $q.dialog({
@@ -103,11 +140,16 @@ export default {
 
     const unplanSlot = slotId => emit('unplan-slot', slotId);
 
+    const updateDuration = (value) => { selectedDuration.value = value; };
+
     return {
       // Data
       linkErrorMessage,
       ON_SITE,
       REMOTE,
+      selectedDuration,
+      // Computed
+      durationOptions,
       // Methods
       validateDatesDeletion,
       validateDeletion,
@@ -118,6 +160,7 @@ export default {
       update,
       getType,
       unplanSlot,
+      updateDuration,
     };
   },
 };
