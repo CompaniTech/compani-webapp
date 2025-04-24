@@ -13,7 +13,6 @@ export const refreshAlenviCookies = async () => {
     const auth = await Authentication.refreshToken();
     return auth;
   } catch (e) {
-    console.error(e);
     return false;
   }
 };

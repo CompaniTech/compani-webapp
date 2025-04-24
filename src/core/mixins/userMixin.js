@@ -58,7 +58,7 @@ export const userMixin = {
       }
       return '';
     },
-    async emailErrorHandler () {
+    async emailErrorHandler (path) {
       try {
         NotifyNegative('Email déjà existant.');
         this.userProfile.local.email = this.tmpInput;

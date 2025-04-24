@@ -95,7 +95,6 @@ export default {
           this.trainerCreationModal = false;
         }
       } catch (e) {
-        console.error(e);
         NotifyNegative('Erreur lors de la création du compte.');
         this.resetCreationModal();
       } finally {

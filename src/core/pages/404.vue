@@ -28,8 +28,8 @@ export default {
     },
     goTo () {
       return /\/ad\//.test(this.$route.path)
-        ? this.$router.replace('/ad').catch(() => {})
-        : this.$router.replace('/').catch(() => {});
+        ? this.$router.replace('/ad').catch((e) => {})
+        : this.$router.replace('/').catch((e) => {});
     },
   },
 };

@@ -81,7 +81,7 @@ export default {
         const blob = URL.createObjectURL(files[0]);
 
         const reader = new FileReader();
-        reader.onload = () => { image.value = blob; };
+        reader.onload = (e) => { image.value = blob; };
         reader.readAsArrayBuffer(files[0]);
         displayCropper.value = true;
       }

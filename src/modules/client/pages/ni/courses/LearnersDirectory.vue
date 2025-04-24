@@ -87,8 +87,7 @@ export default {
       try {
         const companyList = await Companies.list({ holding: loggedUser.value.holding._id });
         holdingCompanies.value = formatAndSortOptions(companyList, 'name');
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
         holdingCompanies.value = [];
         NotifyNegative('Erreur lors de la récupération des structures.');
       }
