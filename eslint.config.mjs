@@ -73,7 +73,9 @@ export default defineConfig([
     'plugin:promise/recommended',
     'plugin:n/recommended'
   ),
-  { // Configuration pour les fichiers .vue
+
+  // Configuration pour les fichiers .vue
+  {
     plugins: { vue, cypress },
     files: ['**/*.vue'],
     languageOptions: {
@@ -92,7 +94,9 @@ export default defineConfig([
     },
     rules,
   },
-  { // Configuration pour les fichiers .js et .mjs
+
+  // Configuration pour les fichiers .js et .mjs
+  {
     files: ['**/*.{js,mjs}'],
     languageOptions: {
       parser: babelParser,
