@@ -9,8 +9,10 @@ describe('Login page tests', () => {
   it('should display an error if credentials are wrong', () => {
     cy.dataCy('email').type('client-admin@alenvi.io');
     cy.dataCy('password').type('3236{enter}');
-    cy.get('.q-notification__message').scrollIntoView();
-    cy.get('.q-notification__message').should('be.visible').and('contain', 'Identifiant ou mot de passe invalide');
+    cy.get('.q-notification__message')
+      .scrollIntoView()
+      .should('be.visible')
+      .and('contain', 'Identifiant ou mot de passe invalide');
     cy.url().should('include', '/login');
   });
 
