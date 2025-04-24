@@ -73,8 +73,9 @@ export default {
     });
 
     const refreshUser = async () => {
-      if (TRAINER === vendorRole.value) await $store.dispatch('main/fetchLoggedUser', userProfile.value._id);
-      else await $store.dispatch('userProfile/fetchUserProfile', { userId: userProfile.value._id });
+      TRAINER === vendorRole.value
+        ? await $store.dispatch('main/fetchLoggedUser', userProfile.value._id)
+        : await $store.dispatch('userProfile/fetchUserProfile', { userId: userProfile.value._id });
     };
 
     const rules = computed(() => ({

@@ -155,8 +155,7 @@ export const useAttendanceSheets = (
   const formatPayload = () => {
     const { course: newAttendanceSheetCourse, file, trainee, trainer, date, slots } = newAttendanceSheet.value;
     const form = new FormData();
-    if ([INTER_B2B, SINGLE].includes(course.value.type)) form.append('trainee', trainee);
-    else form.append('date', date);
+    [INTER_B2B, SINGLE].includes(course.value.type) ? form.append('trainee', trainee) : form.append('date', date);
     form.append('course', newAttendanceSheetCourse);
     form.append('trainer', trainer);
     form.append('file', file);
