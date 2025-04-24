@@ -1,6 +1,7 @@
 require('dotenv').config();
 const path = require('path');
 const webpack = require('webpack');
+const ESLintPlugin = require('eslint-webpack-plugin');
 const { configure } = require('quasar/wrappers');
 
 module.exports = configure(ctx => ({
@@ -98,6 +99,7 @@ module.exports = configure(ctx => ({
         '@composables': path.resolve(__dirname, './src/core/composables'),
       };
       cfg.plugins.push(
+        new ESLintPlugin({ fix: true }),
         // Select moment locale files
         new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /fr/),
         new webpack.IgnorePlugin({
