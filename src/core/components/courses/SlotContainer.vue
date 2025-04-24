@@ -273,18 +273,18 @@ export default {
 
     const getSlotAddress = slot => get(slot, 'address.fullAddress') || 'Adresse non renseignée';
 
-    const defaultDate = (slot) => {
-        if (course.value.type === SINGLE && !has(slot, 'startDate')) {
+    const getDefaultDate = (slot) => {
+      if (course.value.type === SINGLE && !has(slot, 'startDate')) {
           return {
             startDate: CompaniDate().set({ hour: 14, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
             endDate: CompaniDate().set({ hour: 15, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
           };
-        }
-        if (has(slot, 'startDate')) {
+      }
+      if (has(slot, 'startDate')) {
           return pick(slot, ['startDate', 'endDate']);
-        }
+      }
 
-        return {
+      return {
           startDate: CompaniDate().set({ hour: 9, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
           endDate: CompaniDate().set({ hour: 12, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
         };
@@ -296,14 +296,14 @@ export default {
         return NotifyWarning('Vous ne pouvez pas éditer un créneau d\'une formation archivée.');
       }
 
-      const dates = defaultDate(slot);
+      const defaultDate = getDefaultDate(slot);
 
       editedCourseSlot.value = {
         _id: slot._id,
         dates: {
-          ...dates,
-          startHour: CompaniDate(dates.startDate).format(HH_MM),
-          endHour: CompaniDate(dates.endDate).format(HH_MM),
+          ...defaultDate,
+          startHour: CompaniDate(defaultDate.startDate).format(HH_MM),
+          endHour: CompaniDate(defaultDate.endDate).format(HH_MM),
         },
         address: {},
         meetingLink: get(slot, 'meetingLink') || '',

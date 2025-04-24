@@ -91,8 +91,7 @@ export default {
       }
     });
 
-    watch(() => [get(editedCourseSlot.value, 'dates.startHour'), get(editedCourseSlot.value, 'dates.endHour')],
-      () => {
+    watch(() => [get(editedCourseSlot.value, 'dates.startHour'), get(editedCourseSlot.value, 'dates.endHour')], () => {
         const startHour = get(editedCourseSlot.value, 'dates.startHour');
         const endHour = get(editedCourseSlot.value, 'dates.endHour');
         if (startHour && endHour) {
