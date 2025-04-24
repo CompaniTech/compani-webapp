@@ -119,14 +119,16 @@ import DateInput from '@components/form/DateInput';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import { useCourses } from '@composables/courses';
 import { useValidations } from '@composables/validations';
-import { E_LEARNING,
+import {
+  E_LEARNING,
   ON_SITE,
   REMOTE,
   DAY_MONTH_YEAR,
   HH_MM,
   DD_MM_YYYY,
   SHORT_DURATION_H_MM,
-  SINGLE } from '@data/constants';
+  SINGLE
+  } from '@data/constants';
 import { formatQuantity } from '@helpers/utils';
 import { getStepTypeLabel, formatSlotSchedule } from '@helpers/courses';
 import { ascendingSort, getISOTotalDuration } from '@helpers/dates/utils';
@@ -271,13 +273,7 @@ export default {
 
     const getSlotAddress = slot => get(slot, 'address.fullAddress') || 'Adresse non renseignée';
 
-    const openEditionModal = (slot) => {
-      if (!canEdit.value) return;
-      if (course.value.archivedAt) {
-        return NotifyWarning('Vous ne pouvez pas éditer un créneau d\'une formation archivée.');
-      }
-
-      const defaultDate = () => {
+    const defaultDate = (slot) => {
         if (course.value.type === SINGLE && !has(slot, 'startDate')) {
           return {
             startDate: CompaniDate().set({ hour: 14, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
@@ -294,7 +290,13 @@ export default {
         };
       };
 
-      const dates = defaultDate();
+    const openEditionModal = (slot) => {
+      if (!canEdit.value) return;
+      if (course.value.archivedAt) {
+        return NotifyWarning('Vous ne pouvez pas éditer un créneau d\'une formation archivée.');
+      }
+
+      const dates = defaultDate(slot);
 
       editedCourseSlot.value = {
         _id: slot._id,
