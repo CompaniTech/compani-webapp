@@ -39,7 +39,7 @@ export const useCompanyDetachment = (userProfile, refresh) => {
 
   watch(userProfile, () => { userIdentity.value = formatIdentity(get(userProfile.value, 'identity'), 'FL'); });
 
-  const openCompanyDetachModal = () => { companyDetachModal.value = true; };
+  const openCompanyDetachModal = () => (companyDetachModal.value = true);
 
   const validateCompanyDetachement = () => {
     $q.dialog({

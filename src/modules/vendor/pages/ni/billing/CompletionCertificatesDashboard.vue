@@ -255,9 +255,9 @@ export default {
       }
     });
 
-    const updateSelectedMonths = (months) => { selectedMonths.value = months; };
+    const updateSelectedMonths = months => (selectedMonths.value = months);
 
-    const updateSelectedCompany = (value) => { selectedCompany.value = value; };
+    const updateSelectedCompany = value => (selectedCompany.value = value);
 
     const created = () => getMonthOptions();
 

@@ -211,7 +211,7 @@ export default {
 
     const courseName = computed(() => composeCourseName(course.value));
 
-    const saveTmp = (path) => { tmpInput.value = course.value[path]; };
+    const saveTmp = path => (tmpInput.value = course.value[path]);
 
     const refreshCourseBills = async () => {
       try {
