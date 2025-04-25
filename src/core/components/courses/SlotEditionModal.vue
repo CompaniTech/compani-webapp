@@ -92,13 +92,12 @@ export default {
     });
 
     watch(() => [get(editedCourseSlot.value, 'dates.startHour'), get(editedCourseSlot.value, 'dates.endHour')], () => {
-        const startHour = get(editedCourseSlot.value, 'dates.startHour');
-        const endHour = get(editedCourseSlot.value, 'dates.endHour');
-        if (startHour && endHour) {
-          selectedDuration.value = CompaniDate(endHour, HH_MM).diff(CompaniDate(startHour, HH_MM), MINUTE);
-        }
+      const startHour = get(editedCourseSlot.value, 'dates.startHour');
+      const endHour = get(editedCourseSlot.value, 'dates.endHour');
+      if (startHour && endHour) {
+        selectedDuration.value = CompaniDate(endHour, HH_MM).diff(CompaniDate(startHour, HH_MM), MINUTE);
       }
-    );
+    });
 
     const validateDatesDeletion = (slot) => {
       $q.dialog({

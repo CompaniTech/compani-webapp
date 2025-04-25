@@ -275,20 +275,18 @@ export default {
 
     const getDefaultDate = (slot) => {
       if (course.value.type === SINGLE && !has(slot, 'startDate')) {
-          return {
-            startDate: CompaniDate().set({ hour: 14, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
-            endDate: CompaniDate().set({ hour: 15, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
-          };
+        return {
+          startDate: CompaniDate().set({ hour: 14, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+          endDate: CompaniDate().set({ hour: 15, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+        };
       }
-      if (has(slot, 'startDate')) {
-          return pick(slot, ['startDate', 'endDate']);
-      }
+      if (has(slot, 'startDate')) { return pick(slot, ['startDate', 'endDate']);}
 
       return {
-          startDate: CompaniDate().set({ hour: 9, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
-          endDate: CompaniDate().set({ hour: 12, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
-        };
+        startDate: CompaniDate().set({ hour: 9, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+        endDate: CompaniDate().set({ hour: 12, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
       };
+    };
 
     const openEditionModal = (slot) => {
       if (!canEdit.value) return;
