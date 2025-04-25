@@ -10,10 +10,10 @@
       @click="validateDatesDeletion(editedCourseSlot)" />
     </div>
     <ni-btn-toggle in-modal :model-value="selectedDuration" :options="durationOptions"
-      :shifted-duration="selectedDuration" @update:model-value="updateDuration" />
+      @update:model-value="updateDuration" />
     <ni-datetime-range caption="Dates et heures" :model-value="editedCourseSlot.dates" disable-end-date
       :error="validations.dates.$error" @blur="validations.dates.$touch" @update:model-value="update($event, 'dates')"
-      required-field />
+      required-field :shifted-duration="selectedDuration" />
     <ni-search-address v-if="getType(editedCourseSlot.step) === ON_SITE" :model-value="editedCourseSlot.address"
       error-message="Adresse non valide" in-modal last @blur="validations.address.$touch"
       :error="validations.address.$error" @update:model-value="update($event, 'address')" />
