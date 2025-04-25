@@ -127,8 +127,8 @@ import {
   HH_MM,
   DD_MM_YYYY,
   SHORT_DURATION_H_MM,
-  SINGLE
-  } from '@data/constants';
+  SINGLE,
+} from '@data/constants';
 import { formatQuantity } from '@helpers/utils';
 import { getStepTypeLabel, formatSlotSchedule } from '@helpers/courses';
 import { ascendingSort, getISOTotalDuration } from '@helpers/dates/utils';
@@ -280,7 +280,7 @@ export default {
           endDate: CompaniDate().set({ hour: 15, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
         };
       }
-      if (has(slot, 'startDate')) { return pick(slot, ['startDate', 'endDate']);}
+      if (has(slot, 'startDate')) { return pick(slot, ['startDate', 'endDate']); }
 
       return {
         startDate: CompaniDate().set({ hour: 9, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
