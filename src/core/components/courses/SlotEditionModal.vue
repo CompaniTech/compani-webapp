@@ -167,4 +167,6 @@ export default {
   .modal-icon
     display: flex
     justify-content: flex-end
+    margin-top: -5%
+    margin-bottom: 2%
 </style>
