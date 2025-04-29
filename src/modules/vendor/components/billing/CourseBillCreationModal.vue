@@ -23,6 +23,9 @@
       :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
     <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
       @update:model-value="update($event, 'mainFee.description')" />
+    <ni-date-input caption="Date d'échéance" :model-value="newBill.maturityDate" in-modal required-field
+      :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
+      @update:model-value="update($event, 'maturityDate')" />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Créer la facture" icon-right="add" color="white"
         :loading="loading" @click="submit" />
@@ -39,6 +42,7 @@ import OptionGroup from '@components/form/OptionGroup';
 import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import Banner from '@components/Banner';
+import DateInput from '@components/form/DateInput';
 import { INTRA, SINGLE, TRAINEE, GROUP } from '@data/constants';
 import { formatQuantity, formatName } from '@helpers/utils';
 
@@ -63,6 +67,7 @@ export default {
     'company-select': CompanySelect,
     'ni-banner': Banner,
     'ni-option-group': OptionGroup,
+    'ni-date-input': DateInput,
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-bill'],
   setup (props, { emit }) {

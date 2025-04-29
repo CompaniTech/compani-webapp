@@ -114,6 +114,7 @@ export default {
     const newBill = ref({
       payer: '',
       mainFee: { price: 0, count: 1, countUnit: course.value.type === SINGLE ? TRAINEE : GROUP, description: '' },
+      maturityDate: '',
     });
 
     const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
@@ -134,6 +135,7 @@ export default {
           count: { required, strictPositiveNumber, integerNumber },
           countUnit: { required },
         },
+        maturityDate: { required },
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
     }));
@@ -301,6 +303,7 @@ export default {
       mainFee: newBill.value.mainFee,
       companies: companiesToBill.value,
       payer: formatPayerForPayload(newBill.value.payer),
+      maturityDate: newBill.value.maturityDate,
     });
 
     const unrollBill = (billId) => {
@@ -365,6 +368,7 @@ export default {
             countUnit: isSingleCourse.value ? TRAINEE : GROUP,
             description: '',
           },
+          maturityDate: '',
         };
         v$.value.newBill.$reset();
         resetCompaniesSelectionModal();

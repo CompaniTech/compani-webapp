@@ -45,7 +45,12 @@
                 Payeur : {{ get(bill, 'payer.name') }}
                 <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
               </div>
-              {{ isDateVisible(bill) ? `Date : ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` : '' }}
+              {{ isDateVisible(bill) && bill.billedAt
+                ? `Date : ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}`
+                : bill.maturityDate
+                ? `Date d'échéance : ${CompaniDate(bill.maturityDate).format(DD_MM_YYYY)}`
+                : 'Date non disponible'
+              }}
             </q-item-section>
             <q-icon size="24px" :name="areDetailsVisible[bill._id] ? 'expand_less' : 'expand_more'" />
           </q-card-section>
