@@ -7,7 +7,7 @@
       <ni-button v-if="isRofOrVendorAdmin && isVendorInterface && !isPlannedSlot" icon="delete"
         @click="validateDeletion(editedCourseSlot._id)" :disable="isOnlySlot" />
       <ni-button class="bg-copper-grey-100" color="copper-grey-800" v-if="isPlannedSlot" label="Supprimer la date"
-      @click="validateDatesDeletion(editedCourseSlot)" />
+        @click="validateDatesDeletion(editedCourseSlot)" />
     </div>
     <ni-btn-toggle in-modal :model-value="selectedDuration" :options="durationOptions"
       @update:model-value="updateDuration" />
@@ -167,6 +167,5 @@ export default {
   .modal-icon
     display: flex
     justify-content: flex-end
-    margin-top: -5%
-    margin-bottom: 2%
+    margin-bottom: 16px
 </style>
