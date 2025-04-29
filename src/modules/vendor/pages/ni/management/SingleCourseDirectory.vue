@@ -51,7 +51,7 @@ import {
 import { useStore } from 'vuex';
 import { onBeforeRouteLeave } from 'vue-router';
 import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
+import { required, requiredIf, or } from '@vuelidate/validators';
 import compact from 'lodash/compact';
 import get from 'lodash/get';
 import Holdings from '@api/Holdings';
@@ -73,7 +73,7 @@ import {
   UNARCHIVED_COURSES,
   DD_MM_YYYY,
 } from '@data/constants';
-import { integerNumber, positiveNumber } from '@helpers/vuelidateCustomVal';
+import { integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSort } from '@helpers/dates/utils';
 import store from 'src/store/index';
@@ -106,6 +106,7 @@ export default {
       salesRepresentative: '',
       certificateGenerationMode: MONTHLY,
       trainee: '',
+      prices: { global: '', trainerFees: '' },
     });
     const holdingOptions = ref([]);
     const programs = ref([]);
@@ -175,6 +176,13 @@ export default {
         certificateGenerationMode: { required },
         trainee: { required },
         expectedBillsCount: { required, positiveNumber, integerNumber },
+        prices: {
+          global: {
+            strictPositiveNumber: or(strictPositiveNumber, value => value === ''),
+            required: requiredIf(get(newCourse.value, 'prices.trainerFees')),
+          },
+          trainerFees: { strictPositiveNumber: or(strictPositiveNumber, value => value === '') },
+        },
       },
     }));
     const v$ = useVuelidate(rules, { newCourse });
@@ -250,6 +258,7 @@ export default {
         salesRepresentative: '',
         certificateGenerationMode: MONTHLY,
         trainee: '',
+        prices: { global: '', trainerFees: '' },
       };
     };
 

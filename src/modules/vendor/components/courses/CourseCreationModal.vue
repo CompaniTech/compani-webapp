@@ -51,6 +51,12 @@
         :error="validations.certificateGenerationMode.$error" required-field />
       <ni-input v-if="!isSingleCourse" in-modal :model-value="newCourse.misc"
         @update:model-value="update($event.trim(), 'misc')" caption="Informations Complémentaires" />
+      <ni-input v-if="isSingleCourse || isIntraCourse" in-modal :model-value="newCourse.prices.global"
+        @update:model-value="update($event.trim(), 'prices.global')" caption="Prix de la formation" suffix="€"
+        :error="validations.prices.global.$error" :error-message="globalPriceErrorMessage" type="number" />
+      <ni-input v-if="isSingleCourse || isIntraCourse" in-modal :model-value="newCourse.prices.trainerFees"
+        @update:model-value="update($event.trim(), 'prices.trainerFees')" caption="Frais de formateurs" suffix="€"
+        :error="validations.prices.trainerFees.$error" :error-message="trainerFeesErrorMessage" type="number" />
       <q-checkbox in-modal :model-value="newCourse.hasCertifyingTest" label="La formation est certifiante" dense
         @update:model-value="update($event, 'hasCertifyingTest')" class="q-mb-lg" />
       <template #footer>
@@ -61,8 +67,9 @@
 </template>
 
 <script>
-import { ref, computed, toRefs, watch } from 'vue';
+import { ref, computed, toRefs, watch, nextTick } from 'vue';
 import get from 'lodash/get';
+import set from 'lodash/set';
 import omit from 'lodash/omit';
 import Modal from '@components/modal/Modal';
 import Select from '@components/form/Select';
@@ -78,6 +85,7 @@ import {
   PUBLISHED,
   CERTIFICATE_GENERATION_MODE,
   SINGLE,
+  TRAINEE,
 } from '@data/constants';
 import { formatAndSortOptions, formatAndSortCompanyOptions } from '@helpers/utils';
 
@@ -138,6 +146,13 @@ export default {
       return 'Nombre non valide';
     });
 
+    const globalPriceErrorMessage = computed(() => {
+      if (validations.value.prices.global.required.$response === false) return REQUIRED_LABEL;
+      return 'Nombre non valide';
+    });
+
+    const trainerFeesErrorMessage = computed(() => 'Nombre non valide');
+
     const isIntraCourse = computed(() => newCourse.value.type === INTRA);
 
     const isIntraHoldingCourse = computed(() => newCourse.value.type === INTRA_HOLDING);
@@ -156,22 +171,28 @@ export default {
       emit(
         'update:new-course',
         {
-          ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount', 'trainee']),
-          ...(event === INTRA && { maxTrainees: '8', expectedBillsCount: '0' }),
+          ...omit(newCourse.value, ['company', 'holding', 'maxTrainees', 'expectedBillsCount', 'trainee', 'prices']),
+          ...(event === INTRA && {
+            maxTrainees: '8',
+            expectedBillsCount: '0',
+            prices: { global: '', trainerFees: '' },
+          }),
           ...(event === INTRA_HOLDING && { maxTrainees: '8' }),
           type: event,
         }
       );
     };
 
-    const update = (event, prop) => emit(
-      'update:new-course',
-      {
-        ...newCourse.value,
-        [prop]: event,
-        ...(prop === 'trainee' && { misc: traineeOptions.value.find(o => o.value === event).label }),
+    const update = async (event, path) => {
+      emit('update:new-course', set({ ...newCourse.value }, path, event));
+      if (path === TRAINEE) {
+        await nextTick();
+        emit(
+          'update:new-course',
+          set({ ...newCourse.value }, 'misc', traineeOptions.value.find(o => o.value === event).label)
+        );
       }
-    );
+    };
 
     watch(
       () => newCourse.value.program,
@@ -208,6 +229,8 @@ export default {
       programOptions,
       maxTraineesErrorMessage,
       expectedBillsCountErrorMessage,
+      globalPriceErrorMessage,
+      trainerFeesErrorMessage,
       isIntraCourse,
       isIntraHoldingCourse,
       companyOptions,
