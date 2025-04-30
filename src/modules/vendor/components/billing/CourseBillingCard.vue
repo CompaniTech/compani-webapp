@@ -45,12 +45,12 @@
                 Payeur : {{ get(bill, 'payer.name') }}
                 <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
               </div>
-              {{ isDateVisible(bill) && bill.billedAt
-                ? `Date : ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}`
-                : bill.maturityDate
-                ? `Date d'échéance : ${CompaniDate(bill.maturityDate).format(DD_MM_YYYY)}`
-                : 'Date non disponible'
-              }}
+              <span v-if="isDateVisible(bill) && bill.billedAt">
+                {{ `Date : ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
+              </span>
+              <span v-else-if="isDateVisible(bill) && bill.maturityDate">
+                {{ `Date d'échéance : ${CompaniDate(bill.maturityDate).format(DD_MM_YYYY)}` }}
+              </span>
             </q-item-section>
             <q-icon size="24px" :name="areDetailsVisible[bill._id] ? 'expand_less' : 'expand_more'" />
           </q-card-section>
@@ -556,7 +556,7 @@ export default {
 
     const isPayerVisible = bill => !bill.courseCreditNote || areDetailsVisible.value[bill._id];
 
-    const isDateVisible = bill => isPayerVisible(bill) && bill.billedAt;
+    const isDateVisible = bill => isPayerVisible(bill) && !!bill;
 
     const getBillingItemName = billingItem => billingItemList.value.find(item => item.value === billingItem).label;
 
