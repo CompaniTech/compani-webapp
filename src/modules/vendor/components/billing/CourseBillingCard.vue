@@ -41,13 +41,13 @@
                   </div>
                 </div>
               </div>
-              <div v-if="isPayerAndDateVisible">
+              <div v-if="isPayerAndDateVisible(bill)">
                 <div @click.stop="openPayerEditionModal(bill)" class="payer">
                   Payeur : {{ get(bill, 'payer.name') }}
                   <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
                 </div>
                 <span v-if="bill.billedAt">
-                  {{ `Date : ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
+                  {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
                 </span>
                 <span v-else-if="bill.maturityDate">
                   {{ `Date d'échéance : ${CompaniDate(bill.maturityDate).format(DD_MM_YYYY)}` }}
@@ -556,7 +556,7 @@ export default {
 
     const showDetails = (billId) => { emit('unroll', billId); };
 
-    const isPayerAndDateVisible = bill => !bill.courseCreditNote || areDetailsVisible.value[bill._id];
+    const isPayerAndDateVisible = bill => !bill.courseCreditNote && areDetailsVisible.value[bill._id];
 
     const getBillingItemName = billingItem => billingItemList.value.find(item => item.value === billingItem).label;
 
