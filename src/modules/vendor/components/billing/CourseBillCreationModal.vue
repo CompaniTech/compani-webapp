@@ -21,6 +21,9 @@
     <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
       :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" :disable="course.type === SINGLE"
       :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
+    <ni-date-input caption="Date d'échéance" :model-value="newBill.maturityDate" in-modal required-field
+      :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
+      @update:model-value="update($event, 'maturityDate')" />
     <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
       @update:model-value="update($event, 'mainFee.description')" />
     <template #footer>
@@ -39,6 +42,7 @@ import OptionGroup from '@components/form/OptionGroup';
 import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import Banner from '@components/Banner';
+import DateInput from '@components/form/DateInput';
 import { INTRA, SINGLE, TRAINEE, GROUP } from '@data/constants';
 import { formatQuantity, formatName } from '@helpers/utils';
 
@@ -63,6 +67,7 @@ export default {
     'company-select': CompanySelect,
     'ni-banner': Banner,
     'ni-option-group': OptionGroup,
+    'ni-date-input': DateInput,
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-bill'],
   setup (props, { emit }) {

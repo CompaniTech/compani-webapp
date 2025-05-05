@@ -41,11 +41,18 @@
                   </div>
                 </div>
               </div>
-              <div v-if="isPayerVisible(bill)" @click.stop="openPayerEditionModal(bill)" class="payer">
-                Payeur : {{ get(bill, 'payer.name') }}
-                <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
+              <div v-if="isPayerAndDateVisible(bill)">
+                <div @click.stop="openPayerEditionModal(bill)" class="payer">
+                  Payeur : {{ get(bill, 'payer.name') }}
+                  <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
+                </div>
+                <span v-if="bill.billedAt">
+                  {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
+                </span>
+                <span v-else>
+                  Date d'échéance : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
+                </span>
               </div>
-              {{ isDateVisible(bill) ? `Date : ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` : '' }}
             </q-item-section>
             <q-icon size="24px" :name="areDetailsVisible[bill._id] ? 'expand_less' : 'expand_more'" />
           </q-card-section>
@@ -549,9 +556,7 @@ export default {
 
     const showDetails = (billId) => { emit('unroll', billId); };
 
-    const isPayerVisible = bill => !bill.courseCreditNote || areDetailsVisible.value[bill._id];
-
-    const isDateVisible = bill => isPayerVisible(bill) && bill.billedAt;
+    const isPayerAndDateVisible = bill => !bill.courseCreditNote || areDetailsVisible.value[bill._id];
 
     const getBillingItemName = billingItem => billingItemList.value.find(item => item.value === billingItem).label;
 
@@ -620,8 +625,7 @@ export default {
       openCreditNoteCreationModal,
       openCourseBillValidationModal,
       validatePurchaseDeletion,
-      isDateVisible,
-      isPayerVisible,
+      isPayerAndDateVisible,
       showDetails,
       getBillingItemName,
       downloadBill,
