@@ -49,8 +49,8 @@
                 <span v-if="bill.billedAt">
                   {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
                 </span>
-                <span v-else-if="bill.maturityDate">
-                  {{ `Date d'échéance : ${CompaniDate(bill.maturityDate).format(DD_MM_YYYY)}` }}
+                <span v-else>
+                  Date d'échéance : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
                 </span>
               </div>
             </q-item-section>
