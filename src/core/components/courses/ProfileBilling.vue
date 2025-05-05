@@ -4,6 +4,10 @@
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
         @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures"
         :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
+      <ni-input in-modal :v-model="courseBills.global" caption="Prix de la formation" :disable="!!courseBills.length"
+        @blur="updatePrice($event, 'global')" required-field :error="getPricesError()" type="number" />
+      <ni-input :v-model="courseBills.trainerFees" caption="Frais de formateur" :disable="!!courseBills.length"
+        @blur="updatePrice($event, 'trainerFees')" required-field :error="getPricesError()" type="number" in-modal />
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
       <template #message>
@@ -42,7 +46,7 @@ import pickBy from 'lodash/pickBy';
 import groupBy from 'lodash/groupBy';
 import uniq from 'lodash/uniq';
 import useVuelidate from '@vuelidate/core';
-import { required, minValue } from '@vuelidate/validators';
+import { required, minValue, helpers, or } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
 import {
@@ -127,6 +131,12 @@ export default {
           integerNumber,
           minValue: minValue(courseBills.value.filter(cb => !cb.courseCreditNote).length),
         },
+        prices: {
+          $each: helpers.forEach({
+            trainerFees: { strictPositiveNumber: or(strictPositiveNumber, value => value === null) },
+            global: { strictPositiveNumber, required },
+          }),
+        },
       },
       newBill: {
         payer: { required },
@@ -139,6 +149,12 @@ export default {
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
     }));
+
+    const getPricesError = () => {
+      const validation = v$.value.course.prices.$each.$response.$errors;
+
+      return get(validation, 'global.0.$response') === false || get(validation, 'trainerFees.0.$response') === false;
+    };
 
     const defaultDescription = computed(() => {
       const trainersName = course.value.trainers
@@ -404,12 +420,28 @@ export default {
       }
     };
 
+    const updatePrice = async (path, value, company) => {
+      try {
+        v$.value.course.$touch();
+        if (v$.value.course.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        await Courses.update(course.value._id, { company, [path]: value });
+        NotifyPositive('Modification enregistrée.');
+
+        await refreshCourse();
+      } catch (error) {
+        console.error(error);
+        NotifyNegative('Erreur lors de la modification.');
+      }
+    };
+
     watch(billCreationModal, () => {
       if (billCreationModal.value) newBill.value.mainFee.description = defaultDescription.value;
     });
 
     const created = async () => {
       await Promise.all([refreshCourseBills(), refreshPayers(), refreshBillingItems()]);
+      v$.value.course.prices.$each.global.$touch();
     };
 
     created();
@@ -458,6 +490,8 @@ export default {
       pickBy,
       formatPrice,
       formatName,
+      updatePrice,
+      getPricesError,
     };
   },
 };
