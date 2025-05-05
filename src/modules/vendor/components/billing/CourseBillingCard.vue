@@ -556,7 +556,7 @@ export default {
 
     const showDetails = (billId) => { emit('unroll', billId); };
 
-    const isPayerAndDateVisible = bill => !bill.courseCreditNote && areDetailsVisible.value[bill._id];
+    const isPayerAndDateVisible = bill => !bill.courseCreditNote || areDetailsVisible.value[bill._id];
 
     const getBillingItemName = billingItem => billingItemList.value.find(item => item.value === billingItem).label;
 
