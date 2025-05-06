@@ -42,7 +42,7 @@
                 </div>
               </div>
               <div v-if="isPayerAndDateVisible(bill)">
-                <div @click.stop="openPayerEditionModal(bill)" class="payer">
+                <div @click.stop="openCourseBillEditionModal(bill)" class="payer">
                   Payeur : {{ get(bill, 'payer.name') }}
                   <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
                 </div>
@@ -108,9 +108,9 @@
       </div>
     </div>
 
-    <ni-payer-edition-modal v-model="payerEditionModal" v-model:edited-payer="editedBill.payer" @submit="editBill"
-       @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList" :course-name="courseName"
-       :companies-name="companiesName" />
+    <ni-course-bill-edition-modal v-model="courseBillEditionModal" :edited-bill="editedBill" @submit="editBill"
+      @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList" :course-name="courseName"
+      :companies-name="companiesName" :validations="validations.editedBill" @update:edited-bill="updateEditedBill" />
 
     <!-- main fee edition modal -->
     <ni-course-fee-edition-modal v-model="mainFeeEditionModal" v-model:course-fee="editedBill.mainFee"
@@ -164,7 +164,7 @@ import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidate
 import { formatPrice, formatName } from '@helpers/utils';
 import { composeCourseName } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
-import PayerEditionModal from 'src/modules/vendor/components/billing/PayerEditionModal';
+import CourseBillEditionModal from 'src/modules/vendor/components/billing/CourseBillEditionModal';
 import CourseFeeEditionModal from 'src/modules/vendor/components/billing/CourseFeeEditionModal';
 import BillingPurchaseAdditionModal from 'src/modules/vendor/components/billing/BillingPurchaseAdditionModal';
 import CourseBillValidationModal from 'src/modules/vendor/components/billing/CourseBillValidationModal';
@@ -183,7 +183,7 @@ export default {
   },
   emits: ['refresh-course-bills', 'unroll'],
   components: {
-    'ni-payer-edition-modal': PayerEditionModal,
+    'ni-course-bill-edition-modal': CourseBillEditionModal,
     'ni-course-fee-edition-modal': CourseFeeEditionModal,
     'ni-billing-purchase-addition-modal': BillingPurchaseAdditionModal,
     'ni-course-bill-validation-modal': CourseBillValidationModal,
@@ -208,7 +208,7 @@ export default {
     const billingPurchaseEditionLoading = ref(false);
     const billValidationLoading = ref(false);
     const creditNoteCreationLoading = ref(false);
-    const payerEditionModal = ref(false);
+    const courseBillEditionModal = ref(false);
     const mainFeeEditionModal = ref(false);
     const billingPurchaseAdditionModal = ref(false);
     const billingPurchaseEditionModal = ref(false);
@@ -218,6 +218,7 @@ export default {
       _id: '',
       payer: '',
       mainFee: { price: '', description: '', count: '', countUnit: GROUP },
+      maturityDate: '',
     });
     const newBillingPurchase = ref({ billId: '', billingItem: '', price: 0, count: 1, description: '' });
     const editedBillingPurchase = ref({ _id: '', billId: '', price: 0, count: 1, description: '' });
@@ -234,6 +235,7 @@ export default {
           count: { required, strictPositiveNumber, integerNumber },
           countUnit: { required },
         },
+        maturityDate: { required },
       },
       newBillingPurchase: {
         billingItem: { required },
@@ -292,6 +294,7 @@ export default {
 
     const setEditedBill = (bill) => {
       const payer = get(bill, 'payer._id');
+      const maturityDate = get(bill, 'maturityDate');
       editedBill.value = {
         _id: bill._id,
         payer,
@@ -301,14 +304,15 @@ export default {
           countUnit: bill.mainFee.countUnit,
           description: bill.mainFee.description,
         },
+        maturityDate,
       };
     };
 
-    const openPayerEditionModal = (bill) => {
+    const openCourseBillEditionModal = (bill) => {
       if (isBilled(bill)) return null;
 
       setEditedBill(bill);
-      payerEditionModal.value = true;
+      courseBillEditionModal.value = true;
     };
 
     const openMainFeeEditionModal = (bill) => {
@@ -346,7 +350,12 @@ export default {
     };
 
     const resetEditedBill = () => {
-      editedBill.value = { _id: '', payer: '', mainFee: { price: '', description: '', count: '', countUnit: GROUP } };
+      editedBill.value = {
+        _id: '',
+        payer: '',
+        mainFee: { price: '', description: '', count: '', countUnit: GROUP },
+        maturityDate: '',
+      };
       validations.value.editedBill.$reset();
     };
 
@@ -385,11 +394,15 @@ export default {
         billEditionLoading.value = true;
         await CourseBills.update(
           editedBill.value._id,
-          { payer: formatPayerForPayload(editedBill.value.payer), mainFee: editedBill.value.mainFee }
+          {
+            payer: formatPayerForPayload(editedBill.value.payer),
+            mainFee: editedBill.value.mainFee,
+            maturityDate: editedBill.value.maturityDate,
+          }
         );
         NotifyPositive('Facture modifiée.');
 
-        payerEditionModal.value = false;
+        courseBillEditionModal.value = false;
         mainFeeEditionModal.value = false;
         await emit('refresh-course-bills');
       } catch (e) {
@@ -398,6 +411,10 @@ export default {
       } finally {
         billEditionLoading.value = false;
       }
+    };
+
+    const updateEditedBill = ({ path, value }) => {
+      if (path) editedBill.value[path] = value;
     };
 
     const addBillingPurchase = async () => {
@@ -574,7 +591,7 @@ export default {
       billingPurchaseEditionLoading,
       creditNoteCreationLoading,
       billValidationLoading,
-      payerEditionModal,
+      courseBillEditionModal,
       mainFeeEditionModal,
       billingPurchaseAdditionModal,
       billingPurchaseEditionModal,
@@ -618,7 +635,7 @@ export default {
       cancelBillValidation,
       isBilled,
       getBillErrorMessages,
-      openPayerEditionModal,
+      openCourseBillEditionModal,
       openMainFeeEditionModal,
       openBillingPurchaseAdditionModal,
       openBillingPurchaseEditionModal,
@@ -637,6 +654,7 @@ export default {
       formatPrice,
       CompaniDate,
       openBillDeletionModal,
+      updateEditedBill,
     };
   },
 };
