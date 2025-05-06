@@ -1,13 +1,16 @@
 <template>
   <div>
+    {{ course }}
     <div v-if="isIntraCourse || isSingleCourse" class="row gutter-profile">
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
         @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures"
         :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
-      <ni-input in-modal :v-model="courseBills.global" caption="Prix de la formation" :disable="!!courseBills.length"
-        @blur="updatePrice($event, 'global')" required-field :error="getPricesError()" type="number" />
-      <ni-input :v-model="courseBills.trainerFees" caption="Frais de formateur" :disable="!!courseBills.length"
-        @blur="updatePrice($event, 'trainerFees')" required-field :error="getPricesError()" type="number" in-modal />
+      <ni-input v-model="intraPrice.global" caption="Prix de la formation" :disable="!!courseBills.length"
+        @blur="updatePrice('global', course.companies[0]._id)" type="number"
+        required-field :error="getPricesError()" />
+      <ni-input v-model="intraPrice.trainerFees" caption="Frais de formateur"
+        :disable="!!courseBills.length" @blur="updatePrice($event, 'trainerFees', course.companies[0]._id)"
+        type="number" required-field :error="getPricesError()" @focus="saveTmp('prices.trainerFees')" />
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
       <template #message>
@@ -114,6 +117,11 @@ export default {
     const removeNewBillDatas = ref(true);
 
     const course = computed(() => $store.state.course.course);
+
+    const intraPrice = ref({
+      global: get(course.value, 'prices[0].global') || '',
+      trainerFees: get(course.value, 'prices[0].trainerFees') || '',
+    });
 
     const newBill = ref({
       payer: '',
@@ -420,15 +428,16 @@ export default {
       }
     };
 
-    const updatePrice = async (path, value, company) => {
+    const updatePrice = async (path, company) => {
       try {
-        v$.value.course.$touch();
-        if (v$.value.course.$error) return NotifyWarning('Champ(s) invalide(s).');
+        console.log('ici', intraPrice.value);
+        // v$.value.course.prices.$touch();
+        // if (v$.value.course.prices.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        await Courses.update(course.value._id, { company, [path]: value });
+        const payload = { prices: { company, [path]: intraPrice.value[path] } };
+        console.log(payload);
+        await Courses.update(course.value._id, payload);
         NotifyPositive('Modification enregistrée.');
-
-        await refreshCourse();
       } catch (error) {
         console.error(error);
         NotifyNegative('Erreur lors de la modification.');
@@ -440,8 +449,8 @@ export default {
     });
 
     const created = async () => {
+      v$.value.course.prices.$touch();
       await Promise.all([refreshCourseBills(), refreshPayers(), refreshBillingItems()]);
-      v$.value.course.prices.$each.global.$touch();
     };
 
     created();
@@ -449,6 +458,7 @@ export default {
     return {
       // Data
       INTER_B2B,
+      intraPrice,
       // Validation
       v$,
       // Data
