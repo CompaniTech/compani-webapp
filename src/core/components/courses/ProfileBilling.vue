@@ -4,19 +4,26 @@
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
         @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures"
         :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
-      <ni-input v-model="course.prices[0].global" caption="Prix de la formation" :disable="!!courseBills.length"
-         type="number" @blur="updatePrice(0, 'global', course.companies[0]._id)" :error="getPriceError(0, 'global')"
-        required-field :error-message="getPriceErrorMessage(0, 'global')" @focus="saveTmp('prices[0].global')" />
-      <ni-input v-model="course.prices[0].trainerFees" caption="Frais de formateur" :disable="!!courseBills.length"
-         type="number" @blur="updatePrice(0, 'trainerFees', course.companies[0]._id)"
-         :error="getPriceError(0, 'trainerFees')" :error-message="getPriceErrorMessage(0, 'trainerFees')"
-         @focus="saveTmp('prices[0].trainerFees')" />
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
       <template #message>
         Les structures suivantes n'ont pas été facturées : {{ formatName(missingBillsCompanies) }}.
       </template>
     </ni-banner>
+    <div @click="showDetails" class="cursor-pointer justify-end flex">
+      <q-icon size="sm" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
+    </div>
+    <div v-if="showPrices">
+      <div v-for="(company, i) of course.companies" :key="company._id" class="row gutter-profile">
+        <ni-input v-model="course.prices[i].global" caption="Prix de la formation" :disable="!!courseBills.length"
+           type="number" @blur="updatePrice(i, 'global', course.companies[i]._id)" :error="getPriceError(i, 'global')"
+          required-field :error-message="getPriceErrorMessage(i, 'global')" @focus="saveTmp('prices[i].global')" />
+        <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur" :disable="!!courseBills.length"
+           type="number" @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)"
+           :error="getPriceError(i, 'trainerFees')" :error-message="getPriceErrorMessage(i, 'trainerFees')"
+           @focus="saveTmp('prices[i].trainerFees')" />
+      </div>
+    </div>
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
@@ -115,13 +122,9 @@ export default {
     const billCreationLoading = ref(false);
     const areDetailsVisible = ref(Object.fromEntries(courseBills.value.map(bill => [bill._id, false])));
     const removeNewBillDatas = ref(true);
+    const showPrices = ref(true);
 
     const course = computed(() => $store.state.course.course);
-
-    const intraPrice = ref({
-      global: get(course.value, 'prices[0].global') || '',
-      trainerFees: get(course.value, 'prices[0].trainerFees') || '',
-    });
 
     const newBill = ref({
       payer: '',
@@ -458,6 +461,8 @@ export default {
       }
     };
 
+    const showDetails = () => { showPrices.value = !showPrices.value; };
+
     watch(billCreationModal, () => {
       if (billCreationModal.value) newBill.value.mainFee.description = defaultDescription.value;
     });
@@ -472,7 +477,7 @@ export default {
     return {
       // Data
       INTER_B2B,
-      intraPrice,
+      showPrices,
       // Validation
       v$,
       // Data
@@ -517,6 +522,7 @@ export default {
       updatePrice,
       getPriceError,
       getPriceErrorMessage,
+      showDetails,
     };
   },
 };
