@@ -50,6 +50,7 @@ export default {
         if (!get(course, 'contact._id')) course.contact = { _id: '' };
         if (!get(course, 'companyRepresentative._id')) course.companyRepresentative = { _id: '' };
         if (!get(course, 'salesRepresentative._id')) course.salesRepresentative = { _id: '' };
+        if (!get(course, 'prices')) course.prices = course.companies.map(c => ({ company: c._id, global: '' }));
 
         // Coachs and client admins with vendor role only see trainees from their companies on client interface
         const userClientRole = store.getters['main/getClientRole'];

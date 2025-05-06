@@ -1,16 +1,16 @@
 <template>
   <div>
-    {{ course }}
     <div v-if="isIntraCourse || isSingleCourse" class="row gutter-profile">
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
         @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures"
         :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
-      <ni-input v-model="intraPrice.global" caption="Prix de la formation" :disable="!!courseBills.length"
-        @blur="updatePrice('global', course.companies[0]._id)" type="number"
-        required-field :error="getPricesError()" />
-      <ni-input v-model="intraPrice.trainerFees" caption="Frais de formateur"
-        :disable="!!courseBills.length" @blur="updatePrice($event, 'trainerFees', course.companies[0]._id)"
-        type="number" required-field :error="getPricesError()" @focus="saveTmp('prices.trainerFees')" />
+      <ni-input v-model="course.prices[0].global" caption="Prix de la formation" :disable="!!courseBills.length"
+         type="number" @blur="updatePrice(0, 'global', course.companies[0]._id)" :error="getPriceError(0, 'global')"
+        required-field :error-message="getPriceErrorMessage(0, 'global')" @focus="saveTmp('prices[0].global')" />
+      <ni-input v-model="course.prices[0].trainerFees" caption="Frais de formateur" :disable="!!courseBills.length"
+         type="number" @blur="updatePrice(0, 'trainerFees', course.companies[0]._id)"
+         :error="getPriceError(0, 'trainerFees')" :error-message="getPriceErrorMessage(0, 'trainerFees')"
+         @focus="saveTmp('prices[0].trainerFees')" />
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
       <template #message>
@@ -141,8 +141,8 @@ export default {
         },
         prices: {
           $each: helpers.forEach({
-            trainerFees: { strictPositiveNumber: or(strictPositiveNumber, value => value === null) },
-            global: { strictPositiveNumber, required },
+            trainerFees: { strictPositiveNumber: or(strictPositiveNumber, value => value === '') },
+            global: { required, strictPositiveNumber },
           }),
         },
       },
@@ -158,11 +158,7 @@ export default {
       companiesToBill: { minArrayLength: minArrayLength(1) },
     }));
 
-    const getPricesError = () => {
-      const validation = v$.value.course.prices.$each.$response.$errors;
-
-      return get(validation, 'global.0.$response') === false || get(validation, 'trainerFees.0.$response') === false;
-    };
+    const v$ = useVuelidate(rules, { course, newBill, companiesToBill });
 
     const defaultDescription = computed(() => {
       const trainersName = course.value.trainers
@@ -198,8 +194,6 @@ export default {
       + `Nom de l'apprenant·e: ${traineeName} \r\n`
       + `Nom du / des intervenants: ${trainersName}`;
     });
-
-    const v$ = useVuelidate(rules, { course, newBill, companiesToBill });
 
     const { isIntraCourse, isSingleCourse } = useCourses(course);
 
@@ -428,14 +422,34 @@ export default {
       }
     };
 
-    const updatePrice = async (path, company) => {
-      try {
-        console.log('ici', intraPrice.value);
-        // v$.value.course.prices.$touch();
-        // if (v$.value.course.prices.$error) return NotifyWarning('Champ(s) invalide(s).');
+    const getPriceError = (index, path) => {
+      const validation = v$.value.course.prices.$each.$response.$errors[index];
 
-        const payload = { prices: { company, [path]: intraPrice.value[path] } };
-        console.log(payload);
+      return get(validation, `${path}.0.$response`) === false;
+    };
+
+    const getPriceErrorMessage = (index, path) => {
+      const validation = v$.value.course.prices.$each.$response.$errors[index][path];
+      switch (get(validation, '0.$validator')) {
+        case 'required':
+          return REQUIRED_LABEL;
+        case 'strictPositiveNumber':
+          return 'Nombre invalide';
+        default:
+          return '';
+      }
+    };
+
+    const updatePrice = async (index, path, company) => {
+      try {
+        get(v$.value, 'course.prices').$touch();
+        const validation = get(v$.value, `course.prices.$each.$response.$errors[${index}].[${path}].0.$response`);
+        if (validation === false) return NotifyWarning('Champ(s) invalide(s).');
+        if (path === 'trainerFees' && !get(course.value, `prices[${index}].global`)) {
+          return NotifyWarning('Veuillez ajouter un prix à la formation.');
+        }
+        const editedPrice = get(course.value, `prices[${index}].${path}`) || '';
+        const payload = { prices: { company, [path]: editedPrice } };
         await Courses.update(course.value._id, payload);
         NotifyPositive('Modification enregistrée.');
       } catch (error) {
@@ -501,7 +515,8 @@ export default {
       formatPrice,
       formatName,
       updatePrice,
-      getPricesError,
+      getPriceError,
+      getPriceErrorMessage,
     };
   },
 };
