@@ -16,16 +16,25 @@
         <q-icon size="xs" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
       </q-item-section>
       <div v-if="showPrices">
-        <div v-for="(company, i) of course.companies" :key="company._id" class="row gutter-profile">
-          <ni-input v-model="course.prices[i].global" caption="Prix de la formation" :error="getPriceError(i, 'global')"
-            :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
-            @focus="saveTmp('prices[i].global')" type="number" @blur="updatePrice(i, 'global', course.companies[i]._id)"
-            required-field :error-message="getPriceErrorMessage(i, 'global')" />
-          <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur" type="number"
-            :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
-            @focus="saveTmp('prices[i].trainerFees')" @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)"
-            :error="getPriceError(i, 'trainerFees')" :error-message="getPriceErrorMessage(i, 'trainerFees')" />
+        <div v-for="(company, i) of course.companies" :key="company._id">
+          <span v-if="!(isIntraCourse || isSingleCourse)" class="text-weight-regular text-copper-500">
+            {{ company.name }}
+          </span>
+          <div class="row gutter-profile">
+            <ni-input v-model="course.prices[i].global" caption="Prix de la formation"
+              :error="getPriceError(i, 'global')" @blur="updatePrice(i, 'global', course.companies[i]._id)"
+              :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse" type="number"
+              @focus="saveTmp('prices[i].global')" required-field :error-message="getPriceErrorMessage(i, 'global')" />
+            <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur¹" type="number"
+              :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
+              @focus="saveTmp('prices[i].trainerFees')" @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)"
+              :error="getPriceError(i, 'trainerFees')" :error-message="getPriceErrorMessage(i, 'trainerFees')" />
+          </div>
         </div>
+        <span class="text-italic text-12">
+          1 - si les frais de formateur ne s’appliquent qu’à une seule facture, ne pas remplir ce champ et ajouter
+          plutôt un article de facturation
+        </span>
       </div>
     </q-card>
     <div v-for="(companies, index) of companiesList" :key="index">
