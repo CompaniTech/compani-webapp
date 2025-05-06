@@ -468,7 +468,6 @@ export default {
     });
 
     const created = async () => {
-      v$.value.course.prices.$touch();
       await Promise.all([refreshCourseBills(), refreshPayers(), refreshBillingItems()]);
     };
 
