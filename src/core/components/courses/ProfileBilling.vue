@@ -10,21 +10,24 @@
         Les structures suivantes n'ont pas été facturées : {{ formatName(missingBillsCompanies) }}.
       </template>
     </ni-banner>
-    <div @click="showDetails" class="cursor-pointer justify-end flex">
-      <q-icon size="sm" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
-    </div>
-    <div v-if="showPrices">
-      <div v-for="(company, i) of course.companies" :key="company._id" class="row gutter-profile">
-        <ni-input v-model="course.prices[i].global" caption="Prix de la formation" :error="getPriceError(i, 'global')"
-          :disable="companiesList.some(c => c.includes(company._id))" :error-message="getPriceErrorMessage(i, 'global')"
-          type="number" @blur="updatePrice(i, 'global', course.companies[i]._id)" required-field
-          @focus="saveTmp('prices[i].global')" />
-        <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur" type="number"
-          :disable="companiesList.some(c => c.includes(company._id))" @focus="saveTmp('prices[i].trainerFees')"
-          @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)" :error="getPriceError(i, 'trainerFees')"
-          :error-message="getPriceErrorMessage(i, 'trainerFees')" />
+    <q-card class="q-px-md bg-peach-200">
+      <q-item-section @click="showDetails" class="prices cursor-pointer row copper-grey-700">
+        {{ showPrices ? 'Masquer' : 'Afficher' }} les prix
+        <q-icon size="xs" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
+      </q-item-section>
+      <div v-if="showPrices">
+        <div v-for="(company, i) of course.companies" :key="company._id" class="row gutter-profile">
+          <ni-input v-model="course.prices[i].global" caption="Prix de la formation" :error="getPriceError(i, 'global')"
+            :disable="companiesList.some(c => c.includes(company._id))" @focus="saveTmp('prices[i].global')"
+            type="number" @blur="updatePrice(i, 'global', course.companies[i]._id)" required-field
+            :error-message="getPriceErrorMessage(i, 'global')" />
+          <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur" type="number"
+            :disable="companiesList.some(c => c.includes(company._id))" @focus="saveTmp('prices[i].trainerFees')"
+            @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)" :error="getPriceError(i, 'trainerFees')"
+            :error-message="getPriceErrorMessage(i, 'trainerFees')" />
+        </div>
       </div>
-    </div>
+  </q-card>
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
@@ -527,3 +530,10 @@ export default {
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.prices
+  flex-direction: row
+  justify-content: space-between
+  padding: 16px 0px
+</style>
