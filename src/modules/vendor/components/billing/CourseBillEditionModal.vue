@@ -10,7 +10,8 @@
       </ni-banner>
     </div>
     <company-select in-modal caption="Payeur" :company-options="payerOptions" :company="editedBill.payer" required-field
-      @update:model-value="update($event, 'payer')" />
+      @update:model-value="update($event, 'payer')" :error="validations.payer.$error"
+      @blur="validations.payer.$touch" />
     <ni-date-input caption="Date d'échéance" :model-value="editedBill.maturityDate" in-modal required-field
       :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
       @update:model-value="update($event, 'maturityDate')" />
@@ -22,6 +23,8 @@
 </template>
 
 <script>
+import { toRefs } from 'vue';
+import set from 'lodash/set';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Banner from '@components/Banner';
@@ -48,10 +51,12 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:edited-bill'],
   setup (props, { emit }) {
+    const { editedBill } = toRefs(props);
+
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
-    const update = (value, path) => emit('update:edited-bill', { path, value });
+    const update = (value, path) => emit('update:edited-bill', set({ ...editedBill.value }, path, value));
 
     return {
       // Methods

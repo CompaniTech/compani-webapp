@@ -108,9 +108,9 @@
       </div>
     </div>
 
-    <ni-course-bill-edition-modal v-model="courseBillEditionModal" :edited-bill="editedBill" @submit="editBill"
+    <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill" @submit="editBill"
       @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList" :course-name="courseName"
-      :companies-name="companiesName" :validations="validations.editedBill" @update:edited-bill="updateEditedBill" />
+      :companies-name="companiesName" :validations="validations.editedBill" />
 
     <!-- main fee edition modal -->
     <ni-course-fee-edition-modal v-model="mainFeeEditionModal" v-model:course-fee="editedBill.mainFee"
@@ -236,6 +236,7 @@ export default {
           countUnit: { required },
         },
         maturityDate: { required },
+        payer: { required },
       },
       newBillingPurchase: {
         billingItem: { required },
@@ -411,10 +412,6 @@ export default {
       } finally {
         billEditionLoading.value = false;
       }
-    };
-
-    const updateEditedBill = ({ path, value }) => {
-      if (path) editedBill.value[path] = value;
     };
 
     const addBillingPurchase = async () => {
@@ -654,7 +651,6 @@ export default {
       formatPrice,
       CompaniDate,
       openBillDeletionModal,
-      updateEditedBill,
     };
   },
 };
