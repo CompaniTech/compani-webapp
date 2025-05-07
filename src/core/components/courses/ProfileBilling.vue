@@ -18,16 +18,16 @@
       <div v-if="showPrices">
         <div v-for="(company, i) of course.companies" :key="company._id" class="row gutter-profile">
           <ni-input v-model="course.prices[i].global" caption="Prix de la formation" :error="getPriceError(i, 'global')"
-            :disable="companiesList.some(c => c.includes(company._id))" @focus="saveTmp('prices[i].global')"
-            type="number" @blur="updatePrice(i, 'global', course.companies[i]._id)" required-field
-            :error-message="getPriceErrorMessage(i, 'global')" />
+            :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
+            @focus="saveTmp('prices[i].global')" type="number" @blur="updatePrice(i, 'global', course.companies[i]._id)"
+            required-field :error-message="getPriceErrorMessage(i, 'global')" />
           <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur" type="number"
-            :disable="companiesList.some(c => c.includes(company._id))" @focus="saveTmp('prices[i].trainerFees')"
-            @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)" :error="getPriceError(i, 'trainerFees')"
-            :error-message="getPriceErrorMessage(i, 'trainerFees')" />
+            :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
+            @focus="saveTmp('prices[i].trainerFees')" @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)"
+            :error="getPriceError(i, 'trainerFees')" :error-message="getPriceErrorMessage(i, 'trainerFees')" />
         </div>
       </div>
-  </q-card>
+    </q-card>
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
