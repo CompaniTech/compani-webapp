@@ -2,7 +2,7 @@
   <div>
     <div v-if="isIntraCourse || isSingleCourse" class="row gutter-profile">
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
-        @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures"
+        @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures" type="number"
         :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
@@ -10,7 +10,7 @@
         Les structures suivantes n'ont pas été facturées : {{ formatName(missingBillsCompanies) }}.
       </template>
     </ni-banner>
-    <q-card class="q-px-md bg-peach-200">
+    <q-card class="q-mt-sm q-px-md bg-peach-200">
       <q-item-section @click="showDetails" class="prices cursor-pointer row copper-grey-700">
         {{ showPrices ? 'Masquer' : 'Afficher' }} les prix
         <q-icon size="xs" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
@@ -307,8 +307,8 @@ export default {
         billsLoading.value = true;
         if (course.value[path] === tmpInput.value) return;
 
-        v$.value.course.$touch();
-        if (v$.value.course.$error) return NotifyWarning('Champ(s) invalide(s).');
+        v$.value.course[path].$touch();
+        if (v$.value.course[path].$error) return NotifyWarning('Champ(s) invalide(s).');
 
         await Courses.update(course.value._id, { [path]: course.value[path] });
         NotifyPositive('Modification enregistrée.');
@@ -401,6 +401,9 @@ export default {
     };
 
     const openBillCreationModal = () => {
+      if (!courseBills.value.length && !course.value.prices.some(p => p.global)) {
+        return NotifyWarning('Prix de la formation manquant.');
+      }
       if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
