@@ -12,13 +12,15 @@
       </div>
       <div class="row justify-between align-center q-mt-md">
         <p class="text-weight-bold">Interlocuteurs</p>
-        <ni-banner v-if="!get(course, 'contact._id')">
-          <template #message>
+        <div class="column">
+          <ni-banner v-if="!get(course, 'contact._id')">
+            <template #message>
             Vous n’avez pas renseigné le contact de la formation.
-          </template>
-        </ni-banner>
-        <ni-secondary-button v-if="canUpdateInterlocutor" icon="edit" class="q-mb-lg"
-          label="Modifier le contact pour la formation" @click="openContactAdditionModal" />
+            </template>
+          </ni-banner>
+          <ni-secondary-button v-if="canUpdateInterlocutor" icon="edit" class="q-mb-lg"
+            label="Modifier le contact pour la formation" @click="openContactAdditionModal" />
+        </div>
       </div>
       <div v-if="isClientInterface" class="text-italic text-copper-grey-500 q-mb-md">
         Des questions sur votre parcours de formation ou sur la facturation ? Retrouvez vos contacts Compani sur
