@@ -429,6 +429,13 @@ export default {
     const openNextModal = () => {
       v$.value.companiesToBill.$touch();
       if (v$.value.companiesToBill.$error) return NotifyWarning('Champ(s) invalide(s).');
+      const someCompaniesToBillHasNoBill = companiesToBill.value
+        .some(c => !companiesList.value.some(companies => companies.includes(c)));
+      const everyCompaniesToBillHasPrice = companiesToBill.value
+        .every(c => course.value.prices.find(p => p.company === c && p.global));
+      if (someCompaniesToBillHasNoBill && !everyCompaniesToBillHasPrice) {
+        return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
+      }
       companiesSelectionModal.value = false;
       billCreationModal.value = true;
       removeNewBillDatas.value = true;
