@@ -3,7 +3,7 @@ import Courses from '@api/Courses';
 import router from 'src/router/index';
 import store from 'src/store/index';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
-import { UNARCHIVED_COURSES } from '../core/data/constants';
+import { UNARCHIVED_COURSES, BLENDED } from '../core/data/constants';
 
 export default {
   namespaced: true,
@@ -50,6 +50,12 @@ export default {
         if (!get(course, 'contact._id')) course.contact = { _id: '' };
         if (!get(course, 'companyRepresentative._id')) course.companyRepresentative = { _id: '' };
         if (!get(course, 'salesRepresentative._id')) course.salesRepresentative = { _id: '' };
+        if (course.format === BLENDED) {
+          course.prices = course.companies.map((c) => {
+            const companyPrice = (course.prices || []).find(p => p.company === c._id) || { company: c._id, global: '' };
+            return companyPrice;
+          });
+        }
 
         // Coachs and client admins with vendor role only see trainees from their companies on client interface
         const userClientRole = store.getters['main/getClientRole'];

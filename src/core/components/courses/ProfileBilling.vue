@@ -2,7 +2,7 @@
   <div>
     <div v-if="isIntraCourse || isSingleCourse" class="row gutter-profile">
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
-        @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures"
+        @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures" type="number"
         :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
@@ -10,6 +10,24 @@
         Les structures suivantes n'ont pas été facturées : {{ formatName(missingBillsCompanies) }}.
       </template>
     </ni-banner>
+    <q-card class="q-mt-sm q-px-md bg-peach-200">
+      <q-item-section @click="showDetails" class="prices cursor-pointer row copper-grey-700">
+        {{ showPrices ? 'Masquer' : 'Afficher' }} les prix
+        <q-icon size="xs" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
+      </q-item-section>
+      <div v-if="showPrices">
+        <div v-for="(company, i) of course.companies" :key="company._id" class="row gutter-profile">
+          <ni-input v-model="course.prices[i].global" caption="Prix de la formation" :error="getPriceError(i, 'global')"
+            :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
+            @focus="saveTmp('prices[i].global')" type="number" @blur="updatePrice(i, 'global', course.companies[i]._id)"
+            required-field :error-message="getPriceErrorMessage(i, 'global')" />
+          <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur" type="number"
+            :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
+            @focus="saveTmp('prices[i].trainerFees')" @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)"
+            :error="getPriceError(i, 'trainerFees')" :error-message="getPriceErrorMessage(i, 'trainerFees')" />
+        </div>
+      </div>
+    </q-card>
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
@@ -42,7 +60,7 @@ import pickBy from 'lodash/pickBy';
 import groupBy from 'lodash/groupBy';
 import uniq from 'lodash/uniq';
 import useVuelidate from '@vuelidate/core';
-import { required, minValue } from '@vuelidate/validators';
+import { required, minValue, helpers, or } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
 import {
@@ -108,6 +126,7 @@ export default {
     const billCreationLoading = ref(false);
     const areDetailsVisible = ref(Object.fromEntries(courseBills.value.map(bill => [bill._id, false])));
     const removeNewBillDatas = ref(true);
+    const showPrices = ref(true);
 
     const course = computed(() => $store.state.course.course);
 
@@ -127,6 +146,12 @@ export default {
           integerNumber,
           minValue: minValue(courseBills.value.filter(cb => !cb.courseCreditNote).length),
         },
+        prices: {
+          $each: helpers.forEach({
+            trainerFees: { strictPositiveNumber: or(strictPositiveNumber, value => value === '') },
+            global: { required, strictPositiveNumber },
+          }),
+        },
       },
       newBill: {
         payer: { required },
@@ -139,6 +164,8 @@ export default {
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
     }));
+
+    const v$ = useVuelidate(rules, { course, newBill, companiesToBill });
 
     const defaultDescription = computed(() => {
       const trainersName = course.value.trainers
@@ -174,8 +201,6 @@ export default {
       + `Nom de l'apprenant·e: ${traineeName} \r\n`
       + `Nom du / des intervenants: ${trainersName}`;
     });
-
-    const v$ = useVuelidate(rules, { course, newBill, companiesToBill });
 
     const { isIntraCourse, isSingleCourse } = useCourses(course);
 
@@ -282,8 +307,8 @@ export default {
         billsLoading.value = true;
         if (course.value[path] === tmpInput.value) return;
 
-        v$.value.course.$touch();
-        if (v$.value.course.$error) return NotifyWarning('Champ(s) invalide(s).');
+        v$.value.course[path].$touch();
+        if (v$.value.course[path].$error) return NotifyWarning('Champ(s) invalide(s).');
 
         await Courses.update(course.value._id, { [path]: course.value[path] });
         NotifyPositive('Modification enregistrée.');
@@ -376,6 +401,9 @@ export default {
     };
 
     const openBillCreationModal = () => {
+      if (!courseBills.value.length && !course.value.prices.some(p => p.global)) {
+        return NotifyWarning('Prix de la formation manquant.');
+      }
       if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
@@ -404,6 +432,44 @@ export default {
       }
     };
 
+    const getPriceError = (index, path) => {
+      const validation = v$.value.course.prices.$each.$response.$errors[index];
+
+      return get(validation, `${path}.0.$response`) === false;
+    };
+
+    const getPriceErrorMessage = (index, path) => {
+      const validation = v$.value.course.prices.$each.$response.$errors[index][path];
+      switch (get(validation, '0.$validator')) {
+        case 'required':
+          return REQUIRED_LABEL;
+        case 'strictPositiveNumber':
+          return 'Nombre invalide';
+        default:
+          return '';
+      }
+    };
+
+    const updatePrice = async (index, path, company) => {
+      try {
+        get(v$.value, 'course.prices').$touch();
+        const validation = get(v$.value, `course.prices.$each.$response.$errors[${index}].[${path}].0.$response`);
+        if (validation === false) return NotifyWarning('Champ(s) invalide(s).');
+        if (path === 'trainerFees' && !get(course.value, `prices[${index}].global`)) {
+          return NotifyWarning('Veuillez ajouter un prix à la formation.');
+        }
+        const editedPrice = get(course.value, `prices[${index}].${path}`) || '';
+        const payload = { prices: { company, [path]: editedPrice } };
+        await Courses.update(course.value._id, payload);
+        NotifyPositive('Modification enregistrée.');
+      } catch (error) {
+        console.error(error);
+        NotifyNegative('Erreur lors de la modification.');
+      }
+    };
+
+    const showDetails = () => { showPrices.value = !showPrices.value; };
+
     watch(billCreationModal, () => {
       if (billCreationModal.value) newBill.value.mainFee.description = defaultDescription.value;
     });
@@ -417,6 +483,7 @@ export default {
     return {
       // Data
       INTER_B2B,
+      showPrices,
       // Validation
       v$,
       // Data
@@ -458,7 +525,18 @@ export default {
       pickBy,
       formatPrice,
       formatName,
+      updatePrice,
+      getPriceError,
+      getPriceErrorMessage,
+      showDetails,
     };
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.prices
+  flex-direction: row
+  justify-content: space-between
+  padding: 16px 0px
+</style>

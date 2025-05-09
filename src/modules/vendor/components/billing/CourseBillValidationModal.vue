@@ -31,7 +31,7 @@ import Modal from '@components/modal/Modal';
 import Banner from '@components/Banner';
 import Button from '@components/Button';
 import DateInput from '@components/form/DateInput';
-import { INTRA } from '@data/constants';
+import { INTRA, SINGLE } from '@data/constants';
 
 export default {
   name: 'CourseBillValidationModal',
@@ -64,6 +64,7 @@ export default {
     return {
       // Data
       INTRA,
+      SINGLE,
       // Methods
       hide,
       input,
