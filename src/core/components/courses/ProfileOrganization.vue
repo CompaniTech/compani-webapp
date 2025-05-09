@@ -12,6 +12,11 @@
       </div>
       <div class="row justify-between align-center q-mt-md">
         <p class="text-weight-bold">Interlocuteurs</p>
+        <ni-banner v-if="!get(course, 'contact._id')">
+          <template #message>
+            Vous n’avez pas renseigné le contact de la formation.
+          </template>
+        </ni-banner>
         <ni-secondary-button v-if="canUpdateInterlocutor" icon="edit" class="q-mb-lg"
           label="Modifier le contact pour la formation" @click="openContactAdditionModal" />
       </div>
@@ -99,12 +104,12 @@
             pour assurer le suivi de la formation : {{ followUpMissingInfo.join(', ') }}.
           </template>
         </ni-banner>
-        <ni-course-info-link v-if="!isSingleCourse" :disable-link="disableDocDownload"
+        <ni-course-info-link v-if="!isSingleCourse" :disable-link="disableConvocationDownload"
           @download="downloadConvocation" />
       </div>
       <div v-if="isIntraOrIntraHoldingOrVendor">
         <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
-          :disable="disableDocDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
+          :disable="disableAttendanceDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
       </div>
     </div>
     <training-contract-container v-if="canGetTrainingContracts" :course="course" :has-holding-role="hasHoldingRole"
@@ -310,15 +315,13 @@ export default {
 
     const {
       vendorRole,
-      disableDocDownload,
       pdfLoading,
       isClientInterface,
       isVendorInterface,
       isIntraOrIntraHoldingOrVendor,
-      followUpDisabled,
       isArchived,
-      followUpMissingInfo,
       downloadAttendanceSheet,
+      disableAttendanceDownload,
       isIntraCourse,
       isSingleCourse,
     } = useCourses(course);
@@ -462,6 +465,21 @@ export default {
     const traineesOptions = computed(() => formatAndSortUserOptions(potentialTrainees.value, !isIntraCourse.value));
 
     const companyOptions = computed(() => formatAndSortCompanyOptions(course.value.companies));
+
+    const followUpMissingInfo = computed(() => {
+      const missingInfo = [];
+      if (!get(course.value, 'trainers', []).some(t => t._id)) missingInfo.push('l\'intervenant(e)');
+      if (!course.value.slots || !course.value.slots.length) missingInfo.push('minimum 1 créneau');
+
+      if (!get(course.value, 'contact._id')) missingInfo.push('le contact pour la formation');
+      else if (!get(course.value, 'contact.contact.phone')) missingInfo.push('le numéro du contact pour la formation');
+
+      return missingInfo;
+    });
+
+    const followUpDisabled = computed(() => followUpMissingInfo.value.length > 0);
+
+    const disableConvocationDownload = computed(() => followUpDisabled.value || pdfLoading.value);
 
     const defineCourseAbilities = () => {
       const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
@@ -700,7 +718,7 @@ export default {
     };
 
     const downloadConvocation = async () => {
-      if (disableDocDownload.value) return;
+      if (disableConvocationDownload.value) return;
 
       try {
         pdfLoading.value = true;
@@ -1139,8 +1157,9 @@ export default {
       traineesEmails,
       contactOptions,
       isIntraOrIntraHoldingOrVendor,
-      disableDocDownload,
+      disableConvocationDownload,
       followUpDisabled,
+      disableAttendanceDownload,
       isArchived,
       followUpMissingInfo,
       isClientInterface,
