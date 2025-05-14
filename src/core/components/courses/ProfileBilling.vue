@@ -10,7 +10,7 @@
         Les structures suivantes n'ont pas été facturées : {{ formatName(missingBillsCompanies) }}.
       </template>
     </ni-banner>
-    <q-card class="q-mt-sm q-px-md bg-peach-200">
+    <q-card v-if="course.companies.length" class="q-mt-sm q-px-md bg-peach-200">
       <q-item-section @click="showDetails" class="prices cursor-pointer row copper-grey-700">
         {{ showPrices ? 'Masquer' : 'Afficher' }} les prix
         <q-icon size="xs" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
