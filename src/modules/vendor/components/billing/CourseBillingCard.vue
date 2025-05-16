@@ -65,6 +65,7 @@
                   <div>
                     Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
                   </div>
+                  <div v-if="get(bill, 'mainFee.percentage')">Pourcentage : {{ bill.mainFee.percentage }}%</div>
                   <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
                     Description : {{ bill.mainFee.description }}
                   </div>
@@ -81,6 +82,7 @@
                     </div>
                     <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
                     <div>Quantité : {{ billingPurchase.count }}</div>
+                    <div v-if="billingPurchase.percentage">Pourcentage : {{ billingPurchase.percentage }}%</div>
                     <div v-if="billingPurchase.description" class="ellipsis">
                       Description : {{ billingPurchase.description }}
                     </div>

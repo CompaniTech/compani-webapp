@@ -51,7 +51,8 @@
     <ni-bill-creation-modal v-model="billCreationModal" v-model:new-bill="newBill" :course-name="courseName"
       @submit="validateBillCreation" :validations="v$.newBill" @hide="resetBillCreationModal"
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
-      :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill" />
+      :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
+      :total-price-to-bill="totalPriceToBill" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
       :course-companies="course.companies" @submit="openNextModal" :validations="v$.companiesToBill"
@@ -69,7 +70,7 @@ import pickBy from 'lodash/pickBy';
 import groupBy from 'lodash/groupBy';
 import uniq from 'lodash/uniq';
 import useVuelidate from '@vuelidate/core';
-import { required, minValue, helpers, or } from '@vuelidate/validators';
+import { required, minValue, maxValue, helpers, or } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
 import {
@@ -83,6 +84,7 @@ import {
 import { descendingSortBy, ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
+import { add } from '@helpers/numbers';
 import Companies from '@api/Companies';
 import Courses from '@api/Courses';
 import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
@@ -139,13 +141,18 @@ export default {
 
     const course = computed(() => $store.state.course.course);
 
+    const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
+
+    const everyCompaniesToBillHasPrice = computed(() => companiesToBill.value.length && companiesToBill.value
+      .every(c => course.value.prices.find(p => p.company === c && p.global)));
+
     const newBill = ref({
       payer: '',
       mainFee: { price: 0, count: 1, countUnit: course.value.type === SINGLE ? TRAINEE : GROUP, description: '' },
       maturityDate: '',
     });
 
-    const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
+    const totalPriceToBill = ref({ global: 0, trainerFees: 0 });
 
     const rules = computed(() => ({
       course: {
@@ -167,6 +174,9 @@ export default {
         mainFee: {
           price: { required, strictPositiveNumber },
           count: { required, strictPositiveNumber, integerNumber },
+          ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
+            percentage: { required, strictPositiveNumber, integerNumber, maxValue: maxValue(100) },
+          }),
           countUnit: { required },
         },
         maturityDate: { required },
@@ -386,6 +396,7 @@ export default {
         unrollBill();
       } catch (e) {
         console.error(e);
+        if (e.status === 409) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la création de la facture.');
       } finally {
         billCreationLoading.value = false;
@@ -404,6 +415,7 @@ export default {
           },
           maturityDate: '',
         };
+        totalPriceToBill.value = { global: 0, trainerFees: 0 };
         v$.value.newBill.$reset();
         resetCompaniesSelectionModal();
       }
@@ -420,6 +432,18 @@ export default {
         if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
           return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
         }
+        totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
+          if (companiesToBill.value.includes(price.company)) {
+            return {
+              global: Number(add(acc.global, (price.global || 0))),
+              trainerFees: Number(add(acc.trainerFees, (price.trainerFees || 0))),
+            };
+          }
+          return acc;
+        }, { global: 0, trainerFees: 0 });
+
+        if (course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
+
         billCreationModal.value = true;
       } else {
         companiesSelectionModal.value = true;
@@ -431,11 +455,21 @@ export default {
       if (v$.value.companiesToBill.$error) return NotifyWarning('Champ(s) invalide(s).');
       const someCompaniesToBillHasNoBill = companiesToBill.value
         .some(c => !companiesList.value.some(companies => companies.includes(c)));
-      const everyCompaniesToBillHasPrice = companiesToBill.value
-        .every(c => course.value.prices.find(p => p.company === c && p.global));
-      if (someCompaniesToBillHasNoBill && !everyCompaniesToBillHasPrice) {
+      if (someCompaniesToBillHasNoBill && !everyCompaniesToBillHasPrice.value) {
         return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
       }
+      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
+        if (companiesToBill.value.includes(price.company)) {
+          return {
+            global: Number(add(acc.global, (price.global || 0))),
+            trainerFees: Number(add(acc.trainerFees, (price.trainerFees || 0))),
+          };
+        }
+        return acc;
+      }, { global: 0, trainerFees: 0 });
+
+      if (everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
+
       companiesSelectionModal.value = false;
       billCreationModal.value = true;
       removeNewBillDatas.value = true;
@@ -500,6 +534,7 @@ export default {
       // Data
       INTER_B2B,
       showPrices,
+      totalPriceToBill,
       // Validation
       v$,
       // Data
