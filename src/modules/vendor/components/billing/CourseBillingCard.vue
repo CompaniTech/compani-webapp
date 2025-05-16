@@ -93,8 +93,8 @@
                   </div>
                   <div>
                     <ni-button icon="edit" @click="openBillingPurchaseEditionModal(bill, billingPurchase)" />
-                    <ni-button v-if="!isBilled(bill)" icon="delete"
-                      @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" />
+                    <ni-button v-if="!isBilled(bill)" :disable="isTrainerFeesWithPercentage(billingPurchase)"
+                      @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" icon="delete" />
                   </div>
                 </q-card-section>
               </q-card>
@@ -124,7 +124,8 @@
       :loading="billEditionLoading" :error-messages="mainFeeErrorMessages" :course-name="courseName"
       :title="courseFeeEditionModalMetaInfo.title" :is-billed="courseFeeEditionModalMetaInfo.isBilled"
       :companies-name="companiesName" :show-count-unit="![INTRA, SINGLE].includes(course.type)"
-      :trainees-quantity="traineesQuantity" :is-single-course="course.type === SINGLE" />
+      :trainees-quantity="traineesQuantity" :is-single-course="course.type === SINGLE"
+      :total-price-to-bill="totalPriceToBill" />
 
     <ni-billing-purchase-addition-modal v-model="billingPurchaseAdditionModal" :course-name="courseName"
       v-model:new-billing-purchase="newBillingPurchase" @submit="addBillingPurchase"
@@ -156,8 +157,9 @@
 import { useMeta, useQuasar } from 'quasar';
 import { computed, ref, toRefs } from 'vue';
 import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
+import { required, maxValue } from '@vuelidate/validators';
 import get from 'lodash/get';
+import has from 'lodash/has';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import CourseBills from '@api/CourseBills';
@@ -167,6 +169,7 @@ import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
 import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/constants';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
+import { add } from '@helpers/numbers';
 import { formatPrice, formatName } from '@helpers/utils';
 import { composeCourseName } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -201,6 +204,8 @@ export default {
     useMeta(metaInfo);
     const $q = useQuasar();
 
+    const totalPriceToBill = ref({ global: 0, trainerFees: 0 });
+
     const {
       course,
       payerList,
@@ -224,7 +229,6 @@ export default {
       _id: '',
       payer: '',
       mainFee: { price: '', description: '', count: '', countUnit: GROUP },
-      maturityDate: '',
     });
     const newBillingPurchase = ref({ billId: '', billingItem: '', price: 0, count: 1, description: '' });
     const editedBillingPurchase = ref({ _id: '', billId: '', price: 0, count: 1, description: '' });
@@ -240,8 +244,16 @@ export default {
           price: { required, strictPositiveNumber },
           count: { required, strictPositiveNumber, integerNumber },
           countUnit: { required },
+          percentage: has(editedBill.value, 'mainFee.percentage')
+            ? {
+              required,
+              strictPositiveNumber,
+              integerNumber,
+              maxValue: maxValue(100),
+            }
+            : {},
         },
-        maturityDate: { required },
+        maturityDate: has(editedBill.value, 'maturityDate') ? { required } : {},
         payer: { required },
       },
       newBillingPurchase: {
@@ -299,7 +311,7 @@ export default {
     const displayValidatedCourseBillsCount = computed(() => [INTRA, SINGLE].includes(course.value.type) &&
       course.value.expectedBillsCount > 1);
 
-    const setEditedBill = (bill) => {
+    const setEditedBill = (bill, addMaturityDate = false) => {
       const payer = get(bill, 'payer._id');
       const maturityDate = get(bill, 'maturityDate');
       editedBill.value = {
@@ -310,15 +322,16 @@ export default {
           count: bill.mainFee.count,
           countUnit: bill.mainFee.countUnit,
           description: bill.mainFee.description,
+          ...(bill.mainFee.percentage && { percentage: bill.mainFee.percentage }),
         },
-        maturityDate,
+        ...(addMaturityDate && { maturityDate }),
       };
     };
 
     const openCourseBillEditionModal = (bill) => {
       if (isBilled(bill)) return null;
 
-      setEditedBill(bill);
+      setEditedBill(bill, true);
       courseBillEditionModal.value = true;
     };
 
@@ -328,6 +341,15 @@ export default {
         title: get(course, 'value.subProgram.program.name'),
         isBilled: isBilled(bill),
       };
+      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
+        if (bill.companies.map(c => c._id).includes(price.company)) {
+          return {
+            global: Number(add(acc.global, (price.global || 0))),
+            trainerFees: Number(add(acc.trainerFees, (price.trainerFees || 0))),
+          };
+        }
+        return acc;
+      }, { global: 0, trainerFees: 0 });
       mainFeeEditionModal.value = true;
     };
 
@@ -342,6 +364,10 @@ export default {
         billId: bill._id,
         price: billingPurchase.price,
         count: billingPurchase.count,
+        ...(billingPurchase.percentage) && {
+          percentage: billingPurchase.percentage,
+          billingItem: billingPurchase.billingItem,
+        },
         description: billingPurchase.description,
       };
       courseFeeEditionModalMetaInfo.value = {
@@ -361,8 +387,8 @@ export default {
         _id: '',
         payer: '',
         mainFee: { price: '', description: '', count: '', countUnit: GROUP },
-        maturityDate: '',
       };
+      totalPriceToBill.value = { global: 0, trainerFees: 0 };
       validations.value.editedBill.$reset();
     };
 
@@ -414,6 +440,7 @@ export default {
         await emit('refresh-course-bills');
       } catch (e) {
         console.error(e);
+        if (e.status === 409) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la modification de la facture.');
       } finally {
         billEditionLoading.value = false;
@@ -586,6 +613,9 @@ export default {
       query: { defaultTab: 'bills' },
     });
 
+    const isTrainerFeesWithPercentage = billingPurchase => billingPurchase.percentage &&
+      billingPurchase.billingItem === process.env.TRAINER_FEES_BILLING_ITEM;
+
     return {
       // Data
       billEditionLoading,
@@ -608,6 +638,7 @@ export default {
       courseFeeEditionModalMetaInfo,
       minCourseCreditNoteDate,
       creditNoteMetaInfo,
+      totalPriceToBill,
       INTRA,
       SINGLE,
       DD_MM_YYYY,
@@ -657,6 +688,7 @@ export default {
       formatPrice,
       CompaniDate,
       openBillDeletionModal,
+      isTrainerFeesWithPercentage,
     };
   },
 };
