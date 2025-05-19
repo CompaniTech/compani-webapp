@@ -15,11 +15,9 @@
         <ni-secondary-button v-if="canUpdateInterlocutor" icon="edit" class="q-mb-lg"
           label="Modifier le contact pour la formation" @click="openContactAdditionModal" />
       </div>
-      <div class="column">
-        <ni-banner v-if="!get(course, 'contact._id')">
-          <template #message>Vous n’avez pas renseigné le contact de la formation.</template>
-        </ni-banner>
-      </div>
+      <ni-banner v-if="!get(course, 'contact._id')">
+        <template #message>Vous n’avez pas renseigné le contact de la formation.</template>
+      </ni-banner>
       <div v-if="isClientInterface" class="text-italic text-copper-grey-500 q-mb-md">
         Des questions sur votre parcours de formation ou sur la facturation ? Retrouvez vos contacts Compani sur
         <a class="clickable-name cursor-pointer" @click="goToContactProfile">la page dédiée</a> .
@@ -109,7 +107,7 @@
       </div>
       <div v-if="isIntraOrIntraHoldingOrVendor">
         <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
-          :disable="disableAttendanceDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
+          :disable="disableAttendanceSheetDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
       </div>
     </div>
     <training-contract-container v-if="canGetTrainingContracts" :course="course" :has-holding-role="hasHoldingRole"
@@ -321,7 +319,7 @@ export default {
       isIntraOrIntraHoldingOrVendor,
       isArchived,
       downloadAttendanceSheet,
-      disableAttendanceDownload,
+      disableAttendanceSheetDownload,
       isIntraCourse,
       isSingleCourse,
     } = useCourses(course);
@@ -1159,7 +1157,7 @@ export default {
       isIntraOrIntraHoldingOrVendor,
       disableConvocationDownload,
       followUpDisabled,
-      disableAttendanceDownload,
+      disableAttendanceSheetDownload,
       isArchived,
       followUpMissingInfo,
       isClientInterface,

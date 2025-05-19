@@ -44,7 +44,7 @@ export const useCourses = (course) => {
 
   const followUpDisabled = computed(() => followUpMissingInfo.value.length > 0);
 
-  const disableAttendanceDownload = computed(() => followUpDisabled.value || pdfLoading.value);
+  const disableAttendanceSheetDownload = computed(() => followUpDisabled.value || pdfLoading.value);
 
   const isArchived = computed(() => !!course.value.archivedAt);
 
@@ -83,7 +83,7 @@ export const useCourses = (course) => {
   ]);
 
   const downloadAttendanceSheet = async () => {
-    if (disableAttendanceDownload.value) return;
+    if (disableAttendanceSheetDownload.value) return;
 
     try {
       pdfLoading.value = true;
@@ -109,7 +109,7 @@ export const useCourses = (course) => {
     isSingleCourse,
     headerInfo,
     vendorRole,
-    disableAttendanceDownload,
+    disableAttendanceSheetDownload,
     isVendorInterface,
     isClientInterface,
     isIntraOrIntraHoldingOrVendor,
