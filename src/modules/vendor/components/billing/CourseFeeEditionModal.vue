@@ -12,7 +12,7 @@
     <div v-if="!isTrainerFeesWithPercentage">
     <ni-option-group v-if="showCountUnit" in-modal :model-value="courseFee.countUnit" :options="countUnitOptions"
       type="radio" @update:model-value="update($event, 'countUnit')" :error="validations.countUnit.$error"
-      caption="Unité" inline required-field :disable="isBilled || !!totalPriceToBill.global" />
+      caption="Unité" inline required-field :disable="isBilled" />
     <ni-input v-if="isSingleCourse || !totalPriceToBill.global" in-modal :caption="priceCaption"
       :error="validations.price.$error" type="number" :disable="isBilled" :model-value="courseFee.price"
       @blur="validations.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
@@ -117,8 +117,11 @@ export default {
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
-    const update = (event, path) => {
-      emit('update:course-fee', set({ ...courseFee.value }, path, event));
+    const update = async (event, path) => {
+      await emit('update:course-fee', set({ ...courseFee.value }, path, event));
+      if (event === TRAINEE) {
+        emit('update:course-fee', set({ ...courseFee.value }, 'count', traineesQuantity.value));
+      } else if (event === GROUP) emit('update:course-fee', set({ ...courseFee.value }, 'count', 1));
     };
 
     watch(computedPrice, () => {
