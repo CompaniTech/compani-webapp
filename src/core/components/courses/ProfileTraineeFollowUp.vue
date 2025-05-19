@@ -10,7 +10,7 @@
           </template>
         </ni-banner>
         <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
-          :disable="disableDocDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
+          :disable="disableAttendanceSheetDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
       </div>
       <attendance-table :course="course" />
     </div>
@@ -234,7 +234,7 @@ export default {
       pdfLoading,
       isIntraOrIntraHoldingOrVendor,
       isArchived,
-      disableDocDownload,
+      disableAttendanceSheetDownload,
       followUpDisabled,
       followUpMissingInfo,
       downloadAttendanceSheet,
@@ -262,7 +262,7 @@ export default {
     });
 
     const disableDownloadCompletionCertificates =
-      computed(() => disableDocDownload.value || !get(course.value, 'subProgram.program.learningGoals'));
+      computed(() => disableAttendanceSheetDownload.value || !get(course.value, 'subProgram.program.learningGoals'));
 
     const {
       completionCertificates,
@@ -611,7 +611,7 @@ export default {
       disableDownloadCompletionCertificates,
       followUpDisabled,
       followUpMissingInfo,
-      disableDocDownload,
+      disableAttendanceSheetDownload,
       isArchived,
       areQuestionnaireAnswersVisible,
       areQuestionnaireVisible,
