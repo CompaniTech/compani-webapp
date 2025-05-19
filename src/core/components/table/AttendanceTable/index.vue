@@ -278,15 +278,11 @@ export default {
     });
 
     const lastPassedSlotId = computed(() => {
-      const sortedSlots = [...course.value.slots].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-      const today = CompaniDate();
+      const passedSlot = [...course.value.slots]
+        .sort(descendingSortBy('startDate'))
+        .find(slot => CompaniDate(slot.startDate).isBefore(CompaniDate()));
 
-      const passedSlots = sortedSlots.find((slot) => {
-        const slotDate = CompaniDate(slot.startDate);
-        return slotDate.isBefore(today);
-      });
-
-      return passedSlots ? passedSlots._id : null;
+      return passedSlot ? passedSlot._id : null;
     });
 
     const {
@@ -330,12 +326,10 @@ export default {
       return `${traineeName} - ${dates}`;
     };
 
-    const scrollToDate = () => {
-      const lastPassedSlotIndex = course.value.slots.findIndex(slot => slot._id === lastPassedSlotId.value);
-
+    const scrollToDate = (lastPassedSlotIndex) => {
       if (lastPassedSlotIndex >= 0) {
         const column = document.querySelectorAll('th')[lastPassedSlotIndex];
-        if (column) column.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        if (column) column.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
     };
 
@@ -346,7 +340,10 @@ export default {
         ...!isSingleCourse.value ? [getPotentialTrainees()] : [],
       ]);
 
-      if (lastPassedSlotId.value) scrollToDate();
+      const lastPassedSlotIndex = lastPassedSlotId.value
+        ? course.value.slots.findIndex(slot => slot._id === lastPassedSlotId.value)
+        : course.value.slots.length - 1;
+      scrollToDate(lastPassedSlotIndex);
     };
 
     created();
