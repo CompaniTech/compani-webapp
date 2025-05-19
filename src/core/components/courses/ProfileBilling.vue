@@ -37,6 +37,12 @@
         </span>
       </div>
     </q-card>
+    <ni-banner icon="info_outline" class="q-mt-md bg-peach-200">
+      <template #message>
+        Montant total des factures : {{ formatPrice(totalPrice.billedPrice) }}
+        (dont {{ formatPrice(totalPrice.validatedPrice) }} facturés au client)
+      </template>
+    </ni-banner>
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
@@ -84,7 +90,7 @@ import {
 import { descendingSortBy, ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { add, toFixedToFloat } from '@helpers/numbers';
+import { add, multiply, toFixedToFloat } from '@helpers/numbers';
 import Companies from '@api/Companies';
 import Courses from '@api/Courses';
 import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
@@ -256,6 +262,22 @@ export default {
       .length);
 
     const courseName = computed(() => composeCourseName(course.value));
+
+    const totalPrice = computed(() => {
+      let billedPrice = 0;
+      let validatedPrice = 0;
+
+      courseBills.value.filter(cb => !cb.courseCreditNote).forEach((cb) => {
+        const billingItemsPrice = cb.billingPurchaseList
+          .reduce((acc, item) => add(acc, (multiply(item.price, item.count))), 0);
+        const billPrice = add(multiply(cb.mainFee.count, cb.mainFee.price), billingItemsPrice);
+
+        billedPrice = add(billedPrice, billPrice);
+        if (cb.billedAt) validatedPrice = add(validatedPrice, billPrice);
+      });
+
+      return { billedPrice: Number(billedPrice), validatedPrice: Number(validatedPrice) };
+    });
 
     const saveTmp = (path) => { tmpInput.value = course.value[path]; };
 
@@ -559,6 +581,7 @@ export default {
       traineesQuantity,
       courseName,
       missingBillsCompanies,
+      totalPrice,
       // Methods
       saveTmp,
       refreshCourseBills,
