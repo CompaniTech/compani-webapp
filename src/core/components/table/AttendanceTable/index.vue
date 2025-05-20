@@ -277,6 +277,14 @@ export default {
       return Math.round(res);
     });
 
+    const lastPassedSlotId = computed(() => {
+      const lastPassedSlot = [...course.value.slots]
+        .sort(descendingSortBy('startDate'))
+        .find(slot => CompaniDate(slot.startDate).isBefore(CompaniDate()));
+
+      return lastPassedSlot ? lastPassedSlot._id : null;
+    });
+
     const {
       // Data
       attendanceSheetTableLoading,
@@ -318,12 +326,22 @@ export default {
       return `${traineeName} - ${dates}`;
     };
 
+    const scrollToDate = (lastPassedSlotIndex) => {
+      const column = document.querySelectorAll('th')[lastPassedSlotIndex];
+      if (column) column.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    };
+
     const created = async () => {
       await Promise.all([
         refreshAttendances({ course: course.value._id }),
         refreshAttendanceSheets(),
         ...!isSingleCourse.value ? [getPotentialTrainees()] : [],
       ]);
+
+      const lastPassedSlotIndex = lastPassedSlotId.value
+        ? course.value.slots.findIndex(slot => slot._id === lastPassedSlotId.value)
+        : course.value.slots.length - 1;
+      scrollToDate(lastPassedSlotIndex);
     };
 
     created();
