@@ -278,11 +278,11 @@ export default {
     });
 
     const lastPassedSlotId = computed(() => {
-      const passedSlot = [...course.value.slots]
+      const lastPassedSlot = [...course.value.slots]
         .sort(descendingSortBy('startDate'))
         .find(slot => CompaniDate(slot.startDate).isBefore(CompaniDate()));
 
-      return passedSlot ? passedSlot._id : null;
+      return lastPassedSlot ? lastPassedSlot._id : null;
     });
 
     const {
@@ -327,10 +327,8 @@ export default {
     };
 
     const scrollToDate = (lastPassedSlotIndex) => {
-      if (lastPassedSlotIndex >= 0) {
-        const column = document.querySelectorAll('th')[lastPassedSlotIndex];
-        if (column) column.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
+      const column = document.querySelectorAll('th')[lastPassedSlotIndex];
+      if (column) column.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     };
 
     const created = async () => {
