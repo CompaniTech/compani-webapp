@@ -5,7 +5,7 @@
       </template>
       <company-select in-modal :company="selectedCompany" @update="update" :company-options="companyOptions"
         required-field :validation="validations" :display-no-options-slot="displayNoOptionsSlot"
-        @open-company-creation-modal="openCompanyCreationModal" />
+        @open-company-creation-modal="openCompanyCreationModal" :multiple="multiple" />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" label="Ajouter la structure" icon-right="add" color="white"
           :loading="loading" @click="submit" />
@@ -23,10 +23,11 @@ export default {
   props: {
     modelValue: { type: Boolean, default: false },
     companyOptions: { type: Array, default: () => [] },
-    selectedCompany: { type: String, default: '' },
+    selectedCompany: { type: [String, Object], default: () => '' },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
     displayNoOptionsSlot: { type: Boolean, default: false },
+    multiple: { type: Boolean, default: false },
   },
   components: {
     'ni-modal': Modal,

@@ -31,8 +31,8 @@
     </q-card>
 
     <company-addition-modal v-model="companyLinkModal" :loading="modalLoading" @submit="linkCompanyToHolding"
-      :validations="v$.newCompanyLink" @hide="resetCompanyLinkModal" v-model:selected-company="newCompanyLink"
-      :company-options="companyOptions" display-no-options-slot
+      :validations="v$.newCompaniesLink" @hide="resetCompanyLinkModal" v-model:selected-company="newCompaniesLink"
+      :company-options="companyOptions" display-no-options-slot multiple
       @open-company-creation-modal="openCompanyCreationModal" />
 
     <user-addition-modal v-model="userAdditionModal" v-model:new-user-registration="newUserRegistration"
@@ -113,18 +113,18 @@ export default {
     const companyOptions = ref([]);
     const usersOptions = ref([]);
     const companyLinkModal = ref(false);
-    const newCompanyLink = ref('');
+    const newCompaniesLink = ref([]);
     const modalLoading = ref(false);
     const userAdditionModal = ref(false);
     const newUserRegistration = ref({ user: '' });
     const userModalLoading = ref(false);
 
     const rules = {
-      newCompanyLink: { required },
+      newCompaniesLink: { required },
       newUserRegistration: { user: { required } },
       newCompany: { name: { required }, holding: { required } },
     };
-    const v$ = useVuelidate(rules, { newCompanyLink, newUserRegistration, newCompany });
+    const v$ = useVuelidate(rules, { newCompaniesLink, newUserRegistration, newCompany });
 
     const holding = computed(() => $store.state.holding.holding);
 
@@ -151,17 +151,17 @@ export default {
 
     const resetCompanyLinkModal = () => {
       companyOptions.value = [];
-      newCompanyLink.value = '';
-      v$.value.newCompanyLink.$reset();
+      newCompaniesLink.value = [];
+      v$.value.newCompaniesLink.$reset();
     };
 
     const linkCompanyToHolding = async () => {
       try {
-        v$.value.newCompanyLink.$touch();
-        if (v$.value.newCompanyLink.$error) return NotifyWarning('Une structure est requise.');
+        v$.value.newCompaniesLink.$touch();
+        if (v$.value.newCompaniesLink.$error) return NotifyWarning('Une structure est requise.');
 
         modalLoading.value = true;
-        await Holdings.update(holding.value._id, { company: newCompanyLink.value });
+        await Holdings.update(holding.value._id, { companies: newCompaniesLink.value });
 
         companyLinkModal.value = false;
         NotifyPositive('Rattachement à la société mère effectué.');
@@ -257,7 +257,7 @@ export default {
       userPagination,
       companyOptions,
       companyLinkModal,
-      newCompanyLink,
+      newCompaniesLink,
       modalLoading,
       userModalLoading,
       userAdditionModal,

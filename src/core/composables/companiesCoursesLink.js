@@ -11,7 +11,7 @@ import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup
 export const useCompaniesCoursesLink = (course, emit) => {
   const $q = useQuasar();
 
-  const selectedCompany = ref('');
+  const selectedCompany = ref([]);
   const companyAdditionModal = ref(false);
   const companyModalLoading = ref(false);
   const selectCompanyOptions = ref([]);
@@ -23,7 +23,7 @@ export const useCompaniesCoursesLink = (course, emit) => {
   const companyValidation = useVuelidate(rules, { selectedCompany });
 
   const resetCompanyAdditionModal = () => {
-    selectedCompany.value = '';
+    selectedCompany.value = [];
     companyValidation.value.selectedCompany.$reset();
   };
 
