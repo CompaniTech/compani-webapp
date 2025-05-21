@@ -341,10 +341,7 @@ export default {
         ...!isSingleCourse.value ? [getPotentialTrainees()] : [],
       ]);
 
-      const lastPassedSlotIndex = lastPassedSlotId.value
-        ? course.value.slots.findIndex(slot => slot._id === lastPassedSlotId.value)
-        : course.value.slots.length - 1;
-      scrollToDate(lastPassedSlotIndex);
+      if (lastPassedSlotId.value) scrollToDate();
     };
 
     created();
