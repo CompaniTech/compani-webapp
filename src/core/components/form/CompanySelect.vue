@@ -26,7 +26,7 @@ import Button from '@components/Button';
 export default {
   name: 'CompanySelect',
   props: {
-    company: { type: [String, Object], default: () => '' },
+    company: { type: [String, Object], default: '' },
     companyOptions: { type: Array, default: () => [] },
     validation: { type: Object, default: () => ({}) },
     requiredField: { type: Boolean, default: false },

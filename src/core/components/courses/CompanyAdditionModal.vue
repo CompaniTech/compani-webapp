@@ -23,7 +23,7 @@ export default {
   props: {
     modelValue: { type: Boolean, default: false },
     companyOptions: { type: Array, default: () => [] },
-    selectedCompany: { type: [String, Object], default: () => '' },
+    selectedCompany: { type: [String, Object], default: '' },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
     displayNoOptionsSlot: { type: Boolean, default: false },
