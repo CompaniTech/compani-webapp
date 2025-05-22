@@ -42,7 +42,7 @@ export const useSubProgramPublicationModal = (program, refreshProgram) => {
     }
   };
 
-  const validateSubProgramPublication = (accessCompanies = null) => {
+  const validateSubProgramPublication = (accessCompanies = []) => {
     $q.dialog({
       title: 'Confirmation',
       message: 'Une fois le sous-programme publié, vous ne pourrez plus le modifier.<br />'
@@ -55,7 +55,7 @@ export const useSubProgramPublicationModal = (program, refreshProgram) => {
   };
 
   const publishSubProgram = async (accessCompanies) => {
-    const payload = accessCompanies ? { status: PUBLISHED, accessCompanies } : { status: PUBLISHED };
+    const payload = accessCompanies.length ? { status: PUBLISHED, accessCompanies } : { status: PUBLISHED };
     try {
       await SubPrograms.update(subProgramToPublish.value._id, payload);
       NotifyPositive('Sous programme publié');
