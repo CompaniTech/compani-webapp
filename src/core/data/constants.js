@@ -254,7 +254,7 @@ export const FREE_ACCESS = 'free';
 export const RESTRICTED_ACCESS = 'restricted';
 export const ACCESS_OPTIONS = [
   { label: 'Libre accès', value: FREE_ACCESS },
-  { label: 'Choisir une structure', value: RESTRICTED_ACCESS },
+  { label: 'Choisir des structures', value: RESTRICTED_ACCESS },
 ];
 
 // ORIGIN

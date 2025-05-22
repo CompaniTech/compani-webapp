@@ -6,11 +6,11 @@
     <ni-option-group v-model="access" :options="ACCESS_OPTIONS" inline type="radio" @update:model-value="resetAccess" />
     <template v-if="access === RESTRICTED_ACCESS">
       <span class="text-italic">
-        Seuls les apprenants de la structure choisie auront accès à la formation.
+        Seuls les apprenants des structures choisies auront accès à la formation.
         Vous pourrez modifier et rajouter des règles d’accès par la suite.
       </span>
-      <company-select class="select" in-modal :company-options="companyOptions" :company="accessCompany"
-        required-field @update="update" :validation="v$.accessCompany" />
+      <company-select class="select" in-modal :company-options="companyOptions" :company="accessCompanies"
+        required-field @update="update" :validation="v$.accessCompanies" multiple />
     </template>
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Publier avec cette règle d'accès" color="primary"
@@ -43,35 +43,35 @@ export default {
   emits: ['hide', 'update:model-value', 'submit'],
   setup (_, { emit }) {
     const access = ref(FREE_ACCESS);
-    const accessCompany = ref('');
+    const accessCompanies = ref([]);
 
     const rules = computed(() => ({
-      accessCompany: { required: requiredIf(access.value === RESTRICTED_ACCESS) },
+      accessCompanies: { required: requiredIf(access.value === RESTRICTED_ACCESS) },
     }));
 
-    const v$ = useVuelidate(rules, { accessCompany });
+    const v$ = useVuelidate(rules, { accessCompanies });
 
     const hide = () => {
       access.value = FREE_ACCESS;
-      accessCompany.value = '';
+      accessCompanies.value = [];
       emit('hide');
     };
 
     const input = event => emit('update:model-value', event);
 
     const submit = () => {
-      v$.value.accessCompany.$touch();
-      if (v$.value.accessCompany.$error) return NotifyWarning('Champ(s) invalide(s)');
+      v$.value.accessCompanies.$touch();
+      if (v$.value.accessCompanies.$error) return NotifyWarning('Champ(s) invalide(s)');
 
-      emit('submit', accessCompany.value);
+      emit('submit', accessCompanies.value);
     };
 
     const resetAccess = () => {
-      accessCompany.value = '';
-      v$.value.accessCompany.$reset();
+      accessCompanies.value = [];
+      v$.value.accessCompanies.$reset();
     };
 
-    const update = (event) => { accessCompany.value = event; };
+    const update = (event) => { accessCompanies.value = event; };
 
     return {
       // Validations
@@ -80,7 +80,7 @@ export default {
       RESTRICTED_ACCESS,
       ACCESS_OPTIONS,
       access,
-      accessCompany,
+      accessCompanies,
       // Methods
       hide,
       input,

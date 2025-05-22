@@ -42,7 +42,7 @@ export const useSubProgramPublicationModal = (program, refreshProgram) => {
     }
   };
 
-  const validateSubProgramPublication = (accessCompany = null) => {
+  const validateSubProgramPublication = (accessCompanies = null) => {
     $q.dialog({
       title: 'Confirmation',
       message: 'Une fois le sous-programme publié, vous ne pourrez plus le modifier.<br />'
@@ -50,12 +50,12 @@ export const useSubProgramPublicationModal = (program, refreshProgram) => {
       html: true,
       ok: true,
       cancel: 'Annuler',
-    }).onOk(() => publishSubProgram(accessCompany))
+    }).onOk(() => publishSubProgram(accessCompanies))
       .onCancel(() => NotifyPositive('Publication annulée.'));
   };
 
-  const publishSubProgram = async (accessCompany) => {
-    const payload = accessCompany ? { status: PUBLISHED, accessCompany } : { status: PUBLISHED };
+  const publishSubProgram = async (accessCompanies) => {
+    const payload = accessCompanies ? { status: PUBLISHED, accessCompanies } : { status: PUBLISHED };
     try {
       await SubPrograms.update(subProgramToPublish.value._id, payload);
       NotifyPositive('Sous programme publié');
