@@ -21,7 +21,7 @@
       <ni-input caption="Pourcentage" :error="validations.percentage.$error" type="number" suffix="%"
         :model-value="courseFee.percentage" @blur="validations.percentage.$touch" required-field
         :error-message="errorMessages.percentage" @update:model-value="update($event, 'percentage')"
-        class="percentage" />
+        class="percentage" :disable="isBilled" />
       <div class="q-ml-md text-14">
         {{
           !validations.percentage.$error && computedPrice.global > 0
