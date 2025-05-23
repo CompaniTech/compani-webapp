@@ -75,11 +75,11 @@ export default {
 
     const submitLabel = computed(() => (additionType.value === CREATE_STEP ? 'Créer l\'étape' : 'Réutiliser l\'étape'));
 
-    watch(additionType, () => {
+    watch(additionType, async () => {
       if (additionType.value === REUSE_STEP) {
-        if (!reusedStep.value.program) updateProgram(program.value._id);
-        if (!programOptions.value.length) refreshPrograms();
-        if (!stepOptions.value.length) refreshSteps();
+        if (!reusedStep.value.program) await updateProgram(program.value._id);
+        if (!programOptions.value.length) await refreshPrograms();
+        if (!stepOptions.value.length) await refreshSteps();
       }
     });
 
