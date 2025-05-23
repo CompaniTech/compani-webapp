@@ -26,7 +26,7 @@
 
     <access-rule-creation-modal v-model="accessRuleCreationModal" :loading="modalLoading" @submit="addAccessRule"
       :validations="v$.newAccessRule" @hide="resetAccessRuleCreationModal" v-model:new-access-rule="newAccessRule"
-      :company-options="companyOptions" />
+      :company-options="companyOptions" multiple />
   </div>
 </template>
 
@@ -66,7 +66,7 @@ export default {
       { name: 'actions', label: '', field: '_id' },
     ]);
     const pagination = ref({ sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 });
-    const newAccessRule = ref('');
+    const newAccessRule = ref([]);
     const companyOptions = ref([]);
     const accessRuleCreationModal = ref(false);
     const modalLoading = ref(false);
@@ -107,7 +107,7 @@ export default {
 
     const resetAccessRuleCreationModal = () => {
       companyOptions.value = [];
-      newAccessRule.value = '';
+      newAccessRule.value = [];
       v$.value.newAccessRule.$reset();
     };
 
@@ -117,7 +117,7 @@ export default {
         if (v$.value.newAccessRule.$error) return NotifyWarning('Une règle d\'accès est requise');
 
         modalLoading.value = true;
-        await Courses.addAccessRule(profileId.value, { company: newAccessRule.value });
+        await Courses.addAccessRule(profileId.value, { companies: newAccessRule.value });
 
         accessRuleCreationModal.value = false;
         NotifyPositive('Règle d\'accès créée.');

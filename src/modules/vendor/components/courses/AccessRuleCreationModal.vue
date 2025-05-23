@@ -4,7 +4,7 @@
       Ajouter une <span class="text-weight-bold">règle d'accès</span>
     </template>
       <company-select in-modal :company-options="companyOptions" :company="newAccessRule" required-field
-        @update="update" :validation="validations" last />
+        @update="update" :validation="validations" last multiple />
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Ajouter la règle d'accès" color="primary" :loading="loading"
         icon-right="add" @click="submit" />
@@ -23,7 +23,8 @@ export default {
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
     companyOptions: { type: Array, default: () => [] },
-    newAccessRule: { type: String, default: '' },
+    newAccessRule: { type: Array, default: () => [] },
+    multiple: { type: Boolean, default: false },
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-access-rule'],
   components: {
