@@ -24,7 +24,6 @@ export default {
     loading: { type: Boolean, default: false },
     companyOptions: { type: Array, default: () => [] },
     newAccessRule: { type: Array, default: () => [] },
-    multiple: { type: Boolean, default: false },
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-access-rule'],
   components: {

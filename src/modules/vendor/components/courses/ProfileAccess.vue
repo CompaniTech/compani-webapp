@@ -26,7 +26,7 @@
 
     <access-rule-creation-modal v-model="accessRuleCreationModal" :loading="modalLoading" @submit="addAccessRule"
       :validations="v$.newAccessRule" @hide="resetAccessRuleCreationModal" v-model:new-access-rule="newAccessRule"
-      :company-options="companyOptions" multiple />
+      :company-options="companyOptions" />
   </div>
 </template>
 
