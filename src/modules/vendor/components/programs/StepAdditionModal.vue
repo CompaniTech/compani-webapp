@@ -3,6 +3,7 @@
     <template #title>
         Ajouter une nouvelle <span class="text-weight-bold">étape</span>
       </template>
+      {{ reusedStep }}
       <ni-btn-toggle :model-value="additionType" :options="STEP_ATTACHEMENT_OPTIONS"
         @update:model-value="updateAdditionType($event)" />
       <template v-if="additionType === CREATE_STEP">
