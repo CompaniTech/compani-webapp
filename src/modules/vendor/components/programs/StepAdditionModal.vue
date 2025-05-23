@@ -3,7 +3,6 @@
     <template #title>
         Ajouter une nouvelle <span class="text-weight-bold">étape</span>
       </template>
-      {{ reusedStep }}
       <ni-btn-toggle :model-value="additionType" :options="STEP_ATTACHEMENT_OPTIONS"
         @update:model-value="updateAdditionType($event)" />
       <template v-if="additionType === CREATE_STEP">
@@ -17,8 +16,8 @@
         <ni-select in-modal :model-value="reusedStep.program" caption="Programme" required-field
           inline @update:model-value="updateProgram($event)" :error="validations.reusedStep.program.$error"
           :options="programOptions" />
-        <ni-multiple-option-group required-field caption="Étapes" :model-value="reusedStep._id"
-          @update:model-value="updateReusedStep($event)" :error="validations.reusedStep?._id?.$error"
+        <ni-multiple-option-group required-field caption="Étapes" :model-value="reusedStep._ids"
+          @update:model-value="updateReusedStep($event)" :error="validations.reusedStep._ids.$error"
           :options-groups="stepOptions" :group-titles="stepGroups" type="checkbox" />
       </template>
       <template #footer>
