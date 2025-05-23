@@ -16,9 +16,9 @@
         <ni-select in-modal :model-value="reusedStep.program" caption="Programme" required-field
           inline @update:model-value="updateProgram($event)" :error="validations.reusedStep.program.$error"
           :options="programOptions" />
-        <ni-multiple-option-group required-field caption="Étapes" :model-value="reusedStep._id"
-          @update:model-value="updateReusedStep($event)" :error="validations.reusedStep._id.$error"
-          :options-groups="stepOptions" :group-titles="stepGroups" />
+        <ni-multiple-option-group required-field caption="Étapes" :model-value="reusedStep._ids"
+          @update:model-value="updateReusedStep($event)" :error="validations.reusedStep._ids.$error"
+          :options-groups="stepOptions" :group-titles="stepGroups" type="checkbox" />
       </template>
       <template #footer>
         <q-btn no-caps class="full-width modal-btn" :label="submitLabel" color="primary" :loading="loading"
@@ -75,11 +75,11 @@ export default {
 
     const submitLabel = computed(() => (additionType.value === CREATE_STEP ? 'Créer l\'étape' : 'Réutiliser l\'étape'));
 
-    watch(additionType, () => {
+    watch(additionType, async () => {
       if (additionType.value === REUSE_STEP) {
-        if (!reusedStep.value.program) updateProgram(program.value._id);
-        if (!programOptions.value.length) refreshPrograms();
-        if (!stepOptions.value.length) refreshSteps();
+        if (!reusedStep.value.program) await updateProgram(program.value._id);
+        if (!programOptions.value.length) await refreshPrograms();
+        if (!stepOptions.value.length) await refreshSteps();
       }
     });
 
@@ -145,10 +145,10 @@ export default {
     const updateNewStep = (event, prop) => { emit('update:new-step', set(newStep.value, prop, event)); };
 
     const updateProgram = async (event) => {
-      await emit('update:reused-step', { _id: '', program: event });
+      await emit('update:reused-step', { _ids: [], program: event });
       await refreshSteps();
     };
-    const updateReusedStep = (value) => { emit('update:reused-step', set(reusedStep.value, '_id', value)); };
+    const updateReusedStep = (value) => { emit('update:reused-step', set(reusedStep.value, '_ids', value)); };
 
     const updateAdditionType = (value) => { emit('update:addition-type', value); };
 

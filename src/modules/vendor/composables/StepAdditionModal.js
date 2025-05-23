@@ -10,11 +10,11 @@ export const useStepAdditionModal = (setStepLocking, modalLoading, refreshProgra
   const additionType = ref(CREATE_STEP);
   const newStep = ref({ name: '', type: E_LEARNING });
   const stepAdditionModal = ref(false);
-  const reusedStep = ref({ _id: '', program: '' });
+  const reusedStep = ref({ _ids: [], program: '' });
 
   const rules = computed(() => ({
     newStep: { name: { required }, type: { required } },
-    reusedStep: { _id: { required }, program: { required } },
+    reusedStep: { _ids: { required }, program: { required } },
   }));
   const v$ = useVuelidate(rules, { newStep, reusedStep });
 
@@ -37,7 +37,7 @@ export const useStepAdditionModal = (setStepLocking, modalLoading, refreshProgra
         v$.value.reusedStep.$touch();
         if (v$.value.reusedStep.$error) return NotifyWarning('Champ(s) invalide(s)');
 
-        await SubPrograms.reuseStep(currentSubProgramId.value, { steps: reusedStep.value._id });
+        await SubPrograms.reuseStep(currentSubProgramId.value, { steps: reusedStep.value._ids });
         setStepLocking(reusedStep.value, true);
         NotifyPositive('Étape réutilisée.');
       }
@@ -55,7 +55,7 @@ export const useStepAdditionModal = (setStepLocking, modalLoading, refreshProgra
   const resetStepAdditionModal = () => {
     newStep.value = { name: '', type: E_LEARNING };
     additionType.value = CREATE_STEP;
-    reusedStep.value = { _id: '', program: '' };
+    reusedStep.value = { _ids: [], program: '' };
     v$.value.newStep.$reset();
     v$.value.reusedStep.$reset();
   };
