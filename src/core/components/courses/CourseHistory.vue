@@ -23,6 +23,7 @@
 </template>
 
 <script>
+import { ref, computed, toRefs } from 'vue';
 import get from 'lodash/get';
 import {
   SLOT_CREATION,
@@ -42,7 +43,6 @@ import {
 import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatIdentity } from '@helpers/utils';
-import { ref, computed, toRefs } from 'vue';
 
 export default {
   name: 'CourseHistory',
@@ -56,44 +56,6 @@ export default {
     const displayDetails = ref(false);
     const { courseHistory } = toRefs(props);
 
-    const formatedHistory = computed(() => {
-      switch (courseHistory.value.action) {
-        case TRAINEE_DELETION:
-          return { title: getTraineeDeletionTitle() };
-        case TRAINEE_ADDITION:
-          return { title: getTraineeAdditionTitle() };
-        case TRAINER_ADDITION:
-          return { title: getTrainerAdditionTitle() };
-        case TRAINER_DELETION:
-          return { title: getTrainerDeletionTitle() };
-        case COMPANY_ADDITION:
-          return { title: getCompanyAdditionTitle() };
-        case COMPANY_DELETION:
-          return { title: getCompanyDeletionTitle() };
-        case SLOT_DELETION:
-          return {
-            title: getSlotDeletionTitle(),
-            details: getSlotDeletionDetails(),
-          };
-        case SLOT_EDITION:
-          return {
-            title: getSlotEditionTitle(),
-            details: getSlotEditionDetails(),
-          };
-        case ESTIMATED_START_DATE_EDITION:
-          return {
-            title: getEstimatedStartDateEditionTitle(),
-            details: getEstimatedStartDateEditionDetails(),
-          };
-        case SLOT_CREATION:
-        default:
-          return {
-            title: getSlotCreationTitle(),
-            details: getSlotCreationDetails(),
-          };
-      }
-    });
-
     const historySignature = computed(() => {
       const date = CompaniDate(courseHistory.value.createdAt).format(DD_MM_YYYY);
       const hour = CompaniDate(courseHistory.value.createdAt).format(HHhMM);
@@ -102,9 +64,7 @@ export default {
       return `${user} le ${date} à ${hour}.`;
     });
 
-    const toggleDetails = () => {
-      displayDetails.value = !displayDetails.value;
-    };
+    const toggleDetails = () => { displayDetails.value = !displayDetails.value; };
 
     const getAvatar = user => get(user, 'picture.link') || DEFAULT_AVATAR;
 
@@ -232,16 +192,50 @@ export default {
 
     const getTrainerAdditionTitle = () => ({
       pre: 'Ajout d\'un(e)',
-      type: 'formateur/formatrice',
+      type: 'intervenant(e)',
       post: 'à la formation\u00A0:',
       infos: `\r\n${formatIdentity(courseHistory.value.trainer.identity, 'FL')}`,
     });
 
     const getTrainerDeletionTitle = () => ({
       pre: 'Retrait d\'un(e)',
-      type: 'formateur/formatrice',
+      type: 'intervenant(e)',
       post: 'de la formation\u00A0:',
       infos: `\r\n${formatIdentity(courseHistory.value.trainer.identity, 'FL')}`,
+    });
+
+    const formatedHistory = computed(() => {
+      switch (courseHistory.value.action) {
+        case TRAINEE_DELETION:
+          return { title: getTraineeDeletionTitle() };
+        case TRAINEE_ADDITION:
+          return { title: getTraineeAdditionTitle() };
+        case TRAINER_ADDITION:
+          return { title: getTrainerAdditionTitle() };
+        case TRAINER_DELETION:
+          return { title: getTrainerDeletionTitle() };
+        case COMPANY_ADDITION:
+          return { title: getCompanyAdditionTitle() };
+        case COMPANY_DELETION:
+          return { title: getCompanyDeletionTitle() };
+        case SLOT_DELETION:
+          return {
+            title: getSlotDeletionTitle(), details: getSlotDeletionDetails(),
+          };
+        case SLOT_EDITION:
+          return {
+            title: getSlotEditionTitle(), details: getSlotEditionDetails(),
+          };
+        case ESTIMATED_START_DATE_EDITION:
+          return {
+            title: getEstimatedStartDateEditionTitle(), details: getEstimatedStartDateEditionDetails(),
+          };
+        case SLOT_CREATION:
+        default:
+          return {
+            title: getSlotCreationTitle(), details: getSlotCreationDetails(),
+          };
+      }
     });
 
     return {
