@@ -219,22 +219,16 @@ export default {
         case COMPANY_DELETION:
           return { title: getCompanyDeletionTitle() };
         case SLOT_DELETION:
-          return {
-            title: getSlotDeletionTitle(), details: getSlotDeletionDetails(),
-          };
+          return { title: getSlotDeletionTitle(), details: getSlotDeletionDetails() };
         case SLOT_EDITION:
-          return {
-            title: getSlotEditionTitle(), details: getSlotEditionDetails(),
-          };
+          return { title: getSlotEditionTitle(), details: getSlotEditionDetails() };
         case ESTIMATED_START_DATE_EDITION:
           return {
             title: getEstimatedStartDateEditionTitle(), details: getEstimatedStartDateEditionDetails(),
           };
         case SLOT_CREATION:
         default:
-          return {
-            title: getSlotCreationTitle(), details: getSlotCreationDetails(),
-          };
+          return { title: getSlotCreationTitle(), details: getSlotCreationDetails() };
       }
     });
 
