@@ -223,9 +223,7 @@ export default {
         case SLOT_EDITION:
           return { title: getSlotEditionTitle(), details: getSlotEditionDetails() };
         case ESTIMATED_START_DATE_EDITION:
-          return {
-            title: getEstimatedStartDateEditionTitle(), details: getEstimatedStartDateEditionDetails(),
-          };
+          return { title: getEstimatedStartDateEditionTitle(), details: getEstimatedStartDateEditionDetails() };
         case SLOT_CREATION:
         default:
           return { title: getSlotCreationTitle(), details: getSlotCreationDetails() };
