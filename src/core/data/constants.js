@@ -238,6 +238,8 @@ export const TRAINEE_DELETION = 'trainee_deletion';
 export const ESTIMATED_START_DATE_EDITION = 'estimated_start_date_edition';
 export const COMPANY_ADDITION = 'company_addition';
 export const COMPANY_DELETION = 'company_deletion';
+export const TRAINER_ADDITION = 'trainer_addition';
+export const TRAINER_DELETION = 'trainer_deletion';
 
 // MEDIA UPLOAD
 export const UPLOAD_IMAGE = 'image';
