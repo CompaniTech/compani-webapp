@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import get from 'lodash/get';
+import Email from '@api/Email';
 import CourseBills from '@api/CourseBills';
 import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative } from '@components/popup/notify';
@@ -16,6 +17,7 @@ export const useCourseBilling = (courseBills, validations) => {
       const pdf = await CourseBills.getPdf(bill._id);
       const pdfName = `${formatDownloadName(`${bill.payer.name} ${bill.number}`)}.pdf`;
       downloadFile(pdf, pdfName, 'application/octet-stream');
+      await Email.sendBillEmail({ email: 'manon@compani.fr', pdf: Buffer.from(pdf.data), pdfName });
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors du téléchargement de la facture.');

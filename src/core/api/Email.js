@@ -5,4 +5,8 @@ export default {
     const mail = await alenviAxios.post(`${process.env.API_HOSTNAME}/email/send-welcome`, data);
     return mail;
   },
+  async sendBillEmail (data) {
+    const mail = await alenviAxios.post(`${process.env.API_HOSTNAME}/email/bill`, data);
+    return mail;
+  },
 };
