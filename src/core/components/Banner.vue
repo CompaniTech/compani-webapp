@@ -6,21 +6,30 @@
 </template>
 
 <script>
+import { computed, toRefs } from 'vue';
+import { useRoute } from 'vue-router';
 import { CLIENT, VENDOR } from '@data/constants';
 
 export default {
   name: 'Banner',
   props: {
     icon: { type: String, default: 'warning' },
-    class: { type: String, default: '' },
+    contentClass: { type: String, default: '' },
     iconColor: { type: String, default: '' },
   },
-  data () {
-    const interfaceType = /\/ad\//.test(this.$route.path) ? VENDOR : CLIENT;
+  setup (props) {
+    const { contentClass } = toRefs(props);
+    const $route = useRoute();
+
+    const interfaceType = /\/ad\//.test($route.path) ? VENDOR : CLIENT;
+
+    const customClass = computed(() => contentClass.value || (interfaceType === CLIENT ? 'bg-copper-grey-200' : 'bg-peach-200'));
+
     return {
-      customClass: this.class || (interfaceType === CLIENT ? 'bg-copper-grey-200' : 'bg-peach-200'),
-    };
-  },
+      // Computed
+      customClass,
+    }
+  }
 };
 </script>
 
