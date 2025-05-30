@@ -18,7 +18,7 @@
     <div v-else class="end-text">
       Oups, une erreur est survenue.
       Ce questionnaire n'est pas encore accessible ou ne l'est plus.
-      <ni-banner icon="info_outline" class="end-text-banner">
+      <ni-banner icon="info_outline" content-class="end-text-banner">
         <template #message>
           <li>le questionnaire de recueil des attentes est disponible jusqu'à la fin du créneau de mi-formation</li>
           <li>

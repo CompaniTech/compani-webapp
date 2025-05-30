@@ -23,13 +23,14 @@ export default {
 
     const interfaceType = /\/ad\//.test($route.path) ? VENDOR : CLIENT;
 
-    const customClass = computed(() => contentClass.value || (interfaceType === CLIENT ? 'bg-copper-grey-200' : 'bg-peach-200'));
+    const customClass = computed(() => contentClass.value ||
+    (interfaceType === CLIENT ? 'bg-copper-grey-200' : 'bg-peach-200'));
 
     return {
       // Computed
       customClass,
-    }
-  }
+    };
+  },
 };
 </script>
 

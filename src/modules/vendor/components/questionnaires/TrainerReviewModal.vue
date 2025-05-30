@@ -4,7 +4,7 @@
       Ajuster <span class="text-weight-bold">la note</span>
     </template>
     <div>
-      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="help_outline" icon-color="copper-500">
+      <ni-banner content-class="bg-copper-grey-100 q-mt-sm" icon="help_outline" icon-color="copper-500">
         <template #message>Objectif pédagogique : {{ question }}</template>
       </ni-banner>
       <ni-rating v-model="answer" :icon="iconTab" required-field caption="Veuillez sélectionner la note ajustée : "
