@@ -24,17 +24,9 @@
         :model-value="newBill.mainFee.percentage" @blur="validations.mainFee.percentage.$touch" required-field
         :error-message="errorMessages.percentage" @update:model-value="update($event, 'mainFee.percentage')"
         class="percentage" />
-      <div class="q-ml-md text-14">
-        {{
-          !validations.mainFee.percentage.$error && computedPrice.global > 0
-            ? formatPrice(computedPrice.global)
-            : ''
-        }}
-        {{
-          !validations.mainFee.percentage.$error && computedPrice.trainerFees > 0
-            ? `(frais de formateurs : ${formatPrice(computedPrice.trainerFees)})`
-            : ''
-        }}
+      <div v-if="!validations.mainFee.percentage.$error" class="q-ml-md text-14">
+        {{ computedPrice.global > 0 ? formatPrice(computedPrice.global) : '' }}
+        {{ computedPrice.trainerFees > 0 ? `(+ frais de formateurs : ${formatPrice(computedPrice.trainerFees)})` : '' }}
       </div>
     </div>
     <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
