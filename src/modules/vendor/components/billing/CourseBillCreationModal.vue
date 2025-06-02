@@ -56,7 +56,7 @@ import Banner from '@components/Banner';
 import DateInput from '@components/form/DateInput';
 import { INTRA, SINGLE, TRAINEE, GROUP } from '@data/constants';
 import { formatQuantity, formatName, formatPrice } from '@helpers/utils';
-import { multiply, divide } from '@helpers/numbers';
+import { multiply, divide, toFixedToFloat } from '@helpers/numbers';
 
 export default {
   name: 'CourseBillCreationModal',
@@ -108,8 +108,8 @@ export default {
       if (course.value.type === SINGLE || !totalPriceToBill.value.global) return;
 
       return {
-        global: Number(divide(multiply(newBill.value.mainFee.percentage, totalPriceToBill.value.global), 100)),
-        trainerFees: Number(
+        global: toFixedToFloat(divide(multiply(newBill.value.mainFee.percentage, totalPriceToBill.value.global), 100)),
+        trainerFees: toFixedToFloat(
           divide(multiply(newBill.value.mainFee.percentage, totalPriceToBill.value.trainerFees), 100)
         ),
       };

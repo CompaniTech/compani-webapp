@@ -84,7 +84,7 @@ import {
 import { descendingSortBy, ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { add } from '@helpers/numbers';
+import { add, toFixedToFloat } from '@helpers/numbers';
 import Companies from '@api/Companies';
 import Courses from '@api/Courses';
 import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
@@ -435,8 +435,8 @@ export default {
         totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
           if (companiesToBill.value.includes(price.company)) {
             return {
-              global: Number(add(acc.global, (price.global || 0))),
-              trainerFees: Number(add(acc.trainerFees, (price.trainerFees || 0))),
+              global: toFixedToFloat(add(acc.global, (price.global || 0))),
+              trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
             };
           }
           return acc;
@@ -461,8 +461,8 @@ export default {
       totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
         if (companiesToBill.value.includes(price.company)) {
           return {
-            global: Number(add(acc.global, (price.global || 0))),
-            trainerFees: Number(add(acc.trainerFees, (price.trainerFees || 0))),
+            global: toFixedToFloat(add(acc.global, (price.global || 0))),
+            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
           };
         }
         return acc;
