@@ -24,7 +24,11 @@
           class="percentage" :disable="isBilled" />
         <div v-if="!validations.percentage.$error" class="q-ml-md text-14">
           {{ computedPrice.global > 0 ? formatPrice(computedPrice.global) : '' }}
-          {{ computedPrice.trainerFees > 0 ? `(frais de formateurs : ${formatPrice(computedPrice.trainerFees)})` : '' }}
+          {{
+            computedPrice.trainerFees > 0
+            ? `(+ frais de formateurs : ${formatPrice(computedPrice.trainerFees)})`
+            : ''
+          }}
         </div>
       </div>
       <ni-input in-modal caption="Quantité" :error="validations.count.$error" type="number" required-field
