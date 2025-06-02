@@ -381,7 +381,7 @@ export default {
 
     const downloadCCFile = async (format, type, zipName) => {
       try {
-        const zip = await Courses.downloadCompletionCertificates(course.value._id, { format, type });
+        const zip = await Courses.downloadCompletionCertificates(course.value._id, { format, type, isClientInterface });
         downloadZip(zip, zipName);
       } catch (e) {
         console.error(e);
