@@ -169,7 +169,7 @@ import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
 import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/constants';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
-import { add } from '@helpers/numbers';
+import { add, toFixedToFloat } from '@helpers/numbers';
 import { formatPrice, formatName } from '@helpers/utils';
 import { composeCourseName } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -344,8 +344,8 @@ export default {
       totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
         if (bill.companies.map(c => c._id).includes(price.company)) {
           return {
-            global: Number(add(acc.global, (price.global || 0))),
-            trainerFees: Number(add(acc.trainerFees, (price.trainerFees || 0))),
+            global: toFixedToFloat(add(acc.global, (price.global || 0))),
+            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
           };
         }
         return acc;

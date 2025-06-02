@@ -48,7 +48,7 @@ import Button from '@components/Button';
 import Banner from '@components/Banner';
 import Input from '@components/form/Input';
 import OptionGroup from '@components/form/OptionGroup';
-import { multiply, divide } from '@helpers/numbers';
+import { multiply, divide, toFixedToFloat } from '@helpers/numbers';
 import { formatQuantity, formatPrice } from '@helpers/utils';
 import { TRAINEE, GROUP } from '@data/constants';
 
@@ -96,8 +96,8 @@ export default {
       if (isSingleCourse.value || !totalPriceToBill.value.global) return;
 
       return {
-        global: Number(divide(multiply(courseFee.value.percentage, totalPriceToBill.value.global), 100)),
-        trainerFees: Number(
+        global: toFixedToFloat(divide(multiply(courseFee.value.percentage, totalPriceToBill.value.global), 100)),
+        trainerFees: toFixedToFloat(
           divide(multiply(courseFee.value.percentage, totalPriceToBill.value.trainerFees), 100)
         ),
       };
