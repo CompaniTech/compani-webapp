@@ -37,10 +37,10 @@
         </span>
       </div>
     </q-card>
-    <ni-banner icon="info_outline" class="q-mt-md bg-peach-200">
+    <ni-banner v-if="courseBills.length" icon="info_outline" class="q-mt-md bg-peach-200">
       <template #message>
-        Montant total des factures : {{ formatPrice(totalPrice.billedPrice) }}
-        (dont {{ formatPrice(totalPrice.validatedPrice) }} facturés au client)
+        Montant total des factures : <span class="text-weight-bold">{{ formatPrice(totalPrice.billedPrice) }}</span>
+        (dont <span class="text-weight-bold">{{ formatPrice(totalPrice.validatedPrice) }}</span> facturés au client)
       </template>
     </ni-banner>
     <div v-for="(companies, index) of companiesList" :key="index">
@@ -166,7 +166,7 @@ export default {
           required,
           positiveNumber,
           integerNumber,
-          minValue: minValue(courseBills.value.filter(cb => !cb.courseCreditNote).length),
+          minValue: minValue(courseBills.value.filter(bill => !bill.courseCreditNote).length),
         },
         prices: {
           $each: helpers.forEach({
@@ -267,7 +267,7 @@ export default {
       let billedPrice = 0;
       let validatedPrice = 0;
 
-      courseBills.value.filter(cb => !cb.courseCreditNote).forEach((cb) => {
+      courseBills.value.filter(bill => !bill.courseCreditNote).forEach((cb) => {
         const billingItemsPrice = cb.billingPurchaseList
           .reduce((acc, item) => add(acc, (multiply(item.price, item.count))), 0);
         const billPrice = add(multiply(cb.mainFee.count, cb.mainFee.price), billingItemsPrice);
@@ -276,7 +276,7 @@ export default {
         if (cb.billedAt) validatedPrice = add(validatedPrice, billPrice);
       });
 
-      return { billedPrice: Number(billedPrice), validatedPrice: Number(validatedPrice) };
+      return { billedPrice: toFixedToFloat(billedPrice), validatedPrice: toFixedToFloat(validatedPrice) };
     });
 
     const saveTmp = (path) => { tmpInput.value = course.value[path]; };
@@ -450,7 +450,7 @@ export default {
       if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const courseBillsWithoutCreditNote = courseBills.value.filter(cb => !cb.courseCreditNote);
+        const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
         if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
           return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
         }
