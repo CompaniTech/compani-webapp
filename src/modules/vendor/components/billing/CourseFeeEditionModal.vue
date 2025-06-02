@@ -10,34 +10,26 @@
       </ni-banner>
     </div>
     <div v-if="!isTrainerFeesWithPercentage">
-    <ni-option-group v-if="showCountUnit" in-modal :model-value="courseFee.countUnit" :options="countUnitOptions"
-      type="radio" @update:model-value="update($event, 'countUnit')" :error="validations.countUnit.$error"
-      caption="Unité" inline required-field :disable="isBilled" />
-    <ni-input v-if="isSingleCourse || !totalPriceToBill.global" in-modal :caption="priceCaption"
-      :error="validations.price.$error" type="number" :disable="isBilled" :model-value="courseFee.price"
-      @blur="validations.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
-      @update:model-value="update($event, 'price')" />
-    <div v-else class="row items-center">
-      <ni-input caption="Pourcentage" :error="validations.percentage.$error" type="number" suffix="%"
-        :model-value="courseFee.percentage" @blur="validations.percentage.$touch" required-field
-        :error-message="errorMessages.percentage" @update:model-value="update($event, 'percentage')"
-        class="percentage" :disable="isBilled" />
-      <div class="q-ml-md text-14">
-        {{
-          !validations.percentage.$error && computedPrice.global > 0
-            ? formatPrice(computedPrice.global)
-            : ''
-        }}
-        {{
-          !validations.percentage.$error && computedPrice.trainerFees > 0
-            ? `(frais de formateurs : ${formatPrice(computedPrice.trainerFees)})`
-            : ''
-        }}
+      <ni-option-group v-if="showCountUnit" in-modal :model-value="courseFee.countUnit" :options="countUnitOptions"
+        type="radio" @update:model-value="update($event, 'countUnit')" :error="validations.countUnit.$error"
+        caption="Unité" inline required-field :disable="isBilled" />
+      <ni-input v-if="isSingleCourse || !totalPriceToBill.global" in-modal :caption="priceCaption"
+        :error="validations.price.$error" type="number" :disable="isBilled" :model-value="courseFee.price"
+        @blur="validations.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
+        @update:model-value="update($event, 'price')" />
+      <div v-else class="row items-center">
+        <ni-input caption="Pourcentage" :error="validations.percentage.$error" type="number" suffix="%"
+          :model-value="courseFee.percentage" @blur="validations.percentage.$touch" required-field
+          :error-message="errorMessages.percentage" @update:model-value="update($event, 'percentage')"
+          class="percentage" :disable="isBilled" />
+        <div v-if="!validations.percentage.$error" class="q-ml-md text-14">
+          {{ computedPrice.global > 0 ? formatPrice(computedPrice.global) : '' }}
+          {{ computedPrice.trainerFees > 0 ? `(frais de formateurs : ${formatPrice(computedPrice.trainerFees)})` : '' }}
+        </div>
       </div>
-    </div>
-    <ni-input in-modal caption="Quantité" :error="validations.count.$error" type="number" required-field
-      :model-value="courseFee.count" @blur="validations.count.$touch" @update:model-value="update($event, 'count')"
-      :disable="isBilled || isSingleCourse || !!totalPriceToBill.global" :error-message="errorMessages.count" />
+      <ni-input in-modal caption="Quantité" :error="validations.count.$error" type="number" required-field
+        :model-value="courseFee.count" @blur="validations.count.$touch" @update:model-value="update($event, 'count')"
+        :disable="isBilled || isSingleCourse || !!totalPriceToBill.global" :error-message="errorMessages.count" />
     </div>
     <ni-input in-modal caption="Description" type="textarea" :model-value="courseFee.description"
       @update:model-value="update($event, 'description')" />
