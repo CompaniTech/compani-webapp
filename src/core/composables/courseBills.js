@@ -43,6 +43,7 @@ export const useCourseBilling = (courseBills, validations) => {
     let price = '';
     let count = '';
     let countUnit = '';
+    let percentage = '';
     if (get(validations, `value.${parent}.price.strictPositiveNumber.$response`) === false) {
       price = 'Prix non valide';
     }
@@ -54,7 +55,15 @@ export const useCourseBilling = (courseBills, validations) => {
 
     if (get(validations, `value.${parent}.countUnit.required.$response`) === false) countUnit = REQUIRED_LABEL;
 
-    return { price, count, countUnit };
+    const percentagePositive = get(validations, `value.${parent}.percentage.strictPositiveNumber.$response`) === false;
+    const percentageInteger = get(validations, `value.${parent}.percentage.integerNumber.$response`) === false;
+    const percentageMaxValue = get(validations, `value.${parent}.percentage.maxValue.$response`) === false;
+
+    if (percentagePositive || percentageInteger || percentageMaxValue) percentage = 'Nombre invalide';
+
+    if (get(validations, `value.${parent}.percentage.required.$response`) === false) percentage = REQUIRED_LABEL;
+
+    return { price, count, countUnit, percentage };
   };
 
   return {
