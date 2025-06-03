@@ -26,10 +26,13 @@ export default {
     'ni-button': Button,
   },
   emits: ['click'],
-  methods: {
-    click (event) {
-      this.$emit('click', event);
-    },
+  setup (_, { emit }) {
+    const click = event => emit('click', event);
+
+    return {
+      // Methods
+      click,
+    };
   },
 };
 </script>
