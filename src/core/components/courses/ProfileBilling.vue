@@ -37,6 +37,12 @@
         </span>
       </div>
     </q-card>
+    <ni-banner v-if="courseBills.length" icon="info_outline" class="q-mt-md bg-peach-200">
+      <template #message>
+        Montant total des factures : <span class="text-weight-bold">{{ formatPrice(totalPrice.billedPrice) }}</span>
+        (dont <span class="text-weight-bold">{{ formatPrice(totalPrice.validatedPrice) }}</span> facturés au client)
+      </template>
+    </ni-banner>
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
@@ -84,7 +90,7 @@ import {
 import { descendingSortBy, ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { add, toFixedToFloat } from '@helpers/numbers';
+import { add, multiply, toFixedToFloat } from '@helpers/numbers';
 import Companies from '@api/Companies';
 import Courses from '@api/Courses';
 import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
@@ -137,9 +143,10 @@ export default {
     const billCreationLoading = ref(false);
     const areDetailsVisible = ref(Object.fromEntries(courseBills.value.map(bill => [bill._id, false])));
     const removeNewBillDatas = ref(true);
-    const showPrices = ref(true);
 
     const course = computed(() => $store.state.course.course);
+
+    const showPrices = ref((course.value.prices || []).some(p => !p.global));
 
     const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
 
@@ -160,7 +167,7 @@ export default {
           required,
           positiveNumber,
           integerNumber,
-          minValue: minValue(courseBills.value.filter(cb => !cb.courseCreditNote).length),
+          minValue: minValue(courseBills.value.filter(bill => !bill.courseCreditNote).length),
         },
         prices: {
           $each: helpers.forEach({
@@ -256,6 +263,22 @@ export default {
       .length);
 
     const courseName = computed(() => composeCourseName(course.value));
+
+    const totalPrice = computed(() => {
+      let billedPrice = 0;
+      let validatedPrice = 0;
+
+      courseBills.value.filter(bill => !bill.courseCreditNote).forEach((cb) => {
+        const billingItemsPrice = cb.billingPurchaseList
+          .reduce((acc, item) => add(acc, (multiply(item.price, item.count))), 0);
+        const billPrice = add(multiply(cb.mainFee.count, cb.mainFee.price), billingItemsPrice);
+
+        billedPrice = add(billedPrice, billPrice);
+        if (cb.billedAt) validatedPrice = add(validatedPrice, billPrice);
+      });
+
+      return { billedPrice: toFixedToFloat(billedPrice), validatedPrice: toFixedToFloat(validatedPrice) };
+    });
 
     const saveTmp = (path) => { tmpInput.value = course.value[path]; };
 
@@ -428,7 +451,7 @@ export default {
       if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const courseBillsWithoutCreditNote = courseBills.value.filter(cb => !cb.courseCreditNote);
+        const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
         if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
           return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
         }
@@ -559,6 +582,7 @@ export default {
       traineesQuantity,
       courseName,
       missingBillsCompanies,
+      totalPrice,
       // Methods
       saveTmp,
       refreshCourseBills,
