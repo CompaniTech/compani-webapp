@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <ni-banner content-class="bg-peach-100" icon="info_outline">
+    <ni-banner class="bg-peach-100" icon="info_outline">
       <template #message>
         Remplacer chaque bonne réponse par une balise &lt;trou&gt; et cocher les bonnes réponses dans la liste des mots
       </template>

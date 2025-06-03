@@ -13,7 +13,7 @@
     </div>
     <div class="course-bill-infos">
       <div>{{ coursePaymentMetaInfo.courseName }}</div>
-      <ni-banner content-class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
         <template #message>{{ paymentNature }} pour le compte de {{ coursePaymentMetaInfo.companiesName }}</template>
       </ni-banner>
     </div>

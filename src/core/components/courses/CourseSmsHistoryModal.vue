@@ -3,13 +3,13 @@
     <template v-if="sendSms" #title>Envoyer un <span class="text-weight-bold">message</span></template>
     <template v-else #title>Historique des <span class="text-weight-bold">messages</span></template>
     <ni-banner v-if="sendSms" icon="info_outline" icon-color="copper-500"
-      content-class="bg-copper-grey-100 text-copper-grey-800">
+      class="bg-copper-grey-100 text-copper-grey-800">
       <template #message>Assurez-vous d'éviter les doublons de messages en consultant l'historique ci-dessous</template>
     </ni-banner>
     <div class="q-mb-lg">
       <div v-for="history of smsHistoryList" :key="history._id">
         <ni-banner v-if="history.missingPhones.length" icon="info_outline" icon-color="orange-700"
-          content-class="bg-orange-50 text-orange-900">
+          class="bg-orange-50 text-orange-900">
           <template #message>
             Pour cet envoi, il manquait le numéro de téléphone de
             {{ formatQuantity('stagiaire', history.missingPhones.length) }} :

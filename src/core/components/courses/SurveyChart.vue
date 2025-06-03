@@ -2,7 +2,7 @@
   <q-card class="card" flat>
     <div class="text-weight-bold">{{ card.question }}</div>
     <div class="q-mb-lg subtitle">{{ subtitle }}</div>
-    <ni-banner v-if="isRofOrVendorAdmin" icon="info_outline" content-class="bg-peach-100">
+    <ni-banner v-if="isRofOrVendorAdmin" icon="info_outline" class="bg-peach-100">
       <template #message>
         Moyenne des réponses : <a class="text-weight-bold text-copper-grey-700">{{ average }} / 5</a>
       </template>

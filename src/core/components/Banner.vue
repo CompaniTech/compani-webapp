@@ -14,11 +14,11 @@ export default {
   name: 'Banner',
   props: {
     icon: { type: String, default: 'warning' },
-    contentClass: { type: String, default: '' },
+    class: { type: String, default: '' },
     iconColor: { type: String, default: '' },
   },
   setup (props) {
-    const { contentClass } = toRefs(props);
+    const { class: contentClass } = toRefs(props);
     const $route = useRoute();
 
     const interfaceType = /\/ad\//.test($route.path) ? VENDOR : CLIENT;

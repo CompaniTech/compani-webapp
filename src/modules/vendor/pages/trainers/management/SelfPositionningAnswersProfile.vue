@@ -7,12 +7,12 @@
       </template>
     </ni-profile-header>
     <template v-if="selectedTrainee">
-      <ni-banner v-if="get(endQuestionnaireHistory, 'isValidated')" content-class="bg-peach-200" icon="info_outline">
+      <ni-banner v-if="get(endQuestionnaireHistory, 'isValidated')" class="bg-peach-200" icon="info_outline">
         <template #message>
           Vous avez déjà validé les réponses au questionnaire d'auto-positionnement de fin pour cet apprenant.
         </template>
       </ni-banner>
-        <ni-banner v-if="!endQuestionnaireHistory.isValidated" content-class="bg-peach-200" icon="info_outline">
+        <ni-banner v-if="!endQuestionnaireHistory.isValidated" class="bg-peach-200" icon="info_outline">
           <template #message v-if="get(endQuestionnaireHistory, '_id')">
             Pour valider les réponses au questionnaire d’auto-positionnement de fin, veuillez : <br>
             <div class="q-pl-md">

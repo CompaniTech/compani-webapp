@@ -11,12 +11,12 @@
     </div>
     <div class="course-bill-infos">
       <div>{{ creditNoteMetaInfo.courseName }}</div>
-      <ni-banner content-class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
         <template #message>Avoir pour le compte de {{ creditNoteMetaInfo.companiesName }}</template>
       </ni-banner>
     </div>
     <ni-banner v-if="displayValidatedCourseBillsCount" icon="info_outline" icon-color="copper-grey-700"
-      content-class="bg-copper-grey-200 text-copper-grey-700">
+      class="bg-copper-grey-200 text-copper-grey-700">
       <template #message>
         Il y a {{ formatQuantity('facture valide', validatedCourseBillsCount) }} pour cette formation.
       </template>
