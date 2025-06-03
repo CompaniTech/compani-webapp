@@ -14,10 +14,13 @@ export default {
     options: { type: Array, default: () => [] },
   },
   emits: ['update:model-value'],
-  methods: {
-    input (event) {
-      this.$emit('update:model-value', event);
-    },
+  setup (_, { emit }) {
+    const input = (event) => { emit('update:model-value', event); };
+
+    return {
+      // Methods
+      input,
+    };
   },
 };
 </script>
