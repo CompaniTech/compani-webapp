@@ -143,9 +143,10 @@ export default {
     const billCreationLoading = ref(false);
     const areDetailsVisible = ref(Object.fromEntries(courseBills.value.map(bill => [bill._id, false])));
     const removeNewBillDatas = ref(true);
-    const showPrices = ref(true);
 
     const course = computed(() => $store.state.course.course);
+
+    const showPrices = ref((course.value.prices || []).some(p => !p.global));
 
     const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
 
