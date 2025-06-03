@@ -9,8 +9,9 @@ import { BLUE_TEXT_LOGO } from '@data/constants';
 
 export default {
   name: 'CompaniHeader',
-  data () {
+  setup () {
     return {
+      // Data
       BLUE_TEXT_LOGO,
     };
   },
