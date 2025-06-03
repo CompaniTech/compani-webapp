@@ -15,14 +15,16 @@
 </template>
 
 <script>
+import { computed, toRefs } from 'vue';
 import get from 'lodash/get';
-import { mapState } from 'vuex';
+import { useStore } from 'vuex';
 import Button from '@components/Button';
 import { NotifyPositive } from '@components/popup/notify';
 import UserCompanies from '@api/UserCompanies';
 import CompanyLinkRequests from '@api/CompanyLinkRequests';
 import { DEFAULT_AVATAR } from '@data/constants';
 import { formatIdentity } from '@helpers/utils';
+import { useQuasar } from 'quasar';
 
 export default {
   name: 'CompanyLinkRequestCell',
@@ -33,43 +35,41 @@ export default {
     'ni-button': Button,
   },
   emits: ['click'],
-  data () {
-    return {
-      formatIdentity,
-      DEFAULT_AVATAR,
+  setup (props, { emit }) {
+    const { request } = toRefs(props);
+    const $q = useQuasar();
+    const $store = useStore();
+
+    const userProfile = computed(() => $store.state.main.loggedUser);
+
+    const getAvatar = picture => (get(picture, 'link')) || DEFAULT_AVATAR;
+
+    const createUserCompany = async () => {
+      try {
+        await UserCompanies.create({ user: request.value.user._id, company: userProfile.value.company._id });
+        emit('click');
+      } catch (e) {
+        console.error(e);
+      }
     };
-  },
-  computed: {
-    ...mapState({ userProfile: state => state.main.loggedUser }),
-  },
-  methods: {
-    getAvatar (picture) {
-      return (get(picture, 'link')) || DEFAULT_AVATAR;
-    },
-    async createUserCompany () {
+
+    const deleteLinkRequest = async () => {
       try {
-        await UserCompanies.create({ user: this.request.user._id, company: this.userProfile.company._id });
-        this.$emit('click');
+        await CompanyLinkRequests.remove(request.value._id);
+        emit('click');
       } catch (e) {
         console.error(e);
       }
-    },
-    async deleteLinkRequest () {
-      try {
-        await CompanyLinkRequests.remove(this.request._id);
-        this.$emit('click');
-      } catch (e) {
-        console.error(e);
-      }
-    },
-    validateLinkRequestCreation () {
-      this.$q.dialog({
+    };
+
+    const validateLinkRequestCreation = () => {
+      $q.dialog({
         title: 'Voulez-vous vraiment rattacher ce compte&nbsp;?',
         message: `<div class="row q-my-md items-center">
-            <img class="avatar q-mx-md" src="${this.getAvatar(this.request.user.picture)}"/>
+            <img class="avatar q-mx-md" src="${getAvatar(request.value.user.picture)}"/>
             <div>
-              <div>${formatIdentity(this.request.user.identity, 'FL')}</div>
-              <div style="font-size: 14px" class="text-copper-grey-500">${this.request.user.local.email}</div>
+              <div>${formatIdentity(request.value.user.identity, 'FL')}</div>
+              <div style="font-size: 14px" class="text-copper-grey-500">${request.value.user.local.email}</div>
             </div>
           </div>
         En l’ajoutant, vous confirmez que vous êtes employeur de cette personne.<br />
@@ -78,17 +78,18 @@ export default {
         ok: 'Rattacher ce compte',
         cancel: 'Annuler',
       })
-        .onOk(this.createUserCompany)
+        .onOk(() => createUserCompany())
         .onCancel(() => NotifyPositive('Rattachement à la structure annulé.'));
-    },
-    validateLinkRequestDeletion () {
-      this.$q.dialog({
+    };
+
+    const validateLinkRequestDeletion = () => {
+      $q.dialog({
         title: 'Voulez-vous vraiment supprimer cette demande de rattachement&nbsp;?',
         message: `<div class="row q-my-md items-center">
-            <img class="avatar q-mx-md" src="${this.getAvatar(this.request.user.picture)}"/>
+            <img class="avatar q-mx-md" src="${getAvatar(request.value.user.picture)}"/>
             <div>
-              <div>${formatIdentity(this.request.user.identity, 'FL')}</div>
-              <div style="font-size: 14px" class="text-copper-grey-500">${this.request.user.local.email}</div>
+              <div>${formatIdentity(request.value.user.identity, 'FL')}</div>
+              <div style="font-size: 14px" class="text-copper-grey-500">${request.value.user.local.email}</div>
             </div>
           </div>
         Vous ne pourrez pas avoir accès à son historique de formation sur Compani.`,
@@ -96,9 +97,15 @@ export default {
         ok: 'Supprimer la demande',
         cancel: 'Annuler',
       })
-        .onOk(this.deleteLinkRequest)
+        .onOk(() => deleteLinkRequest())
         .onCancel(() => NotifyPositive('Suppression de la demande de rattachement annulée.'));
-    },
+    };
+
+    return {
+      // Methods
+      validateLinkRequestCreation,
+      validateLinkRequestDeletion,
+    };
   },
 };
 </script>
