@@ -18,6 +18,7 @@
 
 <script>
 import Button from '@components/Button';
+import { toRefs, computed } from 'vue';
 
 export default {
   name: 'ProfileHeader',
@@ -28,10 +29,14 @@ export default {
   components: {
     'ni-button': Button,
   },
-  computed: {
-    formattedHeaderInfo () {
-      return this.headerInfo.map(info => ({ labelClass: info.class, iconClass: info.class, ...info }));
-    },
+  setup (props) {
+    const { headerInfo } = toRefs(props);
+    const formattedHeaderInfo = computed(() => headerInfo.value
+      .map(info => ({ labelClass: info.class, iconClass: info.class, ...info })));
+    return {
+      // Computed
+      formattedHeaderInfo,
+    };
   },
 };
 </script>
