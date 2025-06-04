@@ -23,10 +23,11 @@
           <div class="row gutter-profile">
             <ni-input v-model="course.prices[i].global" caption="Prix de la formation"
               :error="getPriceError(i, 'global')" @blur="updatePrice(i, 'global', course.companies[i]._id)"
-              :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse" type="number"
-              @focus="saveTmp('prices[i].global')" required-field :error-message="getPriceErrorMessage(i, 'global')" />
+              :disable="(companiesList.some(c => c.includes(company._id)) && !isSingleCourse) || !!course.archivedAt"
+              type="number" @focus="saveTmp('prices[i].global')" required-field
+              :error-message="getPriceErrorMessage(i, 'global')" />
             <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur¹" type="number"
-              :disable="companiesList.some(c => c.includes(company._id)) && !isSingleCourse"
+              :disable="(companiesList.some(c => c.includes(company._id)) && !isSingleCourse) || !!course.archivedAt"
               @focus="saveTmp('prices[i].trainerFees')" @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)"
               :error="getPriceError(i, 'trainerFees')" :error-message="getPriceErrorMessage(i, 'trainerFees')" />
           </div>
@@ -479,9 +480,12 @@ export default {
       if (!everyCompaniesToBillHasPrice.value) {
         const someCompaniesToBillHasPrice = companiesToBill.value
           .some(c => course.value.prices.find(price => price.global && price.company === c));
+        if (someCompaniesToBillHasPrice) {
+          return NotifyWarning('Impossible de facturer les structures sélectionnées simultanément.');
+        }
         const someCompaniesToBillHasNoBill = companiesToBill.value
           .some(c => !companiesList.value.some(companies => companies.includes(c)));
-        if (someCompaniesToBillHasPrice || someCompaniesToBillHasNoBill) {
+        if (someCompaniesToBillHasNoBill) {
           return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
         }
       }
