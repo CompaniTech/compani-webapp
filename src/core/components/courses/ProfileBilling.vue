@@ -476,10 +476,14 @@ export default {
     const openNextModal = () => {
       v$.value.companiesToBill.$touch();
       if (v$.value.companiesToBill.$error) return NotifyWarning('Champ(s) invalide(s).');
-      const someCompaniesToBillHasNoBill = companiesToBill.value
-        .some(c => !companiesList.value.some(companies => companies.includes(c)));
-      if (someCompaniesToBillHasNoBill && !everyCompaniesToBillHasPrice.value) {
-        return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
+      if (!everyCompaniesToBillHasPrice.value) {
+        const someCompaniesToBillHasPrice = companiesToBill.value
+          .some(c => course.value.prices.find(price => price.global && price.company === c));
+        const someCompaniesToBillHasNoBill = companiesToBill.value
+          .some(c => !companiesList.value.some(companies => companies.includes(c)));
+        if (someCompaniesToBillHasPrice || someCompaniesToBillHasNoBill) {
+          return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
+        }
       }
       totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
         if (companiesToBill.value.includes(price.company)) {
