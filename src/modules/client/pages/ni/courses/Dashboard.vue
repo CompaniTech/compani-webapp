@@ -1,6 +1,5 @@
 <template>
   <q-page class="client-background" padding>
-    {{ linkRequests.length }}
     <ni-title-header title="La formation Compani dans ma structure" />
     <div v-if="linkRequests.length" class="bg-yellow-100 q-my-md q-pa-md">
       <p class="text-orange-900 text-weight-bold">Demandes de rattachement à ma structure</p>
