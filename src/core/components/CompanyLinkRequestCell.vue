@@ -102,7 +102,10 @@ export default {
     };
 
     return {
+      // Data
+      DEFAULT_AVATAR,
       // Methods
+      formatIdentity,
       validateLinkRequestCreation,
       validateLinkRequestDeletion,
     };
