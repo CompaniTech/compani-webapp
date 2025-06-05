@@ -8,7 +8,10 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
+import { useQuasar } from 'quasar';
 import Courses from '@api/Courses';
 import ProfileHeader from '@components/ProfileHeader';
 import Button from '@components/Button';
@@ -27,64 +30,79 @@ export default {
     'ni-button': Button,
   },
   emits: ['delete', 'refresh'],
-  data () {
-    const isClientInterface = !/\/ad\//.test(this.$route.path);
+  setup (_, { emit }) {
+    const $route = useRoute();
+    const $store = useStore();
+    const $q = useQuasar();
 
-    return {
-      isClientInterface,
-    };
-  },
-  computed: {
-    ...mapState('course', ['course']),
-    courseId () {
-      return this.course._id;
-    },
-    isAdmin () {
-      const vendorRole = this.$store.getters['main/getVendorRole'];
+    const isClientInterface = !/\/ad\//.test($route.path);
+
+    const course = computed(() => $store.state.course.course);
+
+    // const courseId = computed(() => course.value._id);
+
+    const isAdmin = computed(() => {
+      const vendorRole = $store.getters['main/getVendorRole'];
       return [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole);
-    },
-    archiveLabel () {
-      return !this.course.archivedAt ? 'Archiver' : 'Désarchiver';
-    },
-  },
-  methods: {
-    deleteCourse () {
-      this.$emit('delete');
-    },
-    refreshCourse () {
-      this.$emit('refresh');
-    },
-    validateCourseArchive () {
-      const message = !this.course.archivedAt
+    });
+
+    const archiveLabel = computed(() => (!course.value.archivedAt ? 'Archiver' : 'Désarchiver'));
+
+    const deleteCourse = () => emit('delete');
+
+    const refreshCourse = () => emit('refresh');
+
+    const validateCourseArchive = () => {
+      const isArchived = !!course.value.archivedAt;
+      const message = !isArchived
         ? 'Êtes-vous sûr(e) de vouloir archiver cette formation&nbsp;? <br /><br /> Vous ne pourrez plus'
-        + ' modifier des informations, ajouter des émargements ni envoyer des sms.'
+      + ' modifier des informations, ajouter des émargements ni envoyer des sms.'
         : 'Êtes-vous sûr(e) de vouloir désarchiver cette formation&nbsp;? <br /><br /> Il sera de nouveau possible de'
-        + ' modifier des informations, ajouter des émargements ou envoyer des sms.';
-      this.$q.dialog({
+      + ' modifier des informations, ajouter des émargements ou envoyer des sms.';
+
+      $q.dialog({
         title: 'Confirmation',
         message,
         html: true,
         ok: 'Oui',
         cancel: 'Non',
-      }).onOk(this.archiveOrUnarchiveCourse)
-        .onCancel(() => NotifyPositive(!this.course.archivedAt ? 'Archivage annulé.' : 'Désarchivage annulé.'));
-    },
-    async archiveOrUnarchiveCourse () {
-      try {
-        const payload = !this.course.archivedAt ? { archivedAt: CompaniDate().toISO() } : { archivedAt: '' };
-        await Courses.update(this.course._id, payload);
+      }).onOk(archiveOrUnarchiveCourse)
+        .onCancel(() => {
+          NotifyPositive(!isArchived ? 'Archivage annulé.' : 'Désarchivage annulé.');
+        });
+    };
 
-        NotifyPositive(!this.course.archivedAt ? 'Formation archivée.' : 'Formation désarchivée.');
-        await this.refreshCourse();
+    const archiveOrUnarchiveCourse = async () => {
+      try {
+        const isArchived = !!course.value.archivedAt;
+        const payload = !isArchived
+          ? { archivedAt: CompaniDate().toISO() }
+          : { archivedAt: '' };
+
+        await Courses.update(course.value._id, payload);
+
+        NotifyPositive(!isArchived ? 'Formation archivée.' : 'Formation désarchivée.');
+        refreshCourse();
       } catch (e) {
         console.error(e);
         NotifyNegative(
-          !this.course.archivedAt
+          !course.value.archivedAt
             ? 'Erreur lors de l\'archivage de la formation.'
             : 'Erreur lors du désarchivage de la formation.'
         );
       }
-    },
+    };
+
+    return {
+      // Data
+      isClientInterface,
+      // Computed
+      isAdmin,
+      archiveLabel,
+      // methods
+      deleteCourse,
+      validateCourseArchive,
+    };
   },
 };
 </script>
