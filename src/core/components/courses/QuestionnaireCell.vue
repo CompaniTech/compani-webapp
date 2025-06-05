@@ -32,8 +32,9 @@ export default {
     index: { type: Number, required: true },
   },
   emits: ['click'],
-  data () {
+  setup () {
     return {
+      // Data
       DRAFT,
       formatQuantity,
     };
