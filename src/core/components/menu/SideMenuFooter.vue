@@ -18,7 +18,9 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { computed, toRefs } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter, useRoute } from 'vue-router';
 import {
   COACH_ROLES,
   AUXILIARY,
@@ -43,42 +45,58 @@ export default {
     'ni-button': Button,
   },
   emits: ['click'],
-  data () {
-    return {
-      interfaceLogo: 'https://storage.googleapis.com/compani-main/icons/blue_icon_small.png',
-      bulbLink: process.env.BULB_LINK,
-    };
-  },
-  computed: {
-    ...mapGetters({
-      clientRole: 'main/getClientRole',
-      vendorRole: 'main/getVendorRole',
-    }),
-    userCanFeedback () {
-      return [...COACH_ROLES, AUXILIARY, PLANNING_REFERENT].includes(this.clientRole) ||
-        [TRAINER, VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(this.vendorRole);
-    },
-    accessBothInterface () {
-      return this.clientRole && this.vendorRole;
-    },
-  },
-  methods: {
-    openExternalUrl (url) {
-      window.open(url, '_blank');
-    },
-    goToProfile () {
-      if (!/account/.test(this.$route.name)) {
-        return /\/ad\//.test(this.$route.path)
-          ? this.$router.push({ name: 'account vendor' })
-          : this.$router.push({ name: 'account client' });
-      }
-    },
-    switchInterface () {
-      if (!this.accessBothInterface) return;
+  setup (props) {
+    const $store = useStore();
+    const $router = useRouter();
+    const $route = useRoute();
+    const { interfaceType } = toRefs(props);
 
-      if (this.interfaceType === CLIENT) this.$router.push({ path: '/ad' }).catch(() => {});
-      else this.$router.push({ path: '/ni/courses' }).catch(() => {});
-    },
+    const interfaceLogo = 'https://storage.googleapis.com/compani-main/icons/blue_icon_small.png';
+    const bulbLink = process.env.BULB_LINK;
+
+    const clientRole = computed(() => $store.getters['main/getClientRole']);
+    const vendorRole = computed(() => $store.getters['main/getVendorRole']);
+
+    const userCanFeedback = computed(() => [...COACH_ROLES, AUXILIARY, PLANNING_REFERENT].includes(clientRole.value) ||
+        [TRAINER, VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
+
+    const accessBothInterface = computed(() => clientRole.value && vendorRole.value);
+
+    const openExternalUrl = (url) => {
+      window.open(url, '_blank');
+    };
+
+    const goToProfile = () => {
+      if (!/account/.test($route.name)) {
+        return /\/ad\//.test($route.path)
+          ? $router.push({ name: 'account vendor' })
+          : $router.push({ name: 'account client' });
+      }
+    };
+
+    const switchInterface = () => {
+      if (!accessBothInterface.value) return;
+
+      if (interfaceType.value === CLIENT) {
+        $router.push({ path: '/ad' }).catch(() => {});
+      } else {
+        $router.push({ path: '/ni/courses' }).catch(() => {});
+      }
+    };
+    return {
+      // Data
+      interfaceLogo,
+      bulbLink,
+      // Computed
+      clientRole,
+      vendorRole,
+      userCanFeedback,
+      accessBothInterface,
+      // Methods
+      openExternalUrl,
+      goToProfile,
+      switchInterface,
+    };
   },
 };
 </script>
