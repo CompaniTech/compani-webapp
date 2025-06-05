@@ -78,7 +78,7 @@ export default {
         ok: 'Rattacher ce compte',
         cancel: 'Annuler',
       })
-        .onOk(() => createUserCompany())
+        .onOk(createUserCompany)
         .onCancel(() => NotifyPositive('Rattachement à la structure annulé.'));
     };
 
@@ -97,7 +97,7 @@ export default {
         ok: 'Supprimer la demande',
         cancel: 'Annuler',
       })
-        .onOk(() => deleteLinkRequest())
+        .onOk(deleteLinkRequest)
         .onCancel(() => NotifyPositive('Suppression de la demande de rattachement annulée.'));
     };
 
