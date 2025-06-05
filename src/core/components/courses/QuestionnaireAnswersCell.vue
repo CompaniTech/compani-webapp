@@ -21,8 +21,9 @@ export default {
     questionnaire: { type: Object, required: true },
   },
   emits: ['click'],
-  data () {
+  setup () {
     return {
+      // Data
       formatQuantity,
       QUESTIONNAIRE_TYPES,
     };
