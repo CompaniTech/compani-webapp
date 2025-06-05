@@ -16,6 +16,7 @@
 
 <script>
 import { computed, toRefs } from 'vue';
+import { useQuasar } from 'quasar';
 import get from 'lodash/get';
 import { useStore } from 'vuex';
 import Button from '@components/Button';
@@ -24,7 +25,6 @@ import UserCompanies from '@api/UserCompanies';
 import CompanyLinkRequests from '@api/CompanyLinkRequests';
 import { DEFAULT_AVATAR } from '@data/constants';
 import { formatIdentity } from '@helpers/utils';
-import { useQuasar } from 'quasar';
 
 export default {
   name: 'CompanyLinkRequestCell',

@@ -17,8 +17,8 @@
 </template>
 
 <script>
-import Button from '@components/Button';
 import { toRefs, computed } from 'vue';
+import Button from '@components/Button';
 
 export default {
   name: 'ProfileHeader',
@@ -31,8 +31,10 @@ export default {
   },
   setup (props) {
     const { headerInfo } = toRefs(props);
+
     const formattedHeaderInfo = computed(() => headerInfo.value
       .map(info => ({ labelClass: info.class, iconClass: info.class, ...info })));
+
     return {
       // Computed
       formattedHeaderInfo,

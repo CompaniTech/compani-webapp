@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import { roundFrenchPercentage } from '@helpers/utils';
 import { toRefs, computed } from 'vue';
+import { roundFrenchPercentage } from '@helpers/utils';
 
 export default {
   name: 'NiProgress',
