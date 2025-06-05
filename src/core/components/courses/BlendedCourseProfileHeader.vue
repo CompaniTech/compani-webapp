@@ -39,8 +39,6 @@ export default {
 
     const course = computed(() => $store.state.course.course);
 
-    // const courseId = computed(() => course.value._id);
-
     const isAdmin = computed(() => {
       const vendorRole = $store.getters['main/getVendorRole'];
       return [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole);
