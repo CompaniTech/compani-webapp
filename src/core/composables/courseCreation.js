@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import get from 'lodash/get';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import Courses from '@api/Courses';
@@ -38,7 +39,13 @@ export const useCourseCreation = (newCourse, activeCourses, archivedCourses, v$)
 
       modalLoading.value = true;
       await Courses.create({
-        ...pickBy(omit(newCourse.value, 'program')),
+        ...pickBy(omit(newCourse.value, ['program', 'prices'])),
+        ...get(newCourse.value, 'prices.global') && {
+          prices: {
+            global: newCourse.value.prices.global,
+            ...newCourse.value.prices.trainerFees && { trainerFees: newCourse.value.prices.trainerFees },
+          },
+        },
         hasCertifyingTest: newCourse.value.hasCertifyingTest,
       });
 

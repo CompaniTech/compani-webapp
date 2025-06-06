@@ -238,6 +238,8 @@ export const TRAINEE_DELETION = 'trainee_deletion';
 export const ESTIMATED_START_DATE_EDITION = 'estimated_start_date_edition';
 export const COMPANY_ADDITION = 'company_addition';
 export const COMPANY_DELETION = 'company_deletion';
+export const TRAINER_ADDITION = 'trainer_addition';
+export const TRAINER_DELETION = 'trainer_deletion';
 
 // MEDIA UPLOAD
 export const UPLOAD_IMAGE = 'image';
@@ -254,7 +256,7 @@ export const FREE_ACCESS = 'free';
 export const RESTRICTED_ACCESS = 'restricted';
 export const ACCESS_OPTIONS = [
   { label: 'Libre accès', value: FREE_ACCESS },
-  { label: 'Choisir une structure', value: RESTRICTED_ACCESS },
+  { label: 'Choisir des structures', value: RESTRICTED_ACCESS },
 ];
 
 // ORIGIN

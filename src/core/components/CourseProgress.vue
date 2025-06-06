@@ -6,6 +6,7 @@
 </template>
 
 <script>
+import { toRefs, computed } from 'vue';
 import { roundFrenchPercentage } from '@helpers/utils';
 
 export default {
@@ -13,10 +14,15 @@ export default {
   props: {
     value: { type: Number, default: 0 },
   },
-  computed: {
-    percentage () {
-      return roundFrenchPercentage(this.value * 100, 0);
-    },
+  setup (props) {
+    const { value } = toRefs(props);
+
+    const percentage = computed(() => roundFrenchPercentage(value.value * 100, 0));
+
+    return {
+      // Computed
+      percentage,
+    };
   },
 };
 </script>

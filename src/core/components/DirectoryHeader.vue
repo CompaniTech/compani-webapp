@@ -16,6 +16,9 @@
 </template>
 
 <script>
+import { toRefs, computed } from 'vue';
+import { useQuasar } from 'quasar';
+
 export default {
   name: 'DirectoryHeader',
   props: {
@@ -28,21 +31,28 @@ export default {
     search: { type: String, default: '' },
   },
   emits: ['update-search', 'toggle'],
-  computed: {
-    titleContainerClass () {
-      return ['col-xs-12', this.displayToggle ? 'col-md-5' : 'col-md-6', { 'q-mb-sm': this.$q.platform.is.mobile }];
-    },
-    searchBarContainerClass () {
-      return ['col-xs-12', this.displayToggle ? 'col-md-5' : 'col-md-6'];
-    },
-  },
-  methods: {
-    input (value) {
-      this.$emit('update-search', value);
-    },
-    toggle (value) {
-      this.$emit('toggle', value);
-    },
+  setup (props, { emit }) {
+    const { displayToggle } = toRefs(props);
+    const $q = useQuasar();
+
+    const titleContainerClass = computed(() => [
+      'col-xs-12', displayToggle.value ? 'col-md-5' : 'col-md-6', { 'q-mb-sm': $q.platform.is.mobile },
+    ]);
+
+    const searchBarContainerClass = computed(() => ['col-xs-12', displayToggle.value ? 'col-md-5' : 'col-md-6']);
+
+    const input = (value) => { emit('update-search', value); };
+
+    const toggle = (value) => { emit('toggle', value); };
+
+    return {
+      // Computed
+      titleContainerClass,
+      searchBarContainerClass,
+      // Methods
+      input,
+      toggle,
+    };
   },
 };
 </script>

@@ -41,11 +41,18 @@
                   </div>
                 </div>
               </div>
-              <div v-if="isPayerVisible(bill)" @click.stop="openPayerEditionModal(bill)" class="payer">
-                Payeur : {{ get(bill, 'payer.name') }}
-                <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
+              <div v-if="isPayerAndDateVisible(bill)">
+                <div @click.stop="openCourseBillEditionModal(bill)" class="payer">
+                  Payeur : {{ get(bill, 'payer.name') }}
+                  <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
+                </div>
+                <span v-if="bill.billedAt">
+                  {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
+                </span>
+                <span v-else>
+                  Date d'échéance : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
+                </span>
               </div>
-              {{ isDateVisible(bill) ? `Date : ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` : '' }}
             </q-item-section>
             <q-icon size="24px" :name="areDetailsVisible[bill._id] ? 'expand_less' : 'expand_more'" />
           </q-card-section>
@@ -57,6 +64,9 @@
                   <div>Prix unitaire : {{ formatPrice(get(bill, 'mainFee.price')) }}</div>
                   <div>
                     Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
+                  </div>
+                  <div v-if="get(bill, 'mainFee.percentage')">
+                    Pourcentage du montant total : {{ bill.mainFee.percentage }} %
                   </div>
                   <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
                     Description : {{ bill.mainFee.description }}
@@ -74,14 +84,17 @@
                     </div>
                     <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
                     <div>Quantité : {{ billingPurchase.count }}</div>
+                    <div v-if="billingPurchase.percentage">
+                      Pourcentage du montant total : {{ billingPurchase.percentage }} %
+                    </div>
                     <div v-if="billingPurchase.description" class="ellipsis">
                       Description : {{ billingPurchase.description }}
                     </div>
                   </div>
                   <div>
                     <ni-button icon="edit" @click="openBillingPurchaseEditionModal(bill, billingPurchase)" />
-                    <ni-button v-if="!isBilled(bill)" icon="delete"
-                      @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" />
+                    <ni-button v-if="!isBilled(bill)" :disable="isTrainerFeesWithPercentage(billingPurchase)"
+                      @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" icon="delete" />
                   </div>
                 </q-card-section>
               </q-card>
@@ -101,9 +114,9 @@
       </div>
     </div>
 
-    <ni-payer-edition-modal v-model="payerEditionModal" v-model:edited-payer="editedBill.payer" @submit="editBill"
-       @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList" :course-name="courseName"
-       :companies-name="companiesName" />
+    <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill" @submit="editBill"
+      @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList" :course-name="courseName"
+      :companies-name="companiesName" :validations="validations.editedBill" />
 
     <!-- main fee edition modal -->
     <ni-course-fee-edition-modal v-model="mainFeeEditionModal" v-model:course-fee="editedBill.mainFee"
@@ -111,7 +124,8 @@
       :loading="billEditionLoading" :error-messages="mainFeeErrorMessages" :course-name="courseName"
       :title="courseFeeEditionModalMetaInfo.title" :is-billed="courseFeeEditionModalMetaInfo.isBilled"
       :companies-name="companiesName" :show-count-unit="![INTRA, SINGLE].includes(course.type)"
-      :trainees-quantity="traineesQuantity" :is-single-course="course.type === SINGLE" />
+      :trainees-quantity="traineesQuantity" :is-single-course="course.type === SINGLE"
+      :total-price-to-bill="totalPriceToBill" />
 
     <ni-billing-purchase-addition-modal v-model="billingPurchaseAdditionModal" :course-name="courseName"
       v-model:new-billing-purchase="newBillingPurchase" @submit="addBillingPurchase"
@@ -143,8 +157,9 @@
 import { useMeta, useQuasar } from 'quasar';
 import { computed, ref, toRefs } from 'vue';
 import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
+import { required, maxValue } from '@vuelidate/validators';
 import get from 'lodash/get';
+import has from 'lodash/has';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import CourseBills from '@api/CourseBills';
@@ -154,10 +169,11 @@ import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
 import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/constants';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
+import { add, toFixedToFloat } from '@helpers/numbers';
 import { formatPrice, formatName } from '@helpers/utils';
 import { composeCourseName } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
-import PayerEditionModal from 'src/modules/vendor/components/billing/PayerEditionModal';
+import CourseBillEditionModal from 'src/modules/vendor/components/billing/CourseBillEditionModal';
 import CourseFeeEditionModal from 'src/modules/vendor/components/billing/CourseFeeEditionModal';
 import BillingPurchaseAdditionModal from 'src/modules/vendor/components/billing/BillingPurchaseAdditionModal';
 import CourseBillValidationModal from 'src/modules/vendor/components/billing/CourseBillValidationModal';
@@ -176,7 +192,7 @@ export default {
   },
   emits: ['refresh-course-bills', 'unroll'],
   components: {
-    'ni-payer-edition-modal': PayerEditionModal,
+    'ni-course-bill-edition-modal': CourseBillEditionModal,
     'ni-course-fee-edition-modal': CourseFeeEditionModal,
     'ni-billing-purchase-addition-modal': BillingPurchaseAdditionModal,
     'ni-course-bill-validation-modal': CourseBillValidationModal,
@@ -187,6 +203,8 @@ export default {
     const metaInfo = { title: 'Configuration facturation' };
     useMeta(metaInfo);
     const $q = useQuasar();
+
+    const totalPriceToBill = ref({ global: 0, trainerFees: 0 });
 
     const {
       course,
@@ -201,7 +219,7 @@ export default {
     const billingPurchaseEditionLoading = ref(false);
     const billValidationLoading = ref(false);
     const creditNoteCreationLoading = ref(false);
-    const payerEditionModal = ref(false);
+    const courseBillEditionModal = ref(false);
     const mainFeeEditionModal = ref(false);
     const billingPurchaseAdditionModal = ref(false);
     const billingPurchaseEditionModal = ref(false);
@@ -226,7 +244,17 @@ export default {
           price: { required, strictPositiveNumber },
           count: { required, strictPositiveNumber, integerNumber },
           countUnit: { required },
+          percentage: has(editedBill.value, 'mainFee.percentage')
+            ? {
+              required,
+              strictPositiveNumber,
+              integerNumber,
+              maxValue: maxValue(100),
+            }
+            : {},
         },
+        maturityDate: has(editedBill.value, 'maturityDate') ? { required } : {},
+        payer: { required },
       },
       newBillingPurchase: {
         billingItem: { required },
@@ -283,8 +311,9 @@ export default {
     const displayValidatedCourseBillsCount = computed(() => [INTRA, SINGLE].includes(course.value.type) &&
       course.value.expectedBillsCount > 1);
 
-    const setEditedBill = (bill) => {
+    const setEditedBill = (bill, addMaturityDate = false) => {
       const payer = get(bill, 'payer._id');
+      const maturityDate = get(bill, 'maturityDate');
       editedBill.value = {
         _id: bill._id,
         payer,
@@ -293,15 +322,17 @@ export default {
           count: bill.mainFee.count,
           countUnit: bill.mainFee.countUnit,
           description: bill.mainFee.description,
+          ...(bill.mainFee.percentage && { percentage: bill.mainFee.percentage }),
         },
+        ...(addMaturityDate && { maturityDate }),
       };
     };
 
-    const openPayerEditionModal = (bill) => {
+    const openCourseBillEditionModal = (bill) => {
       if (isBilled(bill)) return null;
 
-      setEditedBill(bill);
-      payerEditionModal.value = true;
+      setEditedBill(bill, true);
+      courseBillEditionModal.value = true;
     };
 
     const openMainFeeEditionModal = (bill) => {
@@ -310,6 +341,15 @@ export default {
         title: get(course, 'value.subProgram.program.name'),
         isBilled: isBilled(bill),
       };
+      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
+        if (bill.companies.map(c => c._id).includes(price.company)) {
+          return {
+            global: toFixedToFloat(add(acc.global, (price.global || 0))),
+            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
+          };
+        }
+        return acc;
+      }, { global: 0, trainerFees: 0 });
       mainFeeEditionModal.value = true;
     };
 
@@ -324,6 +364,10 @@ export default {
         billId: bill._id,
         price: billingPurchase.price,
         count: billingPurchase.count,
+        ...(billingPurchase.percentage) && {
+          percentage: billingPurchase.percentage,
+          billingItem: billingPurchase.billingItem,
+        },
         description: billingPurchase.description,
       };
       courseFeeEditionModalMetaInfo.value = {
@@ -339,7 +383,12 @@ export default {
     };
 
     const resetEditedBill = () => {
-      editedBill.value = { _id: '', payer: '', mainFee: { price: '', description: '', count: '', countUnit: GROUP } };
+      editedBill.value = {
+        _id: '',
+        payer: '',
+        mainFee: { price: '', description: '', count: '', countUnit: GROUP },
+      };
+      totalPriceToBill.value = { global: 0, trainerFees: 0 };
       validations.value.editedBill.$reset();
     };
 
@@ -378,15 +427,20 @@ export default {
         billEditionLoading.value = true;
         await CourseBills.update(
           editedBill.value._id,
-          { payer: formatPayerForPayload(editedBill.value.payer), mainFee: editedBill.value.mainFee }
+          {
+            payer: formatPayerForPayload(editedBill.value.payer),
+            mainFee: editedBill.value.mainFee,
+            maturityDate: editedBill.value.maturityDate,
+          }
         );
         NotifyPositive('Facture modifiée.');
 
-        payerEditionModal.value = false;
+        courseBillEditionModal.value = false;
         mainFeeEditionModal.value = false;
         await emit('refresh-course-bills');
       } catch (e) {
         console.error(e);
+        if (e.status === 409) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la modification de la facture.');
       } finally {
         billEditionLoading.value = false;
@@ -549,9 +603,7 @@ export default {
 
     const showDetails = (billId) => { emit('unroll', billId); };
 
-    const isPayerVisible = bill => !bill.courseCreditNote || areDetailsVisible.value[bill._id];
-
-    const isDateVisible = bill => isPayerVisible(bill) && bill.billedAt;
+    const isPayerAndDateVisible = bill => !bill.courseCreditNote || areDetailsVisible.value[bill._id];
 
     const getBillingItemName = billingItem => billingItemList.value.find(item => item.value === billingItem).label;
 
@@ -561,6 +613,9 @@ export default {
       query: { defaultTab: 'bills' },
     });
 
+    const isTrainerFeesWithPercentage = billingPurchase => billingPurchase.percentage &&
+      billingPurchase.billingItem === process.env.TRAINER_FEES_BILLING_ITEM;
+
     return {
       // Data
       billEditionLoading,
@@ -569,7 +624,7 @@ export default {
       billingPurchaseEditionLoading,
       creditNoteCreationLoading,
       billValidationLoading,
-      payerEditionModal,
+      courseBillEditionModal,
       mainFeeEditionModal,
       billingPurchaseAdditionModal,
       billingPurchaseEditionModal,
@@ -583,6 +638,7 @@ export default {
       courseFeeEditionModalMetaInfo,
       minCourseCreditNoteDate,
       creditNoteMetaInfo,
+      totalPriceToBill,
       INTRA,
       SINGLE,
       DD_MM_YYYY,
@@ -613,15 +669,14 @@ export default {
       cancelBillValidation,
       isBilled,
       getBillErrorMessages,
-      openPayerEditionModal,
+      openCourseBillEditionModal,
       openMainFeeEditionModal,
       openBillingPurchaseAdditionModal,
       openBillingPurchaseEditionModal,
       openCreditNoteCreationModal,
       openCourseBillValidationModal,
       validatePurchaseDeletion,
-      isDateVisible,
-      isPayerVisible,
+      isPayerAndDateVisible,
       showDetails,
       getBillingItemName,
       downloadBill,
@@ -633,6 +688,7 @@ export default {
       formatPrice,
       CompaniDate,
       openBillDeletionModal,
+      isTrainerFeesWithPercentage,
     };
   },
 };

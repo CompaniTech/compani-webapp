@@ -5,6 +5,8 @@
 </template>
 
 <script>
+import { toRefs, computed } from 'vue';
+
 export default {
   name: 'NiButton',
   props: {
@@ -20,23 +22,29 @@ export default {
     unelevated: { type: Boolean, default: false },
   },
   emits: ['click'],
-  computed: {
-    target () {
-      return this.type === 'a' ? '_blank' : '';
-    },
-    padding () {
-      if (this.type === 'a') return 'xs 0px';
+  setup (props, { emit }) {
+    const { type, label, disable, href } = toRefs(props);
 
-      return this.label ? 'xs md' : 'xs';
-    },
-    innerHref () {
-      return this.disable ? undefined : this.href;
-    },
-  },
-  methods: {
-    click (event) {
-      this.$emit('click', event);
-    },
+    const target = computed(() => (type.value === 'a' ? '_blank' : ''));
+
+    const padding = computed(() => {
+      if (type.value === 'a') return 'xs 0px';
+
+      return label.value ? 'xs md' : 'xs';
+    });
+
+    const innerHref = computed(() => (disable.value ? undefined : href.value));
+
+    const click = event => emit('click', event);
+
+    return {
+      // Computed
+      target,
+      padding,
+      innerHref,
+      // Methods
+      click,
+    };
   },
 };
 </script>

@@ -39,15 +39,12 @@ export const useCourses = (course) => {
     if (!get(course.value, 'trainers', []).some(t => t._id)) missingInfo.push('l\'intervenant(e)');
     if (!course.value.slots || !course.value.slots.length) missingInfo.push('minimum 1 créneau');
 
-    if (!get(course.value, 'contact._id')) missingInfo.push('le contact pour la formation');
-    else if (!get(course.value, 'contact.contact.phone')) missingInfo.push('le numéro du contact pour la formation');
-
     return missingInfo;
   });
 
   const followUpDisabled = computed(() => followUpMissingInfo.value.length > 0);
 
-  const disableDocDownload = computed(() => followUpDisabled.value || pdfLoading.value);
+  const disableAttendanceSheetDownload = computed(() => followUpDisabled.value || pdfLoading.value);
 
   const isArchived = computed(() => !!course.value.archivedAt);
 
@@ -86,7 +83,7 @@ export const useCourses = (course) => {
   ]);
 
   const downloadAttendanceSheet = async () => {
-    if (disableDocDownload.value) return;
+    if (disableAttendanceSheetDownload.value) return;
 
     try {
       pdfLoading.value = true;
@@ -112,7 +109,7 @@ export const useCourses = (course) => {
     isSingleCourse,
     headerInfo,
     vendorRole,
-    disableDocDownload,
+    disableAttendanceSheetDownload,
     isVendorInterface,
     isClientInterface,
     isIntraOrIntraHoldingOrVendor,

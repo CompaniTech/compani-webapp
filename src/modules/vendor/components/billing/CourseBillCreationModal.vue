@@ -15,12 +15,26 @@
     <ni-option-group v-if="![INTRA, SINGLE].includes(course.type)" in-modal :model-value="newBill.mainFee.countUnit"
       :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
       :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
-    <ni-input in-modal :caption="priceCaption" :error="validations.mainFee.price.$error" type="number"
-      :model-value="newBill.mainFee.price" @blur="validations.mainFee.price.$touch" suffix="€" required-field
-      :error-message="errorMessages.price" @update:model-value="update($event, 'mainFee.price')" />
+    <ni-input v-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
+      :error="validations.mainFee.price.$error" type="number" :model-value="newBill.mainFee.price"
+      @blur="validations.mainFee.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
+      @update:model-value="update($event, 'mainFee.price')" />
+    <div v-else class="row items-center">
+      <ni-input caption="Pourcentage" :error="validations.mainFee.percentage.$error" type="number" suffix="%"
+        :model-value="newBill.mainFee.percentage" @blur="validations.mainFee.percentage.$touch" required-field
+        :error-message="errorMessages.percentage" @update:model-value="update($event, 'mainFee.percentage')"
+        class="percentage" />
+      <div v-if="!validations.mainFee.percentage.$error" class="q-ml-md text-14">
+        {{ computedPrice.global > 0 ? formatPrice(computedPrice.global) : '' }}
+        {{ computedPrice.trainerFees > 0 ? `(+ frais de formateurs : ${formatPrice(computedPrice.trainerFees)})` : '' }}
+      </div>
+    </div>
     <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
-      :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" :disable="course.type === SINGLE"
+      :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
       :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
+    <ni-date-input caption="Date d'échéance" :model-value="newBill.maturityDate" in-modal required-field
+      :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
+      @update:model-value="update($event, 'maturityDate')" />
     <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
       @update:model-value="update($event, 'mainFee.description')" />
     <template #footer>
@@ -31,7 +45,7 @@
 </template>
 
 <script>
-import { computed, toRefs } from 'vue';
+import { computed, toRefs, watch } from 'vue';
 import set from 'lodash/set';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
@@ -39,8 +53,10 @@ import OptionGroup from '@components/form/OptionGroup';
 import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import Banner from '@components/Banner';
+import DateInput from '@components/form/DateInput';
 import { INTRA, SINGLE, TRAINEE, GROUP } from '@data/constants';
-import { formatQuantity, formatName } from '@helpers/utils';
+import { formatQuantity, formatName, formatPrice } from '@helpers/utils';
+import { multiply, divide, toFixedToFloat } from '@helpers/numbers';
 
 export default {
   name: 'CourseBillCreationModal',
@@ -55,6 +71,7 @@ export default {
     course: { type: Object, default: () => ({}) },
     traineesQuantity: { type: Number, default: 1 },
     companiesToBill: { type: Array, default: () => [] },
+    totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
   },
   components: {
     'ni-modal': Modal,
@@ -63,10 +80,11 @@ export default {
     'company-select': CompanySelect,
     'ni-banner': Banner,
     'ni-option-group': OptionGroup,
+    'ni-date-input': DateInput,
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-bill'],
   setup (props, { emit }) {
-    const { newBill, traineesQuantity, course, companiesToBill } = toRefs(props);
+    const { newBill, traineesQuantity, course, companiesToBill, totalPriceToBill } = toRefs(props);
 
     const priceCaption = computed(() => (
       newBill.value.mainFee.countUnit === GROUP ? 'Prix du groupe' : 'Prix par stagiaire'
@@ -86,6 +104,17 @@ export default {
       { label: `Stagiaire (${formatQuantity('inscrit', traineesQuantity.value)} à cette formation)`, value: TRAINEE },
     ]);
 
+    const computedPrice = computed(() => {
+      if (course.value.type === SINGLE || !totalPriceToBill.value.global) return;
+
+      return {
+        global: toFixedToFloat(divide(multiply(newBill.value.mainFee.percentage, totalPriceToBill.value.global), 100)),
+        trainerFees: toFixedToFloat(
+          divide(multiply(newBill.value.mainFee.percentage, totalPriceToBill.value.trainerFees), 100)
+        ),
+      };
+    });
+
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
@@ -96,6 +125,15 @@ export default {
       } else if (event === GROUP) emit('update:new-bill', set({ ...newBill.value }, 'mainFee.count', 1));
     };
 
+    watch(computedPrice, () => {
+      if (computedPrice.value) {
+        const newPrice = divide(computedPrice.value.global, newBill.value.mainFee.count);
+        if (newBill.value.mainFee.price !== newPrice) {
+          emit('update:new-bill', set({ ...newBill.value }, 'mainFee.price', newPrice));
+        }
+      }
+    });
+
     return {
       // Data
       INTRA,
@@ -105,12 +143,19 @@ export default {
       priceCaption,
       traineesQuantityInfos,
       companiesName,
+      computedPrice,
       // Methods
       hide,
       input,
       submit,
       update,
+      formatPrice,
     };
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.percentage
+  width: 25%
+</style>
