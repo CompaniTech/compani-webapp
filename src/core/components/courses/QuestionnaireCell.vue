@@ -34,7 +34,7 @@ export default {
   emits: ['click'],
   setup () {
     return {
-      // Data
+      // Methods
       DRAFT,
       formatQuantity,
     };

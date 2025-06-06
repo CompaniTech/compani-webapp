@@ -54,9 +54,9 @@ export default {
       const isArchived = !!course.value.archivedAt;
       const message = !isArchived
         ? 'Êtes-vous sûr(e) de vouloir archiver cette formation&nbsp;? <br /><br /> Vous ne pourrez plus'
-      + ' modifier des informations, ajouter des émargements ni envoyer des sms.'
+        + ' modifier des informations, ajouter des émargements ni envoyer des sms.'
         : 'Êtes-vous sûr(e) de vouloir désarchiver cette formation&nbsp;? <br /><br /> Il sera de nouveau possible de'
-      + ' modifier des informations, ajouter des émargements ou envoyer des sms.';
+        + ' modifier des informations, ajouter des émargements ou envoyer des sms.';
 
       $q.dialog({
         title: 'Confirmation',
@@ -65,22 +65,18 @@ export default {
         ok: 'Oui',
         cancel: 'Non',
       }).onOk(archiveOrUnarchiveCourse)
-        .onCancel(() => {
-          NotifyPositive(!isArchived ? 'Archivage annulé.' : 'Désarchivage annulé.');
-        });
+        .onCancel(() => NotifyPositive(!isArchived ? 'Archivage annulé.' : 'Désarchivage annulé.'));
     };
 
     const archiveOrUnarchiveCourse = async () => {
       try {
         const isArchived = !!course.value.archivedAt;
-        const payload = !isArchived
-          ? { archivedAt: CompaniDate().toISO() }
-          : { archivedAt: '' };
+        const payload = !isArchived ? { archivedAt: CompaniDate().toISO() } : { archivedAt: '' };
 
         await Courses.update(course.value._id, payload);
 
         NotifyPositive(!isArchived ? 'Formation archivée.' : 'Formation désarchivée.');
-        refreshCourse();
+        await refreshCourse();
       } catch (e) {
         console.error(e);
         NotifyNegative(
