@@ -5,31 +5,34 @@
 </template>
 
 <script>
+import { toRefs, ref, watch, onMounted } from 'vue';
+
 export default {
   name: 'CustomImg',
   props: {
     imageSource: { type: String, required: true },
     alt: { type: String, required: true },
   },
-  data () {
-    return {
-      link: '',
-    };
-  },
-  mounted () {
-    this.getThumbnailUrl();
-  },
-  watch: {
-    imageSource () { this.getThumbnailUrl(); },
-  },
-  methods: {
-    async getThumbnailUrl () {
+  setup (props) {
+    const link = ref('');
+    const { imageSource } = toRefs(props);
+
+    const getThumbnailUrl = async () => {
       try {
-        this.link = this.imageSource;
+        link.value = imageSource.value;
       } catch (e) {
         console.error(e);
       }
-    },
+    };
+
+    watch(() => imageSource, async () => { await getThumbnailUrl(); });
+
+    onMounted(async () => { await getThumbnailUrl(); });
+
+    return {
+      // Data
+      link,
+    };
   },
 };
 </script>

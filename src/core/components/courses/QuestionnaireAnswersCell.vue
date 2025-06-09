@@ -21,10 +21,12 @@ export default {
     questionnaire: { type: Object, required: true },
   },
   emits: ['click'],
-  data () {
+  setup () {
     return {
-      formatQuantity,
+      // Data
       QUESTIONNAIRE_TYPES,
+      // Methods
+      formatQuantity,
     };
   },
 };
