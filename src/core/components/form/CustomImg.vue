@@ -25,13 +25,9 @@ export default {
       }
     };
 
-    watch(() => imageSource, () => {
-      getThumbnailUrl();
-    });
+    watch(() => imageSource, async () => { await getThumbnailUrl(); });
 
-    onMounted(() => {
-      getThumbnailUrl();
-    });
+    onMounted(async () => { await getThumbnailUrl(); });
 
     return {
       // Data

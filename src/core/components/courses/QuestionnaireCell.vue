@@ -34,8 +34,9 @@ export default {
   emits: ['click'],
   setup () {
     return {
-      // Methods
+      // Data
       DRAFT,
+      // Methods
       formatQuantity,
     };
   },

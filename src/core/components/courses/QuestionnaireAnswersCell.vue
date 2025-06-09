@@ -23,9 +23,10 @@ export default {
   emits: ['click'],
   setup () {
     return {
+      // Data
+      QUESTIONNAIRE_TYPES,
       // Methods
       formatQuantity,
-      QUESTIONNAIRE_TYPES,
     };
   },
 };

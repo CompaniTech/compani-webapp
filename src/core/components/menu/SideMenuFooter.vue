@@ -58,13 +58,11 @@ export default {
     const vendorRole = computed(() => $store.getters['main/getVendorRole']);
 
     const userCanFeedback = computed(() => [...COACH_ROLES, AUXILIARY, PLANNING_REFERENT].includes(clientRole.value) ||
-        [TRAINER, VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
+      [TRAINER, VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
 
     const accessBothInterface = computed(() => clientRole.value && vendorRole.value);
 
-    const openExternalUrl = (url) => {
-      window.open(url, '_blank');
-    };
+    const openExternalUrl = (url) => { window.open(url, '_blank'); };
 
     const goToProfile = () => {
       if (!/account/.test($route.name)) {
@@ -77,17 +75,14 @@ export default {
     const switchInterface = () => {
       if (!accessBothInterface.value) return;
 
-      if (interfaceType.value === CLIENT) { $router.push({ path: '/ad' }).catch(() => {}); } else {
-        $router.push({ path: '/ni/courses' }).catch(() => {});
-      }
+      if (interfaceType.value === CLIENT) $router.push({ path: '/ad' }).catch(() => {});
+      else $router.push({ path: '/ni/courses' }).catch(() => {});
     };
     return {
       // Data
       interfaceLogo,
       bulbLink,
       // Computed
-      clientRole,
-      vendorRole,
       userCanFeedback,
       accessBothInterface,
       // Methods
