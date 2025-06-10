@@ -66,7 +66,7 @@
             </q-item-section>
             <q-icon size="24px" :name="areDetailsVisible[bill._id] ? 'expand_less' : 'expand_more'" />
             <q-checkbox v-if="!bill.billedAt" :model-value="billCheckboxValue(bill._id)" dense size="sm"
-              @update:model-value="updateSelectedBills(bill._id)" />
+              @update:model-value="updateSelectedBills(bill._id)" class="q-px-sm" />
           </q-card-section>
           <div class="bg-peach-200 q-pt-sm" v-if="areDetailsVisible[bill._id]">
             <q-card flat class="q-mx-lg q-mb-sm">
@@ -344,7 +344,7 @@ export default {
 
     const progress = computed(() => {
       const value = lastDateIndex.value >= 0
-        ? Math.round(((lastDateIndex.value + 1) / course.value.slots.length) * 100)
+        ? Math.round(((lastDateIndex.value + 1) / (course.value.slots.length + course.value.slotsToPlan.length)) * 100)
         : 0;
       return `${value} %`;
     });
@@ -631,7 +631,7 @@ export default {
     const goToCourse = () => ({
       name: 'ni management blended courses info',
       params: { courseId: course.value._id },
-      query: { defaultTab: 'organization' },
+      query: { defaultTab: 'billing' },
     });
 
     const isTrainerFeesWithPercentage = billingPurchase => billingPurchase.percentage &&
@@ -749,7 +749,6 @@ export default {
     text-decoration-color: $copper-500
 
 .course-name
-  // display: inline-block
   max-width: 70%
   white-space: nowrap
   overflow: hidden

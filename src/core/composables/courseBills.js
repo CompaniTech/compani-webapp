@@ -4,7 +4,7 @@ import get from 'lodash/get';
 import CourseBills from '@api/CourseBills';
 import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
-import { formatDownloadName } from '@helpers/utils';
+import { formatDownloadName, formatQuantity } from '@helpers/utils';
 import { downloadFile } from '@helpers/file';
 import { REQUIRED_LABEL } from '../data/constants';
 
@@ -82,11 +82,13 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     try {
       await CourseBills.deleteBillList({ _ids: selectedBills.value });
 
-      NotifyPositive('Factures supprimées');
+      NotifyPositive(formatQuantity('facture supprimée.', selectedBills.value.length));
       await refreshCourseBills();
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de la suppression des factures brouillon.');
+    } finally {
+      selectedBills.value = [];
     }
   };
 
