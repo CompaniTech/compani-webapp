@@ -1,14 +1,18 @@
 import { ref } from 'vue';
+import { useQuasar } from 'quasar';
 import get from 'lodash/get';
 import CourseBills from '@api/CourseBills';
 import CourseCreditNotes from '@api/CourseCreditNotes';
-import { NotifyNegative } from '@components/popup/notify';
+import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { formatDownloadName } from '@helpers/utils';
 import { downloadFile } from '@helpers/file';
 import { REQUIRED_LABEL } from '../data/constants';
 
-export const useCourseBilling = (courseBills, validations) => {
+export const useCourseBilling = (courseBills, validations, refreshCourseBills) => {
+  const $q = useQuasar();
+
   const pdfLoading = ref(false);
+  const selectedBills = ref([]);
 
   const downloadBill = async (bill) => {
     try {
@@ -66,12 +70,46 @@ export const useCourseBilling = (courseBills, validations) => {
     return { price, count, countUnit, percentage };
   };
 
+  const updateSelectedBills = (billId) => {
+    if (selectedBills.value.find(b => b === billId)) {
+      const index = selectedBills.value.indexOf(billId);
+
+      selectedBills.value.splice(index, 1);
+    } else selectedBills.value.push(billId);
+  };
+
+  const deleteBills = async () => {
+    try {
+      await CourseBills.deleteBillList({ _ids: selectedBills.value });
+
+      NotifyPositive('Factures supprimées');
+      await refreshCourseBills();
+    } catch (e) {
+      console.error(e);
+      NotifyNegative('Erreur lors de la suppression des factures brouillon.');
+    }
+  };
+
+  const openBillDeletionModal = () => {
+    $q.dialog({
+      title: 'Confirmation',
+      message: 'Êtes-vous sûr(e) de vouloir supprimer ces factures brouillon ?',
+      html: true,
+      ok: 'OK',
+      cancel: 'Annuler',
+    }).onOk(deleteBills)
+      .onCancel(() => NotifyPositive('Suppression annulée.'));
+  };
+
   return {
     // Data
     pdfLoading,
+    selectedBills,
     // Methods
     downloadBill,
     downloadCreditNote,
     getBillErrorMessages,
+    updateSelectedBills,
+    openBillDeletionModal,
   };
 };

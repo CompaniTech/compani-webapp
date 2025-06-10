@@ -48,12 +48,18 @@
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
         @refresh-course-bills="refreshCourseBills" @unroll="unrollBill" :are-details-visible="areDetailsVisible"
-        :expected-bills-count-invalid="v$.course.expectedBillsCount.$error" />
+        :expected-bills-count-invalid="v$.course.expectedBillsCount.$error" :selected-bills="selectedBills"
+        @update-selected-bills="updateSelectedBills" />
     </div>
     <div v-if="!course.companies.length" class="text-italic">Aucune structure n'est rattachée à la formation</div>
 
-    <q-btn class="fixed fab-custom" no-caps rounded icon="add" label="Créer une facture" @click="openBillCreationModal"
-      color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" />
+    <div class="fixed fab-custom">
+      <q-btn class="q-ma-sm" no-caps rounded icon="add" label="Créer une facture" @click="openBillCreationModal"
+        color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" />
+
+      <q-btn class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures" @click="openBillDeletionModal"
+        color="primary" :disable="!selectedBills.length" />
+    </div>
 
     <ni-bill-creation-modal v-model="billCreationModal" v-model:new-bill="newBill" :course-name="courseName"
       @submit="validateBillCreation" :validations="v$.newBill" @hide="resetBillCreationModal"
@@ -231,7 +237,25 @@ export default {
 
     const { isIntraCourse, isSingleCourse } = useCourses(course);
 
-    const { getBillErrorMessages } = useCourseBilling(courseBills, v$);
+    const refreshCourseBills = async () => {
+      try {
+        billsLoading.value = true;
+        courseBills.value = await CourseBills.list({ course: course.value._id, action: LIST });
+      } catch (e) {
+        console.error(e);
+        courseBills.value = [];
+        NotifyNegative('Erreur lors de la récupération des factures.');
+      } finally {
+        billsLoading.value = false;
+      }
+    };
+
+    const {
+      selectedBills,
+      getBillErrorMessages,
+      openBillDeletionModal,
+      updateSelectedBills,
+    } = useCourseBilling(courseBills, v$, refreshCourseBills);
 
     const billsGroupedByCompanies = computed(() => {
       const sortedBills = courseBills.value
@@ -282,19 +306,6 @@ export default {
     });
 
     const saveTmp = (path) => { tmpInput.value = course.value[path]; };
-
-    const refreshCourseBills = async () => {
-      try {
-        billsLoading.value = true;
-        courseBills.value = await CourseBills.list({ course: course.value._id, action: LIST });
-      } catch (e) {
-        console.error(e);
-        courseBills.value = [];
-        NotifyNegative('Erreur lors de la récupération des factures.');
-      } finally {
-        billsLoading.value = false;
-      }
-    };
 
     const formatPayerForPayload = (payloadPayer) => {
       const payerType = payerList.value.find(payer => payer.value === payloadPayer).type;
@@ -579,6 +590,7 @@ export default {
       companiesSelectionModal,
       companiesToBill,
       areDetailsVisible,
+      selectedBills,
       // Computed
       course,
       companiesList,
@@ -612,6 +624,8 @@ export default {
       getPriceError,
       getPriceErrorMessage,
       showDetails,
+      openBillDeletionModal,
+      updateSelectedBills,
     };
   },
 };
