@@ -105,7 +105,7 @@ export default {
       $q.dialog({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation ? <br /><br />'
-          + 'Vous ne pourrez plus créer de factures',
+          + 'Vous ne pourrez plus créer de factures.',
         html: true,
         ok: 'Oui',
         cancel: 'Non',
