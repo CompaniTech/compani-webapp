@@ -3,6 +3,8 @@
     <template #title v-if="!isClientInterface && isAdmin">
       <ni-button icon="delete" @click="deleteCourse" />
       <ni-button :flat="false" class="q-ml-sm" :label="archiveLabel" @click="validateCourseArchive" />
+      <ni-button :flat="false" class="q-ml-sm" label="Mettre en pause" @click="validateCourseInterruption"
+        :disable="!!course.archivedAt || !!course.interruptedAt" />
     </template>
   </ni-profile-header>
 </template>
@@ -87,15 +89,41 @@ export default {
       }
     };
 
+    const interruptCourse = async () => {
+      try {
+        await Courses.update(course.value._id, { interruptedAt: CompaniDate().toISO() });
+
+        NotifyPositive('Formation mise en pause.');
+        await refreshCourse();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la mise en pause de la formation.');
+      }
+    };
+
+    const validateCourseInterruption = () => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation ? <br /><br />'
+          + 'Vous ne pourrez plus créer de factures',
+        html: true,
+        ok: 'Oui',
+        cancel: 'Non',
+      }).onOk(interruptCourse)
+        .onCancel(() => NotifyPositive('Mise en pause annulée.'));
+    };
+
     return {
       // Data
       isClientInterface,
       // Computed
       isAdmin,
       archiveLabel,
+      course,
       // methods
       deleteCourse,
       validateCourseArchive,
+      validateCourseInterruption,
     };
   },
 };
