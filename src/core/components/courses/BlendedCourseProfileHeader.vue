@@ -3,8 +3,8 @@
     <template #title v-if="!isClientInterface && isAdmin">
       <ni-button icon="delete" @click="deleteCourse" />
       <ni-button :flat="false" class="q-ml-sm" :label="archiveLabel" @click="validateCourseArchive" />
-      <ni-button :flat="false" class="q-ml-sm" label="Mettre en pause" @click="validateCourseInterruption"
-        :disable="!!course.archivedAt || !!course.interruptedAt" />
+      <ni-button v-if="!course.archivedAt" :flat="false" class="q-ml-sm" label="Mettre en pause"
+        @click="validateCourseInterruption" :disable="!!course.interruptedAt" />
     </template>
   </ni-profile-header>
 </template>
@@ -104,7 +104,7 @@ export default {
     const validateCourseInterruption = () => {
       $q.dialog({
         title: 'Confirmation',
-        message: 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation ? <br /><br />'
+        message: 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation&nbsp;? <br /><br />'
           + 'Vous ne pourrez plus créer de factures.',
         html: true,
         ok: 'Oui',
