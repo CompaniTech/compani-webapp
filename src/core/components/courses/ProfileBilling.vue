@@ -57,8 +57,8 @@
       <q-btn class="q-ma-sm" no-caps rounded icon="add" label="Créer une facture" @click="openBillCreationModal"
         color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" />
 
-      <q-btn class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures" @click="openBillDeletionModal"
-        color="primary" :disable="!selectedBills.length" />
+      <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
+        @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
     </div>
 
     <ni-bill-creation-modal v-model="billCreationModal" v-model:new-bill="newBill" :course-name="courseName"

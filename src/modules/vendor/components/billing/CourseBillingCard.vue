@@ -31,12 +31,19 @@
                     <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
                   </div>
                 </div>
-                <div class="bill-title" v-else>
-                  <div class="course-name" @click="$event.stopPropagation()">
+                <div class="bill-title text-weight-bold c" v-else>
+                  <div class="clickable-name course-name" @click="$event.stopPropagation()">
                     <router-link :to="goToCourse()">{{ courseName }}</router-link>
                   </div>
-                  <div class="bill-infos">
-                    &nbsp;- {{ bill.number ? `${bill.number} - ` : '' }}{{ formatPrice(bill.netInclTaxes) }}
+                  <div class="bill-infos" @click.stop="downloadBill(bill)"
+                    :disable="pdfLoading">
+                    <span>&nbsp;-</span>
+                    <span v-if="bill.number">
+                      &nbsp;
+                      <span class="clickable-name">{{ bill.number }}</span>
+                      -
+                    </span>
+                    <span>&nbsp;{{ formatPrice(bill.netInclTaxes) }}</span>
                   </div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
