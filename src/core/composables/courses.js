@@ -78,8 +78,12 @@ export const useCourses = (course) => {
   const headerInfo = computed(() => [
     { icon: 'bookmark_border', label: courseType.value },
     ...(displaySalesRepresentative.value ? [{ icon: 'fa fa-handshake', label: salesRepresentativeName.value }] : []),
-    ...(course.value.archivedAt ? [{ icon: 'circle', label: 'Archivée', iconClass: 'info-archived' }] : []),
     ...(trainersName.value ? [{ icon: 'emoji_people', label: trainersName.value }] : []),
+    ...(course.value.archivedAt ? [{ icon: 'circle', label: 'Archivée', iconClass: 'info-archived' }] : []),
+    ...(course.value.interruptedAt && !course.value.archivedAt
+      ? [{ icon: 'circle', label: 'En pause', iconClass: 'info-warning', class: 'text-orange' }]
+      : []
+    ),
   ]);
 
   const downloadAttendanceSheet = async () => {
