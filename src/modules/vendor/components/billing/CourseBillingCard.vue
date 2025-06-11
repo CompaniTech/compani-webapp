@@ -31,9 +31,13 @@
                     <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
                   </div>
                 </div>
-                <div class="row" v-else>
-                  <router-link class="course-name" :to="goToCourse()">{{ courseName }}</router-link>
-                  <div>- {{ bill.number ? `${bill.number} - ` : '' }}{{ formatPrice(bill.netInclTaxes) }}</div>
+                <div class="bill-title" v-else>
+                  <div class="course-name" @click="$event.stopPropagation()">
+                    <router-link :to="goToCourse()">{{ courseName }}</router-link>
+                  </div>
+                  <div class="bill-infos">
+                    &nbsp;- {{ bill.number ? `${bill.number} - ` : '' }}{{ formatPrice(bill.netInclTaxes) }}
+                  </div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
@@ -748,9 +752,19 @@ export default {
     text-decoration: underline
     text-decoration-color: $copper-500
 
+.bill-title
+  display: flex
+  align-items: center
+  flex-wrap: wrap
+  overflow: hidden
+
 .course-name
-  max-width: 70%
+  flex: 1
   white-space: nowrap
   overflow: hidden
   text-overflow: ellipsis
+
+.bill-infos
+  flex-shrink: 0
+  white-space: nowrap
 </style>

@@ -82,7 +82,7 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     try {
       await CourseBills.deleteBillList({ _ids: selectedBills.value });
 
-      NotifyPositive(formatQuantity('facture supprimée.', selectedBills.value.length));
+      NotifyPositive(`${formatQuantity('facture supprimée', selectedBills.value.length)}.`);
       await refreshCourseBills();
     } catch (e) {
       console.error(e);
