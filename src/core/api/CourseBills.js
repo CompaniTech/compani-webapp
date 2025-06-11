@@ -28,10 +28,6 @@ export default {
     await alenviAxios.delete(`${process.env.API_HOSTNAME}/coursebills/${billId}/billingpurchases/${billingPurchaseId}`);
   },
 
-  async deleteBill (billId) {
-    await alenviAxios.delete(`${process.env.API_HOSTNAME}/coursebills/${billId}`);
-  },
-
   async deleteBillList (payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/list-deletion`, payload);
   },
