@@ -241,6 +241,7 @@ export const COMPANY_DELETION = 'company_deletion';
 export const TRAINER_ADDITION = 'trainer_addition';
 export const TRAINER_DELETION = 'trainer_deletion';
 export const COURSE_INTERRUPTION = 'course_interruption';
+export const COURSE_RESTART = 'course_restart';
 
 // MEDIA UPLOAD
 export const UPLOAD_IMAGE = 'image';

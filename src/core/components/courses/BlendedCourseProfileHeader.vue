@@ -3,8 +3,8 @@
     <template #title v-if="!isClientInterface && isAdmin">
       <ni-button icon="delete" @click="deleteCourse" />
       <ni-button :flat="false" class="q-ml-sm" :label="archiveLabel" @click="validateCourseArchive" />
-      <ni-button v-if="!course.archivedAt" :flat="false" class="q-ml-sm" label="Mettre en pause"
-        @click="validateCourseInterruption" :disable="!!course.interruptedAt" />
+      <ni-button v-if="!course.archivedAt" :flat="false" class="q-ml-sm" :label="interruptionButtonLabel"
+        @click="validateCourseInterruptionOrRestart" />
     </template>
   </ni-profile-header>
 </template>
@@ -47,6 +47,8 @@ export default {
     });
 
     const archiveLabel = computed(() => (!course.value.archivedAt ? 'Archiver' : 'Désarchiver'));
+
+    const interruptionButtonLabel = computed(() => (!course.value.interruptedAt ? 'Mettre en pause' : 'Reprendre'));
 
     const deleteCourse = () => emit('delete');
 
@@ -91,26 +93,34 @@ export default {
 
     const interruptCourse = async () => {
       try {
-        await Courses.update(course.value._id, { interruptedAt: CompaniDate().toISO() });
+        const interruptedAt = !course.value.interruptedAt ? CompaniDate().toISO() : '';
+        await Courses.update(course.value._id, { interruptedAt });
 
-        NotifyPositive('Formation mise en pause.');
+        NotifyPositive(!course.value.interruptedAt ? 'Formation mise en pause.' : 'Reprise de la formation.');
         await refreshCourse();
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la mise en pause de la formation.');
+        NotifyNegative(
+          `Erreur lors de la ${!course.value.interruptedAt ? 'mise en pause' : 'reprise'} de la formation.`
+        );
       }
     };
 
-    const validateCourseInterruption = () => {
+    const validateCourseInterruptionOrRestart = () => {
+      const message = !course.value.interruptedAt
+        ? 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation&nbsp;? <br /><br />'
+          + 'Vous ne pourrez plus créer de factures.'
+        : 'Êtes-vous sûr(e) de vouloir reprendre cette formation&nbsp;? <br /><br />'
+          + 'Vous pourrez de nouveau créer des factures.';
+
       $q.dialog({
         title: 'Confirmation',
-        message: 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation&nbsp;? <br /><br />'
-          + 'Vous ne pourrez plus créer de factures.',
+        message,
         html: true,
         ok: 'Oui',
         cancel: 'Non',
       }).onOk(interruptCourse)
-        .onCancel(() => NotifyPositive('Mise en pause annulée.'));
+        .onCancel(() => NotifyPositive(!course.value.interruptedAt ? 'Mise en pause annulée.' : 'Reprise annulée.'));
     };
 
     return {
@@ -120,10 +130,11 @@ export default {
       isAdmin,
       archiveLabel,
       course,
+      interruptionButtonLabel,
       // methods
       deleteCourse,
       validateCourseArchive,
-      validateCourseInterruption,
+      validateCourseInterruptionOrRestart,
     };
   },
 };
