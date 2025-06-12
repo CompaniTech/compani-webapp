@@ -91,7 +91,7 @@ export default {
       }
     };
 
-    const interruptCourse = async () => {
+    const interruptOrRestartCourse = async () => {
       try {
         const interruptedAt = !course.value.interruptedAt ? CompaniDate().toISO() : '';
         await Courses.update(course.value._id, { interruptedAt });
@@ -119,7 +119,7 @@ export default {
         html: true,
         ok: 'Oui',
         cancel: 'Non',
-      }).onOk(interruptCourse)
+      }).onOk(interruptOrRestartCourse)
         .onCancel(() => NotifyPositive(!course.value.interruptedAt ? 'Mise en pause annulée.' : 'Reprise annulée.'));
     };
 
