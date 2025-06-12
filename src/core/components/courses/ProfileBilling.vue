@@ -86,23 +86,13 @@ import useVuelidate from '@vuelidate/core';
 import { required, minValue, maxValue, helpers, or } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
-import {
-  formatAndSortOptions,
-  formatPrice,
-  formatName,
-  sortStrings,
-  formatIdentity,
-  formatAndSortCompanyOptions,
-} from '@helpers/utils';
-import { descendingSortBy, ascendingSortBy } from '@helpers/dates/utils';
+import { formatPrice, formatName, sortStrings, formatIdentity } from '@helpers/utils';
+import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { add, multiply, toFixedToFloat } from '@helpers/numbers';
-import Companies from '@api/Companies';
 import Courses from '@api/Courses';
-import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
 import CourseBills from '@api/CourseBills';
-import CourseBillingItems from '@api/CourseBillingItems';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
 import {
@@ -110,13 +100,11 @@ import {
   COMPANY,
   REQUIRED_LABEL,
   INTRA,
-  FUNDING_ORGANISATION,
   GROUP,
   TRAINEE,
   LONG_DURATION_H_MM,
   E_LEARNING,
   DD_MM_YYYY,
-  DIRECTORY,
   INTER_B2B,
   SINGLE,
 } from '@data/constants';
@@ -142,13 +130,10 @@ export default {
 
     const courseBills = ref([]);
     const billsLoading = ref(false);
-    const payerList = ref([]);
-    const billingItemList = ref([]);
     const tmpInput = ref('');
     const billCreationModal = ref(false);
     const companiesSelectionModal = ref(false);
     const billCreationLoading = ref(false);
-    const areDetailsVisible = ref(Object.fromEntries(courseBills.value.map(bill => [bill._id, false])));
     const removeNewBillDatas = ref(true);
 
     const course = computed(() => $store.state.course.course);
@@ -251,10 +236,16 @@ export default {
     };
 
     const {
+      payerList,
+      billingItemList,
+      areDetailsVisible,
       selectedBills,
       getBillErrorMessages,
       openBillDeletionModal,
       updateSelectedBills,
+      refreshPayers,
+      refreshBillingItems,
+      unrollBill,
     } = useCourseBilling(courseBills, v$, refreshCourseBills);
 
     const billsGroupedByCompanies = computed(() => {
@@ -313,38 +304,6 @@ export default {
       return payerType === COMPANY ? { company: payloadPayer } : { fundingOrganisation: payloadPayer };
     };
 
-    const refreshPayers = async () => {
-      try {
-        const organisations = await CourseFundingOrganisations.list();
-        const companyList = await Companies.list({ action: DIRECTORY });
-        const formattedOrganisationList = formatAndSortOptions(organisations, 'name');
-        const formattedCompanyList = formatAndSortCompanyOptions(companyList, 'name');
-        payerList.value =
-          [
-            ...formattedOrganisationList.map(payer => ({ ...payer, type: FUNDING_ORGANISATION })),
-            ...formattedCompanyList.map(company => ({ ...company, type: COMPANY })),
-          ];
-      } catch (e) {
-        console.error(e);
-        payerList.value = [];
-        NotifyNegative('Erreur lors de la récupération des financeurs.');
-      }
-    };
-
-    const refreshBillingItems = async () => {
-      try {
-        billsLoading.value = true;
-        const billingItems = await CourseBillingItems.list();
-        billingItemList.value = formatAndSortOptions([...billingItems], 'name');
-      } catch (e) {
-        console.error(e);
-        billingItemList.value = [];
-        NotifyNegative('Erreur lors de la récupération des articles de facturation.');
-      } finally {
-        billsLoading.value = false;
-      }
-    };
-
     const refreshCourse = async () => {
       try {
         billsLoading.value = true;
@@ -384,11 +343,6 @@ export default {
       payer: formatPayerForPayload(newBill.value.payer),
       maturityDate: newBill.value.maturityDate,
     });
-
-    const unrollBill = (billId) => {
-      const bill = billId || [...courseBills.value].sort(descendingSortBy('createdAt'))[0]._id;
-      areDetailsVisible.value[bill] = !areDetailsVisible.value[bill];
-    };
 
     const validateBillCreation = async () => {
       v$.value.newBill.$touch();
@@ -608,7 +562,6 @@ export default {
       refreshCourseBills,
       unrollBill,
       refreshPayers,
-      refreshBillingItems,
       updateCourse,
       validateBillCreation,
       resetBillCreationModal,

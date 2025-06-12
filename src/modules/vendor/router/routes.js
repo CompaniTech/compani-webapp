@@ -383,6 +383,15 @@ const routes = [
           parent: 'exports',
         },
       },
+      {
+        path: 'ni/billing/course-bills',
+        name: 'ni billing course bills',
+        component: () => import('src/modules/vendor/pages/ni/billing/CourseBillsDashboard'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'configuration',
+        },
+      },
     ],
   },
 ];

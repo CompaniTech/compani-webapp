@@ -21,32 +21,37 @@
         <q-card v-for="bill of courseBills" :key="bill._id" flat class="q-mb-md">
           <q-card-section class="cursor-pointer row items-center" :id="bill._id" @click="showDetails(bill._id)">
             <q-item-section>
-              <div class="flex">
-                <div v-if="!isDashboard">
-                  <div v-if="bill.number" class="text-weight-bold clickable-name" @click.stop="downloadBill(bill)"
-                    :disable="pdfLoading">
-                    {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
-                  </div>
-                  <div v-else class="row text-weight-bold">
-                    <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
-                  </div>
+              <div class="flex" v-if="!isDashboard">
+                <div v-if="bill.number" class="text-weight-bold clickable-name" @click.stop="downloadBill(bill)"
+                  :disable="pdfLoading">
+                  {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
                 </div>
-                <div class="bill-title text-weight-bold c" v-else>
-                  <div class="clickable-name course-name" @click="$event.stopPropagation()">
-                    <router-link :to="goToCourse()">{{ courseName }}</router-link>
-                  </div>
-                  <div class="bill-infos" @click.stop="downloadBill(bill)"
-                    :disable="pdfLoading">
-                    <span>&nbsp;-</span>
-                    <span v-if="bill.number">
-                      &nbsp;
-                      <span class="clickable-name">{{ bill.number }}</span>
-                      -
-                    </span>
-                    <span>&nbsp;{{ formatPrice(bill.netInclTaxes) }}</span>
-                  </div>
+                <div v-else class="row text-weight-bold">
+                  <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
+                  <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
+                  <div class="q-ml-xs text-orange-500">
+                    Annulée par avoir -
+                    <span class="clickable-name text-orange-500" :disable="pdfLoading"
+                      @click.stop="downloadCreditNote(bill.courseCreditNote)">
+                      {{ bill.courseCreditNote.number }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="bill-title text-weight-bold" v-else>
+                <div class="clickable-name course-name" @click="$event.stopPropagation()">
+                  <router-link :to="goToCourse()">{{ courseName }}</router-link>
+                </div>
+                <div class="bill-infos" :disable="pdfLoading">
+                  <span>&nbsp;-</span>
+                  <span v-if="bill.number">
+                    &nbsp;<span class="clickable-name" @click.stop="downloadBill(bill)">{{ bill.number }}</span> -
+                  </span>
+                  <span>&nbsp;{{ formatPrice(bill.netInclTaxes) }}</span>
+                </div>
+                <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
                   <div class="q-ml-xs text-orange-500">
                     Annulée par avoir -
@@ -762,11 +767,10 @@ export default {
 .bill-title
   display: flex
   align-items: center
-  flex-wrap: wrap
+  width: 100%
   overflow: hidden
 
 .course-name
-  flex: 1
   white-space: nowrap
   overflow: hidden
   text-overflow: ellipsis
