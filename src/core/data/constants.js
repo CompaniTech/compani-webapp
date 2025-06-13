@@ -333,6 +333,7 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
 // COURSE_BILLS
 export const LIST = 'list';
 export const BALANCE = 'balance';
+export const DASHBOARD = 'dashboard';
 export const FUNDING_ORGANISATION = 'funding_organisation';
 export const GROUP = 'group';
 export const COUNT_UNIT = { [GROUP]: 'groupe', [TRAINEE]: 'stagiaire' };

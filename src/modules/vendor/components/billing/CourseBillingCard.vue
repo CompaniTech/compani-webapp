@@ -21,32 +21,37 @@
         <q-card v-for="bill of courseBills" :key="bill._id" flat class="q-mb-md">
           <q-card-section class="cursor-pointer row items-center" :id="bill._id" @click="showDetails(bill._id)">
             <q-item-section>
-              <div class="flex">
-                <div v-if="!isDashboard">
-                  <div v-if="bill.number" class="text-weight-bold clickable-name" @click.stop="downloadBill(bill)"
-                    :disable="pdfLoading">
-                    {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
-                  </div>
-                  <div v-else class="row text-weight-bold">
-                    <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
-                  </div>
+              <div class="flex" v-if="!isDashboard">
+                <div v-if="bill.number" class="text-weight-bold clickable-name" @click.stop="downloadBill(bill)"
+                  :disable="pdfLoading">
+                  {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
                 </div>
-                <div class="bill-title text-weight-bold c" v-else>
-                  <div class="clickable-name course-name" @click="$event.stopPropagation()">
-                    <router-link :to="goToCourse()">{{ courseName }}</router-link>
-                  </div>
-                  <div class="bill-infos" @click.stop="downloadBill(bill)"
-                    :disable="pdfLoading">
-                    <span>&nbsp;-</span>
-                    <span v-if="bill.number">
-                      &nbsp;
-                      <span class="clickable-name">{{ bill.number }}</span>
-                      -
-                    </span>
-                    <span>&nbsp;{{ formatPrice(bill.netInclTaxes) }}</span>
-                  </div>
+                <div v-else class="row text-weight-bold">
+                  <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
+                  <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
+                  <div class="q-ml-xs text-orange-500">
+                    Annulée par avoir -
+                    <span class="clickable-name text-orange-500" :disable="pdfLoading"
+                      @click.stop="downloadCreditNote(bill.courseCreditNote)">
+                      {{ bill.courseCreditNote.number }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="bill-title text-weight-bold" v-else>
+                <div class="clickable-name course-name" @click="$event.stopPropagation()">
+                  <router-link :to="goToCourse()">{{ courseName }}</router-link>
+                </div>
+                <div class="bill-infos" :disable="pdfLoading">
+                  <span>&nbsp;-</span>
+                  <span v-if="bill.number">
+                    &nbsp;<span class="clickable-name" @click.stop="downloadBill(bill)">{{ bill.number }}</span> -
+                  </span>
+                  <span>&nbsp;{{ formatPrice(bill.netInclTaxes) }}</span>
+                </div>
+                <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
                   <div class="q-ml-xs text-orange-500">
                     Annulée par avoir -
@@ -79,60 +84,62 @@
             <q-checkbox v-if="!bill.billedAt" :model-value="billCheckboxValue(bill._id)" dense size="sm"
               @update:model-value="updateSelectedBills(bill._id)" class="q-px-sm" />
           </q-card-section>
-          <div class="bg-peach-200 q-pt-sm" v-if="areDetailsVisible[bill._id]">
-            <q-card flat class="q-mx-lg q-mb-sm">
-              <q-card-section class="fee">
-                <div class="fee-info">
-                  <div class="text-copper-500">{{ get(course, 'subProgram.program.name') }}</div>
-                  <div>Prix unitaire : {{ formatPrice(get(bill, 'mainFee.price')) }}</div>
-                  <div>
-                    Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
-                  </div>
-                  <div v-if="get(bill, 'mainFee.percentage')">
-                    Pourcentage du montant total : {{ bill.mainFee.percentage }} %
-                  </div>
-                  <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
-                    Description : {{ bill.mainFee.description }}
-                  </div>
-                </div>
-                <ni-button icon="edit" @click="openMainFeeEditionModal(bill)" />
-              </q-card-section>
-            </q-card>
-            <div v-for="billingPurchase of bill.billingPurchaseList" :key="billingPurchase._id">
+          <q-card-section class="q-pa-sm">
+            <div class="bg-peach-200 q-pt-sm" v-if="areDetailsVisible[bill._id]">
               <q-card flat class="q-mx-lg q-mb-sm">
                 <q-card-section class="fee">
                   <div class="fee-info">
-                    <div class="text-copper-500">
-                      {{ getBillingItemName(billingPurchase.billingItem) }}
+                    <div class="text-copper-500">{{ get(course, 'subProgram.program.name') }}</div>
+                    <div>Prix unitaire : {{ formatPrice(get(bill, 'mainFee.price')) }}</div>
+                    <div>
+                      Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
                     </div>
-                    <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
-                    <div>Quantité : {{ billingPurchase.count }}</div>
-                    <div v-if="billingPurchase.percentage">
-                      Pourcentage du montant total : {{ billingPurchase.percentage }} %
+                    <div v-if="get(bill, 'mainFee.percentage')">
+                      Pourcentage du montant total : {{ bill.mainFee.percentage }} %
                     </div>
-                    <div v-if="billingPurchase.description" class="ellipsis">
-                      Description : {{ billingPurchase.description }}
+                    <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
+                      Description : {{ bill.mainFee.description }}
                     </div>
                   </div>
-                  <div>
-                    <ni-button icon="edit" @click="openBillingPurchaseEditionModal(bill, billingPurchase)" />
-                    <ni-button v-if="!isBilled(bill)" :disable="isTrainerFeesWithPercentage(billingPurchase)"
-                      @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" icon="delete" />
-                  </div>
+                  <ni-button icon="edit" @click="openMainFeeEditionModal(bill)" />
                 </q-card-section>
               </q-card>
+              <div v-for="billingPurchase of bill.billingPurchaseList" :key="billingPurchase._id">
+                <q-card flat class="q-mx-lg q-mb-sm">
+                  <q-card-section class="fee">
+                    <div class="fee-info">
+                      <div class="text-copper-500">
+                        {{ getBillingItemName(billingPurchase.billingItem) }}
+                      </div>
+                      <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
+                      <div>Quantité : {{ billingPurchase.count }}</div>
+                      <div v-if="billingPurchase.percentage">
+                        Pourcentage du montant total : {{ billingPurchase.percentage }} %
+                      </div>
+                      <div v-if="billingPurchase.description" class="ellipsis">
+                        Description : {{ billingPurchase.description }}
+                      </div>
+                    </div>
+                    <div>
+                      <ni-button icon="edit" @click="openBillingPurchaseEditionModal(bill, billingPurchase)" />
+                      <ni-button v-if="!isBilled(bill)" :disable="isTrainerFeesWithPercentage(billingPurchase)"
+                        @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" icon="delete" />
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+              <div class="row justify-end q-pa-sm">
+                <ni-button v-if="!isBilled(bill)" color="primary" icon="add" label="Ajouter un article"
+                  :disable="billingPurchaseCreationLoading" @click="openBillingPurchaseAdditionModal(bill._id)" />
+                <ni-button v-else-if="!bill.courseCreditNote" color="primary" :disable="creditNoteCreationLoading"
+                  @click="openCreditNoteCreationModal(bill)" label="Faire un avoir" icon="mdi-credit-card-refund" />
+              </div>
+              <div v-if="!isBilled(bill)" class="row justify-end q-px-lg q-py-sm">
+                <ni-button label="Facturer" color="white" class="bg-primary" icon="payment"
+                  @click="openCourseBillValidationModal(bill._id)" :disable="billValidationLoading" />
+              </div>
             </div>
-            <div class="row justify-end q-pa-sm">
-              <ni-button v-if="!isBilled(bill)" color="primary" icon="add" label="Ajouter un article"
-                :disable="billingPurchaseCreationLoading" @click="openBillingPurchaseAdditionModal(bill._id)" />
-              <ni-button v-else-if="!bill.courseCreditNote" color="primary" :disable="creditNoteCreationLoading"
-                @click="openCreditNoteCreationModal(bill)" label="Faire un avoir" icon="mdi-credit-card-refund" />
-            </div>
-            <div v-if="!isBilled(bill)" class="row justify-end q-px-lg q-py-sm">
-              <ni-button label="Facturer" color="white" class="bg-primary" icon="payment"
-                @click="openCourseBillValidationModal(bill._id)" :disable="billValidationLoading" />
-            </div>
-          </div>
+          </q-card-section>
         </q-card>
       </div>
     </div>
@@ -762,11 +769,10 @@ export default {
 .bill-title
   display: flex
   align-items: center
-  flex-wrap: wrap
+  width: 100%
   overflow: hidden
 
 .course-name
-  flex: 1
   white-space: nowrap
   overflow: hidden
   text-overflow: ellipsis
