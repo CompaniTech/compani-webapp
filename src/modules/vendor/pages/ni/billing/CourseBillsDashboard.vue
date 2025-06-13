@@ -10,8 +10,8 @@
       <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
       <company-select label="Structure" clearable :company-options="companyOptions" :company="selectedCompany"
         @update="updateSelectedCompany" />
-      <ni-select v-model="selectedTypes" multiple caption="Type" :options="typeOptions" clearable />
     </div>
+    <ni-select v-model="selectedTypes" multiple caption="Type" :options="typeOptions" clearable />
     <q-card v-if="filteredValidatedBills.length" class="q-px-md q-py-sm bg-peach-200">
       <q-item-section @click="showDetails" class="cursor-pointer details row copper-grey-700">
         {{ showValidatedCourseBills ? 'Masquer' : 'Afficher' }} les factures validées
