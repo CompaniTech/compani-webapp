@@ -156,6 +156,7 @@ export default {
     };
 
     watch(dateRange, async () => {
+      selectedBills.value = [];
       const promises = [refreshCourseBillsToValidate(), refreshValidatedCourseBills()];
 
       return Promise.all(promises);
