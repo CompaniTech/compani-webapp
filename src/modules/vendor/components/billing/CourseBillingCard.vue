@@ -84,60 +84,62 @@
             <q-checkbox v-if="!bill.billedAt" :model-value="billCheckboxValue(bill._id)" dense size="sm"
               @update:model-value="updateSelectedBills(bill._id)" class="q-px-sm" />
           </q-card-section>
-          <div class="bg-peach-200 q-pt-sm" v-if="areDetailsVisible[bill._id]">
-            <q-card flat class="q-mx-lg q-mb-sm">
-              <q-card-section class="fee">
-                <div class="fee-info">
-                  <div class="text-copper-500">{{ get(course, 'subProgram.program.name') }}</div>
-                  <div>Prix unitaire : {{ formatPrice(get(bill, 'mainFee.price')) }}</div>
-                  <div>
-                    Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
-                  </div>
-                  <div v-if="get(bill, 'mainFee.percentage')">
-                    Pourcentage du montant total : {{ bill.mainFee.percentage }} %
-                  </div>
-                  <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
-                    Description : {{ bill.mainFee.description }}
-                  </div>
-                </div>
-                <ni-button icon="edit" @click="openMainFeeEditionModal(bill)" />
-              </q-card-section>
-            </q-card>
-            <div v-for="billingPurchase of bill.billingPurchaseList" :key="billingPurchase._id">
+          <q-card-section class="q-pa-sm">
+            <div class="bg-peach-200 q-pt-sm" v-if="areDetailsVisible[bill._id]">
               <q-card flat class="q-mx-lg q-mb-sm">
                 <q-card-section class="fee">
                   <div class="fee-info">
-                    <div class="text-copper-500">
-                      {{ getBillingItemName(billingPurchase.billingItem) }}
+                    <div class="text-copper-500">{{ get(course, 'subProgram.program.name') }}</div>
+                    <div>Prix unitaire : {{ formatPrice(get(bill, 'mainFee.price')) }}</div>
+                    <div>
+                      Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
                     </div>
-                    <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
-                    <div>Quantité : {{ billingPurchase.count }}</div>
-                    <div v-if="billingPurchase.percentage">
-                      Pourcentage du montant total : {{ billingPurchase.percentage }} %
+                    <div v-if="get(bill, 'mainFee.percentage')">
+                      Pourcentage du montant total : {{ bill.mainFee.percentage }} %
                     </div>
-                    <div v-if="billingPurchase.description" class="ellipsis">
-                      Description : {{ billingPurchase.description }}
+                    <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
+                      Description : {{ bill.mainFee.description }}
                     </div>
                   </div>
-                  <div>
-                    <ni-button icon="edit" @click="openBillingPurchaseEditionModal(bill, billingPurchase)" />
-                    <ni-button v-if="!isBilled(bill)" :disable="isTrainerFeesWithPercentage(billingPurchase)"
-                      @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" icon="delete" />
-                  </div>
+                  <ni-button icon="edit" @click="openMainFeeEditionModal(bill)" />
                 </q-card-section>
               </q-card>
+              <div v-for="billingPurchase of bill.billingPurchaseList" :key="billingPurchase._id">
+                <q-card flat class="q-mx-lg q-mb-sm">
+                  <q-card-section class="fee">
+                    <div class="fee-info">
+                      <div class="text-copper-500">
+                        {{ getBillingItemName(billingPurchase.billingItem) }}
+                      </div>
+                      <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
+                      <div>Quantité : {{ billingPurchase.count }}</div>
+                      <div v-if="billingPurchase.percentage">
+                        Pourcentage du montant total : {{ billingPurchase.percentage }} %
+                      </div>
+                      <div v-if="billingPurchase.description" class="ellipsis">
+                        Description : {{ billingPurchase.description }}
+                      </div>
+                    </div>
+                    <div>
+                      <ni-button icon="edit" @click="openBillingPurchaseEditionModal(bill, billingPurchase)" />
+                      <ni-button v-if="!isBilled(bill)" :disable="isTrainerFeesWithPercentage(billingPurchase)"
+                        @click="validatePurchaseDeletion(bill._id, billingPurchase._id)" icon="delete" />
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+              <div class="row justify-end q-pa-sm">
+                <ni-button v-if="!isBilled(bill)" color="primary" icon="add" label="Ajouter un article"
+                  :disable="billingPurchaseCreationLoading" @click="openBillingPurchaseAdditionModal(bill._id)" />
+                <ni-button v-else-if="!bill.courseCreditNote" color="primary" :disable="creditNoteCreationLoading"
+                  @click="openCreditNoteCreationModal(bill)" label="Faire un avoir" icon="mdi-credit-card-refund" />
+              </div>
+              <div v-if="!isBilled(bill)" class="row justify-end q-px-lg q-py-sm">
+                <ni-button label="Facturer" color="white" class="bg-primary" icon="payment"
+                  @click="openCourseBillValidationModal(bill._id)" :disable="billValidationLoading" />
+              </div>
             </div>
-            <div class="row justify-end q-pa-sm">
-              <ni-button v-if="!isBilled(bill)" color="primary" icon="add" label="Ajouter un article"
-                :disable="billingPurchaseCreationLoading" @click="openBillingPurchaseAdditionModal(bill._id)" />
-              <ni-button v-else-if="!bill.courseCreditNote" color="primary" :disable="creditNoteCreationLoading"
-                @click="openCreditNoteCreationModal(bill)" label="Faire un avoir" icon="mdi-credit-card-refund" />
-            </div>
-            <div v-if="!isBilled(bill)" class="row justify-end q-px-lg q-py-sm">
-              <ni-button label="Facturer" color="white" class="bg-primary" icon="payment"
-                @click="openCourseBillValidationModal(bill._id)" :disable="billValidationLoading" />
-            </div>
-          </div>
+          </q-card-section>
         </q-card>
       </div>
     </div>

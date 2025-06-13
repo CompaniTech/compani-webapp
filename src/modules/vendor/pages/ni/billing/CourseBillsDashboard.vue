@@ -36,7 +36,7 @@
 <script>
 import { useMeta } from 'quasar';
 import useVuelidate from '@vuelidate/core';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import CourseBills from '@api/CourseBills';
 import ProfileHeader from '@components/ProfileHeader';
 import DateRange from '@components/form/DateRange';
@@ -149,14 +149,17 @@ export default {
     const input = (date) => {
       min.value = CompaniDate(date.endDate).subtract('P1M').add('P1D').toISO();
       max.value = CompaniDate(date.startDate).add('P1M').subtract('P1D').toISO();
-      const promises = [refreshCourseBillsToValidate(), refreshValidatedCourseBills()];
-
-      return Promise.all(promises);
     };
 
     const showDetails = async () => {
       showValidatedCourseBills.value = !showValidatedCourseBills.value;
     };
+
+    watch(dateRange, async () => {
+      const promises = [refreshCourseBillsToValidate(), refreshValidatedCourseBills()];
+
+      return Promise.all(promises);
+    });
 
     const created = async () => {
       await Promise.all([
