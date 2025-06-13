@@ -13,10 +13,9 @@
       </q-item-section>
       <div v-if="showValidatedCourseBills">
         <div v-for="bill of validatedCourseBills" :key="bill._id">
-          <ni-course-billing-card :course="bill.course" :payer-list="payerList" :loading="billsLoading"
-          :billing-item-list="billingItemList" :course-bills="[bill]" is-dashboard
-          @refresh-course-bills="refreshValidatedCourseBills" @unroll="unrollBill"
-          :are-details-visible="areDetailsVisible" />
+          <ni-course-billing-card :course="bill.course" :payer-list="payerList" :loading="billsLoading" is-dashboard
+            :billing-item-list="billingItemList" :course-bills="[bill]" :are-details-visible="areDetailsVisible"
+            @refresh-course-bills="refreshValidatedCourseBills" @unroll="unrollBill" />
         </div>
       </div>
     </q-card>
@@ -26,7 +25,7 @@
           :billing-item-list="billingItemList" :course-bills="[bill]" is-dashboard
           @refresh-course-bills="refreshCourseBillsToValidate" @unroll="unrollBill" :selected-bills="selectedBills"
           :are-details-visible="areDetailsVisible" @update-selected-bills="updateSelectedBills" />
-        </div>
+      </div>
     </div>
     <div v-if="!courseBillsToValidate.length && !validatedCourseBills.length" class="text-italic flex justify-center">
       Aucune facture ne correspond à votre recherche
