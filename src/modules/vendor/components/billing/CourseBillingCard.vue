@@ -435,7 +435,20 @@ export default {
 
     const openCourseBillValidationModal = (billId) => {
       billToValidate.value._id = billId;
-      courseBillValidationModal.value = true;
+
+      if (course.value.interruptedAt) {
+        const message = 'La formation est en pause. Êtes-vous sûr(e) de vouloir valider la facture&nbsp;?';
+        $q.dialog({
+          titre: 'Confirmation',
+          message,
+          html: true,
+          ok: 'Oui',
+          cancel: 'Non',
+        }).onOk(() => { courseBillValidationModal.value = true; })
+          .onCancel(() => NotifyPositive('Facturation annulée.'));
+      } else {
+        courseBillValidationModal.value = true;
+      }
     };
 
     const resetEditedBill = () => {
