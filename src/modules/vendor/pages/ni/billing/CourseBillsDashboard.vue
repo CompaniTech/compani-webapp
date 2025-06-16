@@ -37,12 +37,25 @@
       class="text-italic flex justify-center">
       Aucune facture ne correspond à votre recherche
     </div>
+
+    <div class="fixed fab-custom">
+      <q-btn class="q-ma-sm" no-caps rounded icon="payment" label="Valider les factures"
+        @click="openCourseBillValidationModal" color="primary" :disable="!selectedBills.length" />
+
+      <q-btn class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
+        @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
+    </div>
+
+    <ni-course-bill-validation-modal v-model="courseBillValidationModal" v-model:bill-to-validate="billsToValidate"
+      @submit="validateBills" @hide="resetCourseBillValidationModal" :loading="billValidationLoading"
+      :validations="v$.billsToValidate" @cancel="cancelBillsValidation" :course-infos="courseInfos" />
   </q-page>
 </template>
 <script>
-import { useMeta } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import uniqBy from 'lodash/uniqBy';
 import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import { ref, computed, watch } from 'vue';
 import CourseBills from '@api/CourseBills';
 import ProfileHeader from '@components/ProfileHeader';
@@ -52,10 +65,12 @@ import CompanySelect from '@components/form/CompanySelect';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
 import { DASHBOARD, COURSE_TYPES } from '@data/constants';
+import { composeCourseName } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
-import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
-import { formatAndSortOptions, formatAndSortCompanyOptions } from '@helpers/utils';
+import { minDate, maxDate, minArrayLength } from '@helpers/vuelidateCustomVal';
+import { formatAndSortOptions, formatAndSortCompanyOptions, formatQuantity, formatName } from '@helpers/utils';
 import CourseBillingCard from 'src/modules/vendor/components/billing/CourseBillingCard';
+import CourseBillValidationModal from 'src/modules/vendor/components/billing/CourseBillValidationModal';
 
 export default {
   name: 'CourseBillsDashboard',
@@ -63,12 +78,15 @@ export default {
     'ni-profile-header': ProfileHeader,
     'ni-date-range': DateRange,
     'ni-course-billing-card': CourseBillingCard,
+    'ni-course-bill-validation-modal': CourseBillValidationModal,
     'company-select': CompanySelect,
     'ni-select': Select,
   },
   setup () {
     const metaInfo = { title: 'A facturer' };
     useMeta(metaInfo);
+
+    const $q = useQuasar();
 
     const billsLoading = ref(false);
     const showValidatedCourseBills = ref(false);
@@ -85,8 +103,46 @@ export default {
     const selectedCompany = ref('');
     const selectedHolding = ref('');
     const selectedTypes = ref(['']);
+    const courseBillValidationModal = ref(false);
+    const billValidationLoading = ref(false);
+    const billsToValidate = ref({ _ids: [], billedAt: '' });
 
     const billList = computed(() => [...validatedCourseBills.value, ...courseBillsToValidate.value]);
+
+    const rules = computed(() => ({
+      dateRange: {
+        startDate: { minDate: minDate(min.value) },
+        endDate: { maxDate: maxDate(max.value), minDate: minDate(dateRange.value.startDate) },
+      },
+      billsToValidate: {
+        _ids: { minArrayLength: minArrayLength(1) },
+        billedAt: { required },
+      },
+    }));
+
+    const v$ = useVuelidate(rules, { dateRange, billsToValidate });
+
+    const refreshCourseBillsToValidate = async () => {
+      try {
+        await v$.value.dateRange.$touch();
+        if (v$.value.dateRange.$error) return NotifyWarning('Date(s) invalide(s)');
+
+        billsLoading.value = true;
+        const bills = await CourseBills.list({
+          action: DASHBOARD,
+          startDate: dateRange.value.startDate,
+          endDate: dateRange.value.endDate,
+          isValidated: false,
+        });
+        courseBillsToValidate.value = bills;
+        NotifyPositive('Factures à valider récupérées.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des factures à valider.');
+      } finally {
+        billsLoading.value = false;
+      }
+    };
 
     const {
       payerList,
@@ -97,16 +153,8 @@ export default {
       refreshPayers,
       refreshBillingItems,
       unrollBill,
-    } = useCourseBilling(billList);
-
-    const rules = computed(() => ({
-      dateRange: {
-        startDate: { minDate: minDate(min.value) },
-        endDate: { maxDate: maxDate(max.value), minDate: minDate(dateRange.value.startDate) },
-      },
-    }));
-
-    const v$ = useVuelidate(rules, { dateRange });
+      openBillDeletionModal,
+    } = useCourseBilling(billList, v$, refreshCourseBillsToValidate);
 
     const companyOptions = computed(() => {
       const billsCompanies = billList.value.map(bill => bill.companies).flat();
@@ -191,27 +239,19 @@ export default {
       return '';
     });
 
-    const refreshCourseBillsToValidate = async () => {
-      try {
-        await v$.value.dateRange.$touch();
-        if (v$.value.dateRange.$error) return NotifyWarning('Date(s) invalide(s)');
+    const courseInfos = computed(() => {
+      const bills = courseBillsToValidate.value
+        .filter(bill => billsToValidate.value._ids.includes(bill._id));
 
-        billsLoading.value = true;
-        const bills = await CourseBills.list({
-          action: DASHBOARD,
-          startDate: dateRange.value.startDate,
-          endDate: dateRange.value.endDate,
-          isValidated: false,
-        });
-        courseBillsToValidate.value = bills;
-        NotifyPositive('Factures à valider récupérées.');
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la récupération des factures à valider.');
-      } finally {
-        billsLoading.value = false;
-      }
-    };
+      return bills.map(bill => ({
+        courseType: bill.course.type,
+        companiesName: formatName(bill.companies),
+        courseName: composeCourseName(bill.course),
+        traineesQuantity: bill.course.trainees
+          .filter(trainee => bill.companies.map(c => c._id).includes(trainee.registrationCompany))
+          .length,
+      }));
+    });
 
     const refreshValidatedCourseBills = async () => {
       try {
@@ -245,6 +285,60 @@ export default {
     };
 
     const updateSelectedCompany = (value) => { selectedCompany.value = value; };
+
+    const openCourseBillValidationModal = () => {
+      billsToValidate.value._ids = selectedBills.value;
+      const bills = courseBillsToValidate.value
+        .filter(bill => billsToValidate.value._ids.includes(bill._id));
+      if (bills.some(bill => bill.course.interruptedAt)) {
+        const message = 'La formation d\'une des factures est en pause.'
+          + ' Êtes-vous sûr(e) de vouloir valider les factures&nbsp;?';
+        $q.dialog({
+          titre: 'Confirmation',
+          message,
+          html: true,
+          ok: 'Oui',
+          cancel: 'Non',
+        }).onOk(() => { courseBillValidationModal.value = true; })
+          .onCancel(() => NotifyPositive('Facturation annulée.'));
+      } else {
+        courseBillValidationModal.value = true;
+      }
+    };
+
+    const validateBills = async() => {
+      try {
+        v$.value.billsToValidate.$touch();
+        if (v$.value.billsToValidate.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        billValidationLoading.value = true;
+
+        await CourseBills.updateBillList(billsToValidate.value);
+        NotifyPositive(`${formatQuantity('facture validée', billsToValidate.value._ids.length)}.`);
+
+        courseBillValidationModal.value = false;
+        selectedBills.value = [];
+        const promises = [refreshCourseBillsToValidate(), refreshValidatedCourseBills()];
+        await Promise.all(promises);
+      } catch (e) {
+        console.error(e);
+        if (e.status === 403) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors de la validation des factures brouillon.');
+      } finally {
+        billValidationLoading.value = false;
+      }
+    };
+
+    const resetCourseBillValidationModal = () => {
+      billsToValidate.value = { _ids: [], billedAt: '' };
+      v$.value.billsToValidate.$reset();
+    };
+
+    const cancelBillsValidation = () => {
+      resetCourseBillValidationModal();
+      courseBillValidationModal.value = false;
+      NotifyPositive('Validation des factures annulée.');
+    };
 
     watch(dateRange, async () => {
       selectedBills.value = [];
@@ -291,6 +385,8 @@ export default {
       selectedHolding,
       selectedTypes,
       selectedCompany,
+      courseBillValidationModal,
+      billValidationLoading,
       // Computed
       dateRangeErrorMessage,
       holdingOptions,
@@ -298,6 +394,7 @@ export default {
       typeOptions,
       filteredBillsToValidate,
       filteredValidatedBills,
+      courseInfos,
       v$,
       // Methods
       input,
@@ -307,6 +404,12 @@ export default {
       unrollBill,
       updateSelectedBills,
       updateSelectedCompany,
+      openBillDeletionModal,
+      openCourseBillValidationModal,
+      billsToValidate,
+      validateBills,
+      resetCourseBillValidationModal,
+      cancelBillsValidation,
     };
   },
 };

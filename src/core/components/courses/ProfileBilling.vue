@@ -232,6 +232,7 @@ export default {
         NotifyNegative('Erreur lors de la récupération des factures.');
       } finally {
         billsLoading.value = false;
+        selectedBills.value = [];
       }
     };
 
