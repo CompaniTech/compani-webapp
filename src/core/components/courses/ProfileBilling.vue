@@ -411,9 +411,7 @@ export default {
     };
 
     const openBillCreationModal = () => {
-      if (course.value.interruptedAt) {
-        return NotifyWarning('Impossible : la formation est en pause.');
-      }
+      if (course.value.interruptedAt) return NotifyWarning('Impossible : la formation est en pause.');
 
       if (!courseBills.value.length && !course.value.prices.some(p => p.global)) {
         return NotifyWarning('Prix de la formation manquant.');
