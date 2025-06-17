@@ -2,10 +2,13 @@
   <q-page padding class="vendor-background q-pb-xl">
      <ni-profile-header title="A facturer">
       <template #title>
+        <ni-button icon="chevron_left" class="no-shadow" @click="goToPreviousMonth" />
         <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange" :error="v$.dateRange.$error"
           @update:model-value="input" :error-message="dateRangeErrorMessage" @blur="v$.dateRange.$touch" />
+         <ni-button icon="chevron_right" class="no-shadow" @click="goToNextMonth" />
       </template>
     </ni-profile-header>
+    <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
       <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
       <company-select label="Structure" clearable :company-options="companyOptions" :company="selectedCompany"
@@ -61,6 +64,7 @@ import CourseBills from '@api/CourseBills';
 import ProfileHeader from '@components/ProfileHeader';
 import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
+import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
@@ -81,6 +85,7 @@ export default {
     'ni-course-bill-validation-modal': CourseBillValidationModal,
     'company-select': CompanySelect,
     'ni-select': Select,
+    'ni-button': Button,
   },
   setup () {
     const metaInfo = { title: 'A facturer' };
@@ -340,6 +345,28 @@ export default {
       NotifyPositive('Validation des factures annulée.');
     };
 
+    const resetFilters = () => {
+      selectedHolding.value = '';
+      selectedCompany.value = '';
+      selectedTypes.value = [''];
+    };
+
+    const goToPreviousMonth = () => {
+      dateRange.value = {
+        startDate: CompaniDate(dateRange.value.startDate).startOf('month').subtract('P1M').toISO(),
+        endDate: CompaniDate(dateRange.value.endDate).endOf('month').subtract('P1M').toISO(),
+      };
+      input(dateRange.value);
+    };
+
+    const goToNextMonth = () => {
+      dateRange.value = {
+        startDate: CompaniDate(dateRange.value.startDate).startOf('month').add('P1M').toISO(),
+        endDate: CompaniDate(dateRange.value.endDate).endOf('month').add('P1M').toISO(),
+      };
+      input(dateRange.value);
+    };
+
     watch(dateRange, async () => {
       selectedBills.value = [];
       const promises = [refreshCourseBillsToValidate(), refreshValidatedCourseBills()];
@@ -410,6 +437,9 @@ export default {
       validateBills,
       resetCourseBillValidationModal,
       cancelBillsValidation,
+      resetFilters,
+      goToPreviousMonth,
+      goToNextMonth,
     };
   },
 };
