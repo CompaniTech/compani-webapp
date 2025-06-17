@@ -12,6 +12,7 @@ import {
   UNARCHIVED_COURSES,
   WITHOUT_SALES_REPRESENTATIVE,
   TRAINER,
+  INTERRUPTED_COURSES,
 } from '@data/constants';
 
 export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions = [], courseTypes = COURSE_TYPES) => {
@@ -155,15 +156,16 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
   };
 
   /* ARCHIVED COURSES */
-  const archiveStatusOptions = ref([
+  const statusOptions = ref([
     { label: 'Toutes les formations', value: '' },
     { label: 'Formations archivées', value: ARCHIVED_COURSES },
     { label: 'Formations non-archivées', value: UNARCHIVED_COURSES },
+    { label: 'Formations en pause', value: INTERRUPTED_COURSES },
   ]);
-  const selectedArchiveStatus = computed(() => $store.state.course.selectedArchiveStatus);
+  const selectedStatus = computed(() => $store.state.course.selectedStatus);
 
-  const updateSelectedArchiveStatus = (status) => {
-    $store.dispatch('course/setSelectedArchiveStatus', { status });
+  const updateSelectedStatus = (status) => {
+    $store.dispatch('course/setSelectedStatus', { status });
   };
 
   const resetFilters = () => {
@@ -192,7 +194,7 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
   return {
     // data
     typeFilterOptions,
-    archiveStatusOptions,
+    statusOptions,
     // Computed
     selectedTrainer,
     trainerFilterOptions,
@@ -211,7 +213,7 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
     selectedType,
     selectedNoAddressInSlots,
     selectedMissingTrainees,
-    selectedArchiveStatus,
+    selectedStatus,
     selectedSalesRepresentative,
     salesRepresentativeFilterOptions,
     // Methods
@@ -226,7 +228,7 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
     updateSelectedType,
     updateSelectedNoAddressInSlots,
     updateSelectedMissingTrainees,
-    updateSelectedArchiveStatus,
+    updateSelectedStatus,
     resetFilters,
     updateSelectedSalesRepresentative,
   };

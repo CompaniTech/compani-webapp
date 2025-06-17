@@ -35,6 +35,7 @@ import {
   UNARCHIVED_COURSES,
   WITHOUT_TRAINER,
   WITHOUT_SALES_REPRESENTATIVE,
+  INTERRUPTED_COURSES,
 } from '@data/constants';
 import { happened, composeCourseName } from '@helpers/courses';
 import { formatQuantity } from '@helpers/utils';
@@ -81,7 +82,7 @@ export default {
     const selectedType = computed(() => $store.state.course.selectedType);
     const selectedNoAddressInSlots = computed(() => $store.state.course.selectedNoAddressInSlots);
     const selectedMissingTrainees = computed(() => $store.state.course.selectedMissingTrainees);
-    const selectedArchiveStatus = computed(() => $store.state.course.selectedArchiveStatus);
+    const selectedStatus = computed(() => $store.state.course.selectedStatus);
     const selectedSalesRepresentative = computed(() => $store.state.course.selectedSalesRepresentative);
 
     const isCourseAfterStartDate = computed(() => {
@@ -148,9 +149,11 @@ export default {
         return false;
       }
 
-      if (selectedArchiveStatus.value === UNARCHIVED_COURSES && course.value.archivedAt) return false;
+      if (selectedStatus.value === UNARCHIVED_COURSES && course.value.archivedAt) return false;
 
-      if (selectedArchiveStatus.value === ARCHIVED_COURSES && !course.value.archivedAt) return false;
+      if (selectedStatus.value === ARCHIVED_COURSES && !course.value.archivedAt) return false;
+
+      if (selectedStatus.value === INTERRUPTED_COURSES && !course.value.interruptedAt) return false;
 
       if (selectedStartDate.value && !selectedEndDate.value && !isCourseAfterStartDate.value) return false;
 
