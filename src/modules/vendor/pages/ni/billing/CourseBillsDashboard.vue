@@ -54,7 +54,7 @@
   </q-page>
 </template>
 <script>
-import { useMeta, useQuasar } from 'quasar';
+import { useMeta } from 'quasar';
 import uniqBy from 'lodash/uniqBy';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
@@ -89,8 +89,6 @@ export default {
   setup () {
     const metaInfo = { title: 'A facturer' };
     useMeta(metaInfo);
-
-    const $q = useQuasar();
 
     const billsLoading = ref(false);
     const showValidatedCourseBills = ref(false);
@@ -292,22 +290,7 @@ export default {
 
     const openCourseBillValidationModal = () => {
       billsToValidate.value._ids = selectedBills.value;
-      const bills = courseBillsToValidate.value
-        .filter(bill => billsToValidate.value._ids.includes(bill._id));
-      if (bills.some(bill => bill.course.interruptedAt)) {
-        const message = 'La formation d\'une des factures est en pause.'
-          + ' Êtes-vous sûr(e) de vouloir valider les factures&nbsp;?';
-        $q.dialog({
-          title: 'Confirmation',
-          message,
-          html: true,
-          ok: 'Oui',
-          cancel: 'Non',
-        }).onOk(() => { courseBillValidationModal.value = true; })
-          .onCancel(() => NotifyPositive('Facturation annulée.'));
-      } else {
-        courseBillValidationModal.value = true;
-      }
+      courseBillValidationModal.value = true;
     };
 
     const validateBills = async() => {
