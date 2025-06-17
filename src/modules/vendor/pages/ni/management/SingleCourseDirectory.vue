@@ -13,8 +13,7 @@
         @update:model-value="updateSelectedTrainee" />
       <ni-select :options="programFilterOptions" :model-value="selectedProgram" clearable
         @update:model-value="updateSelectedProgram" />
-      <ni-select :options="archiveStatusOptions" :model-value="selectedArchiveStatus"
-        @update:model-value="updateSelectedArchiveStatus" />
+      <ni-select :options="statusOptions" :model-value="selectedStatus" @update:model-value="updateSelectedStatus" />
     </div>
     <ni-table-list :data="courses" :columns="columns" v-model:pagination="pagination"
       :path="path">
@@ -72,6 +71,7 @@ import {
   WITHOUT_TRAINER,
   UNARCHIVED_COURSES,
   DD_MM_YYYY,
+  INTERRUPTED_COURSES,
 } from '@data/constants';
 import { integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -282,14 +282,14 @@ export default {
       traineeFilterOptions,
       selectedProgram,
       programFilterOptions,
-      archiveStatusOptions,
-      selectedArchiveStatus,
+      statusOptions,
+      selectedStatus,
       updateSelectedHolding,
       updateSelectedCompany,
       updateSelectedTrainer,
       updateSelectedTrainee,
       updateSelectedProgram,
-      updateSelectedArchiveStatus,
+      updateSelectedStatus,
       resetFilters,
     } = useCourseFilters(activeCourses, archivedCourses, holdingOptions, SINGLE_TYPE);
 
@@ -315,9 +315,11 @@ export default {
           !holdingsLinkedToCourse.includes(selectedHolding.value)) {
         return false;
       }
-      if (selectedArchiveStatus.value === UNARCHIVED_COURSES && course.archivedAt) return false;
+      if (selectedStatus.value === UNARCHIVED_COURSES && course.archivedAt) return false;
 
-      if (selectedArchiveStatus.value === ARCHIVED_COURSES && !course.archivedAt) return false;
+      if (selectedStatus.value === ARCHIVED_COURSES && !course.archivedAt) return false;
+
+      if (selectedStatus.value === INTERRUPTED_COURSES && !course.interruptedAt) return false;
 
       return true;
     };
@@ -355,7 +357,7 @@ export default {
       newCourse,
       programs,
       adminUserOptions,
-      archiveStatusOptions,
+      statusOptions,
       traineeOptions,
       // Computed
       selectedHolding,
@@ -368,7 +370,7 @@ export default {
       traineeFilterOptions,
       selectedProgram,
       programFilterOptions,
-      selectedArchiveStatus,
+      selectedStatus,
       courses,
       // Methods
       openCourseCreationModal,
@@ -379,7 +381,7 @@ export default {
       updateSelectedTrainer,
       updateSelectedTrainee,
       updateSelectedProgram,
-      updateSelectedArchiveStatus,
+      updateSelectedStatus,
       resetFilters,
     };
   },

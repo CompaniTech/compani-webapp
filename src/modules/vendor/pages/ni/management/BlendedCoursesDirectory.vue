@@ -23,8 +23,7 @@
         error-message="La date de fin doit être postérieure à la date de début" @blur="v$.selectedEndDate.$touch" />
       <ni-select :options="typeFilterOptions" clearable :model-value="selectedType"
         @update:model-value="updateSelectedType" />
-      <ni-select :options="archiveStatusOptions" :model-value="selectedArchiveStatus"
-        @update:model-value="updateSelectedArchiveStatus" />
+      <ni-select :options="statusOptions" :model-value="selectedStatus" @update:model-value="updateSelectedStatus" />
     </div>
     <div class="q-mb-lg filters-container checkboxes">
       <q-checkbox dense :model-value="selectedNoAddressInSlots" color="primary" label="Aucune adresse"
@@ -137,8 +136,8 @@ export default {
       selectedType,
       selectedNoAddressInSlots,
       selectedMissingTrainees,
-      archiveStatusOptions,
-      selectedArchiveStatus,
+      statusOptions,
+      selectedStatus,
       updateSelectedHolding,
       updateSelectedCompany,
       updateSelectedTrainer,
@@ -149,7 +148,7 @@ export default {
       updateSelectedType,
       updateSelectedNoAddressInSlots,
       updateSelectedMissingTrainees,
-      updateSelectedArchiveStatus,
+      updateSelectedStatus,
       resetFilters,
       selectedSalesRepresentative,
       updateSelectedSalesRepresentative,
@@ -295,7 +294,7 @@ export default {
       adminUserOptions,
       activeCourses,
       archivedCourses,
-      archiveStatusOptions,
+      statusOptions,
       typeFilterOptions,
       // Computed
       selectedHolding,
@@ -313,7 +312,7 @@ export default {
       selectedType,
       selectedNoAddressInSlots,
       selectedMissingTrainees,
-      selectedArchiveStatus,
+      selectedStatus,
       selectedSalesRepresentative,
       salesRepresentativeFilterOptions,
       // Methods
@@ -330,7 +329,7 @@ export default {
       updateSelectedType,
       updateSelectedNoAddressInSlots,
       updateSelectedMissingTrainees,
-      updateSelectedArchiveStatus,
+      updateSelectedStatus,
       resetFilters,
       updateSelectedSalesRepresentative,
     };
