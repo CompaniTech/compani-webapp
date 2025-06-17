@@ -299,7 +299,7 @@ export default {
         const message = 'La formation d\'une des factures est en pause.'
           + ' Êtes-vous sûr(e) de vouloir valider les factures&nbsp;?';
         $q.dialog({
-          titre: 'Confirmation',
+          title: 'Confirmation',
           message,
           html: true,
           ok: 'Oui',
@@ -352,18 +352,14 @@ export default {
     };
 
     const goToPreviousMonth = () => {
-      dateRange.value = {
-        startDate: CompaniDate(dateRange.value.startDate).startOf('month').subtract('P1M').toISO(),
-        endDate: CompaniDate(dateRange.value.endDate).endOf('month').subtract('P1M').toISO(),
-      };
+      const date = CompaniDate(dateRange.value.startDate).startOf('month').subtract('P1M');
+      dateRange.value = { startDate: date.toISO(), endDate: date.endOf('month').toISO() };
       input(dateRange.value);
     };
 
     const goToNextMonth = () => {
-      dateRange.value = {
-        startDate: CompaniDate(dateRange.value.startDate).startOf('month').add('P1M').toISO(),
-        endDate: CompaniDate(dateRange.value.endDate).endOf('month').add('P1M').toISO(),
-      };
+      const date = CompaniDate(dateRange.value.startDate).startOf('month').add('P1M');
+      dateRange.value = { startDate: date.toISO(), endDate: date.endOf('month').toISO() };
       input(dateRange.value);
     };
 
