@@ -134,7 +134,7 @@
                 <ni-button v-else-if="!bill.courseCreditNote" color="primary" :disable="creditNoteCreationLoading"
                   @click="openCreditNoteCreationModal(bill)" label="Faire un avoir" icon="mdi-credit-card-refund" />
               </div>
-              <div v-if="!isBilled(bill)" class="row justify-end q-px-lg q-py-sm">
+              <div v-if="!isBilled(bill) && !isDashboard" class="row justify-end q-px-lg q-py-sm">
                 <ni-button label="Facturer" color="white" class="bg-primary" icon="payment"
                   @click="openCourseBillValidationModal(bill._id)" :disable="billValidationLoading" />
               </div>
@@ -172,8 +172,7 @@
 
     <ni-course-bill-validation-modal v-model="courseBillValidationModal" v-model:bill-to-validate="billToValidate"
       @submit="validateBill" @hide="resetCourseBillValidationModal" :loading="billValidationLoading"
-      :validations="validations.billToValidate" @cancel="cancelBillValidation" :trainees-quantity="traineesQuantity"
-      :course-name="courseName" :course-type="course.type" :companies-name="companiesName" />
+      :validations="validations.billToValidate" @cancel="cancelBillValidation" :course-infos="courseInfos" />
 
     <ni-course-credit-note-creation-modal v-model="creditNoteCreationModal" v-model:new-credit-note="newCreditNote"
       @submit="addCreditNote" @hide="resetCreditNoteCreationModal" :loading="creditNoteCreationLoading"
@@ -366,6 +365,13 @@ export default {
         : 0;
       return `${value} %`;
     });
+
+    const courseInfos = computed(() => ([{
+      courseType: course.value.type,
+      companiesName,
+      courseName,
+      traineesQuantity: Number(traineesQuantity.value),
+    }]));
 
     const setEditedBill = (bill, addMaturityDate = false) => {
       const payer = get(bill, 'payer._id');
@@ -717,6 +723,7 @@ export default {
       nextDate,
       lastDate,
       progress,
+      courseInfos,
       // Methods
       resetEditedBill,
       resetMainFeeEditionModal,

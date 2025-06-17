@@ -3,16 +3,18 @@
     <template #title>
       Confirmation
     </template>
-    <div class="course-bill-infos">
-      <div>{{ courseName }} </div>
-      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
-        <template #message>Facture pour le compte de {{ companiesName }}</template>
+    <div v-for="(info, index) of courseInfos" :key="index">
+      <div class="course-bill-infos">
+        <div>{{ info.courseName }} </div>
+        <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+          <template #message>Facture pour le compte de {{ info.companiesName }}</template>
+        </ni-banner>
+      </div>
+      <ni-banner v-if="!info.traineesQuantity && ![INTRA, SINGLE].includes(info.courseType)" icon="info_outline"
+        icon-color="orange-700" class="bg-orange-50 text-orange-900">
+        <template #message>Aucun stagiaire des structures sélectionnées n'est inscrit à la formation</template>
       </ni-banner>
     </div>
-    <ni-banner v-if="!traineesQuantity && ![INTRA, SINGLE].includes(courseType)" icon="info_outline"
-      icon-color="orange-700" class="bg-orange-50 text-orange-900">
-      <template #message>Aucun stagiaire des structures sélectionnées n'est inscrit à la formation</template>
-    </ni-banner>
    <ni-date-input caption="Date de facture" :model-value="billToValidate.billedAt" :error="validations.billedAt.$error"
       @blur="validations.billedAt.$touch" in-modal required-field @update:model-value="update($event, 'billedAt')" />
     <template #footer>
@@ -40,10 +42,7 @@ export default {
     billToValidate: { type: Object, default: () => ({}) },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
-    traineesQuantity: { type: Number, default: 0 },
-    courseName: { type: String, default: '' },
-    courseType: { type: String, default: '' },
-    companiesName: { type: String, default: '' },
+    courseInfos: { type: Array, default: () => [] },
   },
   components: {
     'ni-modal': Modal,
