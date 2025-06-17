@@ -44,7 +44,6 @@
     <div class="fixed fab-custom">
       <q-btn class="q-ma-sm" no-caps rounded icon="payment" label="Valider les factures"
         @click="openCourseBillValidationModal" color="primary" :disable="!selectedBills.length" />
-
       <q-btn class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
         @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
     </div>
@@ -68,7 +67,7 @@ import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
-import { DASHBOARD, COURSE_TYPES } from '@data/constants';
+import { DASHBOARD, COURSE_TYPES, MONTH } from '@data/constants';
 import { composeCourseName } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import { minDate, maxDate, minArrayLength } from '@helpers/vuelidateCustomVal';
@@ -98,11 +97,11 @@ export default {
     const courseBillsToValidate = ref([]);
     const validatedCourseBills = ref([]);
     const dateRange = ref({
-      startDate: CompaniDate().startOf('month').toISO(),
-      endDate: CompaniDate().endOf('month').toISO(),
+      startDate: CompaniDate().startOf(MONTH).toISO(),
+      endDate: CompaniDate().endOf(MONTH).toISO(),
     });
-    const min = ref(CompaniDate().endOf('month').subtract('P1M').toISO());
-    const max = ref(CompaniDate().startOf('month').add('P1M').toISO());
+    const min = ref(CompaniDate().endOf(MONTH).subtract('P1M').toISO());
+    const max = ref(CompaniDate().startOf(MONTH).add('P1M').toISO());
 
     const typeOptions = ref([{ label: 'Tous les types', value: '' }, ...COURSE_TYPES]);
     const selectedCompany = ref('');
@@ -352,14 +351,14 @@ export default {
     };
 
     const goToPreviousMonth = () => {
-      const date = CompaniDate(dateRange.value.startDate).startOf('month').subtract('P1M');
-      dateRange.value = { startDate: date.toISO(), endDate: date.endOf('month').toISO() };
+      const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).subtract('P1M');
+      dateRange.value = { startDate: date.toISO(), endDate: date.endOf(MONTH).toISO() };
       input(dateRange.value);
     };
 
     const goToNextMonth = () => {
-      const date = CompaniDate(dateRange.value.startDate).startOf('month').add('P1M');
-      dateRange.value = { startDate: date.toISO(), endDate: date.endOf('month').toISO() };
+      const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).add('P1M');
+      dateRange.value = { startDate: date.toISO(), endDate: date.endOf(MONTH).toISO() };
       input(dateRange.value);
     };
 
