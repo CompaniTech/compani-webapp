@@ -439,7 +439,7 @@ export default {
       if (course.value.interruptedAt) {
         const message = 'La formation est en pause. Êtes-vous sûr(e) de vouloir valider la facture&nbsp;?';
         $q.dialog({
-          titre: 'Confirmation',
+          title: 'Confirmation',
           message,
           html: true,
           ok: 'Oui',
