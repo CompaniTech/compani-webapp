@@ -67,7 +67,7 @@ export default {
     const {
       companyFilterOptions,
       typeFilterOptions,
-      archiveStatusOptions,
+      statusOptions,
       selectedTrainer,
       trainerFilterOptions,
       selectedProgram,
@@ -144,7 +144,7 @@ export default {
       activeCourses,
       archivedCourses,
       typeFilterOptions,
-      archiveStatusOptions,
+      statusOptions,
       // Computed
       selectedTrainer,
       trainerFilterOptions,
