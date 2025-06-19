@@ -22,6 +22,10 @@
           <q-icon size="12px" name="circle" class="info-archived" />
           Archivée
         </q-item>
+        <q-item v-else-if="col.name === 'interrupted' && !!col.value" class="items-center">
+          <q-icon size="12px" name="circle" class="info-warning" />
+          En pause
+        </q-item>
         <q-item v-else>{{ col.value }}</q-item>
       </template>
     </ni-table-list>
@@ -162,7 +166,8 @@ export default {
         sortable: true,
         style: 'width: 15%',
       },
-      { name: 'archived', label: '', align: 'right', field: 'archivedAt', style: 'width: 10%' },
+      { name: 'archived', label: '', align: 'right', field: 'archivedAt' },
+      { name: 'interrupted', label: '', align: 'right', field: 'interruptedAt' },
     ]);
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
