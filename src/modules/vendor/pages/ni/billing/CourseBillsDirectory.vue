@@ -40,14 +40,14 @@ import { useMeta } from 'quasar';
 import escapeRegExp from 'lodash/escapeRegExp';
 import { computed, ref } from 'vue';
 import CourseBills from '@api/CourseBills';
-import CourseCreditNotes from '@api/CourseCreditNotes';
 import DirectoryHeader from '@components/DirectoryHeader';
 import { NotifyNegative } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import { DD_MM_YYYY, DASHBOARD } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
-import { downloadFile } from '@helpers/file';
-import { removeDiacritics, formatDownloadName, formatPrice } from '@helpers/utils';
+import { useCourseBilling } from '@composables/courseBills';
+import { descendingSortBy } from '@helpers/dates/utils';
+import { removeDiacritics, formatPrice } from '@helpers/utils';
 
 export default {
   name: 'HoldingsDirectory',
@@ -87,44 +87,22 @@ export default {
       return courseBills.value.filter(bill => bill.number.match(new RegExp(formattedString, 'i')));
     });
 
-    const updateSearch = (value) => {
-      searchStr.value = value;
-    };
+    const updateSearch = (value) => { searchStr.value = value; };
+
+    const { downloadBill, downloadCreditNote } = useCourseBilling(courseBills);
 
     const refreshCourseBills = async () => {
       try {
         tableLoading.value = true;
         const billList = await CourseBills.list({ isValidated: true, action: DASHBOARD });
 
-        courseBills.value = billList;
+        courseBills.value = billList.sort(descendingSortBy('billedAt'));
       } catch (e) {
         console.error(e);
         courseBills.value = [];
         NotifyNegative('Erreur lors de la récupération des factures.');
       } finally {
         tableLoading.value = false;
-      }
-    };
-
-    const downloadBill = async (bill) => {
-      try {
-        const pdf = await CourseBills.getPdf(bill._id);
-        const pdfName = `${bill.number}.pdf`;
-        downloadFile(pdf, pdfName, 'application/octet-stream');
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors du téléchargement de la facture.');
-      }
-    };
-
-    const downloadCreditNote = async (creditNote) => {
-      try {
-        const pdf = await CourseCreditNotes.getPdf(creditNote._id);
-        const pdfName = `${formatDownloadName(`${creditNote.number}`)}.pdf`;
-        downloadFile(pdf, pdfName, 'application/octet-stream');
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors du téléchargement de l\'avoir.');
       }
     };
 
