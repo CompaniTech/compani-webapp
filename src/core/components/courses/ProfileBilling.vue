@@ -48,12 +48,18 @@
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
         @refresh-course-bills="refreshCourseBills" @unroll="unrollBill" :are-details-visible="areDetailsVisible"
-        :expected-bills-count-invalid="v$.course.expectedBillsCount.$error" />
+        :expected-bills-count-invalid="v$.course.expectedBillsCount.$error" :selected-bills="selectedBills"
+        @update-selected-bills="updateSelectedBills" />
     </div>
     <div v-if="!course.companies.length" class="text-italic">Aucune structure n'est rattachée à la formation</div>
 
-    <q-btn class="fixed fab-custom" no-caps rounded icon="add" label="Créer une facture" @click="openBillCreationModal"
-      color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" />
+    <div class="fixed fab-custom">
+      <q-btn class="q-ma-sm" no-caps rounded icon="add" label="Créer une facture" @click="openBillCreationModal"
+        color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" />
+
+      <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
+        @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
+    </div>
 
     <ni-bill-creation-modal v-model="billCreationModal" v-model:new-bill="newBill" :course-name="courseName"
       @submit="validateBillCreation" :validations="v$.newBill" @hide="resetBillCreationModal"
@@ -80,23 +86,13 @@ import useVuelidate from '@vuelidate/core';
 import { required, minValue, maxValue, helpers, or } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
-import {
-  formatAndSortOptions,
-  formatPrice,
-  formatName,
-  sortStrings,
-  formatIdentity,
-  formatAndSortCompanyOptions,
-} from '@helpers/utils';
-import { descendingSortBy, ascendingSortBy } from '@helpers/dates/utils';
+import { formatPrice, formatName, sortStrings, formatIdentity } from '@helpers/utils';
+import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { add, multiply, toFixedToFloat } from '@helpers/numbers';
-import Companies from '@api/Companies';
 import Courses from '@api/Courses';
-import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
 import CourseBills from '@api/CourseBills';
-import CourseBillingItems from '@api/CourseBillingItems';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
 import {
@@ -104,13 +100,11 @@ import {
   COMPANY,
   REQUIRED_LABEL,
   INTRA,
-  FUNDING_ORGANISATION,
   GROUP,
   TRAINEE,
   LONG_DURATION_H_MM,
   E_LEARNING,
   DD_MM_YYYY,
-  DIRECTORY,
   INTER_B2B,
   SINGLE,
 } from '@data/constants';
@@ -136,13 +130,10 @@ export default {
 
     const courseBills = ref([]);
     const billsLoading = ref(false);
-    const payerList = ref([]);
-    const billingItemList = ref([]);
     const tmpInput = ref('');
     const billCreationModal = ref(false);
     const companiesSelectionModal = ref(false);
     const billCreationLoading = ref(false);
-    const areDetailsVisible = ref(Object.fromEntries(courseBills.value.map(bill => [bill._id, false])));
     const removeNewBillDatas = ref(true);
 
     const course = computed(() => $store.state.course.course);
@@ -231,7 +222,32 @@ export default {
 
     const { isIntraCourse, isSingleCourse } = useCourses(course);
 
-    const { getBillErrorMessages } = useCourseBilling(courseBills, v$);
+    const refreshCourseBills = async () => {
+      try {
+        billsLoading.value = true;
+        courseBills.value = await CourseBills.list({ course: course.value._id, action: LIST });
+      } catch (e) {
+        console.error(e);
+        courseBills.value = [];
+        NotifyNegative('Erreur lors de la récupération des factures.');
+      } finally {
+        billsLoading.value = false;
+        selectedBills.value = [];
+      }
+    };
+
+    const {
+      payerList,
+      billingItemList,
+      areDetailsVisible,
+      selectedBills,
+      getBillErrorMessages,
+      openBillDeletionModal,
+      updateSelectedBills,
+      refreshPayers,
+      refreshBillingItems,
+      unrollBill,
+    } = useCourseBilling(courseBills, v$, refreshCourseBills);
 
     const billsGroupedByCompanies = computed(() => {
       const sortedBills = courseBills.value
@@ -283,55 +299,10 @@ export default {
 
     const saveTmp = (path) => { tmpInput.value = course.value[path]; };
 
-    const refreshCourseBills = async () => {
-      try {
-        billsLoading.value = true;
-        courseBills.value = await CourseBills.list({ course: course.value._id, action: LIST });
-      } catch (e) {
-        console.error(e);
-        courseBills.value = [];
-        NotifyNegative('Erreur lors de la récupération des factures.');
-      } finally {
-        billsLoading.value = false;
-      }
-    };
-
     const formatPayerForPayload = (payloadPayer) => {
       const payerType = payerList.value.find(payer => payer.value === payloadPayer).type;
 
       return payerType === COMPANY ? { company: payloadPayer } : { fundingOrganisation: payloadPayer };
-    };
-
-    const refreshPayers = async () => {
-      try {
-        const organisations = await CourseFundingOrganisations.list();
-        const companyList = await Companies.list({ action: DIRECTORY });
-        const formattedOrganisationList = formatAndSortOptions(organisations, 'name');
-        const formattedCompanyList = formatAndSortCompanyOptions(companyList, 'name');
-        payerList.value =
-          [
-            ...formattedOrganisationList.map(payer => ({ ...payer, type: FUNDING_ORGANISATION })),
-            ...formattedCompanyList.map(company => ({ ...company, type: COMPANY })),
-          ];
-      } catch (e) {
-        console.error(e);
-        payerList.value = [];
-        NotifyNegative('Erreur lors de la récupération des financeurs.');
-      }
-    };
-
-    const refreshBillingItems = async () => {
-      try {
-        billsLoading.value = true;
-        const billingItems = await CourseBillingItems.list();
-        billingItemList.value = formatAndSortOptions([...billingItems], 'name');
-      } catch (e) {
-        console.error(e);
-        billingItemList.value = [];
-        NotifyNegative('Erreur lors de la récupération des articles de facturation.');
-      } finally {
-        billsLoading.value = false;
-      }
     };
 
     const refreshCourse = async () => {
@@ -373,11 +344,6 @@ export default {
       payer: formatPayerForPayload(newBill.value.payer),
       maturityDate: newBill.value.maturityDate,
     });
-
-    const unrollBill = (billId) => {
-      const bill = billId || [...courseBills.value].sort(descendingSortBy('createdAt'))[0]._id;
-      areDetailsVisible.value[bill] = !areDetailsVisible.value[bill];
-    };
 
     const validateBillCreation = async () => {
       v$.value.newBill.$touch();
@@ -446,6 +412,8 @@ export default {
     };
 
     const openBillCreationModal = () => {
+      if (course.value.interruptedAt) return NotifyWarning('Impossible : la formation est en pause.');
+
       if (!courseBills.value.length && !course.value.prices.some(p => p.global)) {
         return NotifyWarning('Prix de la formation manquant.');
       }
@@ -579,6 +547,7 @@ export default {
       companiesSelectionModal,
       companiesToBill,
       areDetailsVisible,
+      selectedBills,
       // Computed
       course,
       companiesList,
@@ -596,7 +565,6 @@ export default {
       refreshCourseBills,
       unrollBill,
       refreshPayers,
-      refreshBillingItems,
       updateCourse,
       validateBillCreation,
       resetBillCreationModal,
@@ -612,6 +580,8 @@ export default {
       getPriceError,
       getPriceErrorMessage,
       showDetails,
+      openBillDeletionModal,
+      updateSelectedBills,
     };
   },
 };

@@ -39,6 +39,8 @@ import {
   COMPANY_DELETION,
   TRAINER_ADDITION,
   TRAINER_DELETION,
+  COURSE_INTERRUPTION,
+  COURSE_RESTART,
 } from '@data/constants';
 import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -204,6 +206,10 @@ export default {
       infos: `\r\n${formatIdentity(courseHistory.value.trainer.identity, 'FL')}`,
     });
 
+    const getInterruptionTitle = () => ({ type: 'Mise en pause', post: 'de la formation' });
+
+    const getRestartTitle = () => ({ type: 'Reprise', post: 'de la formation' });
+
     const formatedHistory = computed(() => {
       switch (courseHistory.value.action) {
         case TRAINEE_DELETION:
@@ -224,6 +230,10 @@ export default {
           return { title: getSlotEditionTitle(), details: getSlotEditionDetails() };
         case ESTIMATED_START_DATE_EDITION:
           return { title: getEstimatedStartDateEditionTitle(), details: getEstimatedStartDateEditionDetails() };
+        case COURSE_INTERRUPTION:
+          return { title: getInterruptionTitle() };
+        case COURSE_RESTART:
+          return { title: getRestartTitle() };
         case SLOT_CREATION:
         default:
           return { title: getSlotCreationTitle(), details: getSlotCreationDetails() };

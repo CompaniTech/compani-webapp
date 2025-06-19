@@ -8,8 +8,9 @@
 </template>
 
 <script>
+import { computed, toRefs } from 'vue';
+import { useStore } from 'vuex';
 import { copyToClipboard } from 'quasar';
-import { mapState } from 'vuex';
 import { NotifyPositive, NotifyNegative } from '@components/popup/notify';
 import Button from '@components/Button';
 import BiColorButton from '@components/BiColorButton';
@@ -25,25 +26,29 @@ export default {
     disableLink: { type: Boolean, default: true },
   },
   emits: ['download'],
-  computed: {
-    ...mapState('course', ['course']),
-  },
-  methods: {
-    copy () {
-      if (this.disableLink) return;
+  setup (props) {
+    const { disableLink } = toRefs(props);
+    const $store = useStore();
+    const course = computed(() => $store.state.course.course);
 
-      copyToClipboard(this.courseLink())
+    const courseLink = () => {
+      if (disableLink.value) return;
+
+      return Courses.getConvocationUrl(course.value._id);
+    };
+
+    const copy = () => {
+      if (disableLink.value) return;
+
+      copyToClipboard(courseLink())
         .then(() => NotifyPositive('Lien copié !'))
         .catch(() => NotifyNegative('Erreur lors de la copie du lien.'));
-    },
-    handleCopySuccess () {
-      return NotifyPositive('Lien copié !');
-    },
-    courseLink () {
-      if (this.disableLink) return;
+    };
 
-      return Courses.getConvocationUrl(this.course._id);
-    },
+    return {
+      // Methods
+      copy,
+    };
   },
 };
 </script>

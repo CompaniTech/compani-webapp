@@ -3,12 +3,17 @@
     <template #title v-if="!isClientInterface && isAdmin">
       <ni-button icon="delete" @click="deleteCourse" />
       <ni-button :flat="false" class="q-ml-sm" :label="archiveLabel" @click="validateCourseArchive" />
+      <ni-button v-if="!course.archivedAt" :flat="false" class="q-ml-sm" :label="interruptionButtonLabel"
+        @click="validateCourseInterruptionOrRestart" />
     </template>
   </ni-profile-header>
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
+import { useQuasar } from 'quasar';
 import Courses from '@api/Courses';
 import ProfileHeader from '@components/ProfileHeader';
 import Button from '@components/Button';
@@ -27,64 +32,110 @@ export default {
     'ni-button': Button,
   },
   emits: ['delete', 'refresh'],
-  data () {
-    const isClientInterface = !/\/ad\//.test(this.$route.path);
+  setup (_, { emit }) {
+    const $route = useRoute();
+    const $store = useStore();
+    const $q = useQuasar();
 
-    return {
-      isClientInterface,
-    };
-  },
-  computed: {
-    ...mapState('course', ['course']),
-    courseId () {
-      return this.course._id;
-    },
-    isAdmin () {
-      const vendorRole = this.$store.getters['main/getVendorRole'];
+    const isClientInterface = !/\/ad\//.test($route.path);
+
+    const course = computed(() => $store.state.course.course);
+
+    const isAdmin = computed(() => {
+      const vendorRole = $store.getters['main/getVendorRole'];
       return [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole);
-    },
-    archiveLabel () {
-      return !this.course.archivedAt ? 'Archiver' : 'Désarchiver';
-    },
-  },
-  methods: {
-    deleteCourse () {
-      this.$emit('delete');
-    },
-    refreshCourse () {
-      this.$emit('refresh');
-    },
-    validateCourseArchive () {
-      const message = !this.course.archivedAt
+    });
+
+    const archiveLabel = computed(() => (!course.value.archivedAt ? 'Archiver' : 'Désarchiver'));
+
+    const interruptionButtonLabel = computed(() => (!course.value.interruptedAt ? 'Mettre en pause' : 'Reprendre'));
+
+    const deleteCourse = () => emit('delete');
+
+    const refreshCourse = () => emit('refresh');
+
+    const validateCourseArchive = () => {
+      const isArchived = !!course.value.archivedAt;
+      const message = !isArchived
         ? 'Êtes-vous sûr(e) de vouloir archiver cette formation&nbsp;? <br /><br /> Vous ne pourrez plus'
         + ' modifier des informations, ajouter des émargements ni envoyer des sms.'
         : 'Êtes-vous sûr(e) de vouloir désarchiver cette formation&nbsp;? <br /><br /> Il sera de nouveau possible de'
         + ' modifier des informations, ajouter des émargements ou envoyer des sms.';
-      this.$q.dialog({
+
+      $q.dialog({
         title: 'Confirmation',
         message,
         html: true,
         ok: 'Oui',
         cancel: 'Non',
-      }).onOk(this.archiveOrUnarchiveCourse)
-        .onCancel(() => NotifyPositive(!this.course.archivedAt ? 'Archivage annulé.' : 'Désarchivage annulé.'));
-    },
-    async archiveOrUnarchiveCourse () {
-      try {
-        const payload = !this.course.archivedAt ? { archivedAt: CompaniDate().toISO() } : { archivedAt: '' };
-        await Courses.update(this.course._id, payload);
+      }).onOk(archiveOrUnarchiveCourse)
+        .onCancel(() => NotifyPositive(!isArchived ? 'Archivage annulé.' : 'Désarchivage annulé.'));
+    };
 
-        NotifyPositive(!this.course.archivedAt ? 'Formation archivée.' : 'Formation désarchivée.');
-        await this.refreshCourse();
+    const archiveOrUnarchiveCourse = async () => {
+      try {
+        const isArchived = !!course.value.archivedAt;
+        const payload = !isArchived ? { archivedAt: CompaniDate().toISO() } : { archivedAt: '' };
+
+        await Courses.update(course.value._id, payload);
+
+        NotifyPositive(!isArchived ? 'Formation archivée.' : 'Formation désarchivée.');
+        await refreshCourse();
       } catch (e) {
         console.error(e);
         NotifyNegative(
-          !this.course.archivedAt
+          !course.value.archivedAt
             ? 'Erreur lors de l\'archivage de la formation.'
             : 'Erreur lors du désarchivage de la formation.'
         );
       }
-    },
+    };
+
+    const interruptOrRestartCourse = async () => {
+      try {
+        const interruptedAt = !course.value.interruptedAt ? CompaniDate().toISO() : '';
+        await Courses.update(course.value._id, { interruptedAt });
+
+        NotifyPositive(!course.value.interruptedAt ? 'Formation mise en pause.' : 'Reprise de la formation.');
+        await refreshCourse();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative(
+          `Erreur lors de la ${!course.value.interruptedAt ? 'mise en pause' : 'reprise'} de la formation.`
+        );
+      }
+    };
+
+    const validateCourseInterruptionOrRestart = () => {
+      const message = !course.value.interruptedAt
+        ? 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation&nbsp;? <br /><br />'
+          + 'Vous ne pourrez plus créer de factures.'
+        : 'Êtes-vous sûr(e) de vouloir reprendre cette formation&nbsp;? <br /><br />'
+          + 'Vous pourrez de nouveau créer des factures.';
+
+      $q.dialog({
+        title: 'Confirmation',
+        message,
+        html: true,
+        ok: 'Oui',
+        cancel: 'Non',
+      }).onOk(interruptOrRestartCourse)
+        .onCancel(() => NotifyPositive(!course.value.interruptedAt ? 'Mise en pause annulée.' : 'Reprise annulée.'));
+    };
+
+    return {
+      // Data
+      isClientInterface,
+      // Computed
+      isAdmin,
+      archiveLabel,
+      course,
+      interruptionButtonLabel,
+      // methods
+      deleteCourse,
+      validateCourseArchive,
+      validateCourseInterruptionOrRestart,
+    };
   },
 };
 </script>

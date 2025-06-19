@@ -59,6 +59,8 @@ export const menuItemsMixin = {
               icon: 'picture_as_pdf',
               label: 'Certificats réalisation mensuels',
             },
+            { name: 'ni billing dashboard', icon: 'credit_card', label: 'A facturer' },
+            { name: 'ni billing directory', icon: 'receipt', label: 'Factures' },
           ],
         },
       ],

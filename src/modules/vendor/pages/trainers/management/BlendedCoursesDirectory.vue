@@ -17,8 +17,7 @@
         error-message="La date de fin doit être postérieure à la date de début" @blur="v$.selectedEndDate.$touch" />
       <ni-select :options="typeFilterOptions" clearable :model-value="selectedType"
         @update:model-value="updateSelectedType" />
-      <ni-select :options="archiveStatusOptions" :model-value="selectedArchiveStatus"
-        @update:model-value="updateSelectedArchiveStatus" />
+      <ni-select :options="statusOptions" :model-value="selectedStatus" @update:model-value="updateSelectedStatus" />
     </div>
     <div class="q-mb-lg filters-container checkboxes">
       <q-checkbox dense :model-value="selectedNoAddressInSlots" color="primary" label="Aucune adresse"
@@ -77,8 +76,8 @@ export default {
       selectedType,
       selectedNoAddressInSlots,
       selectedMissingTrainees,
-      archiveStatusOptions,
-      selectedArchiveStatus,
+      statusOptions,
+      selectedStatus,
       updateSelectedCompany,
       updateSelectedProgram,
       updateSelectedOperationsRepresentative,
@@ -87,7 +86,7 @@ export default {
       updateSelectedType,
       updateSelectedNoAddressInSlots,
       updateSelectedMissingTrainees,
-      updateSelectedArchiveStatus,
+      updateSelectedStatus,
       resetFilters,
     } = useCourseFilters(activeCourses, archivedCourses);
 
@@ -137,7 +136,7 @@ export default {
       // Data
       activeCourses,
       archivedCourses,
-      archiveStatusOptions,
+      statusOptions,
       typeFilterOptions,
       // Computed
       selectedCompany,
@@ -151,7 +150,7 @@ export default {
       selectedType,
       selectedNoAddressInSlots,
       selectedMissingTrainees,
-      selectedArchiveStatus,
+      selectedStatus,
       // Methods
       updateSelectedCompany,
       updateSelectedProgram,
@@ -161,7 +160,7 @@ export default {
       updateSelectedType,
       updateSelectedNoAddressInSlots,
       updateSelectedMissingTrainees,
-      updateSelectedArchiveStatus,
+      updateSelectedStatus,
       resetFilters,
     };
   },

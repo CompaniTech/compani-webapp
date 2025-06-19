@@ -146,6 +146,7 @@ export const UNARCHIVED_COURSES = 'unarchived_courses';
 export const MONTHLY = 'monthly';
 export const GLOBAL = 'global';
 export const CERTIFICATE_GENERATION_MODE = [{ label: 'Mensuel', value: MONTHLY }, { label: 'Global', value: GLOBAL }];
+export const INTERRUPTED_COURSES = 'interrupted_course';
 
 // SUBPROGRAM
 export const PUBLISHED = 'published';
@@ -240,6 +241,8 @@ export const COMPANY_ADDITION = 'company_addition';
 export const COMPANY_DELETION = 'company_deletion';
 export const TRAINER_ADDITION = 'trainer_addition';
 export const TRAINER_DELETION = 'trainer_deletion';
+export const COURSE_INTERRUPTION = 'course_interruption';
+export const COURSE_RESTART = 'course_restart';
 
 // MEDIA UPLOAD
 export const UPLOAD_IMAGE = 'image';
@@ -331,6 +334,7 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
 // COURSE_BILLS
 export const LIST = 'list';
 export const BALANCE = 'balance';
+export const DASHBOARD = 'dashboard';
 export const FUNDING_ORGANISATION = 'funding_organisation';
 export const GROUP = 'group';
 export const COUNT_UNIT = { [GROUP]: 'groupe', [TRAINEE]: 'stagiaire' };

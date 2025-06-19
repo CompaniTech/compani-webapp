@@ -21,7 +21,7 @@ export default {
     selectedType: '',
     selectedNoAddressInSlots: false,
     selectedMissingTrainees: false,
-    selectedArchiveStatus: '',
+    selectedStatus: '',
     selectedSalesRepresentative: '',
   },
   mutations: {
@@ -38,7 +38,7 @@ export default {
     SET_SELECTED_TYPE: (state, data) => { state.selectedType = data; },
     SET_SELECTED_NO_ADDRESS_IN_SLOTS: (state, data) => { state.selectedNoAddressInSlots = data; },
     SET_SELECTED_MISSING_TRAINEES: (state, data) => { state.selectedMissingTrainees = data; },
-    SET_SELECTED_ARCHIVE_STATUS: (state, data) => { state.selectedArchiveStatus = data; },
+    SET_SELECTED_STATUS: (state, data) => { state.selectedStatus = data; },
     SET_SELECTED_SALES_REPRESENTATIVE: (state, data) => { state.selectedSalesRepresentative = data; },
   },
   actions: {
@@ -88,7 +88,7 @@ export default {
     setSelectedType: ({ commit }, params) => { commit('SET_SELECTED_TYPE', params.type); },
     setSelectedNoAddressInSlots: ({ commit }, params) => commit('SET_SELECTED_NO_ADDRESS_IN_SLOTS', params.isSelected),
     setSelectedMissingTrainees: ({ commit }, params) => commit('SET_SELECTED_MISSING_TRAINEES', params.isSelected),
-    setSelectedArchiveStatus: ({ commit }, params) => commit('SET_SELECTED_ARCHIVE_STATUS', params.status),
+    setSelectedStatus: ({ commit }, params) => commit('SET_SELECTED_STATUS', params.status),
     setSelectedSalesRepresentative: ({ commit }, params) => {
       commit('SET_SELECTED_SALES_REPRESENTATIVE', params.salesRepresentativeId);
     },
@@ -104,7 +104,7 @@ export default {
       commit('SET_SELECTED_TYPE', '');
       commit('SET_SELECTED_NO_ADDRESS_IN_SLOTS', false);
       commit('SET_SELECTED_MISSING_TRAINEES', false);
-      commit('SET_SELECTED_ARCHIVE_STATUS', params.isClientInterfaceOrTrainer ? '' : UNARCHIVED_COURSES);
+      commit('SET_SELECTED_STATUS', params.isClientInterfaceOrTrainer ? '' : UNARCHIVED_COURSES);
       commit('SET_SELECTED_SALES_REPRESENTATIVE', '');
     },
   },

@@ -11,6 +11,9 @@ export default {
   async update (billId, payload) {
     await alenviAxios.put(`${process.env.API_HOSTNAME}/coursebills/${billId}`, payload);
   },
+  async updateBillList (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/list-edition`, payload);
+  },
   async addBillingPurchase (billId, payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/${billId}/billingpurchases`, payload);
   },
@@ -28,7 +31,7 @@ export default {
     await alenviAxios.delete(`${process.env.API_HOSTNAME}/coursebills/${billId}/billingpurchases/${billingPurchaseId}`);
   },
 
-  async deleteBill (billId) {
-    await alenviAxios.delete(`${process.env.API_HOSTNAME}/coursebills/${billId}`);
+  async deleteBillList (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/list-deletion`, payload);
   },
 };
