@@ -18,9 +18,15 @@
     <ni-table-list :data="courses" :columns="columns" v-model:pagination="pagination"
       :path="path">
       <template #body="{ col }">
-        <q-item v-if="col.name === 'archived' && !!col.value" class="items-center">
-          <q-icon size="12px" name="circle" class="info-archived" />
-          Archivée
+        <q-item v-if="col.name === 'status'" class="items-center">
+          <div v-if="Object.keys(col.value).includes('archivedAt') && !!col.value.archivedAt">
+            <q-icon size="12px" name="circle" class="info-archived" />
+            Archivée
+          </div>
+          <div v-else-if="Object.keys(col.value).includes('interruptedAt') && !!col.value.interruptedAt">
+            <q-icon size="12px" name="circle" class="info-warning" />
+            En&nbsp;pause
+          </div>
         </q-item>
         <q-item v-else>{{ col.value }}</q-item>
       </template>
@@ -162,7 +168,12 @@ export default {
         sortable: true,
         style: 'width: 15%',
       },
-      { name: 'archived', label: '', align: 'right', field: 'archivedAt', style: 'width: 10%' },
+      {
+        name: 'status',
+        label: '',
+        field: row => ({ archivedAt: row.archivedAt, interruptedAt: row.interruptedAt }),
+        align: 'right',
+      },
     ]);
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
