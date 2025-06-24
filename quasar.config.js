@@ -1,9 +1,12 @@
-require('dotenv').config();
-const path = require('path');
-const webpack = require('webpack');
-const { configure } = require('quasar/wrappers');
+import path from 'node:path';
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
+import webpack from 'webpack';
+import dotenv from 'dotenv';
+import { defineConfig } from '#q-app/wrappers';
 
-module.exports = configure(ctx => ({
+dotenv.config();
+
+export default defineConfig(ctx => ({
   css: ['app.sass', 'colors.sass'],
   extras: ['material-icons', 'mdi-v3', 'ionicons-v4', 'fontawesome-v5'],
   framework: {
@@ -80,9 +83,8 @@ module.exports = configure(ctx => ({
     useNotifier: false,
     preloadChunks: true,
     chainWebpack (chain) {
-      const nodePolyfillWebpackPlugin = require('node-polyfill-webpack-plugin');
       chain.plugin('node-polyfill')
-        .use(nodePolyfillWebpackPlugin)
+        .use(new NodePolyfillPlugin())
         .use(webpack.ProvidePlugin, [{ Buffer: ['buffer', 'Buffer'] }]);
     },
     extendWebpack (cfg) {
@@ -123,6 +125,9 @@ module.exports = configure(ctx => ({
       TRAINER_FEES_BILLING_ITEM: process.env.TRAINER_FEES_BILLING_ITEM,
     },
   },
-  devServer: { open: true },
-  ...(ctx && ctx.dev && { boot: ['localEntry'] }),
+  devServer: { port: 8080, open: true },
+  boot: [
+    'store',
+    ...(ctx?.dev ? ['localEntry'] : []),
+  ],
 }));

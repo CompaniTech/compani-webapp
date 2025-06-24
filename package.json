@@ -11,7 +11,7 @@
     "test:e2e": "cypress open",
     "start:workflow:api": "NODE_ENV=test node ../api/server.js",
     "start:workflow:webapp": "quasar dev",
-    "postinstall": "holidays2json --pick FR --min && quasar build",
+    "postinstall": "holidays2json --pick FR --min && quasar build && rm -f quasar.config.js.temporary.*",
     "start": "node server.js",
     "lint": "eslint ."
   },
@@ -52,7 +52,7 @@
     "@babel/preset-env": "~7.27.2",
     "@eslint/eslintrc": "~3.3.1",
     "@eslint/js": "~9.29.0",
-    "@quasar/app-webpack": "~3.15.1",
+    "@quasar/app-webpack": "~4.2.1",
     "@quasar/cli": "~2.5.0",
     "@quasar/quasar-app-extension-testing-e2e-cypress": "~4.2.2",
     "@vue/cli-service": "~5.0.4",

@@ -1,5 +1,5 @@
 const { default: axios } = require('axios');
-const ctx = require('../../../quasar.conf');
+const ctx = require('../../../quasar.config');
 
 const parseEnv = env => Object.keys(env).reduce((acc, key) => {
   if (env[key]) acc[key] = env[key];
