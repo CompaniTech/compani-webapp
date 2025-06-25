@@ -1,10 +1,9 @@
 import path from 'node:path';
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 import webpack from 'webpack';
-import dotenv from 'dotenv';
 import { defineConfig } from '#q-app/wrappers';
-
-dotenv.config();
+// eslint-disable-next-line import/extensions
+import { env } from './env.mjs';
 
 export default defineConfig(ctx => ({
   css: ['app.sass', 'colors.sass'],
@@ -111,19 +110,7 @@ export default defineConfig(ctx => ({
         })
       );
     },
-    env: {
-      NODE_ENV: process.env.NODE_ENV,
-      API_HOSTNAME: process.env.NODE_ENV === 'test' ? process.env.TEST_API_HOSTNAME : process.env.API_HOSTNAME,
-      COMPANI_HOSTNAME: process.env.COMPANI_HOSTNAME,
-      MESSENGER_LINK: process.env.MESSENGER_LINK,
-      ENTERCODE_LINK: process.env.ENTERCODE_LINK,
-      TOKEN_SECRET: process.env.TOKEN_SECRET,
-      ALENVI_BOT_ID: process.env.ALENVI_BOT_ID,
-      GA_TRACKING_ID: process.env.GA_TRACKING_ID,
-      BULB_LINK: process.env.BULB_LINK,
-      DETACHMENT_ALLOWED_COMPANY_IDS: process.env.DETACHMENT_ALLOWED_COMPANY_IDS,
-      TRAINER_FEES_BILLING_ITEM: process.env.TRAINER_FEES_BILLING_ITEM,
-    },
+    env,
   },
   devServer: { port: 8080, open: true },
   boot: [
