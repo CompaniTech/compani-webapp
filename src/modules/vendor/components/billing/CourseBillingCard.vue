@@ -70,7 +70,7 @@
                 <span v-if="bill.billedAt">
                   {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
                 </span>
-                <span v-else>
+                <span v-else class="maturity-date">
                   Date d'échéance : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
                 </span>
                 <div class="text-weight-bold text-14">
@@ -793,4 +793,8 @@ export default {
 .bill-infos
   flex-shrink: 0
   white-space: nowrap
+
+.maturity-date
+  color: red
+  // color: orange
 </style>

@@ -31,4 +31,8 @@ export default {
   async deleteBillList (payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/list-deletion`, payload);
   },
+
+  async createList (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/list-creation`, payload);
+  },
 };
