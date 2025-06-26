@@ -74,6 +74,7 @@ export default defineConfig(ctx => ({
   },
   animations: ['fadeIn', 'fadeOut'],
   supportIE: true,
+  indexHtmlTemplate: './index.html',
   build: {
     scopeHoisting: true,
     vueRouterMode: 'history',

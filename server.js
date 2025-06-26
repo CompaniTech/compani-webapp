@@ -15,5 +15,5 @@ app.set('port', (process.env.PORT || 8080));
 
 app.listen(app.get('port'), () => {
   // eslint-disable-next-line no-console
-  console.log(`Server launched on ${process.env.port || 8080}`);
+  console.log(`Server launched on ${process.env.PORT || 8080}`);
 });
