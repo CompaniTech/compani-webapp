@@ -62,13 +62,17 @@ const rules = {
   'operator-linebreak': ['error', 'before', { overrides: { '&&': 'after', '||': 'after', '=': 'after' } }],
   'prefer-destructuring': ['error', { VariableDeclarator: { object: true, array: false } }],
   'space-before-function-paren': 0,
+  'vue/max-attributes-per-line': 0,
+  'vue/singleline-html-element-content-newline': 0,
+  'vue/html-indent': 0,
+  'vue/html-closing-bracket-newline': 0,
+  'vue/first-attribute-linebreak': 0,
 };
 
 export default defineConfig([
   globalIgnores(['dist', 'eslint.config.mjs', '.quasar', '.postcssrc.js', './test/cypress/support/component.js']),
   ...airbnb,
   ...compat.extends(
-    'plugin:vue/vue3-strongly-recommended',
     'plugin:promise/recommended',
     'plugin:n/recommended'
   ),
@@ -88,7 +92,7 @@ export default defineConfig([
         __statics: true,
       },
     },
-    rules,
+    rules: { ...vue.configs['strongly-recommended'].rules, ...rules },
   },
   { // Configuration pour les fichiers de tests e2e
     files: ['test/cypress/**/*.{js,ts}', '**/*.spec.{js,ts}'],
