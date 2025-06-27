@@ -1,11 +1,13 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template #title>
-      Nouvelle <span class="text-weight-bold">facture</span>
+      {{ billsQuantity === 1 ? 'Nouvelle' : 'Nouvelles' }}
+      <span class="text-weight-bold">
+      {{ billsQuantity === 1 ? 'facture' : 'factures' }}
+      </span>
     </template>
-    {{ newBill }}
+    <div>{{ courseName }} </div>
     <div v-if="billsQuantity === 1">
-      <div>{{ courseName }} </div>
       <div class="course-bill-infos">
         <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
           <template #message>Facture pour le compte de {{ companiesName }}</template>
@@ -20,7 +22,7 @@
       <ni-input v-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
         :error="validations.mainFee.price.$error" type="number" :model-value="newBill.mainFee.price"
         @blur="validations.mainFee.price.$touch" suffix="€" :error-message="errorMessages.price"
-        @update:model-value="update($event, 'mainFee.price')" />
+        @update:model-value="update($event, 'mainFee.price')" required-field />
       <div v-else class="row items-center">
         <ni-input caption="Pourcentage" :error="validations.mainFee.percentage.$error" type="number" suffix="%"
           :model-value="newBill.mainFee.percentage" @blur="validations.mainFee.percentage.$touch" required-field
@@ -43,7 +45,6 @@
         @update:model-value="update($event, 'mainFee.description')" />
     </div>
     <div v-else>
-      <div>{{ courseName }} </div>
       <div class="course-bill-infos">
         <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
           <template #message>Facture pour le compte de {{ companiesName }}</template>
@@ -56,15 +57,15 @@
         :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
         :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
       <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
-        :model-value="traineesQuantity" @blur="validations.mainFee.count.$touch"
+        :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch"
         :disable="course.type === INTRA" :error-message="errorMessages.count"
         @update:model-value="update($event, 'mainFee.count')" />
       <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
         @update:model-value="update($event, 'mainFee.description')" />
     </div>
     <template #footer>
-      <ni-button class="full-width modal-btn bg-primary" label="Créer les factures" icon-right="add" color="white"
-        :loading="loading" @click="submit" />
+      <ni-button :label="billsQuantity === 1 ? 'Créer la facture' : 'Créer les factures'" icon-right="add" color="white"
+        :loading="loading" @click="submit" class="full-width modal-btn bg-primary" />
     </template>
   </ni-modal>
 </template>
