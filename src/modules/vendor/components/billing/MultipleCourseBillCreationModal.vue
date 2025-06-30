@@ -3,7 +3,7 @@
     <template #title>
       Créer des factures
     </template>
-    <ni-input caption="Créer les factures" type="number" in-modal required-field :model-value="newBillsQuantity"
+    <ni-input caption="Nombre de factures a créer" type="number" in-modal required-field :model-value="newBillsQuantity"
       @update:model-value="update($event)" :error="validations.$error" :error-message="quantityErrorMessage" last />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Créer des factures" icon-right color="white"

@@ -1,9 +1,9 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template #title>
-      {{ billsQuantity === 1 ? 'Nouvelle' : 'Nouvelles' }}
+       {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
       <span class="text-weight-bold">
-      {{ billsQuantity === 1 ? 'facture' : 'factures' }}
+      {{ formatQuantity('facture', billsQuantity, 's', false) }}
       </span>
     </template>
     <div>{{ courseName }} </div>
@@ -177,6 +177,7 @@ export default {
       submit,
       update,
       formatPrice,
+      formatQuantity,
     };
   },
 };

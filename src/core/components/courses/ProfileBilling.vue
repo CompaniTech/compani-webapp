@@ -67,9 +67,9 @@
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
       :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity" />
 
-    <ni-multiple-course-bill-creation-modal v-model="multipleBillCreationModal" :validations="v$.newBillsQuantity"
-      :loading="billCreationLoading" @submit="validationMultipleBillCreation" @hide="resetBillsQuantity"
-      v-model:new-bills-quantity="newBillsQuantity" />
+    <ni-multiple-course-bill-creation-modal :validations="v$.newBillsQuantity"
+      v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity"
+      :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
       :course-companies="course.companies" @submit="openNextModal" :validations="v$.companiesToBill"
@@ -141,10 +141,15 @@ export default {
     const companiesSelectionModal = ref(false);
     const billCreationLoading = ref(false);
     const removeNewBillDatas = ref(true);
-    const newBillsQuantity = ref(courseBills.value.length ? course.value.expectedBillsCount : 1);
     const multipleBillCreationModal = ref(false);
 
     const course = computed(() => $store.state.course.course);
+
+    const newBillsQuantity = ref(
+      !courseBills.value.length && course.value.expectedBillsCount
+        ? course.value.expectedBillsCount
+        : 1
+    );
 
     const showPrices = ref((course.value.prices || []).some(p => !p.global));
 
@@ -399,13 +404,20 @@ export default {
       }
     };
 
-    const validationMultipleBillCreation = async () => {
+    const validateBillsQuantity = async () => {
       v$.value.newBillsQuantity.$touch();
-      if (v$.value.newBillsQuantity.$error) return NotifyWarning('Champ(s) invalide(s).');
+      if (v$.value.newBillsQuantity.$error) return NotifyWarning('Champ invalide.');
+
+      const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
+      const totalBillsAfterCreation = courseBillsWithoutCreditNote.length + newBillsQuantity.value;
+
+      if (totalBillsAfterCreation > course.value.expectedBillsCount) {
+        return NotifyWarning('Impossible de créer autant de factures, nombre maximum de factures atteint.');
+      }
 
       if (isIntraCourse.value || isSingleCourse.value) {
-        multipleBillCreationModal.value = false;
         openBillCreationModal();
+        multipleBillCreationModal.value = false;
       } else {
         companiesSelectionModal.value = true;
       }
@@ -457,26 +469,19 @@ export default {
     };
 
     const openBillCreationModal = () => {
-      if (isIntraCourse.value || isSingleCourse.value) {
-        totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
-          if (companiesToBill.value.includes(price.company)) {
-            return {
-              global: toFixedToFloat(add(acc.global, (price.global || 0))),
-              trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
-            };
-          }
-          return acc;
-        }, { global: 0, trainerFees: 0 });
-
-        if (course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) {
-          newBill.value.mainFee.percentage = 40;
+      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
+        if (companiesToBill.value.includes(price.company)) {
+          return {
+            global: toFixedToFloat(add(acc.global, (price.global || 0))),
+            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
+          };
         }
+        return acc;
+      }, { global: 0, trainerFees: 0 });
 
-        multipleBillCreationModal.value = false;
-        billCreationModal.value = true;
-      } else {
-        companiesSelectionModal.value = true;
-      }
+      if (everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
+
+      billCreationModal.value = true;
     };
 
     const openMultipleBillCreationModal = () => {
@@ -486,18 +491,14 @@ export default {
         return NotifyWarning('Prix de la formation manquant.');
       }
 
-      if (isIntraCourse || isSingleCourse.value) {
-        if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
+      if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
-        if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
-          return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
-        }
-
-        multipleBillCreationModal.value = true;
-      } else {
-        companiesSelectionModal.value = true;
+      const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
+      if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
+        return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
       }
+
+      multipleBillCreationModal.value = true;
     };
 
     const openNextModal = () => {
@@ -527,8 +528,8 @@ export default {
 
       if (everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
 
+      openBillCreationModal();
       companiesSelectionModal.value = false;
-      billCreationModal.value = true;
       multipleBillCreationModal.value = false;
       removeNewBillDatas.value = true;
     };
@@ -634,7 +635,7 @@ export default {
       refreshPayers,
       updateCourse,
       validateBillCreation,
-      validationMultipleBillCreation,
+      validateBillsQuantity,
       resetBillCreationModal,
       resetBillsQuantity,
       openBillCreationModal,
