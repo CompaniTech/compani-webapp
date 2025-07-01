@@ -145,11 +145,7 @@ export default {
 
     const course = computed(() => $store.state.course.course);
 
-    const newBillsQuantity = ref(
-      !courseBills.value.length && course.value.expectedBillsCount
-        ? course.value.expectedBillsCount
-        : 1
-    );
+    const newBillsQuantity = ref(1);
 
     const showPrices = ref((course.value.prices || []).some(p => !p.global));
 
@@ -187,7 +183,8 @@ export default {
           ...(newBillsQuantity.value === 1 && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
-            percentage: { required, strictPositiveNumber, integerNumber, maxValue: maxValue(100) },
+            ...(newBillsQuantity.value === 1 &&
+            { percentage: { required, strictPositiveNumber, integerNumber, maxValue: maxValue(100) } }),
           }),
           countUnit: { required },
         },
@@ -417,10 +414,10 @@ export default {
 
       if (isIntraCourse.value || isSingleCourse.value) {
         openBillCreationModal();
-        multipleBillCreationModal.value = false;
       } else {
         companiesSelectionModal.value = true;
       }
+      multipleBillCreationModal.value = false;
     };
 
     const addBill = async () => {
@@ -491,6 +488,10 @@ export default {
         return NotifyWarning('Prix de la formation manquant.');
       }
 
+      if (!courseBills.value.length && course.value.expectedBillsCount) {
+        newBillsQuantity.value = course.value.expectedBillsCount;
+      }
+
       if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
       const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
@@ -516,21 +517,9 @@ export default {
           return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
         }
       }
-      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
-        if (companiesToBill.value.includes(price.company)) {
-          return {
-            global: toFixedToFloat(add(acc.global, (price.global || 0))),
-            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
-          };
-        }
-        return acc;
-      }, { global: 0, trainerFees: 0 });
-
-      if (everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
 
       openBillCreationModal();
       companiesSelectionModal.value = false;
-      multipleBillCreationModal.value = false;
       removeNewBillDatas.value = true;
     };
 
