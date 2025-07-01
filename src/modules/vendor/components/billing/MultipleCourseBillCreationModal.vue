@@ -38,7 +38,7 @@ export default {
     const quantityErrorMessage = computed(() => {
       if (validations.value.strictPositiveNumber.$response === false ||
         validations.value.integerNumber.$response === false) {
-        return 'Nombre non valide, doit être un entier strictement positif .';
+        return 'Nombre non valide, doit être un entier strictement positif.';
       }
 
       return 'Nombre invalide.';

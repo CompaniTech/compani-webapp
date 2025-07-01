@@ -7,22 +7,22 @@
       </span>
     </template>
     <div>{{ courseName }} </div>
+    <div class="course-bill-infos">
+      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+        <template #message>Facture pour le compte de {{ companiesName }}</template>
+      </ni-banner>
+      <div v-if="course.type === INTRA">{{ traineesQuantityInfos }} </div>
+    </div>
+    <company-select in-modal caption="Payeur" :company-options="payerOptions" :company="newBill.payer" required-field
+      @update="update($event, 'payer')" :validation="validations.payer" />
+    <ni-option-group v-if="![INTRA, SINGLE].includes(course.type)" in-modal :model-value="newBill.mainFee.countUnit"
+      :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
+      :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
     <div v-if="billsQuantity === 1">
-      <div class="course-bill-infos">
-        <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
-          <template #message>Facture pour le compte de {{ companiesName }}</template>
-        </ni-banner>
-        <div v-if="course.type === INTRA">{{ traineesQuantityInfos }} </div>
-      </div>
-      <company-select in-modal caption="Payeur" :company-options="payerOptions" :company="newBill.payer" required-field
-        @update="update($event, 'payer')" :validation="validations.payer" />
-      <ni-option-group v-if="![INTRA, SINGLE].includes(course.type)" in-modal :model-value="newBill.mainFee.countUnit"
-        :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
-        :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
       <ni-input v-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
         :error="validations.mainFee.price.$error" type="number" :model-value="newBill.mainFee.price"
-        @blur="validations.mainFee.price.$touch" suffix="€" :error-message="errorMessages.price"
-        @update:model-value="update($event, 'mainFee.price')" required-field />
+        @blur="validations.mainFee.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
+        @update:model-value="update($event, 'mainFee.price')" />
       <div v-else class="row items-center">
         <ni-input caption="Pourcentage" :error="validations.mainFee.percentage.$error" type="number" suffix="%"
           :model-value="newBill.mainFee.percentage" @blur="validations.mainFee.percentage.$touch" required-field
@@ -45,17 +45,6 @@
         @update:model-value="update($event, 'mainFee.description')" />
     </div>
     <div v-else>
-      <div class="course-bill-infos">
-        <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
-          <template #message>Facture pour le compte de {{ companiesName }}</template>
-        </ni-banner>
-        <div v-if="course.type === INTRA">{{ traineesQuantityInfos }} </div>
-      </div>
-      <company-select in-modal caption="Payeur" :company-options="payerOptions" :company="newBill.payer" required-field
-        @update="update($event, 'payer')" :validation="validations.payer" />
-      <ni-option-group v-if="![INTRA, SINGLE].includes(course.type)" in-modal :model-value="newBill.mainFee.countUnit"
-        :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
-        :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
       <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
         :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch"
         :disable="course.type === INTRA" :error-message="errorMessages.count"
@@ -98,7 +87,7 @@ export default {
     traineesQuantity: { type: Number, default: 1 },
     companiesToBill: { type: Array, default: () => [] },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
-    billsQuantity: { type: Number, default: 0 },
+    billsQuantity: { type: Number, default: 1 },
   },
   components: {
     'ni-modal': Modal,

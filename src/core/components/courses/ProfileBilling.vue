@@ -142,10 +142,9 @@ export default {
     const billCreationLoading = ref(false);
     const removeNewBillDatas = ref(true);
     const multipleBillCreationModal = ref(false);
+    const newBillsQuantity = ref(1);
 
     const course = computed(() => $store.state.course.course);
-
-    const newBillsQuantity = ref(1);
 
     const showPrices = ref((course.value.prices || []).some(p => !p.global));
 
@@ -362,11 +361,7 @@ export default {
       return {
         quantity: newBillsQuantity.value,
         course: course.value._id,
-        mainFee: {
-          count: newBill.value.mainFee.count,
-          countUnit: newBill.value.mainFee.countUnit,
-          description: newBill.value.mainFee.description,
-        },
+        mainFee: newBill.value.mainFee,
         companies: companiesToBill.value,
         payer: formatPayerForPayload(newBill.value.payer),
       };
