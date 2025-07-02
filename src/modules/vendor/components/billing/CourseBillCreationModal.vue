@@ -2,9 +2,7 @@
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template #title>
        {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
-      <span class="text-weight-bold">
-      {{ formatQuantity('facture', billsQuantity, 's', false) }}
-      </span>
+      <span class="text-weight-bold">{{ formatQuantity('facture', billsQuantity, 's', false) }}</span>
     </template>
     <div>{{ courseName }} </div>
     <div class="course-bill-infos">
@@ -41,17 +39,14 @@
       <ni-date-input caption="Date d'échéance" :model-value="newBill.maturityDate" in-modal required-field
         :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
         @update:model-value="update($event, 'maturityDate')" />
-      <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
-        @update:model-value="update($event, 'mainFee.description')" />
     </div>
     <div v-else>
       <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
-        :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch"
-        :disable="course.type === INTRA" :error-message="errorMessages.count"
-        @update:model-value="update($event, 'mainFee.count')" />
-      <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
-        @update:model-value="update($event, 'mainFee.description')" />
+        :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
+        :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
     </div>
+    <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
+      @update:model-value="update($event, 'mainFee.description')" />
     <template #footer>
       <ni-button :label="billsQuantity === 1 ? 'Créer la facture' : 'Créer les factures'" icon-right="add" color="white"
         :loading="loading" @click="submit" class="full-width modal-btn bg-primary" />

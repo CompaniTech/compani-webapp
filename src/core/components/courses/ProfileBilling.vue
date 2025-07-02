@@ -487,11 +487,13 @@ export default {
         newBillsQuantity.value = course.value.expectedBillsCount;
       }
 
-      if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
+      if (isIntraCourse.value || isSingleCourse.value) {
+        if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-      const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
-      if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
-        return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
+        const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
+        if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
+          return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
+        }
       }
 
       multipleBillCreationModal.value = true;
