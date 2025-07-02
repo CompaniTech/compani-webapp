@@ -1,7 +1,7 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template #title>
-       {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
+      {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
       <span class="text-weight-bold">{{ formatQuantity('facture', billsQuantity, 's', false) }}</span>
     </template>
     <div>{{ courseName }} </div>
