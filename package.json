@@ -11,7 +11,7 @@
     "test:e2e": "cypress open",
     "start:workflow:api": "NODE_ENV=test node ../api/server.js",
     "start:workflow:webapp": "quasar dev",
-    "postinstall": "holidays2json --pick FR --min && quasar build && rm -f quasar.config.js.temporary.*",
+    "postinstall": "holidays2json --pick FR --min && quasar build",
     "start": "node server.js",
     "lint": "eslint ."
   },
