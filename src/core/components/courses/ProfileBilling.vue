@@ -407,9 +407,7 @@ export default {
         return NotifyWarning('Impossible de créer autant de factures, nombre maximum de factures atteint.');
       }
 
-      if (isIntraCourse.value || isSingleCourse.value) {
-        openBillCreationModal();
-      } else {
+      if (isIntraCourse.value || isSingleCourse.value) { openBillCreationModal(); } else {
         companiesSelectionModal.value = true;
       }
       multipleBillCreationModal.value = false;
@@ -471,7 +469,7 @@ export default {
         return acc;
       }, { global: 0, trainerFees: 0 });
 
-      if (everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
+      if (everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) newBill.value.mainFee.percentage = 40;
 
       billCreationModal.value = true;
     };
@@ -483,10 +481,6 @@ export default {
         return NotifyWarning('Prix de la formation manquant.');
       }
 
-      if (!courseBills.value.length && course.value.expectedBillsCount) {
-        newBillsQuantity.value = course.value.expectedBillsCount;
-      }
-
       if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
@@ -494,6 +488,10 @@ export default {
         if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
           return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
         }
+      }
+
+      if (!courseBills.value.length && course.value.expectedBillsCount) {
+        newBillsQuantity.value = course.value.expectedBillsCount;
       }
 
       multipleBillCreationModal.value = true;

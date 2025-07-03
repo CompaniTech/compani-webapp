@@ -95,7 +95,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-bill'],
   setup (props, { emit }) {
-    const { newBill, traineesQuantity, course, companiesToBill, totalPriceToBill } = toRefs(props);
+    const { newBill, traineesQuantity, course, companiesToBill, totalPriceToBill, billsQuantity } = toRefs(props);
 
     const priceCaption = computed(() => (
       newBill.value.mainFee.countUnit === GROUP ? 'Prix du groupe' : 'Prix par stagiaire'
@@ -137,7 +137,7 @@ export default {
     };
 
     watch(computedPrice, () => {
-      if (computedPrice.value) {
+      if (computedPrice.value && billsQuantity.value === 1) {
         const newPrice = divide(computedPrice.value.global, newBill.value.mainFee.count);
         if (newBill.value.mainFee.price !== newPrice) {
           emit('update:new-bill', set({ ...newBill.value }, 'mainFee.price', newPrice));
