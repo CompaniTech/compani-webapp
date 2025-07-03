@@ -1,10 +1,6 @@
 const { default: axios } = require('axios');
-const ctx = require('../../../quasar.conf');
-
-const parseEnv = env => Object.keys(env).reduce((acc, key) => {
-  if (env[key]) acc[key] = env[key];
-  return acc;
-}, {});
+// eslint-disable-next-line import/extensions
+const { env, parseEnv } = require('../../../env.mjs');
 
 module.exports = (on, config) => {
   on('before:browser:launch', (browser, launchOptions) => {
@@ -35,7 +31,6 @@ module.exports = (on, config) => {
     },
   });
 
-  const { env } = ctx().build;
   config.env = { ...parseEnv(env) };
 
   return config;

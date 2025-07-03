@@ -1,3 +1,3 @@
-import { boot } from 'quasar/wrappers';
+import { defineBoot } from '#q-app/wrappers';
 
-export default boot(({ app }) => { app.config.performance = false; });
+export default defineBoot(({ app }) => { app.config.performance = false; });
