@@ -82,7 +82,7 @@ export default {
     traineesQuantity: { type: Number, default: 1 },
     companiesToBill: { type: Array, default: () => [] },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
-    billsQuantity: { type: Number, default: 1 },
+    billsQuantity: { type: Number, required: true },
   },
   components: {
     'ni-modal': Modal,

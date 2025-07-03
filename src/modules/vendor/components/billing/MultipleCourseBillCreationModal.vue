@@ -29,7 +29,7 @@ export default {
     modelValue: { type: Boolean, default: false },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
-    newBillsQuantity: { type: Number, default: 0 },
+    newBillsQuantity: { type: Number, required: true },
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-bills-quantity'],
   setup (props, { emit }) {
