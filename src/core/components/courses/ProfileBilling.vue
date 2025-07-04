@@ -433,6 +433,13 @@ export default {
       }
     };
 
+    const resetBillsQuantity = () => {
+      if (!billCreationModal.value && !companiesSelectionModal.value) {
+        newBillsQuantity.value = 1;
+        v$.value.newBillsQuantity.$reset();
+      }
+    };
+
     const resetBillCreationModal = () => {
       if (removeNewBillDatas.value) {
         newBill.value = {
@@ -448,13 +455,7 @@ export default {
         totalPriceToBill.value = { global: 0, trainerFees: 0 };
         v$.value.newBill.$reset();
         resetCompaniesSelectionModal();
-      }
-    };
-
-    const resetBillsQuantity = () => {
-      if (!billCreationModal.value && !companiesSelectionModal.value) {
-        newBillsQuantity.value = 1;
-        v$.value.newBillsQuantity.$reset();
+        resetBillsQuantity();
       }
     };
 
