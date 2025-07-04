@@ -407,9 +407,9 @@ export default {
         return NotifyWarning('Impossible de créer autant de factures, nombre maximum de factures atteint.');
       }
 
-      if (isIntraCourse.value || isSingleCourse.value) { openBillCreationModal(); } else {
-        companiesSelectionModal.value = true;
-      }
+      if (isIntraCourse.value || isSingleCourse.value) openBillCreationModal();
+      else companiesSelectionModal.value = true;
+
       multipleBillCreationModal.value = false;
     };
 
