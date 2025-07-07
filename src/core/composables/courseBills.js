@@ -139,9 +139,15 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     }
   };
 
-  const unrollBill = (billId) => {
-    const bill = billId || [...courseBills.value].sort(descendingSortBy('createdAt'))[0]._id;
-    areDetailsVisible.value[bill] = !areDetailsVisible.value[bill];
+  const unrollBill = (value) => {
+    if (!value) {
+      const bill = [...courseBills.value].sort(descendingSortBy('createdAt'))[0]._id;
+      areDetailsVisible.value[bill] = !areDetailsVisible.value[bill];
+    } else if (Array.isArray(value)) {
+      value.forEach((billId) => { areDetailsVisible.value[billId] = !areDetailsVisible.value[billId]; });
+    } else {
+      areDetailsVisible.value[value] = !areDetailsVisible.value[value];
+    }
   };
 
   return {

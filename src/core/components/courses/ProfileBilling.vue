@@ -416,14 +416,15 @@ export default {
     const addBill = async () => {
       try {
         billCreationLoading.value = true;
-        await CourseBills.createList(formatCreationPayload());
+        const billsCreated = await CourseBills.createList(formatCreationPayload());
+
         NotifyPositive('Facture(s) créée(s).');
 
         billCreationModal.value = false;
         resetCompaniesSelectionModal();
         resetBillsQuantity();
         await refreshCourseBills();
-        unrollBill();
+        unrollBill(billsCreated.length > 1 ? billsCreated.map(b => b._id) : billsCreated._id);
       } catch (e) {
         console.error(e);
         if (e.status === 409) return NotifyNegative(e.data.message);
