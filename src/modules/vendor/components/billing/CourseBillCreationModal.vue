@@ -1,7 +1,8 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template #title>
-      Nouvelle <span class="text-weight-bold">facture</span>
+      {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
+      <span class="text-weight-bold">{{ formatQuantity('facture', billsQuantity, 's', false) }}</span>
     </template>
     <div>{{ courseName }} </div>
     <div class="course-bill-infos">
@@ -15,31 +16,40 @@
     <ni-option-group v-if="![INTRA, SINGLE].includes(course.type)" in-modal :model-value="newBill.mainFee.countUnit"
       :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
       :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
-    <ni-input v-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
-      :error="validations.mainFee.price.$error" type="number" :model-value="newBill.mainFee.price"
-      @blur="validations.mainFee.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
-      @update:model-value="update($event, 'mainFee.price')" />
-    <div v-else class="row items-center">
-      <ni-input caption="Pourcentage" :error="validations.mainFee.percentage.$error" type="number" suffix="%"
-        :model-value="newBill.mainFee.percentage" @blur="validations.mainFee.percentage.$touch" required-field
-        :error-message="errorMessages.percentage" @update:model-value="update($event, 'mainFee.percentage')"
-        class="percentage" />
-      <div v-if="!validations.mainFee.percentage.$error" class="q-ml-md text-14">
-        {{ computedPrice.global > 0 ? formatPrice(computedPrice.global) : '' }}
-        {{ computedPrice.trainerFees > 0 ? `(+ frais de formateurs : ${formatPrice(computedPrice.trainerFees)})` : '' }}
+    <div v-if="billsQuantity === 1">
+      <ni-input v-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
+        :error="validations.mainFee.price.$error" type="number" :model-value="newBill.mainFee.price"
+        @blur="validations.mainFee.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
+        @update:model-value="update($event, 'mainFee.price')" />
+      <div v-else class="row items-center">
+        <ni-input caption="Pourcentage" :error="validations.mainFee.percentage.$error" type="number" suffix="%"
+          :model-value="newBill.mainFee.percentage" @blur="validations.mainFee.percentage.$touch" required-field
+          :error-message="errorMessages.percentage" @update:model-value="update($event, 'mainFee.percentage')"
+          class="percentage" />
+        <div v-if="!validations.mainFee.percentage.$error" class="q-ml-md text-14">
+          {{ computedPrice.global > 0 ? formatPrice(computedPrice.global) : '' }}
+          {{ computedPrice.trainerFees > 0 ?
+          `(+ frais de formateurs : ${formatPrice(computedPrice.trainerFees)})`
+          : '' }}
+        </div>
       </div>
+      <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
+        :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
+        :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
+      <ni-date-input caption="Date d'échéance" :model-value="newBill.maturityDate" in-modal required-field
+        :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
+        @update:model-value="update($event, 'maturityDate')" />
     </div>
-    <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
-      :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
-      :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
-    <ni-date-input caption="Date d'échéance" :model-value="newBill.maturityDate" in-modal required-field
-      :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
-      @update:model-value="update($event, 'maturityDate')" />
+    <div v-else>
+      <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
+        :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
+        :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
+    </div>
     <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
       @update:model-value="update($event, 'mainFee.description')" />
     <template #footer>
-      <ni-button class="full-width modal-btn bg-primary" label="Créer la facture" icon-right="add" color="white"
-        :loading="loading" @click="submit" />
+      <ni-button :label="billsQuantity === 1 ? 'Créer la facture' : 'Créer les factures'" icon-right="add" color="white"
+        :loading="loading" @click="submit" class="full-width modal-btn bg-primary" />
     </template>
   </ni-modal>
 </template>
@@ -72,6 +82,7 @@ export default {
     traineesQuantity: { type: Number, default: 1 },
     companiesToBill: { type: Array, default: () => [] },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
+    billsQuantity: { type: Number, required: true },
   },
   components: {
     'ni-modal': Modal,
@@ -84,7 +95,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-bill'],
   setup (props, { emit }) {
-    const { newBill, traineesQuantity, course, companiesToBill, totalPriceToBill } = toRefs(props);
+    const { newBill, traineesQuantity, course, companiesToBill, totalPriceToBill, billsQuantity } = toRefs(props);
 
     const priceCaption = computed(() => (
       newBill.value.mainFee.countUnit === GROUP ? 'Prix du groupe' : 'Prix par stagiaire'
@@ -126,7 +137,7 @@ export default {
     };
 
     watch(computedPrice, () => {
-      if (computedPrice.value) {
+      if (computedPrice.value && billsQuantity.value === 1) {
         const newPrice = divide(computedPrice.value.global, newBill.value.mainFee.count);
         if (newBill.value.mainFee.price !== newPrice) {
           emit('update:new-bill', set({ ...newBill.value }, 'mainFee.price', newPrice));
@@ -150,6 +161,7 @@ export default {
       submit,
       update,
       formatPrice,
+      formatQuantity,
     };
   },
 };

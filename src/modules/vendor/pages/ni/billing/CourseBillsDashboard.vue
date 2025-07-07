@@ -24,7 +24,7 @@
         <div v-for="bill of filteredValidatedBills" :key="bill._id">
           <ni-course-billing-card :course="bill.course" :payer-list="payerList" :loading="billsLoading" is-dashboard
             :billing-item-list="billingItemList" :course-bills="[bill]" :are-details-visible="areDetailsVisible"
-            @refresh-course-bills="refreshValidatedCourseBills" @unroll="unrollBill" />
+            @refresh-course-bills="refreshValidatedCourseBills" @unroll="unrollBill({ _id: $event })" />
         </div>
       </div>
     </q-card>
@@ -32,8 +32,9 @@
       <div v-for="bill of filteredBillsToValidate" :key="bill._id">
         <ni-course-billing-card :course="bill.course" :payer-list="payerList" :loading="billsLoading"
           :billing-item-list="billingItemList" :course-bills="[bill]" is-dashboard
-          @refresh-course-bills="refreshCourseBillsToValidate" @unroll="unrollBill" :selected-bills="selectedBills"
-          :are-details-visible="areDetailsVisible" @update-selected-bills="updateSelectedBills" />
+          @refresh-course-bills="refreshCourseBillsToValidate" @unroll="unrollBill({ _id: $event })"
+          :selected-bills="selectedBills" :are-details-visible="areDetailsVisible"
+          @update-selected-bills="updateSelectedBills" />
       </div>
     </div>
     <div v-if="!filteredBillsToValidate.length && !filteredValidatedBills.length"

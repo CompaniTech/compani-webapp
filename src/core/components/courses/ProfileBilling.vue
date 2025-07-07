@@ -47,15 +47,15 @@
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
-        @refresh-course-bills="refreshCourseBills" @unroll="unrollBill" :are-details-visible="areDetailsVisible"
-        :expected-bills-count-invalid="v$.course.expectedBillsCount.$error" :selected-bills="selectedBills"
-        @update-selected-bills="updateSelectedBills" />
+        @refresh-course-bills="refreshCourseBills" @unroll="unrollBill({ _id: $event })"
+        :are-details-visible="areDetailsVisible" :expected-bills-count-invalid="v$.course.expectedBillsCount.$error"
+        :selected-bills="selectedBills" @update-selected-bills="updateSelectedBills" />
     </div>
     <div v-if="!course.companies.length" class="text-italic">Aucune structure n'est rattachée à la formation</div>
 
     <div class="fixed fab-custom">
-      <q-btn class="q-ma-sm" no-caps rounded icon="add" label="Créer une facture" @click="openBillCreationModal"
-        color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" />
+      <q-btn class="q-ma-sm" no-caps rounded label="Créer des factures" @click="openMultipleBillCreationModal"
+        color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" icon="add" />
 
       <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
         @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
@@ -65,7 +65,11 @@
       @submit="validateBillCreation" :validations="v$.newBill" @hide="resetBillCreationModal"
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
-      :total-price-to-bill="totalPriceToBill" />
+      :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity" />
+
+    <ni-multiple-course-bill-creation-modal :validations="v$.newBillsQuantity"
+      v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity"
+      :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
       :course-companies="course.companies" @submit="openNextModal" :validations="v$.companiesToBill"
@@ -111,6 +115,7 @@ import {
 import CourseBillingCard from 'src/modules/vendor/components/billing/CourseBillingCard';
 import BillCreationModal from 'src/modules/vendor/components/billing/CourseBillCreationModal';
 import CompaniesSelectionModal from 'src/modules/vendor/components/billing/CompaniesSelectionModal';
+import MultipleCourseBillCreationModal from 'src/modules/vendor/components/billing/MultipleCourseBillCreationModal';
 import Input from '@components/form/Input';
 import Banner from '@components/Banner';
 import { useCourses } from '@composables/courses';
@@ -123,6 +128,7 @@ export default {
     'ni-companies-selection-modal': CompaniesSelectionModal,
     'ni-input': Input,
     'ni-banner': Banner,
+    'ni-multiple-course-bill-creation-modal': MultipleCourseBillCreationModal,
   },
   setup () {
     const $store = useStore();
@@ -135,6 +141,8 @@ export default {
     const companiesSelectionModal = ref(false);
     const billCreationLoading = ref(false);
     const removeNewBillDatas = ref(true);
+    const multipleBillCreationModal = ref(false);
+    const newBillsQuantity = ref(1);
 
     const course = computed(() => $store.state.course.course);
 
@@ -171,19 +179,21 @@ export default {
       newBill: {
         payer: { required },
         mainFee: {
-          price: { required, strictPositiveNumber },
+          ...(newBillsQuantity.value === 1 && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
-            percentage: { required, strictPositiveNumber, integerNumber, maxValue: maxValue(100) },
+            ...(newBillsQuantity.value === 1 &&
+            { percentage: { required, strictPositiveNumber, integerNumber, maxValue: maxValue(100) } }),
           }),
           countUnit: { required },
         },
-        maturityDate: { required },
+        ...(newBillsQuantity.value === 1 && { maturityDate: { required } }),
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
+      newBillsQuantity: { strictPositiveNumber, integerNumber, required },
     }));
 
-    const v$ = useVuelidate(rules, { course, newBill, companiesToBill });
+    const v$ = useVuelidate(rules, { course, newBill, companiesToBill, newBillsQuantity });
 
     const defaultDescription = computed(() => {
       const trainersName = course.value.trainers
@@ -337,13 +347,25 @@ export default {
       }
     };
 
-    const formatCreationPayload = () => ({
-      course: course.value._id,
-      mainFee: newBill.value.mainFee,
-      companies: companiesToBill.value,
-      payer: formatPayerForPayload(newBill.value.payer),
-      maturityDate: newBill.value.maturityDate,
-    });
+    const formatCreationPayload = () => {
+      if (newBillsQuantity.value === 1) {
+        return {
+          course: course.value._id,
+          mainFee: newBill.value.mainFee,
+          companies: companiesToBill.value,
+          payer: formatPayerForPayload(newBill.value.payer),
+          maturityDate: newBill.value.maturityDate,
+          quantity: newBillsQuantity.value,
+        };
+      }
+      return {
+        quantity: newBillsQuantity.value,
+        course: course.value._id,
+        mainFee: newBill.value.mainFee,
+        companies: companiesToBill.value,
+        payer: formatPayerForPayload(newBill.value.payer),
+      };
+    };
 
     const validateBillCreation = async () => {
       v$.value.newBill.$touch();
@@ -374,22 +396,48 @@ export default {
       }
     };
 
+    const validateBillsQuantity = async () => {
+      v$.value.newBillsQuantity.$touch();
+      if (v$.value.newBillsQuantity.$error) return NotifyWarning('Champ invalide.');
+
+      const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
+      const totalBillsAfterCreation = courseBillsWithoutCreditNote.length + newBillsQuantity.value;
+
+      if (totalBillsAfterCreation > course.value.expectedBillsCount) {
+        return NotifyWarning('Impossible de créer autant de factures, nombre maximum de factures atteint.');
+      }
+
+      if (isIntraCourse.value || isSingleCourse.value) openBillCreationModal();
+      else companiesSelectionModal.value = true;
+
+      multipleBillCreationModal.value = false;
+    };
+
     const addBill = async () => {
       try {
         billCreationLoading.value = true;
-        await CourseBills.create(formatCreationPayload());
-        NotifyPositive('Facture créée.');
+        await CourseBills.createList(formatCreationPayload());
+
+        NotifyPositive('Facture(s) créée(s).');
 
         billCreationModal.value = false;
         resetCompaniesSelectionModal();
         await refreshCourseBills();
-        unrollBill();
+        unrollBill({ quantity: newBillsQuantity.value });
+        resetBillsQuantity();
       } catch (e) {
         console.error(e);
         if (e.status === 409) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la création de la facture.');
       } finally {
         billCreationLoading.value = false;
+      }
+    };
+
+    const resetBillsQuantity = () => {
+      if (!billCreationModal.value && !companiesSelectionModal.value) {
+        newBillsQuantity.value = 1;
+        v$.value.newBillsQuantity.$reset();
       }
     };
 
@@ -408,15 +456,33 @@ export default {
         totalPriceToBill.value = { global: 0, trainerFees: 0 };
         v$.value.newBill.$reset();
         resetCompaniesSelectionModal();
+        resetBillsQuantity();
       }
     };
 
     const openBillCreationModal = () => {
+      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
+        if (companiesToBill.value.includes(price.company)) {
+          return {
+            global: toFixedToFloat(add(acc.global, (price.global || 0))),
+            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
+          };
+        }
+        return acc;
+      }, { global: 0, trainerFees: 0 });
+
+      if (everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) newBill.value.mainFee.percentage = 40;
+
+      billCreationModal.value = true;
+    };
+
+    const openMultipleBillCreationModal = () => {
       if (course.value.interruptedAt) return NotifyWarning('Impossible : la formation est en pause.');
 
       if (!courseBills.value.length && !course.value.prices.some(p => p.global)) {
         return NotifyWarning('Prix de la formation manquant.');
       }
+
       if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
@@ -424,22 +490,13 @@ export default {
         if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
           return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
         }
-        totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
-          if (companiesToBill.value.includes(price.company)) {
-            return {
-              global: toFixedToFloat(add(acc.global, (price.global || 0))),
-              trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
-            };
-          }
-          return acc;
-        }, { global: 0, trainerFees: 0 });
-
-        if (course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
-
-        billCreationModal.value = true;
-      } else {
-        companiesSelectionModal.value = true;
       }
+
+      if (!courseBills.value.length && course.value.expectedBillsCount) {
+        newBillsQuantity.value = course.value.expectedBillsCount;
+      }
+
+      multipleBillCreationModal.value = true;
     };
 
     const openNextModal = () => {
@@ -457,20 +514,9 @@ export default {
           return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
         }
       }
-      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
-        if (companiesToBill.value.includes(price.company)) {
-          return {
-            global: toFixedToFloat(add(acc.global, (price.global || 0))),
-            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
-          };
-        }
-        return acc;
-      }, { global: 0, trainerFees: 0 });
 
-      if (everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
-
+      openBillCreationModal();
       companiesSelectionModal.value = false;
-      billCreationModal.value = true;
       removeNewBillDatas.value = true;
     };
 
@@ -523,6 +569,12 @@ export default {
       if (billCreationModal.value) newBill.value.mainFee.description = defaultDescription.value;
     });
 
+    watch(newBillsQuantity, () => {
+      if (newBillsQuantity.value > 1) {
+        newBill.value = omit(newBill.value, ['mainFee.price', 'maturityDate']);
+      }
+    });
+
     const created = async () => {
       await Promise.all([refreshCourseBills(), refreshPayers(), refreshBillingItems()]);
     };
@@ -534,6 +586,7 @@ export default {
       INTER_B2B,
       showPrices,
       totalPriceToBill,
+      newBillsQuantity,
       // Validation
       v$,
       // Data
@@ -543,6 +596,7 @@ export default {
       billsLoading,
       billCreationLoading,
       billCreationModal,
+      multipleBillCreationModal,
       newBill,
       companiesSelectionModal,
       companiesToBill,
@@ -567,8 +621,11 @@ export default {
       refreshPayers,
       updateCourse,
       validateBillCreation,
+      validateBillsQuantity,
       resetBillCreationModal,
+      resetBillsQuantity,
       openBillCreationModal,
+      openMultipleBillCreationModal,
       resetCompaniesSelectionModal,
       openNextModal,
       get,
