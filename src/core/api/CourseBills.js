@@ -36,8 +36,6 @@ export default {
   },
 
   async createList (payload) {
-    const courseBills = await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/list-creation`, payload);
-
-    return courseBills.data.data.bills;
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/coursebills/list-creation`, payload);
   },
 };

@@ -47,9 +47,9 @@
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
-        @refresh-course-bills="refreshCourseBills" @unroll="unrollBill" :are-details-visible="areDetailsVisible"
-        :expected-bills-count-invalid="v$.course.expectedBillsCount.$error" :selected-bills="selectedBills"
-        @update-selected-bills="updateSelectedBills" />
+        @refresh-course-bills="refreshCourseBills" @unroll="unrollBill({ _id: $event })"
+        :are-details-visible="areDetailsVisible" :expected-bills-count-invalid="v$.course.expectedBillsCount.$error"
+        :selected-bills="selectedBills" @update-selected-bills="updateSelectedBills" />
     </div>
     <div v-if="!course.companies.length" class="text-italic">Aucune structure n'est rattachée à la formation</div>
 
@@ -416,15 +416,15 @@ export default {
     const addBill = async () => {
       try {
         billCreationLoading.value = true;
-        const billsCreated = await CourseBills.createList(formatCreationPayload());
+        await CourseBills.createList(formatCreationPayload());
 
         NotifyPositive('Facture(s) créée(s).');
 
         billCreationModal.value = false;
         resetCompaniesSelectionModal();
-        resetBillsQuantity();
         await refreshCourseBills();
-        unrollBill(billsCreated.length > 1 ? billsCreated.map(b => b._id) : billsCreated._id);
+        unrollBill({ quantity: newBillsQuantity.value });
+        resetBillsQuantity();
       } catch (e) {
         console.error(e);
         if (e.status === 409) return NotifyNegative(e.data.message);
