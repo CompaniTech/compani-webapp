@@ -187,7 +187,7 @@ export default {
           }),
           countUnit: { required },
         },
-        ...(newBillsQuantity.value === 1 && { maturityDate: { required } }),
+        ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: { required } }),
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
       newBillsQuantity: { strictPositiveNumber, integerNumber, required },
@@ -358,6 +358,18 @@ export default {
           quantity: newBillsQuantity.value,
         };
       }
+
+      if (isSingleCourse.value) {
+        return {
+          quantity: newBillsQuantity.value,
+          course: course.value._id,
+          mainFee: omit(newBill.value.mainFee, 'description'),
+          companies: companiesToBill.value,
+          payer: formatPayerForPayload(newBill.value.payer),
+          maturityDate: newBill.value.maturityDate,
+        };
+      }
+
       return {
         quantity: newBillsQuantity.value,
         course: course.value._id,
@@ -571,7 +583,8 @@ export default {
 
     watch(newBillsQuantity, () => {
       if (newBillsQuantity.value > 1) {
-        newBill.value = omit(newBill.value, ['mainFee.price', 'maturityDate']);
+        newBill.value = omit(newBill.value, 'mainFee.price');
+        if (!isSingleCourse.value) newBill.value = omit(newBill.value, 'maturityDate');
       }
     });
 

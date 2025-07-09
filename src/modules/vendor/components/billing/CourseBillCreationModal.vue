@@ -44,9 +44,20 @@
       <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
         :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
         :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
+      <div v-if="course.type === SINGLE">
+        <ni-date-input caption="Date de 1ère échéance" :model-value="newBill.maturityDate" in-modal required-field
+          :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
+          @update:model-value="update($event, 'maturityDate')" />
+        <ni-banner v-if="!!newBill.maturityDate" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+          <template #message>
+            Une facture sera créée le {{ CompaniDate(newBill.maturityDate).format('dd') }} de chaque mois, pendant
+            {{ billsQuantity }} mois, à compter du {{ CompaniDate(newBill.maturityDate).format(DD_MM_YYYY) }}.
+          </template>
+        </ni-banner>
+      </div>
     </div>
-    <ni-input in-modal caption="Description" type="textarea" :model-value="newBill.mainFee.description"
-      @update:model-value="update($event, 'mainFee.description')" />
+    <ni-input v-if="course.type !== SINGLE || billsQuantity === 1" in-modal caption="Description" type="textarea"
+      :model-value="newBill.mainFee.description" @update:model-value="update($event, 'mainFee.description')" />
     <template #footer>
       <ni-button :label="billsQuantity === 1 ? 'Créer la facture' : 'Créer les factures'" icon-right="add" color="white"
         :loading="loading" @click="submit" class="full-width modal-btn bg-primary" />
@@ -64,9 +75,10 @@ import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import Banner from '@components/Banner';
 import DateInput from '@components/form/DateInput';
-import { INTRA, SINGLE, TRAINEE, GROUP } from '@data/constants';
+import { INTRA, SINGLE, TRAINEE, GROUP, DD_MM_YYYY } from '@data/constants';
 import { formatQuantity, formatName, formatPrice } from '@helpers/utils';
 import { multiply, divide, toFixedToFloat } from '@helpers/numbers';
+import CompaniDate from '@helpers/dates/companiDates';
 
 export default {
   name: 'CourseBillCreationModal',
@@ -149,6 +161,7 @@ export default {
       // Data
       INTRA,
       SINGLE,
+      DD_MM_YYYY,
       // Computed
       countUnitOptions,
       priceCaption,
@@ -162,6 +175,7 @@ export default {
       update,
       formatPrice,
       formatQuantity,
+      CompaniDate,
     };
   },
 };
