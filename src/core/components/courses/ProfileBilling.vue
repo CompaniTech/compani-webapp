@@ -347,37 +347,14 @@ export default {
       }
     };
 
-    const formatCreationPayload = () => {
-      if (newBillsQuantity.value === 1) {
-        return {
-          course: course.value._id,
-          mainFee: newBill.value.mainFee,
-          companies: companiesToBill.value,
-          payer: formatPayerForPayload(newBill.value.payer),
-          maturityDate: newBill.value.maturityDate,
-          quantity: newBillsQuantity.value,
-        };
-      }
-
-      if (isSingleCourse.value) {
-        return {
-          quantity: newBillsQuantity.value,
-          course: course.value._id,
-          mainFee: omit(newBill.value.mainFee, 'description'),
-          companies: companiesToBill.value,
-          payer: formatPayerForPayload(newBill.value.payer),
-          maturityDate: newBill.value.maturityDate,
-        };
-      }
-
-      return {
-        quantity: newBillsQuantity.value,
-        course: course.value._id,
-        mainFee: newBill.value.mainFee,
-        companies: companiesToBill.value,
-        payer: formatPayerForPayload(newBill.value.payer),
-      };
-    };
+    const formatCreationPayload = () => ({
+      course: course.value._id,
+      quantity: newBillsQuantity.value,
+      companies: companiesToBill.value,
+      payer: formatPayerForPayload(newBill.value.payer),
+      mainFee: isSingleCourse.value ? omit(newBill.value.mainFee, 'description') : newBill.value.mainFee,
+      ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
+    });
 
     const validateBillCreation = async () => {
       v$.value.newBill.$touch();
@@ -583,8 +560,7 @@ export default {
 
     watch(newBillsQuantity, () => {
       if (newBillsQuantity.value > 1) {
-        newBill.value = omit(newBill.value, 'mainFee.price');
-        if (!isSingleCourse.value) newBill.value = omit(newBill.value, 'maturityDate');
+        newBill.value = omit(newBill.value, ['mainFee.price', ...(!isSingleCourse.value ? ['maturityDate'] : [])]);
       }
     });
 
