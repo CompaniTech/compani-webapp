@@ -27,7 +27,9 @@
                   {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
                 </div>
                 <div v-else class="row text-weight-bold">
-                  <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
+                  <div :class="['q-pt-xs', { 'missing-info': !bill.netInclTaxes }]">
+                    A facturer - {{ formatPrice(bill.netInclTaxes) }}
+                  </div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
@@ -70,7 +72,7 @@
                 <span v-if="bill.billedAt">
                   {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
                 </span>
-                <span v-else :class="{ 'maturity-date': !bill.maturityDate }">
+                <span v-else :class="{ 'missing-info': !bill.maturityDate }">
                   Date d'échéance : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
                 </span>
                 <div class="text-weight-bold text-14">
@@ -273,7 +275,7 @@ export default {
     const rules = computed(() => ({
       editedBill: {
         mainFee: {
-          price: { required, strictPositiveNumber },
+          price: get(editedBill.value, 'mainFee.price') ? { required, strictPositiveNumber } : {},
           count: { required, strictPositiveNumber, integerNumber },
           countUnit: { required },
           percentage: has(editedBill.value, 'mainFee.percentage')
@@ -801,6 +803,6 @@ export default {
   flex-shrink: 0
   white-space: nowrap
 
-.maturity-date
+.missing-info
   color: red
 </style>
