@@ -312,7 +312,8 @@ export default {
 
     const courseInfos = computed(() => ({
       courseType: course.value.type,
-      companiesName: courseBills.value.filter(bill => selectedBills.value.includes(bill._id))
+      companiesName: courseBills.value
+        .filter(bill => selectedBills.value.includes(bill._id))
         .map(bill => formatName(bill.companies)),
       courseName,
     }));
