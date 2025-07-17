@@ -6,7 +6,7 @@
     <div class="course-bill-infos">
       <div>{{ courseInfos.courseName }} </div>
       <ni-banner v-if="billsToUpdate.severalPayers" class="bg-copper-grey-100 q-mt-sm" icon="warning">
-        <template #message>Les payeurs des factures séléctionnées sont différents.</template>
+        <template #message>Les payeurs des factures sélectionnées sont différents.</template>
       </ni-banner>
       <div v-for="companies of courseInfos.companiesName" :key="companies">
         <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">

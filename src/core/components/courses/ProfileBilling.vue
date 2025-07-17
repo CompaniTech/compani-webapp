@@ -210,7 +210,6 @@ export default {
       billsToUpdate: {
         _ids: { minArrayLength: minArrayLength(1) },
         payer: { required: requiredIf(has(billsToUpdate.value, 'payer')) },
-        mainFee: { description: { required: requiredIf(has(billsToUpdate.value, 'description')) } },
       },
     }));
 
