@@ -146,9 +146,9 @@
       </div>
     </div>
 
-    <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill" @submit="editBill"
-      @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList" :course-name="courseName"
-      :companies-name="companiesName" :validations="validations.editedBill" />
+    <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill"
+      @submit="() => editBill(false)" @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList"
+      :course-name="courseName" :companies-name="companiesName" :validations="validations.editedBill" />
 
     <!-- main fee edition modal -->
     <ni-course-fee-edition-modal v-model="mainFeeEditionModal" v-model:course-fee="editedBill.mainFee"
@@ -186,7 +186,7 @@
 
 <script>
 import { useMeta, useQuasar } from 'quasar';
-import { computed, ref, toRefs } from 'vue';
+import { computed, ref, toRefs, nextTick } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { required, maxValue } from '@vuelidate/validators';
 import get from 'lodash/get';
@@ -271,22 +271,32 @@ export default {
     const billToValidate = ref({ _id: '', billedAt: '' });
     const courseFeeEditionModalMetaInfo = ref({ title: '', isBilled: false });
     const minCourseCreditNoteDate = ref('');
+    const enableMainFeeValidation = ref(true);
+
+    const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
+
+    const everyCompaniesToBillHasPrice = computed(() => companiesToBill.value.length && companiesToBill.value
+      .every(c => course.value.prices.find(p => p.company === c && p.global)));
+
+    const displayPercentage = computed(() => course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value);
 
     const rules = computed(() => ({
       editedBill: {
-        mainFee: {
-          price: get(editedBill.value, 'mainFee.price') ? { required, strictPositiveNumber } : {},
-          count: { required, strictPositiveNumber, integerNumber },
-          countUnit: { required },
-          percentage: has(editedBill.value, 'mainFee.percentage')
-            ? {
-              required,
-              strictPositiveNumber,
-              integerNumber,
-              maxValue: maxValue(100),
-            }
-            : {},
-        },
+        mainFee: enableMainFeeValidation.value
+          ? {
+            price: { required, strictPositiveNumber },
+            count: { required, strictPositiveNumber, integerNumber },
+            countUnit: { required },
+            percentage: displayPercentage.value
+              ? {
+                required,
+                strictPositiveNumber,
+                integerNumber,
+                maxValue: maxValue(100),
+              }
+              : {},
+          }
+          : {},
         maturityDate: has(editedBill.value, 'maturityDate') ? { required } : {},
         payer: { required },
       },
@@ -382,11 +392,11 @@ export default {
         _id: bill._id,
         payer,
         mainFee: {
-          price: bill.mainFee.price,
+          price: get(bill, 'mainFee.price', 0),
           count: bill.mainFee.count,
           countUnit: bill.mainFee.countUnit,
-          description: bill.mainFee.description,
-          ...(bill.mainFee.percentage && { percentage: bill.mainFee.percentage }),
+          description: get(bill, 'mainFee.description', ''),
+          ...(displayPercentage.value && { percentage: get(bill, 'mainFee.percentage', 0) }),
         },
         ...(addMaturityDate && { maturityDate }),
       };
@@ -496,20 +506,22 @@ export default {
       return payerType === COMPANY ? { company: payloadPayer } : { fundingOrganisation: payloadPayer };
     };
 
-    const editBill = async () => {
+    const editBill = async (payloadWithMainFee = true) => {
       try {
+        enableMainFeeValidation.value = payloadWithMainFee;
+
+        await nextTick();
+
+        const payload = payloadWithMainFee
+          ? { ...omit(editedBill.value, '_id'), payer: formatPayerForPayload(editedBill.value.payer) }
+          : { payer: formatPayerForPayload(editedBill.value.payer), maturityDate: editedBill.value.maturityDate };
+
         validations.value.editedBill.$touch();
         if (validations.value.editedBill.$error) return NotifyWarning('Champ(s) invalide(s)');
 
         billEditionLoading.value = true;
-        await CourseBills.update(
-          editedBill.value._id,
-          {
-            payer: formatPayerForPayload(editedBill.value.payer),
-            mainFee: editedBill.value.mainFee,
-            maturityDate: editedBill.value.maturityDate,
-          }
-        );
+        await CourseBills.update(editedBill.value._id, payload);
+
         NotifyPositive('Facture modifiée.');
 
         courseBillEditionModal.value = false;
@@ -521,6 +533,7 @@ export default {
         NotifyNegative('Erreur lors de la modification de la facture.');
       } finally {
         billEditionLoading.value = false;
+        enableMainFeeValidation.value = true;
       }
     };
 
