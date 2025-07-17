@@ -272,13 +272,7 @@ export default {
     const courseFeeEditionModalMetaInfo = ref({ title: '', isBilled: false });
     const minCourseCreditNoteDate = ref('');
     const enableMainFeeValidation = ref(true);
-
-    const companiesToBill = ref([INTRA, SINGLE].includes(course.value.type) ? [course.value.companies[0]._id] : []);
-
-    const everyCompaniesToBillHasPrice = computed(() => companiesToBill.value.length && companiesToBill.value
-      .every(c => course.value.prices.find(p => p.company === c && p.global)));
-
-    const displayPercentage = computed(() => course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value);
+    const addPercentage = ref(false);
 
     const rules = computed(() => ({
       editedBill: {
@@ -287,7 +281,7 @@ export default {
             price: { required, strictPositiveNumber },
             count: { required, strictPositiveNumber, integerNumber },
             countUnit: { required },
-            percentage: displayPercentage.value
+            percentage: addPercentage.value
               ? {
                 required,
                 strictPositiveNumber,
@@ -388,6 +382,9 @@ export default {
     const setEditedBill = (bill, addMaturityDate = false) => {
       const payer = get(bill, 'payer._id');
       const maturityDate = get(bill, 'maturityDate');
+      addPercentage.value = bill.companies
+        .every(c => course.value.prices.find(p => p.company === c._id && p.global));
+
       editedBill.value = {
         _id: bill._id,
         payer,
@@ -396,7 +393,7 @@ export default {
           count: bill.mainFee.count,
           countUnit: bill.mainFee.countUnit,
           description: get(bill, 'mainFee.description', ''),
-          ...(displayPercentage.value && { percentage: get(bill, 'mainFee.percentage', 0) }),
+          ...(addPercentage.value && { percentage: get(bill, 'mainFee.percentage', 0) }),
         },
         ...(addMaturityDate && { maturityDate }),
       };
