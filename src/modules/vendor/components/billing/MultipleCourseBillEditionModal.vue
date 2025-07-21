@@ -24,6 +24,14 @@
         :model-value="billsToUpdate.mainFee.description" @update:model-value="update($event, 'mainFee.description')" />
       <ni-secondary-button v-else label="Éditer la description" icon="edit" class="full-width modal-btn q-my-sm"
         @click="update('', 'mainFee.description')" />
+      <div v-if="courseInfos.courseType === SINGLE">
+        <ni-input v-if="has(billsToUpdate, 'mainFee.price')" in-modal caption="Prix" type="number" suffix="€"
+          :model-value="billsToUpdate.mainFee.price" @update:model-value="update($event, 'mainFee.price')"
+          :error="get(validations, 'mainFee.price.$error', false)" @blur="get(validations, 'mainFee.price.$touch')"
+          required-field />
+        <ni-secondary-button v-else label="Éditer le prix" icon="edit" class="full-width modal-btn q-my-sm"
+          @click="update('', 'mainFee.price')" />
+      </div>
     </div>
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Éditer la facture" icon-right="add" color="white"
@@ -33,8 +41,9 @@
 </template>
 
 <script>
-import { toRefs } from 'vue';
+import { toRefs, computed } from 'vue';
 import set from 'lodash/set';
+import get from 'lodash/get';
 import has from 'lodash/has';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
@@ -43,6 +52,7 @@ import Banner from '@components/Banner';
 import CompanySelect from '@components/form/CompanySelect';
 import DateInput from '@components/form/DateInput';
 import { SINGLE } from '@data/constants';
+import CompaniDate from '@helpers/dates/companiDates';
 import SecondaryButton from '../../../../core/components/SecondaryButton.vue';
 
 export default {
@@ -69,6 +79,12 @@ export default {
   setup (props, { emit }) {
     const { billsToUpdate } = toRefs(props);
 
+    const maturityDateDiff = computed(() => {
+      if (billsToUpdate.firstMaturityDate) {
+        return CompaniDate(billsToUpdate.firstMaturityDate).diff(billsToUpdate.maturityDate);
+      }
+    });
+
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
@@ -77,12 +93,15 @@ export default {
     return {
       // Data
       SINGLE,
+      // Computed
+      maturityDateDiff,
       // Methods
       hide,
       input,
       submit,
       update,
       has,
+      get,
     };
   },
 };
