@@ -10,7 +10,7 @@ import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { formatDownloadName, formatQuantity, formatAndSortCompanyOptions, formatAndSortOptions } from '@helpers/utils';
 import { downloadFile } from '@helpers/file';
 import { descendingSortBy } from '@helpers/dates/utils';
-import { COMPANY, REQUIRED_LABEL, FUNDING_ORGANISATION, DIRECTORY } from '../data/constants';
+import { COMPANY, REQUIRED_LABEL, FUNDING_ORGANISATION, DIRECTORY, EDITION } from '../data/constants';
 
 export const useCourseBilling = (courseBills, validations, refreshCourseBills) => {
   const $q = useQuasar();
@@ -140,11 +140,14 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
   };
 
   const unrollBill = (value) => {
-    const sortedBills = [...courseBills.value].sort(descendingSortBy('createdAt'));
+    const sortKey = value.type === EDITION ? 'updatedAt' : 'createdAt';
+    const sortedBills = [...courseBills.value].sort(descendingSortBy(sortKey));
     if (!Object.keys(value).length) {
       const bill = sortedBills[0]._id;
       areDetailsVisible.value[bill] = !areDetailsVisible.value[bill];
-    } else if (Object.keys(value).includes('quantity')) {
+    }
+
+    if (Object.keys(value).includes('quantity')) {
       const billsToUnroll = sortedBills.slice(0, value.quantity).map(bill => bill._id);
       billsToUnroll.forEach((billId) => { areDetailsVisible.value[billId] = !areDetailsVisible.value[billId]; });
     } else {

@@ -27,7 +27,9 @@
                   {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
                 </div>
                 <div v-else class="row text-weight-bold">
-                  <div class="q-pt-xs"> A facturer - {{ formatPrice(bill.netInclTaxes) }}</div>
+                  <div :class="['q-pt-xs', { 'missing-info': !bill.netInclTaxes }]">
+                    A facturer - {{ formatPrice(bill.netInclTaxes) }}
+                  </div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
@@ -70,7 +72,7 @@
                 <span v-if="bill.billedAt">
                   {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
                 </span>
-                <span v-else :class="{ 'maturity-date': !bill.maturityDate }">
+                <span v-else :class="{ 'missing-info': !bill.maturityDate }">
                   Date d'échéance : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
                 </span>
                 <div class="text-weight-bold text-14">
@@ -144,9 +146,9 @@
       </div>
     </div>
 
-    <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill" @submit="editBill"
-      @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList" :course-name="courseName"
-      :companies-name="companiesName" :validations="validations.editedBill" />
+    <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill"
+      @submit="() => editBill(false)" @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList"
+      :course-name="courseName" :companies-name="companiesName" :validations="validations.editedBill" />
 
     <!-- main fee edition modal -->
     <ni-course-fee-edition-modal v-model="mainFeeEditionModal" v-model:course-fee="editedBill.mainFee"
@@ -184,7 +186,7 @@
 
 <script>
 import { useMeta, useQuasar } from 'quasar';
-import { computed, ref, toRefs } from 'vue';
+import { computed, ref, toRefs, nextTick } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { required, maxValue } from '@vuelidate/validators';
 import get from 'lodash/get';
@@ -269,22 +271,26 @@ export default {
     const billToValidate = ref({ _id: '', billedAt: '' });
     const courseFeeEditionModalMetaInfo = ref({ title: '', isBilled: false });
     const minCourseCreditNoteDate = ref('');
+    const enableMainFeeValidation = ref(true);
+    const addPercentage = ref(false);
 
     const rules = computed(() => ({
       editedBill: {
-        mainFee: {
-          price: { required, strictPositiveNumber },
-          count: { required, strictPositiveNumber, integerNumber },
-          countUnit: { required },
-          percentage: has(editedBill.value, 'mainFee.percentage')
-            ? {
-              required,
-              strictPositiveNumber,
-              integerNumber,
-              maxValue: maxValue(100),
-            }
-            : {},
-        },
+        mainFee: enableMainFeeValidation.value
+          ? {
+            price: { required, strictPositiveNumber },
+            count: { required, strictPositiveNumber, integerNumber },
+            countUnit: { required },
+            percentage: addPercentage.value
+              ? {
+                required,
+                strictPositiveNumber,
+                integerNumber,
+                maxValue: maxValue(100),
+              }
+              : {},
+          }
+          : {},
         maturityDate: has(editedBill.value, 'maturityDate') ? { required } : {},
         payer: { required },
       },
@@ -376,15 +382,18 @@ export default {
     const setEditedBill = (bill, addMaturityDate = false) => {
       const payer = get(bill, 'payer._id');
       const maturityDate = get(bill, 'maturityDate');
+      addPercentage.value = bill.companies
+        .every(c => course.value.prices.find(p => p.company === c._id && p.global));
+
       editedBill.value = {
         _id: bill._id,
         payer,
         mainFee: {
-          price: bill.mainFee.price,
+          price: get(bill, 'mainFee.price', 0),
           count: bill.mainFee.count,
           countUnit: bill.mainFee.countUnit,
-          description: bill.mainFee.description,
-          ...(bill.mainFee.percentage && { percentage: bill.mainFee.percentage }),
+          description: get(bill, 'mainFee.description', ''),
+          ...(addPercentage.value && { percentage: get(bill, 'mainFee.percentage', 0) }),
         },
         ...(addMaturityDate && { maturityDate }),
       };
@@ -494,20 +503,22 @@ export default {
       return payerType === COMPANY ? { company: payloadPayer } : { fundingOrganisation: payloadPayer };
     };
 
-    const editBill = async () => {
+    const editBill = async (payloadWithMainFee = true) => {
       try {
+        enableMainFeeValidation.value = payloadWithMainFee;
+
+        await nextTick();
+
+        const payload = payloadWithMainFee
+          ? { ...omit(editedBill.value, '_id'), payer: formatPayerForPayload(editedBill.value.payer) }
+          : { payer: formatPayerForPayload(editedBill.value.payer), maturityDate: editedBill.value.maturityDate };
+
         validations.value.editedBill.$touch();
         if (validations.value.editedBill.$error) return NotifyWarning('Champ(s) invalide(s)');
 
         billEditionLoading.value = true;
-        await CourseBills.update(
-          editedBill.value._id,
-          {
-            payer: formatPayerForPayload(editedBill.value.payer),
-            mainFee: editedBill.value.mainFee,
-            maturityDate: editedBill.value.maturityDate,
-          }
-        );
+        await CourseBills.update(editedBill.value._id, payload);
+
         NotifyPositive('Facture modifiée.');
 
         courseBillEditionModal.value = false;
@@ -519,6 +530,7 @@ export default {
         NotifyNegative('Erreur lors de la modification de la facture.');
       } finally {
         billEditionLoading.value = false;
+        enableMainFeeValidation.value = true;
       }
     };
 
@@ -801,6 +813,6 @@ export default {
   flex-shrink: 0
   white-space: nowrap
 
-.maturity-date
+.missing-info
   color: red
 </style>
