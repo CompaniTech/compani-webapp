@@ -78,7 +78,7 @@
       :course-companies="course.companies" @submit="openNextModal" :validations="v$.companiesToBill"
       @hide="resetCompaniesSelectionModal" :course-name="courseName" :is-inter-course="course.type === INTER_B2B" />
 
-    <ni-multiple-course-bill-edition-modal v-model="multipleCourseBillEditionModal"
+    <ni-multiple-course-bill-edition-modal v-model="multipleCourseBillEditionModal" :several-payers="severalPayers"
       v-model:bills-to-update="billsToUpdate" @submit="updateBills" @hide="resetBillsEditionModal"
       :payer-options="payerList" :course-infos="courseInfos" :validations="v$.billsToUpdate" />
   </div>
@@ -595,10 +595,8 @@ export default {
       if (selectedBills.value.length === 1) {
         set(billsToUpdate.value, 'payer', bill.payer._id);
         set(billsToUpdate.value, 'mainFee.description', bill.mainFee.description);
-      } else if (!severalPayers) {
+      } else if (!severalPayers.value) {
         set(billsToUpdate.value, 'payer', bill.payer._id);
-      } else {
-        set(billsToUpdate.value, 'severalPayers', severalPayers.value);
       }
 
       multipleCourseBillEditionModal.value = true;
@@ -614,7 +612,7 @@ export default {
         if (v$.value.billsToUpdate.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         const payload = {
-          ...omit(billsToUpdate.value, 'severalPayers'),
+          ...billsToUpdate.value,
           ...(billsToUpdate.value.payer && { payer: formatPayerForPayload(billsToUpdate.value.payer) }),
         };
         await CourseBills.updateBillList(payload);
