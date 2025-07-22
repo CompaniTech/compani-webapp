@@ -113,7 +113,7 @@ export default {
 
     const submit = () => emit('submit');
 
-    const update = async (value, path) => {
+    const update = (value, path) => {
       if (path === 'maturityDate') {
         const description = 'Facture liée à des frais pédagogiques \r\n'
           + 'Contrat de professionnalisation \r\n'
@@ -124,8 +124,6 @@ export default {
           'update:bills-to-update',
           set({ ...billsToUpdate.value, mainFee: { description } }, path, value)
         );
-
-        // await nextTick();
       } else emit('update:bills-to-update', set({ ...billsToUpdate.value }, path, value));
     };
 

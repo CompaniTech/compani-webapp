@@ -596,14 +596,14 @@ export default {
 
     const showDetails = () => { showPrices.value = !showPrices.value; };
 
-    const openMultipleBillEditionModal = async () => {
-      const bill = courseBills.value.find(b => b._id === selectedBills.value[0]);
+    const openMultipleBillEditionModal = () => {
+      const firstBill = courseBills.value.find(b => b._id === selectedBills.value[0]);
       if (selectedBills.value.length === 1) {
-        set(billsToUpdate.value, 'payer', bill.payer._id);
-        set(billsToUpdate.value, 'mainFee.description', bill.mainFee.description);
-        if (isSingleCourse.value) set(billsToUpdate.value, 'mainFee.price', get(bill, 'mainFee.price', 0));
+        set(billsToUpdate.value, 'payer', firstBill.payer._id);
+        set(billsToUpdate.value, 'mainFee.description', firstBill.mainFee.description);
+        if (isSingleCourse.value) set(billsToUpdate.value, 'mainFee.price', get(firstBill, 'mainFee.price', 0));
       } else if (!severalPayers.value) {
-        set(billsToUpdate.value, 'payer', bill.payer._id);
+        set(billsToUpdate.value, 'payer', firstBill.payer._id);
       }
 
       if (isSingleCourse.value) {
