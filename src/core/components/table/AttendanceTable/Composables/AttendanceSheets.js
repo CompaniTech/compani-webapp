@@ -93,12 +93,14 @@ export const useAttendanceSheets = (
     if (!isSingleCourse.value) return [];
 
     return course.value.slots
-      .filter(s => attendanceSheets.value.every(as => !get(as, 'slots', []).map(slot => slot._id).includes(s._id)));
+      .filter(s => attendanceSheets.value
+        .every(as => !get(as, 'slots', []).map(slot => slot.slotId._id).includes(s._id)));
   });
 
   const disableSheetDeletion = attendanceSheet => !get(attendanceSheet, 'file.link') || !!course.value.archivedAt;
 
-  const disableSheetEdition = attendanceSheet => !!course.value.archivedAt || !!get(attendanceSheet, 'signatures');
+  const disableSheetEdition = attendanceSheet => !!course.value.archivedAt ||
+    (attendanceSheet.slots || []).some(s => s.trainerSignature);
 
   const refreshAttendanceSheets = async () => {
     try {
@@ -206,7 +208,7 @@ export const useAttendanceSheets = (
   const validateAttendanceSheetDeletion = (attendanceSheet) => {
     if (!canUpdate.value) return NotifyNegative('Impossible de supprimer la feuille d\'émargement.');
 
-    const message = attendanceSheet.signatures
+    const message = (attendanceSheet.slots || []).some(s => s.trainerSignature)
       ? 'Êtes-vous sûr·e de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
       + 'également supprimées.'
       : 'Êtes-vous sûr·e de vouloir supprimer cette feuille d\'émargement&nbsp;?';
@@ -237,7 +239,7 @@ export const useAttendanceSheets = (
   };
 
   const openAttendanceSheetEditionModal = (attendanceSheet) => {
-    const linkedSlots = attendanceSheet.slots || [];
+    const linkedSlots = (attendanceSheet.slots || []).map(s => s.slotId) || [];
     if (![...linkedSlots, ...notLinkedSlotOptions.value].length) {
       return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
     }
