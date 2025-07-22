@@ -101,7 +101,9 @@
             :style="col.style">
             <template v-if="col.name === 'actions'">
               <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex items-center">
-                <div v-if="!props.row.signatures.trainee" class="text-italic text-primary">En attente de signature</div>
+                <div v-if="props.row.slots.some(s => !s.traineesSignature)" class="text-italic text-primary">
+                  En attente de signature
+                </div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
                   @click="generateAttendanceSheet(props.row._id)" />
                 <ni-button v-if="canUpdate" icon="delete" color="primary"
@@ -322,7 +324,7 @@ export default {
     };
 
     const formatSingleAttendanceSheetName = (traineeName, slots) => {
-      const dates = [...new Set(slots.map(slot => CompaniDate(slot.startDate).format(DD_MM_YYYY)))].join(', ');
+      const dates = [...new Set(slots.map(slot => CompaniDate(slot.slotId.startDate).format(DD_MM_YYYY)))].join(', ');
       return `${traineeName} - ${dates}`;
     };
 
