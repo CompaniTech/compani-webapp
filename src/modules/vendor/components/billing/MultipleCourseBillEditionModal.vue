@@ -20,10 +20,6 @@
         :error="validations.payer.$error" @blur="validations.payer.$touch" />
       <ni-secondary-button v-else label="Éditer le payeur" icon="edit" @click="update('', 'payer')"
         class="full-width modal-btn q-my-sm" />
-      <ni-input v-if="has(billsToUpdate, 'mainFee.description')" in-modal caption="Description" type="textarea"
-        :model-value="billsToUpdate.mainFee.description" @update:model-value="update($event, 'mainFee.description')" />
-      <ni-secondary-button v-else label="Éditer la description" icon="edit" class="full-width modal-btn q-my-sm"
-        @click="update('', 'mainFee.description')" />
       <div v-if="courseInfos.courseType === SINGLE">
         <ni-input v-if="has(billsToUpdate, 'mainFee.price')" in-modal caption="Prix" type="number" suffix="€"
           :model-value="billsToUpdate.mainFee.price" @update:model-value="update($event, 'mainFee.price')"
@@ -31,7 +27,18 @@
           required-field />
         <ni-secondary-button v-else label="Éditer le prix" icon="edit" class="full-width modal-btn q-my-sm"
           @click="update('', 'mainFee.price')" />
+        <ni-banner v-if="billsToUpdate._ids.length > 1 && maturityDateDiffMessage" class="bg-copper-grey-100 q-mt-sm"
+          icon="info_outline">
+          <template #message>{{ maturityDateDiffMessage }}</template>
+        </ni-banner>
+        <ni-date-input v-if="has(billsToUpdate, 'maturityDate')" in-modal caption="Date d'échéance"
+          :model-value="billsToUpdate.maturityDate" @update:model-value="update($event, 'maturityDate')"
+          required-field />
       </div>
+      <ni-input v-if="has(billsToUpdate, 'mainFee.description')" in-modal caption="Description" type="textarea"
+        :model-value="billsToUpdate.mainFee.description" @update:model-value="update($event, 'mainFee.description')" />
+      <ni-secondary-button v-else label="Éditer la description" icon="edit" class="full-width modal-btn q-my-sm"
+        @click="update('', 'mainFee.description')" />
     </div>
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Éditer la facture" icon-right="add" color="white"
@@ -53,6 +60,7 @@ import CompanySelect from '@components/form/CompanySelect';
 import DateInput from '@components/form/DateInput';
 import { SINGLE } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
+import CompaniDuration from '@helpers/dates/companiDurations';
 import SecondaryButton from '../../../../core/components/SecondaryButton.vue';
 
 export default {
@@ -77,24 +85,55 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:bills-to-update'],
   setup (props, { emit }) {
-    const { billsToUpdate } = toRefs(props);
+    const { billsToUpdate, courseInfos } = toRefs(props);
 
     const maturityDateDiff = computed(() => {
-      if (billsToUpdate.firstMaturityDate) {
-        return CompaniDate(billsToUpdate.firstMaturityDate).diff(billsToUpdate.maturityDate);
+      if (billsToUpdate.value.firstMaturityDate) {
+        const dateDiff = CompaniDate(billsToUpdate.value.maturityDate)
+          .diff(billsToUpdate.value.firstMaturityDate, 'days');
+
+        return CompaniDuration(dateDiff).toMonthAndDaysObject();
       }
     });
 
+    const maturityDateDiffMessage = computed(() => {
+      const { months, days } = maturityDateDiff.value;
+      if (!months && !days) return '';
+
+      const duration = [];
+      if (months) duration.push(`${months} mois`);
+      if (days) duration.push(`${days} jours`);
+
+      return `La date d'échéance de toutes les factures sélectionnées va être décalée de ${duration.join(' et ')}.`;
+    });
+
     const hide = () => emit('hide');
+
     const input = event => emit('update:model-value', event);
+
     const submit = () => emit('submit');
-    const update = (value, path) => emit('update:bills-to-update', set({ ...billsToUpdate.value }, path, value));
+
+    const update = async (value, path) => {
+      if (path === 'maturityDate') {
+        const description = 'Facture liée à des frais pédagogiques \r\n'
+          + 'Contrat de professionnalisation \r\n'
+          + `ACCOMPAGNEMENT ${CompaniDate(value).format('LLLL yyyy')} \r\n`
+          + `Nom de l'apprenant·e: ${courseInfos.value.traineeName} \r\n`
+          + `Nom du / des intervenants: ${courseInfos.value.trainersName}`;
+        emit(
+          'update:bills-to-update',
+          set({ ...billsToUpdate.value, mainFee: { description } }, path, value)
+        );
+
+        // await nextTick();
+      } else emit('update:bills-to-update', set({ ...billsToUpdate.value }, path, value));
+    };
 
     return {
       // Data
       SINGLE,
       // Computed
-      maturityDateDiff,
+      maturityDateDiffMessage,
       // Methods
       hide,
       input,
