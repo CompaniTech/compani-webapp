@@ -209,9 +209,10 @@ export default {
       newBillsQuantity: { strictPositiveNumber, integerNumber, required },
       billsToUpdate: {
         _ids: { minArrayLength: minArrayLength(1) },
-        payer: { required: requiredIf(has(billsToUpdate.value, 'payer')) },
+        payer: { required: requiredIf(Object.keys(billsToUpdate.value).includes('payer')) },
         mainFee: {
-          ...(has(billsToUpdate.value, 'mainFee.price') && { price: { strictPositiveNumber, required } }),
+          ...(Object.keys(get(billsToUpdate.value, 'mainFee', {})).includes('price') &&
+            { price: { strictPositiveNumber, required } }),
         },
       },
     }));
