@@ -505,7 +505,7 @@ export default {
     });
 
     const created = async () => {
-      if (get(company.value, '_id') && hasHoldingRole.value) {
+      if (get(company.value, '_id')) {
         await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions()]);
       }
     };
