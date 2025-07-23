@@ -239,7 +239,7 @@ export const useAttendanceSheets = (
   };
 
   const openAttendanceSheetEditionModal = (attendanceSheet) => {
-    const linkedSlots = (attendanceSheet.slots || []).map(s => s.slotId) || [];
+    const linkedSlots = (attendanceSheet.slots || []).map(s => s.slotId);
     if (![...linkedSlots, ...notLinkedSlotOptions.value].length) {
       return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
     }
