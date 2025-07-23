@@ -94,6 +94,8 @@ export default {
 
         return CompaniDuration(dateDiff).toMonthAndDaysObject();
       }
+
+      return { months: 0, days: 0 };
     });
 
     const maturityDateDiffMessage = computed(() => {
