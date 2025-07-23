@@ -1,5 +1,5 @@
 <template>
-  <course-billing-infos :company="company" @refresh-company="refreshCompany" />
+  <course-billing-infos v-if="company" :company="company" @refresh-company="refreshCompany" />
 </template>
 
 <script>
@@ -27,6 +27,12 @@ export default {
         console.error(e);
       }
     };
+
+    const created = async () => {
+      if (!company.value) await refreshCompany();
+    };
+
+    created();
 
     return {
       // Computed

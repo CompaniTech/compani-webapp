@@ -6,7 +6,7 @@
           :options="companiesOptions" @update:model-value="setCompany($event)" clearable class="selector" />
       </template>
     </ni-title-header>
-    <course-billing-infos :company="currentCompany" @refresh-company="refreshCompany" />
+    <course-billing-infos v-if="currentCompany" :company="currentCompany" @refresh-company="refreshCompany" />
   </q-page>
 </template>
 
