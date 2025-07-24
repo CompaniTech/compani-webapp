@@ -55,7 +55,8 @@
 
     <div class="fixed fab-custom">
       <q-btn class="q-ma-sm" no-caps rounded label="Créer des factures" @click="openMultipleBillCreationModal"
-        color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" icon="add" />
+        color="primary" :disable="billCreationLoading || !course.companies.length || !!selectedBills.length"
+        :loading="billsLoading" icon="add" />
 
       <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="edit" label="Modifier les factures"
         @click="openBillEditionModal" color="primary" :disable="!selectedBills.length" />
@@ -260,7 +261,6 @@ export default {
         NotifyNegative('Erreur lors de la récupération des factures.');
       } finally {
         billsLoading.value = false;
-        selectedBills.value = [];
       }
     };
 
@@ -617,7 +617,7 @@ export default {
         };
         await CourseBills.updateBillList(payload);
 
-        refreshCourseBills();
+        await refreshCourseBills();
         unrollBill({ quantity: selectedBills.value.length, type: EDITION });
         selectedBills.value = [];
         multipleCourseBillEditionModal.value = false;
