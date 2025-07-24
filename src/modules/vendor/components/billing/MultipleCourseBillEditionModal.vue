@@ -130,7 +130,7 @@ export default {
           + `Nom du / des intervenants: ${courseInfos.value.trainersName}`;
         emit(
           'update:bills-to-update',
-          set({ ...billsToUpdate.value, mainFee: { description } }, path, value)
+          set({ ...billsToUpdate.value, mainFee: { ...billsToUpdate.value.mainFee, description } }, path, value)
         );
       } else emit('update:bills-to-update', set({ ...billsToUpdate.value }, path, value));
     };
