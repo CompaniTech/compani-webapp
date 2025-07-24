@@ -622,9 +622,9 @@ export default {
 
     const updateBills = async () => {
       try {
-        if (!has(billsToUpdate.value, 'payer') && !has(billsToUpdate.value, 'mainFee.description')) {
-          return NotifyWarning('Vous devez éditer au moins un champ.');
-        }
+        const editedFields = has(billsToUpdate.value, 'payer') || has(billsToUpdate.value, 'mainFee.description') ||
+          has(billsToUpdate.value, 'mainFee.price');
+        if (!editedFields) return NotifyWarning('Vous devez éditer au moins un champ.');
 
         v$.value.billsToUpdate.$touch();
         if (v$.value.billsToUpdate.$error) return NotifyWarning('Champ(s) invalide(s).');

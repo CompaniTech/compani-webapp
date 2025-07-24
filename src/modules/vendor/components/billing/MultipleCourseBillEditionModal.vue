@@ -61,6 +61,7 @@ import DateInput from '@components/form/DateInput';
 import { SINGLE } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
+import { formatQuantity } from '@helpers/utils';
 import SecondaryButton from '../../../../core/components/SecondaryButton.vue';
 
 export default {
@@ -88,11 +89,16 @@ export default {
     const { billsToUpdate, courseInfos } = toRefs(props);
 
     const maturityDateDiff = computed(() => {
-      if (billsToUpdate.value.firstMaturityDate) {
-        const dateDiff = CompaniDate(billsToUpdate.value.maturityDate)
-          .diff(billsToUpdate.value.firstMaturityDate, 'days');
+      const { firstMaturityDate } = billsToUpdate.value;
+      const newMaturityDate = billsToUpdate.value.maturityDate;
 
-        return CompaniDuration(dateDiff).toMonthAndDaysObject();
+      if (firstMaturityDate) {
+        const monthDuration = CompaniDate(newMaturityDate).diff(firstMaturityDate, 'months');
+        const month = Math.trunc(CompaniDuration(monthDuration).asMonths());
+        const intermediate = CompaniDate(firstMaturityDate).add(`P${month}M`);
+        const dayDuration = CompaniDate(newMaturityDate).diff(intermediate, 'days');
+
+        return { months: month, days: CompaniDuration(dayDuration).asDays() };
       }
 
       return { months: 0, days: 0 };
@@ -104,7 +110,7 @@ export default {
 
       const duration = [];
       if (months) duration.push(`${months} mois`);
-      if (days) duration.push(`${days} jours`);
+      if (days) duration.push(`${formatQuantity('jour', days)}`);
 
       return `La date d'échéance de toutes les factures sélectionnées va être décalée de ${duration.join(' et ')}.`;
     });
