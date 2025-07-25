@@ -613,6 +613,9 @@ export default {
         set(billsToUpdate.value, '_ids', sortedBills.map(cb => cb._id));
         set(billsToUpdate.value, 'firstMaturityDate', sortedBills[0].maturityDate);
         set(billsToUpdate.value, 'maturityDate', sortedBills[0].maturityDate);
+        if (sortedBills[0].mainFee.description) {
+          set(billsToUpdate.value, 'mainFee.description', sortedBills[0].mainFee.description);
+        }
       } else {
         set(billsToUpdate.value, '_ids', selectedBills.value);
       }

@@ -20,14 +20,14 @@
         :error="validations.payer.$error" @blur="validations.payer.$touch" />
       <ni-secondary-button v-else label="Éditer le payeur" icon="edit" @click="update('', 'payer')"
         class="full-width modal-btn q-my-sm" />
-      <div v-if="courseInfos.courseType === SINGLE">
+      <div v-if="isSingleCourse">
         <ni-input v-if="has(billsToUpdate, 'mainFee.price')" in-modal caption="Prix" type="number" suffix="€"
           :model-value="billsToUpdate.mainFee.price" @update:model-value="update($event, 'mainFee.price')"
           :error="get(validations, 'mainFee.price.$error', false)" @blur="get(validations, 'mainFee.price.$touch')"
           required-field />
         <ni-secondary-button v-else label="Éditer le prix" icon="edit" class="full-width modal-btn q-my-sm"
           @click="update('', 'mainFee.price')" />
-        <ni-banner v-if="billsToUpdate._ids.length > 1 && maturityDateDiffMessage" class="bg-copper-grey-100 q-mt-sm"
+        <ni-banner v-if="severalBillsToEdit && maturityDateDiffMessage" class="bg-copper-grey-100 q-mt-sm"
           icon="info_outline">
           <template #message>{{ maturityDateDiffMessage }}</template>
         </ni-banner>
@@ -36,9 +36,10 @@
           required-field />
       </div>
       <ni-input v-if="has(billsToUpdate, 'mainFee.description')" in-modal caption="Description" type="textarea"
-        :model-value="billsToUpdate.mainFee.description" @update:model-value="update($event, 'mainFee.description')" />
-      <ni-secondary-button v-else label="Éditer la description" icon="edit" class="full-width modal-btn q-my-sm"
-        @click="update('', 'mainFee.description')" />
+        :model-value="billsToUpdate.mainFee.description" @update:model-value="update($event, 'mainFee.description')"
+        :disable="isSingleCourse && severalBillsToEdit" />
+      <ni-secondary-button v-else-if="!isSingleCourse" label="Éditer la description" icon="edit"
+        class="full-width modal-btn q-my-sm" @click="update('', 'mainFee.description')" />
     </div>
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Éditer la facture" icon-right="add" color="white"
@@ -112,8 +113,13 @@ export default {
       if (months) duration.push(`${months} mois`);
       if (days) duration.push(`${formatQuantity('jour', days)}`);
 
-      return `La date d'échéance de toutes les factures sélectionnées va être décalée de ${duration.join(' et ')}.`;
+      return `La date d'échéance de toutes les factures sélectionnées va être décalée de ${duration.join(' et ')}, et
+        la description sera mise à jour en fonction du mois et de l’année correspondants à chaque facture.`;
     });
+
+    const severalBillsToEdit = computed(() => billsToUpdate.value._ids.length > 1);
+
+    const isSingleCourse = computed(() => courseInfos.value.courseType === SINGLE);
 
     const hide = () => emit('hide');
 
@@ -140,6 +146,8 @@ export default {
       SINGLE,
       // Computed
       maturityDateDiffMessage,
+      severalBillsToEdit,
+      isSingleCourse,
       // Methods
       hide,
       input,
