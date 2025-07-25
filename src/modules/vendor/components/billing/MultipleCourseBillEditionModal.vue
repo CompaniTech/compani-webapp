@@ -111,7 +111,7 @@ export default {
 
       const duration = [];
       if (months) duration.push(`${months} mois`);
-      if (days) duration.push(`${formatQuantity('jour', days)}`);
+      if (days) duration.push(`${days} ${formatQuantity('jour', Math.abs(days), 's', false)}`);
 
       return `La date d'échéance de toutes les factures sélectionnées va être décalée de ${duration.join(' et ')}, et
         la description sera mise à jour en fonction du mois et de l’année correspondants à chaque facture.`;
