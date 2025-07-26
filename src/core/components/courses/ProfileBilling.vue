@@ -623,6 +623,25 @@ export default {
       multipleCourseBillEditionModal.value = true;
     };
 
+    const formatBillsPayload = () => {
+      const fieldsToRemove = [];
+      if (get(billsToUpdate.value, 'maturityDate') && get(billsToUpdate.value, 'firstMaturityDate')) {
+        const isSameMaturityDate = CompaniDate(billsToUpdate.value.maturityDate)
+          .isSame(billsToUpdate.value.firstMaturityDate);
+
+        fieldsToRemove.push('firstMaturityDate');
+        if (isSameMaturityDate) {
+          fieldsToRemove.push('maturityDate');
+          if (billsToUpdate.value._ids.length > 1) fieldsToRemove.push('mainFee.description');
+        }
+      }
+
+      return {
+        ...omit(billsToUpdate.value, fieldsToRemove),
+        ...(billsToUpdate.value.payer && { payer: formatPayerForPayload(billsToUpdate.value.payer) }),
+      };
+    };
+
     const updateBills = async () => {
       try {
         const editedFields = has(billsToUpdate.value, 'payer') || has(billsToUpdate.value, 'mainFee.description') ||
@@ -632,10 +651,7 @@ export default {
         v$.value.billsToUpdate.$touch();
         if (v$.value.billsToUpdate.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const payload = {
-          ...omit(billsToUpdate.value, 'firstMaturityDate'),
-          ...(billsToUpdate.value.payer && { payer: formatPayerForPayload(billsToUpdate.value.payer) }),
-        };
+        const payload = formatBillsPayload();
         await CourseBills.updateBillList(payload);
 
         refreshCourseBills();
