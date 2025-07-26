@@ -58,7 +58,7 @@
         color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" icon="add" />
 
       <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="edit" label="Modifier les factures"
-        @click="openBillEditionModal" color="primary" :disable="!selectedBills.length" />
+        @click="openMultipleBillEditionModal" color="primary" :disable="!selectedBills.length" />
 
       <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
         @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
@@ -209,7 +209,11 @@ export default {
       newBillsQuantity: { strictPositiveNumber, integerNumber, required },
       billsToUpdate: {
         _ids: { minArrayLength: minArrayLength(1) },
-        payer: { required: requiredIf(has(billsToUpdate.value, 'payer')) },
+        payer: { required: requiredIf(Object.keys(billsToUpdate.value).includes('payer')) },
+        mainFee: {
+          ...(Object.keys(get(billsToUpdate.value, 'mainFee', {})).includes('price') &&
+            { price: { strictPositiveNumber, required } }),
+        },
       },
     }));
 
@@ -315,6 +319,10 @@ export default {
         .filter(bill => selectedBills.value.includes(bill._id))
         .map(bill => formatName(bill.companies)),
       courseName,
+      ...(isSingleCourse.value && {
+        trainersName: course.value.trainers.map(trainer => formatIdentity(trainer.identity, 'FL')).join(', '),
+        traineeName: formatIdentity(course.value.trainees[0].identity, 'FL'),
+      }),
     }));
 
     const severalPayers = computed(() => {
@@ -588,33 +596,62 @@ export default {
 
     const showDetails = () => { showPrices.value = !showPrices.value; };
 
-    const openBillEditionModal = () => {
-      const bill = courseBills.value.find(b => b._id === selectedBills.value[0]);
-      set(billsToUpdate.value, '_ids', selectedBills.value);
-
+    const openMultipleBillEditionModal = () => {
+      const firstBill = courseBills.value.find(b => b._id === selectedBills.value[0]);
       if (selectedBills.value.length === 1) {
-        set(billsToUpdate.value, 'payer', bill.payer._id);
-        set(billsToUpdate.value, 'mainFee.description', bill.mainFee.description);
+        set(billsToUpdate.value, 'payer', firstBill.payer._id);
+        set(billsToUpdate.value, 'mainFee.description', firstBill.mainFee.description);
+        if (isSingleCourse.value) set(billsToUpdate.value, 'mainFee.price', get(firstBill, 'mainFee.price', 0));
       } else if (!severalPayers.value) {
-        set(billsToUpdate.value, 'payer', bill.payer._id);
+        set(billsToUpdate.value, 'payer', firstBill.payer._id);
+      }
+
+      if (isSingleCourse.value) {
+        const sortedBills = courseBills.value
+          .filter(cb => selectedBills.value.includes(cb._id))
+          .sort(ascendingSortBy('maturityDate'));
+        set(billsToUpdate.value, '_ids', sortedBills.map(cb => cb._id));
+        set(billsToUpdate.value, 'firstMaturityDate', sortedBills[0].maturityDate);
+        set(billsToUpdate.value, 'maturityDate', sortedBills[0].maturityDate);
+        if (sortedBills[0].mainFee.description) {
+          set(billsToUpdate.value, 'mainFee.description', sortedBills[0].mainFee.description);
+        }
+      } else {
+        set(billsToUpdate.value, '_ids', selectedBills.value);
       }
 
       multipleCourseBillEditionModal.value = true;
     };
 
+    const formatBillsPayload = () => {
+      const fieldsToRemove = [];
+      if (get(billsToUpdate.value, 'maturityDate') && get(billsToUpdate.value, 'firstMaturityDate')) {
+        const isSameMaturityDate = CompaniDate(billsToUpdate.value.maturityDate)
+          .isSame(billsToUpdate.value.firstMaturityDate);
+
+        fieldsToRemove.push('firstMaturityDate');
+        if (isSameMaturityDate) {
+          fieldsToRemove.push('maturityDate');
+          if (billsToUpdate.value._ids.length > 1) fieldsToRemove.push('mainFee.description');
+        }
+      }
+
+      return {
+        ...omit(billsToUpdate.value, fieldsToRemove),
+        ...(billsToUpdate.value.payer && { payer: formatPayerForPayload(billsToUpdate.value.payer) }),
+      };
+    };
+
     const updateBills = async () => {
       try {
-        if (!has(billsToUpdate.value, 'payer') && !has(billsToUpdate.value, 'mainFee.description')) {
-          return NotifyWarning('Vous devez éditer au moins un champ.');
-        }
+        const editedFields = has(billsToUpdate.value, 'payer') || has(billsToUpdate.value, 'mainFee.description') ||
+          has(billsToUpdate.value, 'mainFee.price');
+        if (!editedFields) return NotifyWarning('Vous devez éditer au moins un champ.');
 
         v$.value.billsToUpdate.$touch();
         if (v$.value.billsToUpdate.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const payload = {
-          ...billsToUpdate.value,
-          ...(billsToUpdate.value.payer && { payer: formatPayerForPayload(billsToUpdate.value.payer) }),
-        };
+        const payload = formatBillsPayload();
         await CourseBills.updateBillList(payload);
 
         refreshCourseBills();
@@ -710,7 +747,7 @@ export default {
       showDetails,
       openBillDeletionModal,
       updateSelectedBills,
-      openBillEditionModal,
+      openMultipleBillEditionModal,
       updateBills,
       resetBillsEditionModal,
     };
