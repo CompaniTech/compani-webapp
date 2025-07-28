@@ -149,7 +149,7 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
 
     if (Object.keys(value).includes('quantity')) {
       const billsToUnroll = sortedBills.slice(0, value.quantity).map(bill => bill._id);
-      billsToUnroll.forEach((billId) => { areDetailsVisible.value[billId] = !areDetailsVisible.value[billId]; });
+      billsToUnroll.forEach((billId) => { areDetailsVisible.value[billId] = true; });
     } else {
       areDetailsVisible.value[value._id] = !areDetailsVisible.value[value._id];
     }
