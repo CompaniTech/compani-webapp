@@ -600,7 +600,7 @@ export default {
       const firstBill = courseBills.value.find(b => b._id === selectedBills.value[0]);
       if (selectedBills.value.length === 1) {
         set(billsToUpdate.value, 'payer', firstBill.payer._id);
-        set(billsToUpdate.value, 'mainFee.description', firstBill.mainFee.description);
+        set(billsToUpdate.value, 'mainFee.description', firstBill.mainFee.description || '');
         if (isSingleCourse.value) set(billsToUpdate.value, 'mainFee.price', get(firstBill, 'mainFee.price', 0));
       } else if (!severalPayers.value) {
         set(billsToUpdate.value, 'payer', firstBill.payer._id);
