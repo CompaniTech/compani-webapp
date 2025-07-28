@@ -382,7 +382,7 @@ export default {
     const setEditedBill = (bill, addMaturityDate = false) => {
       const payer = get(bill, 'payer._id');
       const maturityDate = get(bill, 'maturityDate');
-      addPercentage.value = bill.companies
+      addPercentage.value = course.value.type !== SINGLE && bill.companies
         .every(c => course.value.prices.find(p => p.company === c._id && p.global));
 
       editedBill.value = {
