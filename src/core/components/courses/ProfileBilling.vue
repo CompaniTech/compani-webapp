@@ -99,7 +99,7 @@ import useVuelidate from '@vuelidate/core';
 import { required, minValue, maxValue, helpers, or, requiredIf } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
-import { formatPrice, formatName, sortStrings, formatIdentity, removeEmptyProps } from '@helpers/utils';
+import { formatPrice, formatName, sortStrings, formatIdentity, removeEmptyProps, formatQuantity } from '@helpers/utils';
 import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -658,6 +658,8 @@ export default {
 
         refreshCourseBills();
         unrollBill({ quantity: selectedBills.value.length, type: EDITION });
+
+        NotifyPositive(`${formatQuantity('facture modifiée', selectedBills.value.length)}.`);
         selectedBills.value = [];
         multipleCourseBillEditionModal.value = false;
       } catch (e) {
