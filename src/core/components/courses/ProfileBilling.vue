@@ -99,7 +99,7 @@ import useVuelidate from '@vuelidate/core';
 import { required, minValue, maxValue, helpers, or, requiredIf } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
-import { formatPrice, formatName, sortStrings, formatIdentity } from '@helpers/utils';
+import { formatPrice, formatName, sortStrings, formatIdentity, removeEmptyProps } from '@helpers/utils';
 import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -624,22 +624,24 @@ export default {
     };
 
     const formatBillsPayload = () => {
-      const fieldsToRemove = [];
-      if (get(billsToUpdate.value, 'maturityDate') && get(billsToUpdate.value, 'firstMaturityDate')) {
-        const isSameMaturityDate = CompaniDate(billsToUpdate.value.maturityDate)
-          .isSame(billsToUpdate.value.firstMaturityDate);
+      const bills = billsToUpdate.value;
+      const fieldsToRemove = ['firstMaturityDate'];
+      if (get(bills, 'maturityDate') && get(bills, 'firstMaturityDate')) {
+        const isSameMaturityDate = CompaniDate(bills.maturityDate).isSame(bills.firstMaturityDate);
 
-        fieldsToRemove.push('firstMaturityDate');
         if (isSameMaturityDate) {
           fieldsToRemove.push('maturityDate');
-          if (billsToUpdate.value._ids.length > 1) fieldsToRemove.push('mainFee.description');
+          if (bills._ids.length > 1) fieldsToRemove.push('mainFee.description');
         }
       }
 
-      return {
-        ...omit(billsToUpdate.value, fieldsToRemove),
-        ...(billsToUpdate.value.payer && { payer: formatPayerForPayload(billsToUpdate.value.payer) }),
+      const payload = {
+        ...omit(bills, fieldsToRemove),
+        ...(bills.payer && { payer: formatPayerForPayload(bills.payer) }),
       };
+
+      const keepEmptyDescription = has(bills, 'mainFee.description') && bills.mainFee.description === '';
+      return keepEmptyDescription ? payload : removeEmptyProps(payload);
     };
 
     const updateBills = async () => {
