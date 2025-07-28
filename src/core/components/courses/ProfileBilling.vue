@@ -62,7 +62,8 @@
         @click="openMultipleBillEditionModal" color="primary" :disable="!selectedBills.length" />
 
       <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
-        @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
+        @click="() => openBillDeletionModal(selectedBills.length === 1)" color="primary"
+        :disable="!selectedBills.length" />
     </div>
 
     <ni-bill-creation-modal v-model="billCreationModal" v-model:new-bill="newBill" :course-name="courseName"
