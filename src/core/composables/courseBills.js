@@ -101,7 +101,7 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
 
       await CourseBills.deleteBillList({ _ids: billIdsToDelete });
 
-      NotifyPositive(`${formatQuantity('facture supprimée', selectedBills.value.length)}.`);
+      NotifyPositive(`${formatQuantity('facture supprimée', billIdsToDelete.length)}.`);
       await refreshCourseBills();
     } catch (e) {
       console.error(e);
@@ -126,10 +126,11 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
             label: 'Supprimer cette facture et toutes celles qui ont une date d\'échéance ultérieure',
             value: true,
           }],
-          size: 'md',
+          size: '32px',
+          class: 'text-14',
         },
       }),
-    }).onOk(value => deleteBills(value[0]))
+    }).onOk(value => deleteBills(value.length && value[0]))
       .onCancel(() => NotifyPositive('Suppression annulée.'));
   };
 
