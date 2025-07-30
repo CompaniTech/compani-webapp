@@ -46,7 +46,7 @@
       <q-btn class="q-ma-sm" no-caps rounded icon="payment" label="Valider les factures"
         @click="openCourseBillValidationModal" color="primary" :disable="!selectedBills.length" />
       <q-btn class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
-        @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
+        @click="() => openBillDeletionModal()" color="primary" :disable="!selectedBills.length" />
     </div>
 
     <ni-course-bill-validation-modal v-model="courseBillValidationModal" v-model:bill-to-validate="billsToValidate"
