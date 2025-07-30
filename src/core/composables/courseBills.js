@@ -130,7 +130,7 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
           class: 'text-14',
         },
       }),
-    }).onOk(value => deleteBills(value.length && value[0]))
+    }).onOk(value => deleteBills(!!value && value[0]))
       .onCancel(() => NotifyPositive('Suppression annulée.'));
   };
 
