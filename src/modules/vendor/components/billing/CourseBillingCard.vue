@@ -51,7 +51,9 @@
                   <span v-if="bill.number">
                     &nbsp;<span class="clickable-name" @click.stop="downloadBill(bill)">{{ bill.number }}</span> -
                   </span>
-                  <span>&nbsp;{{ formatPrice(bill.netInclTaxes) }}</span>
+                  <span :class="{ 'missing-info': !bill.netInclTaxes }">
+                    &nbsp;{{ formatPrice(bill.netInclTaxes) }}
+                  </span>
                 </div>
                 <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
