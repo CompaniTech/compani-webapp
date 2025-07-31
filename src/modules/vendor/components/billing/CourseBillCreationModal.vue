@@ -4,6 +4,11 @@
       {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
       <span class="text-weight-bold">{{ formatQuantity('facture', billsQuantity, 's', false) }}</span>
     </template>
+    <ni-banner v-if="!get(course, 'trainers', []).some(t => t._id)" class="bg-peach-100" icon="warning">
+      <template #message>
+        Les intervenant·e·s ne sont pas renseigné·e·s et ne figureront pas dans la description des factures.
+      </template>
+    </ni-banner>
     <div>{{ courseName }} </div>
     <div class="course-bill-infos">
       <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
@@ -68,6 +73,7 @@
 <script>
 import { computed, toRefs, watch } from 'vue';
 import set from 'lodash/set';
+import get from 'lodash/get';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import OptionGroup from '@components/form/OptionGroup';
@@ -176,6 +182,7 @@ export default {
       formatPrice,
       formatQuantity,
       CompaniDate,
+      get,
     };
   },
 };
