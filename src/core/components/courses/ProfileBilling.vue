@@ -395,7 +395,9 @@ export default {
       quantity: newBillsQuantity.value,
       companies: companiesToBill.value,
       payer: formatPayerForPayload(newBill.value.payer),
-      mainFee: isSingleCourse.value ? omit(newBill.value.mainFee, 'description') : newBill.value.mainFee,
+      mainFee: isSingleCourse.value && newBillsQuantity.value > 1
+        ? omit(newBill.value.mainFee, 'description')
+        : newBill.value.mainFee,
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
     });
 

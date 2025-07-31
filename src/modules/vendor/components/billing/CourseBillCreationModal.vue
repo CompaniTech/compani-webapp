@@ -4,7 +4,7 @@
       {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
       <span class="text-weight-bold">{{ formatQuantity('facture', billsQuantity, 's', false) }}</span>
     </template>
-    <ni-banner v-if="!get(course, 'trainers', []).some(t => t._id)" class="bg-peach-100" icon="warning">
+    <ni-banner v-if="!get(course, 'trainers', []).some(t => t._id)" class="bg-orange-100" icon="warning">
       <template #message>
         Les intervenant·e·s ne sont pas renseigné·e·s et ne figureront pas dans la description des factures.
       </template>
