@@ -395,7 +395,9 @@ export default {
       quantity: newBillsQuantity.value,
       companies: companiesToBill.value,
       payer: formatPayerForPayload(newBill.value.payer),
-      mainFee: isSingleCourse.value ? omit(newBill.value.mainFee, 'description') : newBill.value.mainFee,
+      mainFee: isSingleCourse.value && newBillsQuantity.value > 1
+        ? omit(newBill.value.mainFee, 'description')
+        : newBill.value.mainFee,
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
     });
 
@@ -503,7 +505,9 @@ export default {
         return acc;
       }, { global: 0, trainerFees: 0 });
 
-      if (everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) newBill.value.mainFee.percentage = 40;
+      if (!isSingleCourse.value && everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) {
+        newBill.value.mainFee.percentage = 40;
+      }
 
       billCreationModal.value = true;
     };
