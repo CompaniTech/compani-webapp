@@ -47,29 +47,42 @@
     <div v-for="(companies, index) of companiesList" :key="index">
       <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
-        @refresh-course-bills="refreshCourseBills" @unroll="unrollBill" :are-details-visible="areDetailsVisible"
-        :expected-bills-count-invalid="v$.course.expectedBillsCount.$error" :selected-bills="selectedBills"
-        @update-selected-bills="updateSelectedBills" />
+        @refresh-course-bills="refreshCourseBills" @unroll="unrollBill({ _id: $event })"
+        :are-details-visible="areDetailsVisible" :expected-bills-count-invalid="v$.course.expectedBillsCount.$error"
+        :selected-bills="selectedBills" @update-selected-bills="updateSelectedBills" />
     </div>
     <div v-if="!course.companies.length" class="text-italic">Aucune structure n'est rattachée à la formation</div>
 
     <div class="fixed fab-custom">
-      <q-btn class="q-ma-sm" no-caps rounded icon="add" label="Créer une facture" @click="openBillCreationModal"
-        color="primary" :disable="billCreationLoading || !course.companies.length" :loading="billsLoading" />
+      <q-btn class="q-ma-sm" no-caps rounded label="Créer des factures" @click="openMultipleBillCreationModal"
+        color="primary" :disable="billCreationLoading || !course.companies.length || !!selectedBills.length"
+        :loading="billsLoading" icon="add" />
+
+      <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="edit" label="Modifier les factures"
+        @click="openMultipleBillEditionModal" color="primary" :disable="!selectedBills.length" />
 
       <q-btn v-if="courseBills.length" class="q-ma-sm" no-caps rounded icon="delete" label="Supprimer les factures"
-        @click="openBillDeletionModal" color="primary" :disable="!selectedBills.length" />
+        @click="() => openBillDeletionModal(selectedBills.length === 1)" color="primary"
+        :disable="!selectedBills.length" />
     </div>
 
     <ni-bill-creation-modal v-model="billCreationModal" v-model:new-bill="newBill" :course-name="courseName"
       @submit="validateBillCreation" :validations="v$.newBill" @hide="resetBillCreationModal"
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
-      :total-price-to-bill="totalPriceToBill" />
+      :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity" />
+
+    <ni-multiple-course-bill-creation-modal :validations="v$.newBillsQuantity"
+      v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity"
+      :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
       :course-companies="course.companies" @submit="openNextModal" :validations="v$.companiesToBill"
       @hide="resetCompaniesSelectionModal" :course-name="courseName" :is-inter-course="course.type === INTER_B2B" />
+
+    <ni-multiple-course-bill-edition-modal v-model="multipleCourseBillEditionModal" :several-payers="severalPayers"
+      v-model:bills-to-update="billsToUpdate" @submit="updateBills" @hide="resetBillsEditionModal"
+      :payer-options="payerList" :course-infos="courseInfos" :validations="v$.billsToUpdate" />
   </div>
 </template>
 
@@ -78,15 +91,17 @@ import { useStore } from 'vuex';
 import { useQuasar } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import get from 'lodash/get';
+import set from 'lodash/set';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import groupBy from 'lodash/groupBy';
 import uniq from 'lodash/uniq';
+import has from 'lodash/has';
 import useVuelidate from '@vuelidate/core';
-import { required, minValue, maxValue, helpers, or } from '@vuelidate/validators';
+import { required, minValue, maxValue, helpers, or, requiredIf } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { composeCourseName, computeDuration } from '@helpers/courses';
-import { formatPrice, formatName, sortStrings, formatIdentity } from '@helpers/utils';
+import { formatPrice, formatName, sortStrings, formatIdentity, removeEmptyProps, formatQuantity } from '@helpers/utils';
 import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -107,10 +122,13 @@ import {
   DD_MM_YYYY,
   INTER_B2B,
   SINGLE,
+  EDITION,
 } from '@data/constants';
 import CourseBillingCard from 'src/modules/vendor/components/billing/CourseBillingCard';
 import BillCreationModal from 'src/modules/vendor/components/billing/CourseBillCreationModal';
 import CompaniesSelectionModal from 'src/modules/vendor/components/billing/CompaniesSelectionModal';
+import MultipleCourseBillCreationModal from 'src/modules/vendor/components/billing/MultipleCourseBillCreationModal';
+import MultipleCourseBillEditionModal from 'src/modules/vendor/components/billing/MultipleCourseBillEditionModal';
 import Input from '@components/form/Input';
 import Banner from '@components/Banner';
 import { useCourses } from '@composables/courses';
@@ -123,6 +141,8 @@ export default {
     'ni-companies-selection-modal': CompaniesSelectionModal,
     'ni-input': Input,
     'ni-banner': Banner,
+    'ni-multiple-course-bill-creation-modal': MultipleCourseBillCreationModal,
+    'ni-multiple-course-bill-edition-modal': MultipleCourseBillEditionModal,
   },
   setup () {
     const $store = useStore();
@@ -135,6 +155,10 @@ export default {
     const companiesSelectionModal = ref(false);
     const billCreationLoading = ref(false);
     const removeNewBillDatas = ref(true);
+    const multipleBillCreationModal = ref(false);
+    const newBillsQuantity = ref(1);
+    const billsToUpdate = ref({ _ids: [] });
+    const multipleCourseBillEditionModal = ref(false);
 
     const course = computed(() => $store.state.course.course);
 
@@ -152,6 +176,8 @@ export default {
     });
 
     const totalPriceToBill = ref({ global: 0, trainerFees: 0 });
+
+    const { isIntraCourse, isSingleCourse } = useCourses(course);
 
     const rules = computed(() => ({
       course: {
@@ -171,19 +197,29 @@ export default {
       newBill: {
         payer: { required },
         mainFee: {
-          price: { required, strictPositiveNumber },
+          ...(newBillsQuantity.value === 1 && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
-            percentage: { required, strictPositiveNumber, integerNumber, maxValue: maxValue(100) },
+            ...(newBillsQuantity.value === 1 &&
+            { percentage: { required, strictPositiveNumber, integerNumber, maxValue: maxValue(100) } }),
           }),
           countUnit: { required },
         },
-        maturityDate: { required },
+        ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: { required } }),
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
+      newBillsQuantity: { strictPositiveNumber, integerNumber, required },
+      billsToUpdate: {
+        _ids: { minArrayLength: minArrayLength(1) },
+        payer: { required: requiredIf(Object.keys(billsToUpdate.value).includes('payer')) },
+        mainFee: {
+          ...(Object.keys(get(billsToUpdate.value, 'mainFee', {})).includes('price') &&
+            { price: { strictPositiveNumber, required } }),
+        },
+      },
     }));
 
-    const v$ = useVuelidate(rules, { course, newBill, companiesToBill });
+    const v$ = useVuelidate(rules, { course, newBill, companiesToBill, newBillsQuantity, billsToUpdate });
 
     const defaultDescription = computed(() => {
       const trainersName = course.value.trainers
@@ -220,8 +256,6 @@ export default {
       + `Nom du / des intervenants: ${trainersName}`;
     });
 
-    const { isIntraCourse, isSingleCourse } = useCourses(course);
-
     const refreshCourseBills = async () => {
       try {
         billsLoading.value = true;
@@ -232,7 +266,6 @@ export default {
         NotifyNegative('Erreur lors de la récupération des factures.');
       } finally {
         billsLoading.value = false;
-        selectedBills.value = [];
       }
     };
 
@@ -280,6 +313,26 @@ export default {
       .length);
 
     const courseName = computed(() => composeCourseName(course.value));
+
+    const courseInfos = computed(() => ({
+      courseType: course.value.type,
+      companiesName: courseBills.value
+        .filter(bill => selectedBills.value.includes(bill._id))
+        .map(bill => formatName(bill.companies)),
+      courseName,
+      ...(isSingleCourse.value && {
+        trainersName: course.value.trainers.map(trainer => formatIdentity(trainer.identity, 'FL')).join(', '),
+        traineeName: formatIdentity(course.value.trainees[0].identity, 'FL'),
+      }),
+    }));
+
+    const severalPayers = computed(() => {
+      const payerCount = uniq(
+        courseBills.value.filter(bill => selectedBills.value.includes(bill._id)).map(bill => bill.payer._id)
+      ).length;
+
+      return payerCount > 1;
+    });
 
     const totalPrice = computed(() => {
       let billedPrice = 0;
@@ -339,10 +392,13 @@ export default {
 
     const formatCreationPayload = () => ({
       course: course.value._id,
-      mainFee: newBill.value.mainFee,
+      quantity: newBillsQuantity.value,
       companies: companiesToBill.value,
       payer: formatPayerForPayload(newBill.value.payer),
-      maturityDate: newBill.value.maturityDate,
+      mainFee: isSingleCourse.value && newBillsQuantity.value > 1
+        ? omit(newBill.value.mainFee, 'description')
+        : newBill.value.mainFee,
+      ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
     });
 
     const validateBillCreation = async () => {
@@ -374,22 +430,48 @@ export default {
       }
     };
 
+    const validateBillsQuantity = async () => {
+      v$.value.newBillsQuantity.$touch();
+      if (v$.value.newBillsQuantity.$error) return NotifyWarning('Champ invalide.');
+
+      const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
+      const totalBillsAfterCreation = courseBillsWithoutCreditNote.length + newBillsQuantity.value;
+
+      if (totalBillsAfterCreation > course.value.expectedBillsCount) {
+        return NotifyWarning('Impossible de créer autant de factures, nombre maximum de factures atteint.');
+      }
+
+      if (isIntraCourse.value || isSingleCourse.value) openBillCreationModal();
+      else companiesSelectionModal.value = true;
+
+      multipleBillCreationModal.value = false;
+    };
+
     const addBill = async () => {
       try {
         billCreationLoading.value = true;
-        await CourseBills.create(formatCreationPayload());
-        NotifyPositive('Facture créée.');
+        await CourseBills.createList(formatCreationPayload());
+
+        NotifyPositive('Facture(s) créée(s).');
 
         billCreationModal.value = false;
         resetCompaniesSelectionModal();
         await refreshCourseBills();
-        unrollBill();
+        unrollBill({ quantity: newBillsQuantity.value });
+        resetBillsQuantity();
       } catch (e) {
         console.error(e);
         if (e.status === 409) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la création de la facture.');
       } finally {
         billCreationLoading.value = false;
+      }
+    };
+
+    const resetBillsQuantity = () => {
+      if (!billCreationModal.value && !companiesSelectionModal.value) {
+        newBillsQuantity.value = 1;
+        v$.value.newBillsQuantity.$reset();
       }
     };
 
@@ -408,15 +490,35 @@ export default {
         totalPriceToBill.value = { global: 0, trainerFees: 0 };
         v$.value.newBill.$reset();
         resetCompaniesSelectionModal();
+        resetBillsQuantity();
       }
     };
 
     const openBillCreationModal = () => {
+      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
+        if (companiesToBill.value.includes(price.company)) {
+          return {
+            global: toFixedToFloat(add(acc.global, (price.global || 0))),
+            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
+          };
+        }
+        return acc;
+      }, { global: 0, trainerFees: 0 });
+
+      if (!isSingleCourse.value && everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) {
+        newBill.value.mainFee.percentage = 40;
+      }
+
+      billCreationModal.value = true;
+    };
+
+    const openMultipleBillCreationModal = () => {
       if (course.value.interruptedAt) return NotifyWarning('Impossible : la formation est en pause.');
 
       if (!courseBills.value.length && !course.value.prices.some(p => p.global)) {
         return NotifyWarning('Prix de la formation manquant.');
       }
+
       if (isIntraCourse.value || isSingleCourse.value) {
         if (v$.value.course.expectedBillsCount.$error) return NotifyWarning('Champ(s) invalide(s).');
 
@@ -424,22 +526,13 @@ export default {
         if (courseBillsWithoutCreditNote.length === course.value.expectedBillsCount) {
           return NotifyWarning('Impossible de créer une facture, nombre de factures maximum atteint.');
         }
-        totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
-          if (companiesToBill.value.includes(price.company)) {
-            return {
-              global: toFixedToFloat(add(acc.global, (price.global || 0))),
-              trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
-            };
-          }
-          return acc;
-        }, { global: 0, trainerFees: 0 });
-
-        if (course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
-
-        billCreationModal.value = true;
-      } else {
-        companiesSelectionModal.value = true;
       }
+
+      if (!courseBills.value.length && course.value.expectedBillsCount) {
+        newBillsQuantity.value = course.value.expectedBillsCount;
+      }
+
+      multipleBillCreationModal.value = true;
     };
 
     const openNextModal = () => {
@@ -457,20 +550,9 @@ export default {
           return NotifyWarning('Prix de la formation manquant pour une structure sélectionnée.');
         }
       }
-      totalPriceToBill.value = course.value.prices.reduce((acc, price) => {
-        if (companiesToBill.value.includes(price.company)) {
-          return {
-            global: toFixedToFloat(add(acc.global, (price.global || 0))),
-            trainerFees: toFixedToFloat(add(acc.trainerFees, (price.trainerFees || 0))),
-          };
-        }
-        return acc;
-      }, { global: 0, trainerFees: 0 });
 
-      if (everyCompaniesToBillHasPrice.value) newBill.value.mainFee.percentage = 40;
-
+      openBillCreationModal();
       companiesSelectionModal.value = false;
-      billCreationModal.value = true;
       removeNewBillDatas.value = true;
     };
 
@@ -519,8 +601,91 @@ export default {
 
     const showDetails = () => { showPrices.value = !showPrices.value; };
 
+    const openMultipleBillEditionModal = () => {
+      const firstBill = courseBills.value.find(b => b._id === selectedBills.value[0]);
+      if (selectedBills.value.length === 1) {
+        set(billsToUpdate.value, 'payer', firstBill.payer._id);
+        set(billsToUpdate.value, 'mainFee.description', firstBill.mainFee.description || '');
+        if (isSingleCourse.value) set(billsToUpdate.value, 'mainFee.price', get(firstBill, 'mainFee.price', 0));
+      } else if (!severalPayers.value) {
+        set(billsToUpdate.value, 'payer', firstBill.payer._id);
+      }
+
+      if (isSingleCourse.value) {
+        const sortedBills = courseBills.value
+          .filter(cb => selectedBills.value.includes(cb._id))
+          .sort(ascendingSortBy('maturityDate'));
+        set(billsToUpdate.value, '_ids', sortedBills.map(cb => cb._id));
+        set(billsToUpdate.value, 'firstMaturityDate', sortedBills[0].maturityDate);
+        set(billsToUpdate.value, 'maturityDate', sortedBills[0].maturityDate);
+        if (sortedBills[0].mainFee.description) {
+          set(billsToUpdate.value, 'mainFee.description', sortedBills[0].mainFee.description);
+        }
+      } else {
+        set(billsToUpdate.value, '_ids', selectedBills.value);
+      }
+
+      multipleCourseBillEditionModal.value = true;
+    };
+
+    const formatBillsPayload = () => {
+      const bills = billsToUpdate.value;
+      const fieldsToRemove = ['firstMaturityDate'];
+      if (get(bills, 'maturityDate') && get(bills, 'firstMaturityDate')) {
+        const isSameMaturityDate = CompaniDate(bills.maturityDate).isSame(bills.firstMaturityDate);
+
+        if (isSameMaturityDate) {
+          fieldsToRemove.push('maturityDate');
+          if (bills._ids.length > 1) fieldsToRemove.push('mainFee.description');
+        }
+      }
+
+      const payload = {
+        ...omit(bills, fieldsToRemove),
+        ...(bills.payer && { payer: formatPayerForPayload(bills.payer) }),
+      };
+
+      const keepEmptyDescription = has(bills, 'mainFee.description') && bills.mainFee.description === '';
+      return keepEmptyDescription ? payload : removeEmptyProps(payload);
+    };
+
+    const updateBills = async () => {
+      try {
+        const editedFields = has(billsToUpdate.value, 'payer') || has(billsToUpdate.value, 'mainFee.description') ||
+          has(billsToUpdate.value, 'mainFee.price');
+        if (!editedFields) return NotifyWarning('Vous devez éditer au moins un champ.');
+
+        v$.value.billsToUpdate.$touch();
+        if (v$.value.billsToUpdate.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        const payload = formatBillsPayload();
+        await CourseBills.updateBillList(payload);
+
+        await refreshCourseBills();
+        unrollBill({ quantity: selectedBills.value.length, type: EDITION });
+
+        NotifyPositive(`${formatQuantity('facture modifiée', selectedBills.value.length)}.`);
+        selectedBills.value = [];
+        multipleCourseBillEditionModal.value = false;
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification des factures.');
+      }
+    };
+
+    const resetBillsEditionModal = () => {
+      billsToUpdate.value = { _ids: [] };
+      v$.value.billsToUpdate.$reset();
+    };
+
     watch(billCreationModal, () => {
       if (billCreationModal.value) newBill.value.mainFee.description = defaultDescription.value;
+    });
+
+    watch(newBillsQuantity, () => {
+      if (newBillsQuantity.value > 1) {
+        newBill.value = omit(newBill.value, ['mainFee.price', ...(!isSingleCourse.value ? ['maturityDate'] : [])]);
+      }
     });
 
     const created = async () => {
@@ -534,6 +699,7 @@ export default {
       INTER_B2B,
       showPrices,
       totalPriceToBill,
+      newBillsQuantity,
       // Validation
       v$,
       // Data
@@ -543,11 +709,14 @@ export default {
       billsLoading,
       billCreationLoading,
       billCreationModal,
+      multipleBillCreationModal,
       newBill,
       companiesSelectionModal,
       companiesToBill,
       areDetailsVisible,
       selectedBills,
+      multipleCourseBillEditionModal,
+      billsToUpdate,
       // Computed
       course,
       companiesList,
@@ -560,6 +729,8 @@ export default {
       courseName,
       missingBillsCompanies,
       totalPrice,
+      severalPayers,
+      courseInfos,
       // Methods
       saveTmp,
       refreshCourseBills,
@@ -567,8 +738,11 @@ export default {
       refreshPayers,
       updateCourse,
       validateBillCreation,
+      validateBillsQuantity,
       resetBillCreationModal,
+      resetBillsQuantity,
       openBillCreationModal,
+      openMultipleBillCreationModal,
       resetCompaniesSelectionModal,
       openNextModal,
       get,
@@ -582,6 +756,9 @@ export default {
       showDetails,
       openBillDeletionModal,
       updateSelectedBills,
+      openMultipleBillEditionModal,
+      updateBills,
+      resetBillsEditionModal,
     };
   },
 };

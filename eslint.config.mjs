@@ -62,19 +62,22 @@ const rules = {
   'operator-linebreak': ['error', 'before', { overrides: { '&&': 'after', '||': 'after', '=': 'after' } }],
   'prefer-destructuring': ['error', { VariableDeclarator: { object: true, array: false } }],
   'space-before-function-paren': 0,
+  'vue/max-attributes-per-line': 0,
+  'vue/singleline-html-element-content-newline': 0,
+  'vue/html-indent': 0,
+  'vue/html-closing-bracket-newline': 0,
+  'vue/first-attribute-linebreak': 0,
 };
 
 export default defineConfig([
   globalIgnores(['dist', 'eslint.config.mjs', '.quasar', '.postcssrc.js', './test/cypress/support/component.js']),
   ...airbnb,
   ...compat.extends(
-    'plugin:cypress/recommended',
-    'plugin:vue/vue3-strongly-recommended',
     'plugin:promise/recommended',
     'plugin:n/recommended'
   ),
   { // Configuration pour les fichiers .vue
-    plugins: { vue, cypress },
+    plugins: { vue },
     files: ['**/*.vue'],
     languageOptions: {
       parser: vueParser,
@@ -87,10 +90,22 @@ export default defineConfig([
       globals: {
         ...globals.browser,
         __statics: true,
-        'cypress/globals': true,
       },
     },
-    rules,
+    rules: { ...vue.configs['strongly-recommended'].rules, ...rules },
+  },
+  { // Configuration pour les fichiers de tests e2e
+    files: ['test/cypress/**/*.{js,ts}', '**/*.spec.{js,ts}'],
+    plugins: { cypress },
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...cypress.configs.recommended.languageOptions.globals,
+      },
+    },
+    rules: { ...cypress.configs.recommended.rules },
   },
   { // Configuration pour les fichiers .js et .mjs
     files: ['**/*.{js,mjs}'],

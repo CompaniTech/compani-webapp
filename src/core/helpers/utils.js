@@ -51,7 +51,8 @@ export const clear = (obj) => {
 };
 
 export const removeEmptyProps = obj => transform(obj, (acc, value, key) => {
-  if (!value) return;
+  const isEmptyObject = isObject(value) && !Object.keys(value).length;
+  if (!value || isEmptyObject) return;
   acc[key] = isObject(value) ? removeEmptyProps(value) : value;
 });
 

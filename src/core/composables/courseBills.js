@@ -10,7 +10,8 @@ import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { formatDownloadName, formatQuantity, formatAndSortCompanyOptions, formatAndSortOptions } from '@helpers/utils';
 import { downloadFile } from '@helpers/file';
 import { descendingSortBy } from '@helpers/dates/utils';
-import { COMPANY, REQUIRED_LABEL, FUNDING_ORGANISATION, DIRECTORY } from '../data/constants';
+import CompaniDate from '@helpers/dates/companiDates';
+import { COMPANY, REQUIRED_LABEL, FUNDING_ORGANISATION, DIRECTORY, EDITION } from '../data/constants';
 
 export const useCourseBilling = (courseBills, validations, refreshCourseBills) => {
   const $q = useQuasar();
@@ -85,11 +86,22 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     } else selectedBills.value.push(billId);
   };
 
-  const deleteBills = async () => {
+  const deleteBills = async (shouldDeleteAllFollowingBills) => {
     try {
-      await CourseBills.deleteBillList({ _ids: selectedBills.value });
+      let billIdsToDelete = selectedBills.value;
+      if (shouldDeleteAllFollowingBills) {
+        const selectedBill = courseBills.value.find(bill => bill._id === selectedBills.value[0]);
+        if (selectedBill.maturityDate) {
+          billIdsToDelete = courseBills.value
+            .filter(bill => bill.maturityDate &&
+              CompaniDate(bill.maturityDate).isSameOrAfter(selectedBill.maturityDate))
+            .map(bill => bill._id);
+        }
+      }
 
-      NotifyPositive(`${formatQuantity('facture supprimée', selectedBills.value.length)}.`);
+      await CourseBills.deleteBillList({ _ids: billIdsToDelete });
+
+      NotifyPositive(`${formatQuantity('facture supprimée', billIdsToDelete.length)}.`);
       await refreshCourseBills();
     } catch (e) {
       console.error(e);
@@ -99,14 +111,26 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     }
   };
 
-  const openBillDeletionModal = () => {
+  const openBillDeletionModal = (displayCheckbox = false) => {
     $q.dialog({
       title: 'Confirmation',
       message: 'Êtes-vous sûr(e) de vouloir supprimer ces factures brouillon ?',
       html: true,
       ok: 'OK',
       cancel: 'Annuler',
-    }).onOk(deleteBills)
+      ...(displayCheckbox && {
+        options: {
+          type: 'checkbox',
+          model: [],
+          items: [{
+            label: 'Supprimer cette facture et toutes celles qui ont une date d\'échéance ultérieure',
+            value: true,
+          }],
+          size: '32px',
+          class: 'text-14',
+        },
+      }),
+    }).onOk(value => deleteBills(!!value && value[0]))
       .onCancel(() => NotifyPositive('Suppression annulée.'));
   };
 
@@ -139,9 +163,20 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     }
   };
 
-  const unrollBill = (billId) => {
-    const bill = billId || [...courseBills.value].sort(descendingSortBy('createdAt'))[0]._id;
-    areDetailsVisible.value[bill] = !areDetailsVisible.value[bill];
+  const unrollBill = (value) => {
+    const sortKey = value.type === EDITION ? 'updatedAt' : 'createdAt';
+    const sortedBills = [...courseBills.value].sort(descendingSortBy(sortKey));
+    if (!Object.keys(value).length) {
+      const bill = sortedBills[0]._id;
+      areDetailsVisible.value[bill] = !areDetailsVisible.value[bill];
+    }
+
+    if (Object.keys(value).includes('quantity')) {
+      const billsToUnroll = sortedBills.slice(0, value.quantity).map(bill => bill._id);
+      billsToUnroll.forEach((billId) => { areDetailsVisible.value[billId] = true; });
+    } else {
+      areDetailsVisible.value[value._id] = !areDetailsVisible.value[value._id];
+    }
   };
 
   return {
