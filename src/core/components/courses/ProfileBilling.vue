@@ -503,7 +503,9 @@ export default {
         return acc;
       }, { global: 0, trainerFees: 0 });
 
-      if (everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) newBill.value.mainFee.percentage = 40;
+      if (!isSingleCourse.value && everyCompaniesToBillHasPrice.value && newBillsQuantity.value === 1) {
+        newBill.value.mainFee.percentage = 40;
+      }
 
       billCreationModal.value = true;
     };
