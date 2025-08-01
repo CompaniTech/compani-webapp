@@ -561,6 +561,8 @@ export default {
         companiesToBill.value = isIntraCourse.value || isSingleCourse.value ? [course.value.companies[0]._id] : [];
         v$.value.companiesToBill.$reset();
       }
+
+      resetBillsQuantity();
     };
 
     const getPriceError = (index, path) => {
