@@ -93,8 +93,7 @@ export const useAttendanceSheets = (
     if (!isSingleCourse.value) return [];
 
     return course.value.slots
-      .filter(s => attendanceSheets.value
-        .every(as => !get(as, 'slots', []).map(slot => slot.slotId._id).includes(s._id)));
+      .filter(s => attendanceSheets.value.every(as => !get(as, 'slots', []).map(slot => slot._id).includes(s._id)));
   });
 
   const disableSheetDeletion = attendanceSheet => !get(attendanceSheet, 'file.link') || !!course.value.archivedAt;
@@ -239,7 +238,7 @@ export const useAttendanceSheets = (
   };
 
   const openAttendanceSheetEditionModal = (attendanceSheet) => {
-    const linkedSlots = (attendanceSheet.slots || []).map(s => s.slotId);
+    const linkedSlots = attendanceSheet.slots || [];
     if (![...linkedSlots, ...notLinkedSlotOptions.value].length) {
       return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
     }

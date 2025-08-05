@@ -324,7 +324,7 @@ export default {
     };
 
     const formatSingleAttendanceSheetName = (traineeName, slots) => {
-      const dates = [...new Set(slots.map(slot => CompaniDate(slot.slotId.startDate).format(DD_MM_YYYY)))].join(', ');
+      const dates = [...new Set(slots.map(slot => CompaniDate(slot.startDate).format(DD_MM_YYYY)))].join(', ');
       return `${traineeName} - ${dates}`;
     };
 
