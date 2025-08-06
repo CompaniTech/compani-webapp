@@ -8,6 +8,7 @@ import { required, requiredIf } from '@vuelidate/validators';
 import AttendanceSheets from '@api/AttendanceSheets';
 import { INTER_B2B, SINGLE, DD_MM_YYYY, GENERATION } from '@data/constants';
 import { formatIdentity, sortStrings } from '@helpers/utils';
+import { descendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
 
@@ -156,7 +157,7 @@ export const useAttendanceSheets = (
   const formatPayload = () => {
     const { course: newAttendanceSheetCourse, file, trainee, trainer, date, slots } = newAttendanceSheet.value;
     const form = new FormData();
-    if ([INTER_B2B, SINGLE].includes(course.value.type)) form.append('trainee', trainee);
+    if ([INTER_B2B, SINGLE].includes(course.value.type)) form.append('trainees', trainee);
     else form.append('date', date);
     form.append('course', newAttendanceSheetCourse);
     form.append('trainer', trainer);
@@ -204,13 +205,31 @@ export const useAttendanceSheets = (
     }
   };
 
+  const validateAttendanceSheetGeneration = (attendanceSheet) => {
+    const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
+    const isLastSlotSigned = !!attendanceSheet.slots.find(s => s._id === lastSlot._id);
+
+    if (!isLastSlotSigned) {
+      const message = 'Vous n\'avez pas émargé tous les créneaux. <br />'
+        + 'Êtes-vous sûr(e) de vouloir générer cette feuille d\'émargement&nbsp;?';
+      $q.dialog({
+        title: 'Confirmation',
+        message,
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => generateAttendanceSheet(attendanceSheet._id))
+        .onCancel(() => NotifyPositive('Génération annulée.'));
+    } else return generateAttendanceSheet(attendanceSheet._id);
+  };
+
   const validateAttendanceSheetDeletion = (attendanceSheet) => {
     if (!canUpdate.value) return NotifyNegative('Impossible de supprimer la feuille d\'émargement.');
 
     const message = (attendanceSheet.slots || []).some(s => s.trainerSignature)
-      ? 'Êtes-vous sûr·e de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
+      ? 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
       + 'également supprimées.'
-      : 'Êtes-vous sûr·e de vouloir supprimer cette feuille d\'émargement&nbsp;?';
+      : 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;?';
 
     $q.dialog({
       title: 'Confirmation',
@@ -313,7 +332,7 @@ export const useAttendanceSheets = (
     openAttendanceSheetEditionModal,
     updateAttendanceSheet,
     resetAttendanceSheetEditionModal,
-    generateAttendanceSheet,
+    validateAttendanceSheetGeneration,
     // Validations
     attendanceSheetValidations: v$,
   };
