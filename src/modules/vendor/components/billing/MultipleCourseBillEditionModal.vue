@@ -23,8 +23,8 @@
       <div v-if="isSingleCourse">
         <ni-input v-if="has(billsToUpdate, 'mainFee.price')" in-modal caption="Prix" type="number" suffix="€"
           :model-value="billsToUpdate.mainFee.price" @update:model-value="update($event, 'mainFee.price')"
-          :error="get(validations, 'mainFee.price.$error', false)" @blur="get(validations, 'mainFee.price.$touch')"
-          required-field />
+          :error="validations.mainFee.price.$error" @blur="validations.mainFee.price.$touch" required-field
+          :error-message="getPriceErrorMessage()" />
         <ni-secondary-button v-else label="Éditer le prix" icon="edit" class="full-width modal-btn q-my-sm"
           @click="update('', 'mainFee.price')" />
         <ni-banner v-if="severalBillsToEdit && maturityDateDiffMessage" class="bg-copper-grey-100 q-mt-sm"
@@ -59,7 +59,7 @@ import Input from '@components/form/Input';
 import Banner from '@components/Banner';
 import CompanySelect from '@components/form/CompanySelect';
 import DateInput from '@components/form/DateInput';
-import { SINGLE } from '@data/constants';
+import { SINGLE, REQUIRED_LABEL } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { formatQuantity } from '@helpers/utils';
@@ -87,7 +87,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:bills-to-update'],
   setup (props, { emit }) {
-    const { billsToUpdate, courseInfos } = toRefs(props);
+    const { billsToUpdate, courseInfos, validations } = toRefs(props);
 
     const maturityDateDiff = computed(() => {
       const { firstMaturityDate } = billsToUpdate.value;
@@ -141,6 +141,14 @@ export default {
       } else emit('update:bills-to-update', set({ ...billsToUpdate.value }, path, value));
     };
 
+    const getPriceErrorMessage = () => {
+      if (get(validations, 'value.mainFee.price.required.$response') === false) return REQUIRED_LABEL;
+
+      if (get(validations, 'value.mainFee.price.strictPositiveNumber.$response') === false) {
+        return 'Prix non valide';
+      }
+    };
+
     return {
       // Data
       SINGLE,
@@ -155,6 +163,7 @@ export default {
       update,
       has,
       get,
+      getPriceErrorMessage,
     };
   },
 };

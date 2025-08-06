@@ -82,7 +82,7 @@ import CompanySelect from '@components/form/CompanySelect';
 import Banner from '@components/Banner';
 import DateInput from '@components/form/DateInput';
 import { INTRA, SINGLE, TRAINEE, GROUP, DD_MM_YYYY } from '@data/constants';
-import { formatQuantity, formatName, formatPrice } from '@helpers/utils';
+import { formatQuantity, formatName, formatPrice, formatIdentity } from '@helpers/utils';
 import { multiply, divide, toFixedToFloat } from '@helpers/numbers';
 import CompaniDate from '@helpers/dates/companiDates';
 
@@ -148,10 +148,27 @@ export default {
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
     const update = (event, path) => {
-      emit('update:new-bill', set({ ...newBill.value }, path, event));
+      let newBillToSet = newBill.value;
       if (event === TRAINEE) {
-        emit('update:new-bill', set({ ...newBill.value }, 'mainFee.count', traineesQuantity.value));
-      } else if (event === GROUP) emit('update:new-bill', set({ ...newBill.value }, 'mainFee.count', 1));
+        newBillToSet = set({ ...newBill.value }, 'mainFee.count', traineesQuantity.value);
+      } else if (event === GROUP) newBillToSet = set({ ...newBill.value }, 'mainFee.count', 1);
+
+      if (path === 'maturityDate' && course.value.type === SINGLE) {
+        const traineeName = course.value.trainees.length
+          ? formatIdentity(get(course.value.trainees[0], 'identity'), 'FL')
+          : '';
+        const trainersName = course.value.trainers
+          .map(trainer => formatIdentity(get(trainer, 'identity'), 'FL')).join(', ');
+        const description = 'Facture liée à des frais pédagogiques \r\n'
+          + 'Contrat de professionnalisation \r\n'
+          + `ACCOMPAGNEMENT ${CompaniDate(event).format('LLLL yyyy')} \r\n`
+          + `Nom de l'apprenant·e: ${traineeName} \r\n`
+          + `Nom du / des intervenants: ${trainersName}`;
+
+        newBillToSet = set({ ...newBillToSet, mainFee: { ...newBillToSet.mainFee, description } }, path, event);
+      } else newBillToSet = set({ ...newBillToSet }, path, event);
+
+      emit('update:new-bill', newBillToSet);
     };
 
     watch(computedPrice, () => {
