@@ -104,8 +104,9 @@
                 <div v-if="props.row.slots.some(s => !s.traineesSignature)" class="text-italic text-primary">
                   En attente de signature
                 </div>
+                <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
-                  @click="generateAttendanceSheet(props.row._id)" />
+                  @click="validateAttendanceSheetGeneration(props.row)" />
                 <ni-button v-if="canUpdate" icon="delete" color="primary"
                   @click="validateAttendanceSheetDeletion(props.row)" :disable="!!course.archivedAt" />
               </div>
@@ -156,7 +157,7 @@ import { computed, toRefs, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import pick from 'lodash/pick';
 import get from 'lodash/get';
-import { DEFAULT_AVATAR, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, DD_MM_YYYY } from '@data/constants';
+import { DEFAULT_AVATAR, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, DD_MM_YYYY, INTER_B2B } from '@data/constants';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
 import { formatQuantity } from '@helpers/utils';
@@ -287,6 +288,11 @@ export default {
       return lastPassedSlot ? lastPassedSlot._id : null;
     });
 
+    const isInterCourseInProgress = computed(() => {
+      const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
+      return course.value.type === INTER_B2B && CompaniDate().isBefore(lastSlot.endDate);
+    });
+
     const {
       // Data
       attendanceSheetTableLoading,
@@ -313,7 +319,7 @@ export default {
       resetAttendanceSheetEditionModal,
       updateAttendanceSheet,
       openAttendanceSheetEditionModal,
-      generateAttendanceSheet,
+      validateAttendanceSheetGeneration,
       // Validations
       attendanceSheetValidations,
     } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading);
@@ -384,6 +390,7 @@ export default {
       notLinkedSlotOptions,
       editionSlotsGroupedByStep,
       isSingleCourse,
+      isInterCourseInProgress,
       // Methods
       get,
       attendanceCheckboxValue,
@@ -406,7 +413,7 @@ export default {
       updateAttendanceSheet,
       formatQuantity,
       openAttendanceSheetEditionModal,
-      generateAttendanceSheet,
+      validateAttendanceSheetGeneration,
       formatSingleAttendanceSheetName,
       // Validations
       attendanceSheetValidations,
