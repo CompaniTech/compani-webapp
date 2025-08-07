@@ -95,7 +95,7 @@
 </template>
 
 <script>
-import { useMeta, Dialog } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
@@ -136,6 +136,7 @@ export default {
   setup () {
     const metaInfo = { title: 'Configuration' };
     useMeta(metaInfo);
+    const $q = useQuasar();
 
     const organisationsLoading = ref(false);
     const itemsLoading = ref(false);
@@ -333,7 +334,7 @@ export default {
     const deleteOrganisation = async (organisationId) => {
       try {
         await CourseFundingOrganisations.delete(organisationId);
-        refreshCourseFundingOrganisations();
+        await refreshCourseFundingOrganisations();
         NotifyPositive('Financeur supprimé.');
       } catch (e) {
         console.error(e);
@@ -342,7 +343,7 @@ export default {
     };
 
     const validateOrganisationDeletion = (organisationId) => {
-      Dialog.create({
+      $q.create({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir supprimer le financeur&nbsp;?',
         html: true,
@@ -382,7 +383,7 @@ export default {
     const deleteBillingItems = async (billingItemId) => {
       try {
         await CourseBillingItems.delete(billingItemId);
-        refreshCourseBillingItems();
+        await refreshCourseBillingItems();
         NotifyPositive('Article de facturation supprimé.');
       } catch (e) {
         console.error(e);
@@ -391,7 +392,7 @@ export default {
     };
 
     const validateBillingItemsDeletion = (billingItemId) => {
-      Dialog.create({
+      $q.create({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir supprimer l\'article de facturation&nbsp;?',
         html: true,
@@ -423,10 +424,10 @@ export default {
     };
 
     const created = async () => {
-      refreshVendorCompany();
-      refreshCourseFundingOrganisations();
-      refreshCourseBillingItems();
-      refreshBillingRepresentativeOptions();
+      await refreshVendorCompany();
+      await refreshCourseFundingOrganisations();
+      await refreshCourseBillingItems();
+      await refreshBillingRepresentativeOptions();
     };
 
     created();
