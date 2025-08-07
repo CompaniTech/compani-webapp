@@ -26,15 +26,17 @@
 </template>
 
 <script>
-import { useMeta } from 'quasar';
-import { mapState } from 'vuex';
+import { ref, computed, toRefs, useTemplateRef, onBeforeUnmount } from 'vue';
+import { useStore } from 'vuex';
+import { useMeta, useQuasar } from 'quasar';
+import { useRoute } from 'vue-router';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import get from 'lodash/get';
 import uniqBy from 'lodash/uniqBy';
 import Activities from '@api/Activities';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { ACTIVITY_TYPES, PUBLISHED, PUBLISHED_DOT_ACTIVE, PUBLISHED_DOT_WARNING } from '@data/constants';
+import { ACTIVITY_TYPES, PUBLISHED } from '@data/constants';
 import ProfileHeader from '@components/ProfileHeader';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
@@ -42,7 +44,7 @@ import Select from '@components/form/Select';
 import CardContainer from 'src/modules/vendor/components/programs/cards/CardContainer';
 import CardEdition from 'src/modules/vendor/components/programs/cards/CardEdition';
 import CardCreationModal from 'src/modules/vendor/components/programs/cards/CardCreationModal';
-import { cardMixin } from '@mixins/cardMixin';
+import { useCards } from '@composables/cards';
 
 export default {
   name: 'ActivityProfile',
@@ -61,106 +63,91 @@ export default {
     'ni-input': Input,
     'ni-select': Select,
   },
-  mixins: [cardMixin],
-  setup () {
+  setup (props) {
     const metaInfo = { title: 'Fiche activité' };
     useMeta(metaInfo);
+    const { activityId, subProgramId, stepId, programId } = toRefs(props);
+    const $store = useStore();
+    const $q = useQuasar();
+    const $route = useRoute();
 
-    return { v$: useVuelidate() };
-  },
-  data () {
-    return {
-      programName: '',
-      stepName: '',
-      cardCreationModal: false,
-      isEditionLocked: false,
-      isActivityUsedInSeveralPlaces: false,
-      PUBLISHED_DOT_WARNING,
-      PUBLISHED_DOT_ACTIVE,
-      editedActivity: { name: '', type: '' },
-      ACTIVITY_TYPES,
+    const programName = ref('');
+    const stepName = ref('');
+    const cardCreationModal = ref(false);
+    const isEditionLocked = ref(false);
+    const isActivityUsedInSeveralPlaces = ref(false);
+    const editedActivity = ref({ name: '', type: '' });
+    const cardContainer = useTemplateRef('cardContainer');
+
+    const activity = computed(() => $store.state.program.activity);
+    const program = computed(() => $store.state.program.program);
+    const card = computed(() => $store.state.card.card);
+
+    const deleteCard = async (cardId) => {
+      try {
+        await Activities.deleteCard(cardId);
+        await refreshActivity();
+        $store.dispatch('card/resetCard');
+        NotifyPositive('Carte supprimée');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression de la carte.');
+      }
     };
-  },
-  validations () {
-    return {
+
+    const { validateCardDeletion, openCardCreationModal } = useCards(cardCreationModal, deleteCard);
+
+    const rules = computed(() => ({
       editedActivity: {
         name: { required },
         type: { required },
       },
-    };
-  },
-  computed: {
-    ...mapState({
-      activity: state => state.program.activity,
-      program: state => state.program.program,
-      card: state => state.card.card,
-    }),
-    activityType () {
-      return ACTIVITY_TYPES.find(type => type.value === this.activity.type).label || '';
-    },
-    isActivityPublished () {
-      return this.activity.status === PUBLISHED;
-    },
-    isActivityValid () {
-      return this.activity.areCardsValid && this.activity.cards.length > 0;
-    },
-    headerInfo () {
+    }));
+
+    const v$ = useVuelidate(rules, { editedActivity });
+
+    const activityType = computed(() => ACTIVITY_TYPES.find(type => type.value === activity.value.type).label || '');
+
+    const isActivityPublished = computed(() => activity.value.status === PUBLISHED);
+
+    const isActivityValid = computed(() => activity.value.areCardsValid && activity.value.cards.length > 0);
+
+    const headerInfo = computed(() => {
       const infos = [
-        { icon: 'library_books', label: this.programName },
-        { icon: 'book', label: this.stepName },
-        { icon: 'bookmark_border', label: this.activityType },
+        { icon: 'library_books', label: programName.value },
+        { icon: 'book', label: stepName.value },
+        { icon: 'bookmark_border', label: activityType.value },
       ];
 
-      if (this.isActivityPublished) {
-        infos.push({ icon: !this.isActivityValid ? 'circle' : 'check_circle',
+      if (isActivityPublished.value) {
+        infos.push({ icon: !isActivityValid.value ? 'circle' : 'check_circle',
           label: 'Publiée',
-          class: this.isActivityValid ? 'info-active' : 'info-warning' });
+          class: isActivityValid.value ? 'info-active' : 'info-warning' });
       }
 
       return infos;
-    },
-  },
-  async created () {
-    try {
-      await this.refreshActivity();
+    });
 
-      if (!this.program) await this.$store.dispatch('program/fetchProgram', { programId: this.programId });
-      this.programName = get(this.program, 'name') || '';
-
-      const subProgram = this.program.subPrograms.find(sp => sp._id === this.subProgramId);
-
-      const step = subProgram ? subProgram.steps.find(s => s._id === this.stepId) : '';
-      this.stepName = get(step, 'name') || '';
-
-      const isActivityUsedInOtherSteps = this.activity.steps.length > 1;
-      const isActivityUsedInOneStepButSeveralSubPrograms = this.activity.steps[0].subPrograms.length > 1;
-      this.isActivityUsedInSeveralPlaces = isActivityUsedInOtherSteps || isActivityUsedInOneStepButSeveralSubPrograms;
-
-      this.isEditionLocked = this.isActivityUsedInSeveralPlaces || this.isActivityPublished;
-      this.editedActivity = { name: this.activity.name, type: this.activity.type };
-    } catch (e) {
-      console.error(e);
-    }
-  },
-  methods: {
-    async refreshActivity () {
+    const refreshActivity = async () => {
       try {
-        await this.$store.dispatch('program/fetchActivity', { activityId: this.activityId });
+        await $store.dispatch('program/fetchActivity', { activityId: activityId.value });
       } catch (e) {
         console.error(e);
       }
-    },
-    async refreshCard () {
+    };
+
+    const refreshCard = async () => {
       try {
-        await this.$store.dispatch('program/fetchActivity', { activityId: this.activity._id });
-        const card = this.activity.cards.find(c => c._id === this.card._id);
-        this.$store.dispatch('card/fetchCard', card);
+        await $store.dispatch('program/fetchActivity', { activityId: activity.value._id });
+        const cards = activity.value.cards.find(c => c._id === card.value._id);
+        $store.dispatch('card/fetchCard', cards);
       } catch (e) {
         console.error(e);
       }
-    },
-    validateUnlockEdition () {
-      const activityReusagesExceptCurrentUsage = this.activity.steps.map(step => step.subPrograms
+    };
+
+    const validateUnlockEdition = () => {
+      const activityReusagesExceptCurrentUsage = activity.value.steps.map(step => step.subPrograms
         .map(sp => ({
           stepId: step._id,
           subProgramId: sp._id,
@@ -168,87 +155,128 @@ export default {
           programName: get(sp, 'program.name'),
         })))
         .flat()
-        .filter(activity => activity.subProgramId !== this.subProgramId || activity.stepId !== this.stepId);
+        .filter(
+          activityItem => activityItem.subProgramId !== subProgramId.value || activityItem.stepId !== stepId.value
+        );
       const programsReusingActivity = uniqBy(activityReusagesExceptCurrentUsage, 'programId').map(p => p.programName);
 
-      const usedInOtherStepMessage = this.isActivityUsedInSeveralPlaces
+      const usedInOtherStepMessage = isActivityUsedInSeveralPlaces.value
         ? 'Cette activité est utilisée dans les étapes '
           + `${programsReusingActivity.length > 1 ? 'des programmes suivants' : 'du programme suivant'} : `
           + `${programsReusingActivity.join(', ')}. <br />Si vous la modifiez, elle sera modifiée dans toutes
           ces étapes.`
           + '<br /><br />'
         : '';
-      const isPublishedMessage = this.isActivityPublished
+      const isPublishedMessage = isActivityPublished.value
         ? 'Cette activité est publiée, vous ne pourrez pas ajouter, supprimer ou changer l\'ordre des cartes'
           + '<br /><br />'
         : '';
 
-      this.$q.dialog({
+      $q.dialog({
         title: 'Confirmation',
         message: `${usedInOtherStepMessage} ${isPublishedMessage}`
           + 'Êtes-vous sûr(e) de vouloir déverrouiller cette activité&nbsp;?',
         html: true,
         ok: true,
         cancel: 'Annuler',
-      }).onOk(() => { this.isEditionLocked = false; NotifyPositive('Activité déverrouillée.'); })
+      }).onOk(() => { isEditionLocked.value = false; NotifyPositive('Activité déverrouillée.'); })
         .onCancel(() => NotifyPositive('Déverrouillage annulé.'));
-    },
-    async createCard (template) {
-      this.$q.loading.show();
+    };
+
+    const createCard = async (template) => {
+      $q.loading.show();
       try {
-        await Activities.addCard(this.activityId, { template });
+        await Activities.addCard(activityId.value, { template });
 
         NotifyPositive('Carte créée.');
-        this.cardCreationModal = false;
+        cardCreationModal.value = false;
 
-        this.$refs.cardContainer.scrollDown();
+        cardContainer.value.scrollDown();
 
-        await this.refreshActivity();
-        const cardCreated = this.activity.cards[this.activity.cards.length - 1];
-        await this.$store.dispatch('card/fetchCard', cardCreated);
+        await refreshActivity();
+        const cardCreated = activity.value.cards[activity.value.cards.length - 1];
+        await $store.dispatch('card/fetchCard', cardCreated);
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la création de la carte.');
       } finally {
-        this.$q.loading.hide();
+        $q.loading.hide();
       }
-    },
-    async deleteCard (cardId) {
-      try {
-        await Activities.deleteCard(cardId);
-        await this.refreshActivity();
-        this.$store.dispatch('card/resetCard');
-        NotifyPositive('Carte supprimée');
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la suppression de la carte.');
-      }
-    },
-    async updateActivity (event, path) {
-      try {
-        this.v$.editedActivity.$touch();
-        if (this.v$.editedActivity.$error) return NotifyWarning('Champ(s) invalide(s)');
+    };
 
-        await Activities.updateById(this.activity._id, { [path]: event });
+    const updateActivity = async (event, path) => {
+      try {
+        v$.value.editedActivity.$touch();
+        if (v$.value.editedActivity.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        await Activities.updateById(activity.value._id, { [path]: event });
 
         NotifyPositive('Modification enregistrée.');
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la modification des cartes.');
       } finally {
-        this.refreshActivity();
+        refreshActivity();
       }
-    },
-  },
-  async beforeUnmount () {
-    this.$store.dispatch('program/resetActivity');
-    this.$store.dispatch('card/resetCard');
-    if ((new RegExp(`programs/${this.program._id}`)).test(this.$route.path)) {
-      this.$store.dispatch('program/fetchProgram', { programId: this.programId });
-      this.$store.dispatch('program/setOpenedStep', { stepId: this.stepId });
-    } else {
-      this.$store.dispatch('program/resetProgram');
-    }
+    };
+
+    const created = async () => {
+      try {
+        await refreshActivity();
+
+        if (!program.value) await $store.dispatch('program/fetchProgram', { programId: programId.value });
+        programName.value = get(program.value, 'name') || '';
+
+        const subProgram = program.value.subPrograms.find(sp => sp._id === subProgramId.value);
+
+        const step = subProgram ? subProgram.steps.find(s => s._id === stepId.value) : '';
+        stepName.value = get(step, 'name') || '';
+
+        const isActivityUsedInOtherSteps = activity.value.steps.length > 1;
+        const isActivityUsedInOneStepButSeveralSubPrograms = activity.value.steps[0].subPrograms.length > 1;
+        isActivityUsedInSeveralPlaces.value = isActivityUsedInOtherSteps ||
+        isActivityUsedInOneStepButSeveralSubPrograms;
+
+        isEditionLocked.value = isActivityUsedInSeveralPlaces.value || isActivityPublished.value;
+        editedActivity.value = { name: activity.value.name, type: activity.value.type };
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    created();
+
+    onBeforeUnmount(() => {
+      $store.dispatch('program/resetActivity');
+      $store.dispatch('card/resetCard');
+      if ((new RegExp(`programs/${program.value._id}`)).test($route.path)) {
+        $store.dispatch('program/fetchProgram', { programId: programId.value });
+        $store.dispatch('program/setOpenedStep', { stepId: stepId.value });
+      } else {
+        $store.dispatch('program/resetProgram');
+      }
+    });
+
+    return {
+      // Validation
+      v$,
+      // Data
+      ACTIVITY_TYPES,
+      cardCreationModal,
+      isEditionLocked,
+      editedActivity,
+      isActivityPublished,
+      // Computed
+      activity,
+      headerInfo,
+      // Method
+      refreshCard,
+      validateUnlockEdition,
+      createCard,
+      updateActivity,
+      validateCardDeletion,
+      openCardCreationModal,
+    };
   },
 };
 </script>
