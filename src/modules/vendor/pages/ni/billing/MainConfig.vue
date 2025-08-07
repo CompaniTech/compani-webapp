@@ -61,7 +61,7 @@
           <template #body="{ props }">
             <q-tr :props="props">
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name">
-                <template v-if="col.name === 'action'">
+                <template v-if="col.name === 'actions'">
                   <div class="row no-wrap table-actions">
                     <ni-button icon="delete" @click="validateBillingItemsDeletion(col.value)"
                       :disable="!!props.row.courseBillCount" />
@@ -144,7 +144,7 @@ export default {
     const courseFundingOrganisationColumns = [
       { name: 'name', label: 'Nom', align: 'left', field: 'name' },
       { name: 'address', label: 'Adresse', align: 'left', field: 'address' },
-      { name: 'actions', label: '', align: 'left', field: '_id' },
+      { name: 'actions', label: '', align: 'right', field: '_id', style: 'width: 10%' },
     ];
     const vendorCompany = ref({
       name: '',
@@ -159,7 +159,7 @@ export default {
     const courseBillingItems = ref([]);
     const courseBillingItemColumns = [
       { name: 'name', label: 'Nom', align: 'left', field: 'name' },
-      { name: 'actions', label: '', align: 'left', field: '_id' },
+      { name: 'actions', label: '', align: 'right', field: '_id', style: 'width: 10%' },
     ];
     const pagination = { rowsPerPage: 0 };
     const organisationCreationModal = ref(false);
@@ -343,7 +343,7 @@ export default {
     };
 
     const validateOrganisationDeletion = (organisationId) => {
-      $q.create({
+      $q.dialog({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir supprimer le financeur&nbsp;?',
         html: true,
@@ -392,7 +392,7 @@ export default {
     };
 
     const validateBillingItemsDeletion = (billingItemId) => {
-      $q.create({
+      $q.dialog({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir supprimer l\'article de facturation&nbsp;?',
         html: true,
