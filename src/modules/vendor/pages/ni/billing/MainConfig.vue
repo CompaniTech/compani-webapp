@@ -57,7 +57,21 @@
       <p class="text-weight-bold q-mt-xl">Articles de facturation</p>
       <q-card>
         <ni-responsive-table :data="courseBillingItems" :columns="courseBillingItemColumns"
-          v-model:pagination="pagination" class="q-mb-md" :loading="itemsLoading" />
+          v-model:pagination="pagination" class="q-mb-md" :loading="itemsLoading">
+          <template #body="{ props }">
+            <q-tr :props="props">
+              <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name">
+                <template v-if="col.name === 'actions'">
+                  <div class="row no-wrap table-actions">
+                    <ni-button icon="delete" @click="validateBillingItemsDeletion(col.value)"
+                      :disable="!!props.row.courseBillCount" />
+                  </div>
+                </template>
+                <template v-else>{{ col.value }}</template>
+              </q-td>
+            </q-tr>
+          </template>
+        </ni-responsive-table>
         <q-card-actions align="right">
           <ni-button color="primary" icon="add" label="Ajouter un article" :disable="itemsLoading"
             @click="openItemCreationModal" />
@@ -81,7 +95,7 @@
 </template>
 
 <script>
-import { useMeta, Dialog } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
@@ -122,6 +136,7 @@ export default {
   setup () {
     const metaInfo = { title: 'Configuration' };
     useMeta(metaInfo);
+    const $q = useQuasar();
 
     const organisationsLoading = ref(false);
     const itemsLoading = ref(false);
@@ -129,7 +144,7 @@ export default {
     const courseFundingOrganisationColumns = [
       { name: 'name', label: 'Nom', align: 'left', field: 'name' },
       { name: 'address', label: 'Adresse', align: 'left', field: 'address' },
-      { name: 'actions', label: '', align: 'left', field: '_id' },
+      { name: 'actions', label: '', align: 'right', field: '_id', style: 'width: 10%' },
     ];
     const vendorCompany = ref({
       name: '',
@@ -142,7 +157,10 @@ export default {
       shareCapital: '',
     });
     const courseBillingItems = ref([]);
-    const courseBillingItemColumns = [{ name: 'name', label: 'Nom', align: 'left', field: 'name' }];
+    const courseBillingItemColumns = [
+      { name: 'name', label: 'Nom', align: 'left', field: 'name' },
+      { name: 'actions', label: '', align: 'right', field: '_id', style: 'width: 10%' },
+    ];
     const pagination = { rowsPerPage: 0 };
     const organisationCreationModal = ref(false);
     const itemCreationModal = ref(false);
@@ -316,7 +334,7 @@ export default {
     const deleteOrganisation = async (organisationId) => {
       try {
         await CourseFundingOrganisations.delete(organisationId);
-        refreshCourseFundingOrganisations();
+        await refreshCourseFundingOrganisations();
         NotifyPositive('Financeur supprimé.');
       } catch (e) {
         console.error(e);
@@ -325,7 +343,7 @@ export default {
     };
 
     const validateOrganisationDeletion = (organisationId) => {
-      Dialog.create({
+      $q.dialog({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir supprimer le financeur&nbsp;?',
         html: true,
@@ -362,6 +380,28 @@ export default {
       }
     };
 
+    const deleteBillingItems = async (billingItemId) => {
+      try {
+        await CourseBillingItems.delete(billingItemId);
+        await refreshCourseBillingItems();
+        NotifyPositive('Article de facturation supprimé.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression de l’article de facturation.');
+      }
+    };
+
+    const validateBillingItemsDeletion = (billingItemId) => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir supprimer l\'article de facturation&nbsp;?',
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => deleteBillingItems(billingItemId))
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
+
     const openBillingRepresentativeModal = (event) => {
       const { action: eventAction } = event;
       const action = eventAction === EDITION ? 'Modifier le ' : 'Ajouter un ';
@@ -384,10 +424,10 @@ export default {
     };
 
     const created = async () => {
-      refreshVendorCompany();
-      refreshCourseFundingOrganisations();
-      refreshCourseBillingItems();
-      refreshBillingRepresentativeOptions();
+      await refreshVendorCompany();
+      await refreshCourseFundingOrganisations();
+      await refreshCourseBillingItems();
+      await refreshBillingRepresentativeOptions();
     };
 
     created();
@@ -424,6 +464,7 @@ export default {
       addOrganisation,
       openOrganisationCreationModal,
       validateOrganisationDeletion,
+      validateBillingItemsDeletion,
       refreshCourseBillingItems,
       resetItemAdditionForm,
       addItem,
