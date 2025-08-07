@@ -8,32 +8,61 @@
 </template>
 
 <script>
-import { createMetaMixin } from 'quasar';
-import { mapGetters } from 'vuex';
+import { ref, computed } from 'vue';
+import { useStore } from 'vuex';
+import { useMeta } from 'quasar';
 import DirectoryHeader from '@components/DirectoryHeader';
 import TableList from '@components/table/TableList';
+import { useELearningCourseDirectory } from '@composables/eLearningCourseDirectory';
 import { STRICTLY_E_LEARNING, OPERATIONS } from '@data/constants';
-import { eLearningCourseDirectoryMixin } from '@mixins/eLearningCourseDirectoryMixin';
-
-const metaInfo = { title: 'Repertoire formation eLearning' };
 
 export default {
   name: 'ELearningCoursesDirectory',
-  mixins: [eLearningCourseDirectoryMixin, createMetaMixin(metaInfo)],
   components: {
     'ni-directory-header': DirectoryHeader,
     'ni-table-list': TableList,
   },
-  data () {
-    return {
-      path: { name: 'ni elearning courses info', params: 'courseId' },
+  setup () {
+    const metaInfo = { title: 'Repertoire formation eLearning' };
+    useMeta(metaInfo);
+    const $store = useStore();
+
+    const path = ref({ name: 'ni elearning courses info', params: 'courseId' });
+
+    const {
+      tableLoading,
+      searchStr,
+      pagination,
+      columns,
+      filteredCourses,
+      updateSearch,
+      refreshCourseList,
+    } = useELearningCourseDirectory();
+
+    const company = computed(() => $store.getters['main/getCompany']);
+
+    const created = async () => {
+      await refreshCourseList({
+        format: STRICTLY_E_LEARNING,
+        company: company.value._id,
+        action: OPERATIONS,
+      });
     };
-  },
-  computed: {
-    ...mapGetters({ company: 'main/getCompany' }),
-  },
-  async created () {
-    await this.refreshCourseList({ format: STRICTLY_E_LEARNING, company: this.company._id, action: OPERATIONS });
+
+    created();
+
+    return {
+      // Data
+      path,
+      tableLoading,
+      searchStr,
+      pagination,
+      columns,
+      // Computed
+      filteredCourses,
+      // Method
+      updateSearch,
+    };
   },
 };
 </script>

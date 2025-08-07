@@ -2,9 +2,9 @@ import { ref, computed } from 'vue';
 import escapeRegExp from 'lodash/escapeRegExp';
 import Courses from '@api/Courses';
 import { NotifyNegative } from '@components/popup/notify';
+import { DD_MM_YYYY, LONG_DURATION_H_MM } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { DD_MM_YYYY, LONG_DURATION_H_MM } from '@data/constants';
 import { ascendingSort } from '@helpers/dates/utils';
 import { removeDiacritics } from '@helpers/utils';
 
