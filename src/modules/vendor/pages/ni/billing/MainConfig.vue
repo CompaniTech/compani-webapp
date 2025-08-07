@@ -57,7 +57,21 @@
       <p class="text-weight-bold q-mt-xl">Articles de facturation</p>
       <q-card>
         <ni-responsive-table :data="courseBillingItems" :columns="courseBillingItemColumns"
-          v-model:pagination="pagination" class="q-mb-md" :loading="itemsLoading" />
+          v-model:pagination="pagination" class="q-mb-md" :loading="itemsLoading">
+          <template #body="{ props }">
+            <q-tr :props="props">
+              <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name">
+                <template v-if="col.name === 'action'">
+                  <div class="row no-wrap table-actions">
+                    <ni-button icon="delete" @click="validateBillingItemsDeletion(col.value)"
+                      :disable="!!props.row.courseBillCount" />
+                  </div>
+                </template>
+                <template v-else>{{ col.value }}</template>
+              </q-td>
+            </q-tr>
+          </template>
+        </ni-responsive-table>
         <q-card-actions align="right">
           <ni-button color="primary" icon="add" label="Ajouter un article" :disable="itemsLoading"
             @click="openItemCreationModal" />
@@ -142,7 +156,10 @@ export default {
       shareCapital: '',
     });
     const courseBillingItems = ref([]);
-    const courseBillingItemColumns = [{ name: 'name', label: 'Nom', align: 'left', field: 'name' }];
+    const courseBillingItemColumns = [
+      { name: 'name', label: 'Nom', align: 'left', field: 'name' },
+      { name: 'actions', label: '', align: 'left', field: '_id' },
+    ];
     const pagination = { rowsPerPage: 0 };
     const organisationCreationModal = ref(false);
     const itemCreationModal = ref(false);
@@ -362,6 +379,28 @@ export default {
       }
     };
 
+    const deleteBillingItems = async (billingItemId) => {
+      try {
+        await CourseBillingItems.delete(billingItemId);
+        refreshCourseBillingItems();
+        NotifyPositive('Article de facturation supprimé.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression de l’article de facturation.');
+      }
+    };
+
+    const validateBillingItemsDeletion = (billingItemId) => {
+      Dialog.create({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir supprimer l\'article de facturation&nbsp;?',
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => deleteBillingItems(billingItemId))
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
+
     const openBillingRepresentativeModal = (event) => {
       const { action: eventAction } = event;
       const action = eventAction === EDITION ? 'Modifier le ' : 'Ajouter un ';
@@ -424,6 +463,7 @@ export default {
       addOrganisation,
       openOrganisationCreationModal,
       validateOrganisationDeletion,
+      validateBillingItemsDeletion,
       refreshCourseBillingItems,
       resetItemAdditionForm,
       addItem,
