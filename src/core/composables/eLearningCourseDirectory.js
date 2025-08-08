@@ -29,7 +29,7 @@ export const useELearningCourseDirectory = () => {
       align: 'center',
       sortable: true,
       style: 'width: 10%',
-      sort: (a, b) => durationAscendingSort(a, b),
+      sort: durationAscendingSort,
     },
     {
       name: 'traineesCount',
