@@ -14,13 +14,15 @@ export const useELearningCourseDirectory = () => {
   const pagination = ref({ sortBy: 'createdAt', descending: true, page: 1, rowsPerPage: 15 });
   const searchStr = ref('');
   const columns = ref([
-    { name: 'name',
+    {
+      name: 'name',
       label: 'Nom',
       field: 'name',
       align: 'left',
       sortable: true,
       style: 'width: 60%',
-      sort: sortStrings },
+      sort: sortStrings,
+    },
     {
       name: 'totalTheoreticalDuration',
       label: 'Durée',
