@@ -5,8 +5,8 @@ import { NotifyNegative } from '@components/popup/notify';
 import { DD_MM_YYYY, LONG_DURATION_H_MM } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { ascendingSort } from '@helpers/dates/utils';
-import { removeDiacritics } from '@helpers/utils';
+import { ascendingSort, durationAscendingSort } from '@helpers/dates/utils';
+import { removeDiacritics, sortStrings } from '@helpers/utils';
 
 export const useELearningCourseDirectory = () => {
   const courses = ref([]);
@@ -14,7 +14,13 @@ export const useELearningCourseDirectory = () => {
   const pagination = ref({ sortBy: 'createdAt', descending: true, page: 1, rowsPerPage: 15 });
   const searchStr = ref('');
   const columns = ref([
-    { name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true, style: 'width: 60%' },
+    { name: 'name',
+      label: 'Nom',
+      field: 'name',
+      align: 'left',
+      sortable: true,
+      style: 'width: 60%',
+      sort: sortStrings },
     {
       name: 'totalTheoreticalDuration',
       label: 'Durée',
@@ -23,6 +29,7 @@ export const useELearningCourseDirectory = () => {
       align: 'center',
       sortable: true,
       style: 'width: 10%',
+      sort: (a, b) => durationAscendingSort(a, b),
     },
     {
       name: 'traineesCount',
