@@ -89,7 +89,7 @@ export default {
         await refreshActivity();
 
         $store.dispatch('card/resetCard');
-        NotifyPositive('Carte supprimée');
+        NotifyPositive('Carte supprimée.');
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la suppression de la carte.');
