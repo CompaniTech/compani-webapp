@@ -209,7 +209,7 @@ export const useAttendanceSheets = (
     const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
     const isLastSlotSigned = !!attendanceSheet.slots.find(s => s._id === lastSlot._id);
 
-    if (!isLastSlotSigned && course.type === INTER_B2B) {
+    if (!isLastSlotSigned && course.value.type === INTER_B2B) {
       const message = 'Vous n\'avez pas émargé tous les créneaux. <br />'
         + 'Êtes-vous sûr(e) de vouloir générer cette feuille d\'émargement&nbsp;?';
       $q.dialog({
