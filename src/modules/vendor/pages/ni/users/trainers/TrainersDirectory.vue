@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import { ref, computed } from 'vue';
 import { useMeta } from 'quasar';
 import useVuelidate from '@vuelidate/core';
 import { required, email } from '@vuelidate/validators';
@@ -25,9 +26,9 @@ import Email from '@api/Email';
 import DirectoryHeader from '@components/DirectoryHeader';
 import TableList from '@components/table/TableList';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { formatIdentity, removeDiacritics } from '@helpers/utils';
+import { useUser } from '@composables/user';
 import { TRAINER, TRAINING_ORGANISATION_MANAGER } from '@data/constants';
-import { userMixin } from '@mixins/userMixin';
+import { formatIdentity, removeDiacritics } from '@helpers/utils';
 import TrainerCreationModal from 'src/modules/vendor/components/trainers/TrainerCreationModal';
 
 export default {
@@ -37,51 +38,107 @@ export default {
     'ni-table-list': TableList,
     'trainer-creation-modal': TrainerCreationModal,
   },
-  mixins: [userMixin],
   setup () {
     const metaInfo = { title: 'Répertoire formateurs' };
     useMeta(metaInfo);
 
-    return { v$: useVuelidate() };
-  },
-  data () {
-    return {
-      trainers: [],
-      tableLoading: false,
-      columns: [{ name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true }],
-      pagination: { sortBy: 'name', descending: false, page: 1, rowsPerPage: 15 },
-      searchStr: '',
-      trainerCreationModal: false,
-      newTrainer: { identity: { lastname: '', firstname: '', title: '' }, local: { email: '' } },
-      modalLoading: false,
-      firstStep: true,
-      path: { name: 'ni users trainers info', params: 'trainerId' },
-    };
-  },
-  validations () {
-    return {
+    const trainers = ref([]);
+    const tableLoading = ref(false);
+    const columns = ref([{ name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true }]);
+    const pagination = ref({ sortBy: 'name', descending: false, page: 1, rowsPerPage: 15 });
+    const searchStr = ref('');
+    const trainerCreationModal = ref(false);
+    const newTrainer = ref({ identity: { lastname: '', firstname: '', title: '' }, local: { email: '' } });
+    const modalLoading = ref(false);
+    const firstStep = ref(true);
+    const path = ref({ name: 'ni users trainers info', params: 'trainerId' });
+
+    const { emailError } = useUser();
+
+    const rules = computed(() => ({
       newTrainer: { identity: { lastname: { required }, title: { required } }, local: { email: { required, email } } },
+    }));
+
+    const v$ = useVuelidate(rules, { newTrainer });
+
+    const filteredTrainers = computed(() => {
+      const formattedString = escapeRegExp(removeDiacritics(searchStr.value));
+      return trainers.value.filter(trainer => trainer.noDiacriticsName.match(new RegExp(formattedString, 'i')));
+    });
+
+    const resetCreationModal = () => {
+      firstStep.value = true;
+      newTrainer.value = { identity: { lastname: '', firstname: '', title: '' }, local: { email: '' } };
+      v$.value.newTrainer.$reset();
     };
-  },
-  computed: {
-    filteredTrainers () {
-      const formattedString = escapeRegExp(removeDiacritics(this.searchStr));
-      return this.trainers.filter(trainer => trainer.noDiacriticsName.match(new RegExp(formattedString, 'i')));
-    },
-  },
-  async created () {
-    await this.refreshTrainers();
-  },
-  methods: {
-    async nextStep () {
+
+    const updateSearch = (value) => { searchStr.value = value; };
+
+    const sendWelcome = async () => {
       try {
-        this.v$.newTrainer.local.email.$touch();
-        if (this.v$.newTrainer.local.email.$error) return NotifyWarning('Champ(s) invalide(s)');
+        await Email.sendWelcome({ email: newTrainer.value.local.email, type: TRAINER });
+        NotifyPositive('Email envoyé');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de l\'envoi du mail.');
+      }
+    };
 
-        this.modalLoading = true;
-        const userInfo = await Users.exists({ email: this.newTrainer.local.email });
+    const formatTrainer = (trainer) => {
+      const formattedName = formatIdentity(trainer.identity, 'FL');
 
-        if (!userInfo.exists) this.firstStep = false;
+      return { ...trainer, name: formattedName, noDiacriticsName: removeDiacritics(formattedName) };
+    };
+
+    const refreshTrainers = async () => {
+      try {
+        tableLoading.value = true;
+        const trainersAndROFs = await Users.list({ role: [TRAINER, TRAINING_ORGANISATION_MANAGER] });
+
+        trainers.value = trainersAndROFs.map(trainer => formatTrainer(trainer));
+      } catch (e) {
+        console.error(e);
+        trainers.value = [];
+        NotifyNegative('Erreur lors de la récupération des formateurs.');
+      } finally {
+        tableLoading.value = false;
+      }
+    };
+
+    const createTrainer = async () => {
+      try {
+        v$.value.newTrainer.$touch();
+        if (v$.value.newTrainer.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        modalLoading.value = true;
+
+        const roles = await Roles.list({ name: TRAINER });
+        if (roles.length === 0) throw new Error('Role not found');
+
+        await Users.create({ ...newTrainer.value, role: roles[0]._id });
+        trainerCreationModal.value = false;
+        NotifyPositive('Compte créé.');
+
+        await sendWelcome();
+        await refreshTrainers();
+      } catch (e) {
+        console.error(e);
+        if (e.status === 409) return NotifyNegative('Compte déjà existant.');
+        NotifyNegative('Erreur lors de la création du compte.');
+      } finally {
+        modalLoading.value = false;
+      }
+    };
+
+    const nextStep = async () => {
+      try {
+        v$.value.newTrainer.local.email.$touch();
+        if (v$.value.newTrainer.local.email.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        modalLoading.value = true;
+        const userInfo = await Users.exists({ email: newTrainer.value.local.email });
+
+        if (!userInfo.exists) firstStep.value = false;
         else if (get(userInfo, 'user.role.vendor')) NotifyNegative('Compte déjà existant.');
         else {
           const roles = await Roles.list({ name: TRAINER });
@@ -90,78 +147,47 @@ export default {
           await Users.updateById(userInfo.user._id, { role: roles[0]._id });
           NotifyPositive('Compte créé');
 
-          await this.refreshTrainers();
-          this.resetCreationModal();
-          this.trainerCreationModal = false;
+          await refreshTrainers();
+          resetCreationModal();
+          trainerCreationModal.value = false;
         }
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la création du compte.');
-        this.resetCreationModal();
+        resetCreationModal();
       } finally {
-        this.modalLoading = false;
+        modalLoading.value = false;
       }
-    },
-    resetCreationModal () {
-      this.firstStep = true;
-      this.newTrainer = { identity: { lastname: '', firstname: '', title: '' }, local: { email: '' } };
-      this.v$.newTrainer.$reset();
-    },
-    updateSearch (value) {
-      this.searchStr = value;
-    },
-    formatTrainer (trainer) {
-      const formattedName = formatIdentity(trainer.identity, 'FL');
+    };
 
-      return { ...trainer, name: formattedName, noDiacriticsName: removeDiacritics(formattedName) };
-    },
-    async refreshTrainers () {
-      try {
-        this.tableLoading = true;
-        const trainersAndROFs = await Users.list({ role: [TRAINER, TRAINING_ORGANISATION_MANAGER] });
+    const created = async () => {
+      await refreshTrainers();
+    };
 
-        this.trainers = trainersAndROFs.map(trainer => this.formatTrainer(trainer));
-      } catch (e) {
-        console.error(e);
-        this.trainers = [];
-        NotifyNegative('Erreur lors de la récupération des formateurs.');
-      } finally {
-        this.tableLoading = false;
-      }
-    },
-    async createTrainer () {
-      try {
-        this.v$.newTrainer.$touch();
-        if (this.v$.newTrainer.$error) return NotifyWarning('Champ(s) invalide(s)');
+    created();
 
-        this.modalLoading = true;
-
-        const roles = await Roles.list({ name: TRAINER });
-        if (roles.length === 0) throw new Error('Role not found');
-
-        await Users.create({ ...this.newTrainer, role: roles[0]._id });
-        this.trainerCreationModal = false;
-        NotifyPositive('Compte créé.');
-
-        await this.sendWelcome();
-        await this.refreshTrainers();
-      } catch (e) {
-        console.error(e);
-        if (e.status === 409) return NotifyNegative('Compte déjà existant.');
-        NotifyNegative('Erreur lors de la création du compte.');
-      } finally {
-        this.modalLoading = false;
-      }
-    },
-    async sendWelcome () {
-      try {
-        await Email.sendWelcome({ email: this.newTrainer.local.email, type: TRAINER });
-        NotifyPositive('Email envoyé');
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de l\'envoi du mail.');
-      }
-    },
+    return {
+      // Validation
+      v$,
+      // Data
+      tableLoading,
+      columns,
+      pagination,
+      searchStr,
+      trainerCreationModal,
+      newTrainer,
+      modalLoading,
+      firstStep,
+      path,
+      // Computed
+      filteredTrainers,
+      // Method
+      resetCreationModal,
+      updateSearch,
+      createTrainer,
+      nextStep,
+      emailError,
+    };
   },
 };
 </script>
