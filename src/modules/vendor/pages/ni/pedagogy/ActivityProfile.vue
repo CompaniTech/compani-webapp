@@ -87,6 +87,7 @@ export default {
       try {
         await Activities.deleteCard(cardId);
         await refreshActivity();
+
         $store.dispatch('card/resetCard');
         NotifyPositive('Carte supprimée');
       } catch (e) {
@@ -139,8 +140,8 @@ export default {
     const refreshCard = async () => {
       try {
         await $store.dispatch('program/fetchActivity', { activityId: activity.value._id });
-        const cards = activity.value.cards.find(c => c._id === card.value._id);
-        $store.dispatch('card/fetchCard', cards);
+        const cardToRefresh = activity.value.cards.find(c => c._id === card.value._id);
+        $store.dispatch('card/fetchCard', cardToRefresh);
       } catch (e) {
         console.error(e);
       }
@@ -216,7 +217,7 @@ export default {
         console.error(e);
         NotifyNegative('Erreur lors de la modification des cartes.');
       } finally {
-        refreshActivity();
+        await refreshActivity();
       }
     };
 
@@ -235,7 +236,7 @@ export default {
         const isActivityUsedInOtherSteps = activity.value.steps.length > 1;
         const isActivityUsedInOneStepButSeveralSubPrograms = activity.value.steps[0].subPrograms.length > 1;
         isActivityUsedInSeveralPlaces.value = isActivityUsedInOtherSteps ||
-        isActivityUsedInOneStepButSeveralSubPrograms;
+          isActivityUsedInOneStepButSeveralSubPrograms;
 
         isEditionLocked.value = isActivityUsedInSeveralPlaces.value || isActivityPublished.value;
         editedActivity.value = { name: activity.value.name, type: activity.value.type };
