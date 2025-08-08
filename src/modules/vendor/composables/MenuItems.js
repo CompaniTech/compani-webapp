@@ -14,7 +14,7 @@ export const useMenuItems = (isAdmin, isTrainer) => {
     management: { open: false },
   });
 
-  const adminRoutes = ref([
+  const adminRoutes = computed(() => [
     {
       ref: 'management',
       label: 'Gestion',

@@ -32,13 +32,13 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
-import { layoutMixin } from '@mixins/layoutMixin';
-import { sideMenuMixin } from '@mixins/sideMenuMixin';
 import { TRAINER, VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER, VENDOR } from '@data/constants';
 import SideMenuFooter from '@components/menu/SideMenuFooter';
 import MenuItem from '@components/menu/MenuItem';
+import { useSideMenu } from '@composables/sideMenu';
+import { useLayouts } from '@composables/layouts';
 import { useMenuItems } from '../composables/MenuItems';
 
 export default {
@@ -46,7 +46,6 @@ export default {
     'ni-side-menu-footer': SideMenuFooter,
     'ni-menu-item': MenuItem,
   },
-  mixins: [layoutMixin, sideMenuMixin],
   setup () {
     const $store = useStore();
 
@@ -60,16 +59,38 @@ export default {
 
     const { routes, activeRoutes } = useMenuItems(isAdmin, isTrainer);
 
+    const { userFirstname, companiLogo, collapsibleOpening, collapsibleClosing } = useSideMenu(activeRoutes);
+
+    const {
+      isMini,
+      loggedUser,
+      drawer,
+      menuIcon,
+      chevronClasses,
+      chevronContainerClasses,
+      toggleMenu,
+    } = useLayouts(collapsibleClosing);
+
+    onMounted(() => {
+      collapsibleOpening();
+    });
+
     return {
       // Data
       interfaceType,
+      userFirstname,
+      companiLogo,
+      isMini,
       // Computed
       routes,
       activeRoutes,
+      loggedUser,
+      drawer,
+      menuIcon,
+      chevronClasses,
+      chevronContainerClasses,
+      toggleMenu,
     };
-  },
-  mounted () {
-    this.collapsibleOpening();
   },
 };
 </script>
