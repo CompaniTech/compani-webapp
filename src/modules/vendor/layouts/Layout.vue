@@ -32,36 +32,44 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { computed, ref } from 'vue';
+import { useStore } from 'vuex';
 import { layoutMixin } from '@mixins/layoutMixin';
 import { sideMenuMixin } from '@mixins/sideMenuMixin';
 import { TRAINER, VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER, VENDOR } from '@data/constants';
 import SideMenuFooter from '@components/menu/SideMenuFooter';
 import MenuItem from '@components/menu/MenuItem';
-import { menuItemsMixin } from '../mixins/menuItemsMixin';
+import { useMenuItems } from '../composables/MenuItems';
 
 export default {
   components: {
     'ni-side-menu-footer': SideMenuFooter,
     'ni-menu-item': MenuItem,
   },
-  mixins: [layoutMixin, sideMenuMixin, menuItemsMixin],
-  mounted () {
-    this.collapsibleOpening();
-  },
-  data () {
+  mixins: [layoutMixin, sideMenuMixin],
+  setup () {
+    const $store = useStore();
+
+    const interfaceType = ref(VENDOR);
+
+    const vendorRole = computed(() => $store.getters['main/getVendorRole']);
+
+    const isAdmin = computed(() => [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
+
+    const isTrainer = computed(() => vendorRole.value === TRAINER);
+
+    const { routes, activeRoutes } = useMenuItems(isAdmin, isTrainer);
+
     return {
-      interfaceType: VENDOR,
+      // Data
+      interfaceType,
+      // Computed
+      routes,
+      activeRoutes,
     };
   },
-  computed: {
-    ...mapGetters({ vendorRole: 'main/getVendorRole' }),
-    isAdmin () {
-      return [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(this.vendorRole);
-    },
-    isTrainer () {
-      return this.vendorRole === TRAINER;
-    },
+  mounted () {
+    this.collapsibleOpening();
   },
 };
 </script>

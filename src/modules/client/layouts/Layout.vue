@@ -39,6 +39,7 @@ import SideMenuFooter from '@components/menu/SideMenuFooter';
 import MenuItem from '@components/menu/MenuItem';
 import { CLIENT } from '@data/constants';
 import { menuItemsMixin } from '../mixins/menuItemsMixin';
+import { useMenuItems } from '../composables/MenuItems';
 
 export default {
   name: 'ClientLayout',
@@ -50,22 +51,23 @@ export default {
   setup () {
     const interfaceType = ref(CLIENT);
 
+    const { isCoach, isAuxiliary, activeRoutes, loggedUser } = useMenuItems();
+
     const footerLabel = computed(() => {
-      if (this.isCoach || this.isAuxiliary) return this.userFirstname;
-      return this.loggedUser.identity.lastname;
+      if (isCoach.value || isAuxiliary.value) return this.userFirstname;
+      return loggedUser.value.identity.lastname;
     });
     return {
       // Data
       interfaceType,
       // Computed
       footerLabel,
+      activeRoutes,
+      loggedUser,
     };
   },
   mounted () {
     this.collapsibleOpening();
-  },
-  computed: {
-
   },
 };
 </script>
