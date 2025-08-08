@@ -32,6 +32,7 @@
 </template>
 
 <script>
+import { ref, computed } from 'vue';
 import { layoutMixin } from '@mixins/layoutMixin';
 import { sideMenuMixin } from '@mixins/sideMenuMixin';
 import SideMenuFooter from '@components/menu/SideMenuFooter';
@@ -46,19 +47,25 @@ export default {
     'ni-side-menu-footer': SideMenuFooter,
     'ni-menu-item': MenuItem,
   },
-  data () {
+  setup () {
+    const interfaceType = ref(CLIENT);
+
+    const footerLabel = computed(() => {
+      if (this.isCoach || this.isAuxiliary) return this.userFirstname;
+      return this.loggedUser.identity.lastname;
+    });
     return {
-      interfaceType: CLIENT,
+      // Data
+      interfaceType,
+      // Computed
+      footerLabel,
     };
   },
   mounted () {
     this.collapsibleOpening();
   },
   computed: {
-    footerLabel () {
-      if (this.isCoach || this.isAuxiliary) return this.userFirstname;
-      return this.loggedUser.identity.lastname;
-    },
+
   },
 };
 </script>
