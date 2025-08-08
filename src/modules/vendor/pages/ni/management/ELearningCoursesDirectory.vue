@@ -8,28 +8,53 @@
 </template>
 
 <script>
-import { createMetaMixin } from 'quasar';
+import { ref } from 'vue';
+import { useMeta } from 'quasar';
 import DirectoryHeader from '@components/DirectoryHeader';
 import TableList from '@components/table/TableList';
+import { useELearningCourseDirectory } from '@composables/eLearningCourseDirectory';
 import { STRICTLY_E_LEARNING, OPERATIONS } from '@data/constants';
-import { eLearningCourseDirectoryMixin } from '@mixins/eLearningCourseDirectoryMixin';
-
-const metaInfo = { title: 'Repertoire formation eLearning' };
 
 export default {
   name: 'ELearningCoursesDirectory',
-  mixins: [eLearningCourseDirectoryMixin, createMetaMixin(metaInfo)],
   components: {
     'ni-directory-header': DirectoryHeader,
     'ni-table-list': TableList,
   },
-  data () {
-    return {
-      path: { name: 'ni management elearning courses info', params: 'courseId' },
+  setup () {
+    const metaInfo = { title: 'Repertoire formation eLearning' };
+    useMeta(metaInfo);
+
+    const path = ref({ name: 'ni management elearning courses info', params: 'courseId' });
+
+    const {
+      tableLoading,
+      searchStr,
+      pagination,
+      columns,
+      filteredCourses,
+      updateSearch,
+      refreshCourseList,
+    } = useELearningCourseDirectory();
+
+    const created = async () => {
+      await refreshCourseList({ format: STRICTLY_E_LEARNING, action: OPERATIONS });
     };
-  },
-  async created () {
-    await this.refreshCourseList({ format: STRICTLY_E_LEARNING, action: OPERATIONS });
+
+    created();
+
+    return {
+      // Data
+      path,
+      tableLoading,
+      searchStr,
+      pagination,
+      columns,
+      // Computed
+      filteredCourses,
+      // Method
+      updateSearch,
+    };
   },
 };
 </script>
