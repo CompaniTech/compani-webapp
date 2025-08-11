@@ -23,6 +23,8 @@
           <ni-input caption="Capital social" v-model="vendorCompany.shareCapital" @focus="saveTmp('shareCapital')"
             @blur="updateVendorCompany('shareCapital')" :error="validations.vendorCompany.shareCapital.$error"
             :error-message="shareCapitalErrorMessage" required-field />
+          <ni-input caption="ICS" v-model="vendorCompany.ics" @focus="saveTmp('ics')" @blur="updateVendorCompany('ics')"
+            :error="validations.vendorCompany.ics.$error" :error-message="icsErrorMessage" required-field />
         </div>
       </div>
       <p class="text-weight-bold">Contacts</p>
@@ -101,7 +103,7 @@ import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import get from 'lodash/get';
 import set from 'lodash/set';
-import { frAddress, validSiret, iban, bic, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
+import { frAddress, validSiret, iban, bic, strictPositiveNumber, ics } from '@helpers/vuelidateCustomVal';
 import { sortStrings, formatAndSortUserOptions } from '@helpers/utils';
 import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
 import VendorCompanies from '@api/VendorCompanies';
@@ -155,6 +157,7 @@ export default {
       iban: '',
       bic: '',
       shareCapital: '',
+      ics: '',
     });
     const courseBillingItems = ref([]);
     const courseBillingItemColumns = [
@@ -184,6 +187,7 @@ export default {
         iban: { required, iban },
         bic: { required, bic },
         shareCapital: { required, strictPositiveNumber },
+        ics: { required, ics },
       },
       tmpBillingRepresentativeId: { required },
     };
@@ -222,6 +226,15 @@ export default {
 
       if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
       if (get(validation, 'bic.$response') === false) return 'BIC non valide';
+
+      return '';
+    });
+
+    const icsErrorMessage = computed(() => {
+      const validation = get(validations, 'value.vendorCompany.ics');
+
+      if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
+      if (get(validation, 'ics.$response') === false) return 'ICS non valide';
 
       return '';
     });
@@ -458,6 +471,7 @@ export default {
       ibanErrorMessage,
       bicErrorMessage,
       shareCapitalErrorMessage,
+      icsErrorMessage,
       // Methods
       refreshCourseFundingOrganisations,
       resetOrganisationAdditionForm,
