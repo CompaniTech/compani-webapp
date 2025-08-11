@@ -19,6 +19,8 @@
       <div class="row gutter-profile">
         <ni-input caption="IBAN" v-model="company.iban" :error="v$.company.iban.$error"
           :error-message="ibanErrorMessage" @focus="saveTmp('iban')" @blur="updateCompany('iban')" />
+        <ni-input caption="BIC" v-model="company.bic" :error="v$.company.bic.$error"
+          :error-message="bicErrorMessage" @focus="saveTmp('bic')" @blur="updateCompany('bic')" />
       </div>
     </div>
     <ni-coach-list :company="company" />
@@ -45,7 +47,7 @@ import CoachList from '@components/table/CoachList';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
-import { frAddress, iban } from '@helpers/vuelidateCustomVal';
+import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
 import { useValidations } from '@composables/validations';
 import { useCompanies } from '@composables/companies';
@@ -86,6 +88,7 @@ export default {
           location: { required },
         },
         iban: { required, iban },
+        bic: { required, bic },
       },
       tmpSalesRepresentativeId: { required },
     }));
@@ -93,7 +96,7 @@ export default {
 
     const { waitForValidation } = useValidations();
 
-    const { addressError, ibanErrorMessage } = useCompanies(v$);
+    const { addressError, ibanErrorMessage, bicErrorMessage } = useCompanies(v$);
 
     const saveTmp = (path) => { tmpInput.value = get(company.value, path); };
 
@@ -193,6 +196,7 @@ export default {
       company,
       addressError,
       ibanErrorMessage,
+      bicErrorMessage,
       // Methods
       saveTmp,
       trimAndUpdateCompany,

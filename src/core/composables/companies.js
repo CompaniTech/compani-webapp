@@ -18,9 +18,18 @@ export const useCompanies = (v$) => {
     return '';
   });
 
+  const bicErrorMessage = computed(() => {
+    const validation = v$.value.company.bic;
+    if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
+    if (get(validation, 'bic.$response') === false) return 'BIC non valide';
+
+    return '';
+  });
+
   return {
     // Computed
     addressError,
     ibanErrorMessage,
+    bicErrorMessage,
   };
 };
