@@ -27,7 +27,7 @@
             :error="validations.vendorCompany.ics.$error" :error-message="icsErrorMessage" required-field />
           <ni-file-uploader caption="Template mandat de prélèvement SEPA" path="debitMandateTemplate"
             :entity="vendorCompany" :url="templateUploadUrl" @delete="validateTemplateDeletion"
-            @uploaded="templateUploaded" drive-storage hide-image />
+            @uploaded="templateUploaded" drive-storage hide-image :extensions="UPLOAD_TEMPLATE_EXTENSIONS" />
         </div>
       </div>
       <p class="text-weight-bold">Contacts</p>
@@ -123,7 +123,13 @@ import ItemCreationModal from 'src/modules/vendor/components/billing/CourseBilli
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
 import FileUploader from '@components/form/FileUploader';
-import { REQUIRED_LABEL, EDITION, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN } from '@data/constants';
+import {
+  REQUIRED_LABEL,
+  EDITION,
+  TRAINING_ORGANISATION_MANAGER,
+  VENDOR_ADMIN,
+  UPLOAD_TEMPLATE_EXTENSIONS,
+} from '@data/constants';
 import { useValidations } from '@composables/validations';
 
 export default {
@@ -479,6 +485,7 @@ export default {
       billingRepresentativeModal,
       billingRepresentativeModalLoading,
       tmpBillingRepresentativeId,
+      UPLOAD_TEMPLATE_EXTENSIONS,
       // Computed
       validations,
       siretErrorMessage,
