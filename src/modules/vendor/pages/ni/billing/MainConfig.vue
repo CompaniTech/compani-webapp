@@ -25,6 +25,9 @@
             :error-message="shareCapitalErrorMessage" required-field />
           <ni-input caption="ICS" v-model="vendorCompany.ics" @focus="saveTmp('ics')" @blur="updateVendorCompany('ics')"
             :error="validations.vendorCompany.ics.$error" :error-message="icsErrorMessage" required-field />
+          <ni-file-uploader caption="Template mandat de prélèvement SEPA" path="debitMandateTemplate"
+            :entity="vendorCompany" :url="templateUploadUrl" @delete="validateTemplateDeletion"
+            @uploaded="templateUploaded" drive-storage hide-image />
         </div>
       </div>
       <p class="text-weight-bold">Contacts</p>
@@ -119,6 +122,7 @@ import OrganisationCreationModal from 'src/modules/vendor/components/billing/Cou
 import ItemCreationModal from 'src/modules/vendor/components/billing/CourseBillingItemCreationModal';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
+import FileUploader from '@components/form/FileUploader';
 import { REQUIRED_LABEL, EDITION, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN } from '@data/constants';
 import { useValidations } from '@composables/validations';
 
@@ -134,6 +138,7 @@ export default {
     'ni-search-address': SearchAddress,
     'interlocutor-cell': InterlocutorCell,
     'interlocutor-modal': InterlocutorModal,
+    'ni-file-uploader': FileUploader,
   },
   setup () {
     const metaInfo = { title: 'Configuration' };
@@ -246,6 +251,8 @@ export default {
 
       return '';
     });
+
+    const templateUploadUrl = computed(() => `${process.env.API_HOSTNAME}/vendorcompanies/mandate/upload`);
 
     const refreshVendorCompany = async () => {
       try {
@@ -436,6 +443,14 @@ export default {
       validations.value.tmpBillingRepresentativeId.$reset();
     };
 
+    const templateUploaded = async () => {
+      NotifyPositive('Document chargé.');
+
+      await refreshVendorCompany();
+    };
+
+    const validateTemplateDeletion = async () => {};
+
     const created = async () => {
       await refreshVendorCompany();
       await refreshCourseFundingOrganisations();
@@ -472,6 +487,7 @@ export default {
       bicErrorMessage,
       shareCapitalErrorMessage,
       icsErrorMessage,
+      templateUploadUrl,
       // Methods
       refreshCourseFundingOrganisations,
       resetOrganisationAdditionForm,
@@ -487,6 +503,8 @@ export default {
       updateVendorCompany,
       openBillingRepresentativeModal,
       resetBillingRepresentative,
+      templateUploaded,
+      validateTemplateDeletion,
     };
   },
 };
