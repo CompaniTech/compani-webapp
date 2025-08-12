@@ -455,7 +455,28 @@ export default {
       await refreshVendorCompany();
     };
 
-    const validateTemplateDeletion = async () => {};
+    const deleteTemplate = async () => {
+      try {
+        await VendorCompanies.removeTemplate();
+
+        await refreshVendorCompany();
+        NotifyPositive('Template supprimé.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du template.');
+      }
+    };
+
+    const validateTemplateDeletion = async () => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir supprimer ce template&nbsp;?',
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(deleteTemplate)
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
 
     const created = async () => {
       await refreshVendorCompany();
