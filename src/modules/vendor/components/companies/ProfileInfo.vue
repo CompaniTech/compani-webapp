@@ -23,6 +23,22 @@
           :error-message="bicErrorMessage" @focus="saveTmp('bic')" @blur="updateCompany('bic')" />
       </div>
     </div>
+    <div class="q-mb-xl">
+      <p class="text-weight-bold">Mandats de prélèvements</p>
+       <q-card>
+        <ni-responsive-table :columns="mandatesColumns" :data="company.debitMandates" class="mandate-table"
+          :loading="mandatesLoading" v-model:pagination="pagination">
+          <template #body="{ props }">
+            <q-tr :props="props">
+              <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
+                :style="col.style">
+                {{ col.value }}
+              </q-td>
+            </q-tr>
+          </template>
+        </ni-responsive-table>
+      </q-card>
+    </div>
     <ni-coach-list :company="company" />
   </div>
 
@@ -47,6 +63,7 @@ import CoachList from '@components/table/CoachList';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
+import ResponsiveTable from '@components/table/ResponsiveTable';
 import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
 import { useValidations } from '@composables/validations';
@@ -64,6 +81,7 @@ export default {
     'ni-search-address': SearchAddress,
     'ni-interlocutor-cell': InterlocutorCell,
     'ni-interlocutor-modal': InterlocutorModal,
+    'ni-responsive-table': ResponsiveTable,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -73,6 +91,9 @@ export default {
     const salesRepresentativeModal = ref(false);
     const salesRepresentativeModalLoading = ref(false);
     const salesRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
+    const mandatesColumns = ref([{ name: 'rum', label: 'RUM', align: 'left', field: 'rum' }]);
+    const pagination = ref({ sortBy: 'createdAt', ascending: true, rowsPerPage: 0 });
+    const mandatesLoading = ref(false);
 
     const $store = useStore();
     const company = computed(() => $store.state.company.company);
@@ -102,9 +123,12 @@ export default {
 
     const refreshCompany = async () => {
       try {
+        mandatesLoading.value = true;
         await $store.dispatch('company/fetchCompany', { companyId: profileId.value });
       } catch (e) {
         console.error(e);
+      } finally {
+        mandatesLoading.value = false;
       }
     };
 
@@ -190,6 +214,9 @@ export default {
       salesRepresentativeModalLabel,
       salesRepresentativeModalLoading,
       tmpSalesRepresentativeId,
+      mandatesColumns,
+      pagination,
+      mandatesLoading,
       // Validations
       v$,
       // Computed
