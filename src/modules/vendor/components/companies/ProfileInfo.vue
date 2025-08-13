@@ -23,6 +23,26 @@
           :error-message="bicErrorMessage" @focus="saveTmp('bic')" @blur="updateCompany('bic')" />
       </div>
     </div>
+    <div class="q-mb-xl">
+      <p class="text-weight-bold">Mandats de prélèvements</p>
+       <q-card>
+        <ni-responsive-table :columns="mandatesColumns" :data="company.debitMandates" class="mandate-table"
+          :loading="mandatesLoading" v-model:pagination="pagination">
+          <template #body="{ props }">
+            <q-tr :props="props">
+              <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
+                :style="col.style">
+                <template v-if="col.name === 'emptyMandate'">
+                  <ni-button v-if="isLastCreatedMandate(props.row)" @click="downloadMandate(props.row)"
+                    icon="file_download" />
+                </template>
+                <template v-else>{{ col.value }}</template>
+              </q-td>
+            </q-tr>
+          </template>
+        </ni-responsive-table>
+      </q-card>
+    </div>
     <ni-coach-list :company="company" />
   </div>
 
@@ -41,14 +61,19 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import Companies from '@api/Companies';
 import Users from '@api/Users';
+import VendorCompanies from '@api/VendorCompanies';
 import SearchAddress from '@components/form/SearchAddress';
 import Input from '@components/form/Input';
 import CoachList from '@components/table/CoachList';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
+import ResponsiveTable from '@components/table/ResponsiveTable';
+import Button from '@components/Button';
+import CompaniDate from '@helpers/dates/companiDates';
 import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
+import { downloadDocx } from '@helpers/file';
 import { useValidations } from '@composables/validations';
 import { useCompanies } from '@composables/companies';
 import { TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, EDITION } from '@data/constants';
@@ -60,10 +85,12 @@ export default {
   },
   components: {
     'ni-input': Input,
+    'ni-button': Button,
     'ni-coach-list': CoachList,
     'ni-search-address': SearchAddress,
     'ni-interlocutor-cell': InterlocutorCell,
     'ni-interlocutor-modal': InterlocutorModal,
+    'ni-responsive-table': ResponsiveTable,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -73,6 +100,12 @@ export default {
     const salesRepresentativeModal = ref(false);
     const salesRepresentativeModalLoading = ref(false);
     const salesRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
+    const mandatesColumns = ref([
+      { name: 'rum', label: 'RUM', align: 'left', field: 'rum' },
+      { name: 'emptyMandate', label: 'Mandat vierge', align: 'center' },
+    ]);
+    const pagination = ref({ sortBy: 'createdAt', ascending: true, rowsPerPage: 0 });
+    const mandatesLoading = ref(false);
 
     const $store = useStore();
     const company = computed(() => $store.state.company.company);
@@ -102,9 +135,12 @@ export default {
 
     const refreshCompany = async () => {
       try {
+        mandatesLoading.value = true;
         await $store.dispatch('company/fetchCompany', { companyId: profileId.value });
       } catch (e) {
         console.error(e);
+      } finally {
+        mandatesLoading.value = false;
       }
     };
 
@@ -175,6 +211,29 @@ export default {
       v$.value.tmpSalesRepresentativeId.$reset();
     };
 
+    const isLastCreatedMandate = mandate => company.value.debitMandates
+      .every(m => CompaniDate(m.createdAt).isSameOrBefore(mandate.createdAt));
+
+    const downloadMandate = async (mandate) => {
+      try {
+        const vendorCompany = await VendorCompanies.get();
+        const mandateDriveId = get(vendorCompany, 'debitMandateTemplate.driveId', null);
+        if (!mandateDriveId) return NotifyWarning('Template manquant dans la configuration Compani.');
+
+        const docx = await Companies.generateDocxMandate(company.value._id, { rum: mandate.rum });
+        const docName = `${company.value.name}_mandat.docx`;
+        downloadDocx(docx, docName);
+
+        NotifyPositive('Mandat téléchargé.');
+      } catch (e) {
+        console.error(e);
+        if (e.status === 403) {
+          return NotifyNegative('Impossible : informations bancaires de Compani manquantes.');
+        }
+        NotifyNegative('Erreur lors du téléchargement du mandat.');
+      }
+    };
+
     const created = async () => {
       if (!company.value) await refreshCompany();
       await refreshSalesRepresentativeOptions();
@@ -190,6 +249,9 @@ export default {
       salesRepresentativeModalLabel,
       salesRepresentativeModalLoading,
       tmpSalesRepresentativeId,
+      mandatesColumns,
+      pagination,
+      mandatesLoading,
       // Validations
       v$,
       // Computed
@@ -204,6 +266,8 @@ export default {
       refreshSalesRepresentativeOptions,
       openSalesRepresentativeModal,
       resetSalesRepresentative,
+      isLastCreatedMandate,
+      downloadMandate,
     };
   },
 };
