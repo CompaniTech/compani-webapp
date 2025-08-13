@@ -33,7 +33,8 @@
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
                 <template v-if="col.name === 'emptyMandate'">
-                  <ni-button v-if="isLastCreatedMandate(props.row)" icon="file_download" />
+                  <ni-button v-if="isLastCreatedMandate(props.row)" @click="downloadMandate(props.row)"
+                    icon="file_download" />
                 </template>
                 <template v-else>{{ col.value }}</template>
               </q-td>
@@ -60,6 +61,7 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import Companies from '@api/Companies';
 import Users from '@api/Users';
+import VendorCompanies from '@api/VendorCompanies';
 import SearchAddress from '@components/form/SearchAddress';
 import Input from '@components/form/Input';
 import CoachList from '@components/table/CoachList';
@@ -71,6 +73,7 @@ import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
 import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
+import { downloadDocx } from '@helpers/file';
 import { useValidations } from '@composables/validations';
 import { useCompanies } from '@composables/companies';
 import { TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, EDITION } from '@data/constants';
@@ -211,6 +214,26 @@ export default {
     const isLastCreatedMandate = mandate => company.value.debitMandates
       .every(m => CompaniDate(m.createdAt).isSameOrBefore(mandate.createdAt));
 
+    const downloadMandate = async (mandate) => {
+      try {
+        const vendorCompany = await VendorCompanies.get();
+        const mandateDriveId = get(vendorCompany, 'debitMandateTemplate.driveId', null);
+        if (!mandateDriveId) return NotifyWarning('Template manquant dans la configuration Compani.');
+
+        const docx = await Companies.generateDocxMandate(company.value._id, { rum: mandate.rum });
+        const docName = `${company.value.name}_mandat.docx`;
+        downloadDocx(docx, docName);
+
+        NotifyPositive('Mandat téléchargé.');
+      } catch (e) {
+        console.error(e);
+        if (e.status === 403) {
+          return NotifyNegative('Impossible : informations bancaires de Compani manquantes.');
+        }
+        NotifyNegative('Erreur lors du téléchargement du mandat.');
+      }
+    };
+
     const created = async () => {
       if (!company.value) await refreshCompany();
       await refreshSalesRepresentativeOptions();
@@ -244,6 +267,7 @@ export default {
       openSalesRepresentativeModal,
       resetSalesRepresentative,
       isLastCreatedMandate,
+      downloadMandate,
     };
   },
 };
