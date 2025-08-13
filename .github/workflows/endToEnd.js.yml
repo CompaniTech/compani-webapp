@@ -38,6 +38,7 @@ jobs:
         env:
           DETACHMENT_ALLOWED_COMPANY_IDS : ${{ secrets.DETACHMENT_ALLOWED_COMPANY_IDS }}
           TRAINER_FEES_BILLING_ITEM : ${{ secrets.TRAINER_FEES_BILLING_ITEM }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
       - uses: actions/checkout@v3
         with:
           path: 'webapp'
