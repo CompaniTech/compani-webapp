@@ -32,7 +32,10 @@
             <q-tr :props="props">
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
-                {{ col.value }}
+                <template v-if="col.name === 'emptyMandate'">
+                  <ni-button v-if="isLastCreatedMandate(props.row)" icon="file_download" />
+                </template>
+                <template v-else>{{ col.value }}</template>
               </q-td>
             </q-tr>
           </template>
@@ -64,6 +67,8 @@ import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
 import ResponsiveTable from '@components/table/ResponsiveTable';
+import Button from '@components/Button';
+import CompaniDate from '@helpers/dates/companiDates';
 import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
 import { useValidations } from '@composables/validations';
@@ -77,6 +82,7 @@ export default {
   },
   components: {
     'ni-input': Input,
+    'ni-button': Button,
     'ni-coach-list': CoachList,
     'ni-search-address': SearchAddress,
     'ni-interlocutor-cell': InterlocutorCell,
@@ -91,7 +97,10 @@ export default {
     const salesRepresentativeModal = ref(false);
     const salesRepresentativeModalLoading = ref(false);
     const salesRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
-    const mandatesColumns = ref([{ name: 'rum', label: 'RUM', align: 'left', field: 'rum' }]);
+    const mandatesColumns = ref([
+      { name: 'rum', label: 'RUM', align: 'left', field: 'rum' },
+      { name: 'emptyMandate', label: 'Mandat vierge', align: 'center' },
+    ]);
     const pagination = ref({ sortBy: 'createdAt', ascending: true, rowsPerPage: 0 });
     const mandatesLoading = ref(false);
 
@@ -199,6 +208,9 @@ export default {
       v$.value.tmpSalesRepresentativeId.$reset();
     };
 
+    const isLastCreatedMandate = mandate => company.value.debitMandates
+      .every(m => CompaniDate(m.createdAt).isSameOrBefore(mandate.createdAt));
+
     const created = async () => {
       if (!company.value) await refreshCompany();
       await refreshSalesRepresentativeOptions();
@@ -231,6 +243,7 @@ export default {
       refreshSalesRepresentativeOptions,
       openSalesRepresentativeModal,
       resetSalesRepresentative,
+      isLastCreatedMandate,
     };
   },
 };
