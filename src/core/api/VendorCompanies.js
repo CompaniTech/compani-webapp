@@ -8,4 +8,7 @@ export default {
   async update (payload) {
     await alenviAxios.put(`${process.env.API_HOSTNAME}/vendorcompanies`, payload);
   },
+  async removeTemplate () {
+    await alenviAxios.delete(`${process.env.API_HOSTNAME}/vendorcompanies/mandate/upload`);
+  },
 };

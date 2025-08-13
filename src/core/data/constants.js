@@ -254,6 +254,9 @@ export const UPLOAD_EXTENSION_OPTIONS = [
   { label: 'Audio', value: UPLOAD_AUDIO },
 ];
 
+// TEMPLATE UPLOAD
+export const UPLOAD_TEMPLATE_EXTENSIONS = '.docx,.doc';
+
 // ACCESS RULES
 export const FREE_ACCESS = 'free';
 export const RESTRICTED_ACCESS = 'restricted';
