@@ -227,9 +227,6 @@ export default {
         NotifyPositive('Mandat téléchargé.');
       } catch (e) {
         console.error(e);
-        if (e.status === 403) {
-          return NotifyNegative('Impossible : informations bancaires de Compani manquantes.');
-        }
         NotifyNegative('Erreur lors du téléchargement du mandat.');
       }
     };
