@@ -220,7 +220,7 @@ export default {
         const mandateDriveId = get(vendorCompany, 'debitMandateTemplate.driveId', null);
         if (!mandateDriveId) return NotifyWarning('Template manquant dans la configuration Compani.');
 
-        const docx = await Companies.generateDocxMandate(company.value._id, { rum: mandate.rum });
+        const docx = await Companies.generateDocxMandate(company.value._id, { mandateId: mandate._id });
         const docName = `${company.value.name}_mandat.docx`;
         downloadDocx(docx, docName);
 
