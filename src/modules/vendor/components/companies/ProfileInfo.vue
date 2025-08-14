@@ -11,7 +11,7 @@
         <ni-input caption="Raison sociale" v-model="company.name" @focus="saveTmp('name')"
           @blur="trimAndUpdateCompany('name')" :error="v$.company.name.$error" />
         <ni-search-address v-model="company.address" :error-message="addressError" @blur="updateCompany('address')"
-            @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" />
+          @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" />
       </div>
     </div>
     <div class="q-mb-xl">
@@ -36,6 +36,10 @@
                   <ni-button v-if="isLastCreatedMandate(props.row)" @click="downloadMandate(props.row)"
                     icon="file_download" />
                 </template>
+                <template v-else-if="col.name === 'signedAt'">
+                  <ni-date-input in-modal :model-value="debitMandatesGroupById[props.row._id].signedAt"
+                    @update:model-value="updateMandate($event, props.row)" @focus="saveTmpSignedAt(props.row._id)" />
+                </template>
                 <template v-else>{{ col.value }}</template>
               </q-td>
             </q-tr>
@@ -59,6 +63,7 @@ import { useStore } from 'vuex';
 import { required } from '@vuelidate/validators';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import keyBy from 'lodash/keyBy';
 import Companies from '@api/Companies';
 import Users from '@api/Users';
 import VendorCompanies from '@api/VendorCompanies';
@@ -70,6 +75,7 @@ import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
 import ResponsiveTable from '@components/table/ResponsiveTable';
 import Button from '@components/Button';
+import DateInput from '@components/form/DateInput';
 import CompaniDate from '@helpers/dates/companiDates';
 import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
@@ -92,6 +98,7 @@ export default {
     'ni-interlocutor-cell': InterlocutorCell,
     'ni-interlocutor-modal': InterlocutorModal,
     'ni-responsive-table': ResponsiveTable,
+    'ni-date-input': DateInput,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -104,6 +111,7 @@ export default {
     const mandatesColumns = ref([
       { name: 'rum', label: 'RUM', align: 'left', field: 'rum' },
       { name: 'emptyMandate', label: 'Mandat vierge', align: 'center' },
+      { name: 'signedAt', label: 'Date de signature', align: 'left', field: 'signedAt' },
     ]);
     const pagination = ref({ sortBy: 'createdAt', ascending: true, rowsPerPage: 0 });
     const mandatesLoading = ref(false);
@@ -128,6 +136,8 @@ export default {
     }));
     const v$ = useVuelidate(companyRules, { company, tmpSalesRepresentativeId });
 
+    const debitMandatesGroupById = computed(() => keyBy(company.value.debitMandates, m => m._id));
+
     const { waitForValidation } = useValidations();
 
     const debitMandates = computed(() => [...company.value.debitMandates].sort(descendingSortBy('createdAt')));
@@ -135,6 +145,10 @@ export default {
     const { addressError, ibanErrorMessage, bicErrorMessage } = useCompanies(v$);
 
     const saveTmp = (path) => { tmpInput.value = get(company.value, path); };
+
+    const saveTmpSignedAt = (mandateId) => {
+      tmpInput.value = debitMandatesGroupById.value[mandateId].signedAt;
+    };
 
     const refreshCompany = async () => {
       try {
@@ -234,6 +248,20 @@ export default {
       }
     };
 
+    const updateMandate = async (date, mandate) => {
+      try {
+        if (!date || tmpInput.value === date) return;
+        const params = { _id: company.value._id, mandateId: mandate._id };
+        await Companies.updateMandate(params, { signedAt: date });
+
+        await refreshCompany();
+        NotifyPositive('Modification enregistrée.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification.');
+      }
+    };
+
     const created = async () => {
       if (!company.value) await refreshCompany();
       await refreshSalesRepresentativeOptions();
@@ -260,6 +288,7 @@ export default {
       addressError,
       ibanErrorMessage,
       bicErrorMessage,
+      debitMandatesGroupById,
       // Methods
       saveTmp,
       trimAndUpdateCompany,
@@ -269,6 +298,8 @@ export default {
       resetSalesRepresentative,
       isLastCreatedMandate,
       downloadMandate,
+      updateMandate,
+      saveTmpSignedAt,
     };
   },
 };
