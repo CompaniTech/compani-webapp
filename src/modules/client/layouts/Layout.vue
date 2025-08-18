@@ -48,10 +48,16 @@ export default {
   },
   setup () {
     const interfaceType = ref(CLIENT);
+    const expansionRefs = ref({});
 
     const { isCoach, isAuxiliary, activeRoutes, routes } = useMenuItems();
 
-    const { userFirstname, companiLogo, collapsibleOpening, collapsibleClosing } = useSideMenu(activeRoutes);
+    const {
+      userFirstname,
+      companiLogo,
+      collapsibleOpening,
+      collapsibleClosing,
+    } = useSideMenu(activeRoutes, expansionRefs);
 
     const {
       isMini,

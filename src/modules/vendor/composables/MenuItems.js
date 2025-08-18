@@ -2,7 +2,7 @@ import { computed, ref } from 'vue';
 
 export const useMenuItems = (isAdmin, isTrainer) => {
   const adminActiveRoutes = ref({
-    management: { open: false },
+    management: { open: true },
     users: { open: false },
     pedagogy: { open: false },
     exports: { open: false },

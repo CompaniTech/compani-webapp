@@ -15,7 +15,7 @@ export const useMenuItems = () => {
   const $store = useStore();
 
   const coachActiveRoutes = ref({
-    courses: { open: false },
+    courses: { open: true },
     customers: { open: false },
     teams: { open: false },
     billing: { open: false },

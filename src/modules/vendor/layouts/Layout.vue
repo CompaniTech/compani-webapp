@@ -50,6 +50,7 @@ export default {
     const $store = useStore();
 
     const interfaceType = ref(VENDOR);
+    const expansionRefs = ref({});
 
     const vendorRole = computed(() => $store.getters['main/getVendorRole']);
 
@@ -59,7 +60,12 @@ export default {
 
     const { routes, activeRoutes } = useMenuItems(isAdmin, isTrainer);
 
-    const { userFirstname, companiLogo, collapsibleOpening, collapsibleClosing } = useSideMenu(activeRoutes);
+    const {
+      userFirstname,
+      companiLogo,
+      collapsibleOpening,
+      collapsibleClosing,
+    } = useSideMenu(activeRoutes, expansionRefs);
 
     const {
       isMini,

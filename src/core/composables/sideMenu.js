@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import get from 'lodash/get';
 import { BLUE_TEXT_LOGO } from '../data/constants';
 
-export const useSideMenu = (activeRoutes) => {
+export const useSideMenu = (activeRoutes, expansionRefs) => {
   const $store = useStore();
   const $route = useRoute();
 
@@ -18,13 +18,13 @@ export const useSideMenu = (activeRoutes) => {
   const collapsibleOpening = () => {
     const parentRoute = $route.meta.parent;
 
-    if (parentRoute && activeRoutes.value[parentRoute]) {
+    if (expansionRefs.value[parentRoute] && activeRoutes.value[parentRoute]) {
       activeRoutes.value[parentRoute].open = true;
     }
   };
 
   const collapsibleClosing = (to, from) => {
-    if ([from.meta.parent] && to.meta.parent !== from.meta.parent) {
+    if (expansionRefs.value[from.meta.parent] && to.meta.parent !== from.meta.parent) {
       activeRoutes.value[from.meta.parent].open = false;
     }
   };
