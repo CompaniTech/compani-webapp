@@ -77,7 +77,7 @@ export default {
     const sendWelcome = async () => {
       try {
         await Email.sendWelcome({ email: newTrainer.value.local.email, type: TRAINER });
-        NotifyPositive('Email envoyé');
+        NotifyPositive('Email envoyé.');
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de l\'envoi du mail.');
@@ -108,7 +108,7 @@ export default {
     const createTrainer = async () => {
       try {
         v$.value.newTrainer.$touch();
-        if (v$.value.newTrainer.$error) return NotifyWarning('Champ(s) invalide(s)');
+        if (v$.value.newTrainer.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         modalLoading.value = true;
 
@@ -133,7 +133,7 @@ export default {
     const nextStep = async () => {
       try {
         v$.value.newTrainer.local.email.$touch();
-        if (v$.value.newTrainer.local.email.$error) return NotifyWarning('Champ(s) invalide(s)');
+        if (v$.value.newTrainer.local.email.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         modalLoading.value = true;
         const userInfo = await Users.exists({ email: newTrainer.value.local.email });
@@ -145,7 +145,7 @@ export default {
           if (roles.length === 0) throw new Error('Role not found');
 
           await Users.updateById(userInfo.user._id, { role: roles[0]._id });
-          NotifyPositive('Compte créé');
+          NotifyPositive('Compte créé.');
 
           await refreshTrainers();
           resetCreationModal();
