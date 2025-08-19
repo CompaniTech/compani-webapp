@@ -36,6 +36,17 @@
                   <ni-button v-if="isLastCreatedMandate(props.row)" @click="downloadMandate(props.row)"
                     icon="file_download" />
                 </template>
+                <template v-else-if="col.name === 'signedMandate'">
+                  <div v-if="!props.row.file" class="row justify-center table-actions">
+                    <q-uploader flat with-credentials :url="getMandateUploadUrl(props.row._id)" field-name="file"
+                      @uploaded="refreshCompany" :accept="DOC_EXTENSIONS" auto-upload />
+                  </div>
+                  <ni-button v-else icon="file_download" @click="downloadSignedMandate(props.row)"
+                    :disable="mandatesLoading" />
+                </template>
+                <template v-else-if="col.name === 'signed'">
+                  <div :class="[{ 'dot dot-green': col.value, 'dot dot-orange': !col.value }]" />
+                </template>
                 <template v-else-if="col.name === 'signedAt'">
                   <ni-date-input in-modal :model-value="debitMandatesGroupById[props.row._id].signedAt"
                     @update:model-value="updateMandate($event, props.row)" @focus="saveTmpSignedAt(props.row._id)" />
@@ -61,6 +72,7 @@ import useVuelidate from '@vuelidate/core';
 import { computed, ref, toRefs } from 'vue';
 import { useStore } from 'vuex';
 import { required } from '@vuelidate/validators';
+import { openURL } from 'quasar';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import keyBy from 'lodash/keyBy';
@@ -83,7 +95,7 @@ import { descendingSortBy } from '@helpers/dates/utils';
 import { downloadDocx } from '@helpers/file';
 import { useValidations } from '@composables/validations';
 import { useCompanies } from '@composables/companies';
-import { TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, EDITION } from '@data/constants';
+import { TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, EDITION, DOC_EXTENSIONS } from '@data/constants';
 
 export default {
   name: 'ProfileInfo',
@@ -109,9 +121,17 @@ export default {
     const salesRepresentativeModalLoading = ref(false);
     const salesRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const mandatesColumns = ref([
-      { name: 'rum', label: 'RUM', align: 'left', field: 'rum' },
+      { name: 'rum', label: 'RUM', align: 'left', field: 'rum', style: 'min-width: 250px; width: 35%' },
       { name: 'emptyMandate', label: 'Mandat vierge', align: 'center' },
-      { name: 'signedAt', label: 'Date de signature', align: 'left', field: 'signedAt' },
+      { name: 'signedMandate', label: 'Mandat signé', align: 'center' },
+      { name: 'signed', label: 'Signé', align: 'center', field: 'signedAt' },
+      {
+        name: 'signedAt',
+        label: 'Date de signature',
+        align: 'left',
+        field: 'signedAt',
+        style: 'min-width: 110px; width: 20%',
+      },
     ]);
     const pagination = ref({ sortBy: 'createdAt', ascending: true, rowsPerPage: 0 });
     const mandatesLoading = ref(false);
@@ -262,6 +282,13 @@ export default {
       }
     };
 
+    // eslint-disable-next-line max-len
+    const getMandateUploadUrl = mandateId => `${process.env.API_HOSTNAME}/companies/${company.value._id}/mandates/${mandateId}/upload-signed`;
+
+    const downloadSignedMandate = async (mandate) => {
+      openURL(mandate.file.link);
+    };
+
     const created = async () => {
       if (!company.value) await refreshCompany();
       await refreshSalesRepresentativeOptions();
@@ -280,6 +307,7 @@ export default {
       mandatesColumns,
       pagination,
       mandatesLoading,
+      DOC_EXTENSIONS,
       // Validations
       v$,
       // Computed
@@ -300,6 +328,9 @@ export default {
       downloadMandate,
       updateMandate,
       saveTmpSignedAt,
+      getMandateUploadUrl,
+      refreshCompany,
+      downloadSignedMandate,
     };
   },
 };
