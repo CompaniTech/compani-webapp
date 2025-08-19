@@ -72,13 +72,13 @@ import useVuelidate from '@vuelidate/core';
 import { computed, ref, toRefs } from 'vue';
 import { useStore } from 'vuex';
 import { required } from '@vuelidate/validators';
-import { openURL } from 'quasar';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import keyBy from 'lodash/keyBy';
 import Companies from '@api/Companies';
 import Users from '@api/Users';
 import VendorCompanies from '@api/VendorCompanies';
+import GoogleDrive from '@api/GoogleDrive';
 import SearchAddress from '@components/form/SearchAddress';
 import Input from '@components/form/Input';
 import CoachList from '@components/table/CoachList';
@@ -286,7 +286,18 @@ export default {
     const getMandateUploadUrl = mandateId => `${process.env.API_HOSTNAME}/companies/${company.value._id}/mandates/${mandateId}/upload-signed`;
 
     const downloadSignedMandate = async (mandate) => {
-      openURL(mandate.file.link);
+      if (mandatesLoading.value) return;
+      try {
+        mandatesLoading.value = true;
+        const mandateNumber = company.value.debitMandates.findIndex(m => m._id === mandate._id) + 1;
+        const mandateName = `${company.value.name}_mandat_prelevement_signe_${mandateNumber}`;
+
+        await GoogleDrive.downloadFileById(mandate.file.driveId, mandateName);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        mandatesLoading.value = false;
+      }
     };
 
     const created = async () => {
