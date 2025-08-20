@@ -13,13 +13,12 @@ export const useLayouts = (collapsibleClosing) => {
 
   const chevronClasses = computed(() => (!isMini.value ? 'chevron chevron-left' : 'chevron chevron-right'));
 
-  const chevronContainerClasses = computed(() => (
-    !isMini.value ? 'absolute q-mini-drawer-hide' : 'absolute q-mini-drawer-only'
+  const chevronContainerClasses = computed(() => (!isMini.value
+    ? 'absolute q-mini-drawer-hide'
+    : 'absolute q-mini-drawer-only'
   ));
 
-  const toggleMenu = (value) => {
-    $store.dispatch('main/setDrawer', value);
-  };
+  const toggleMenu = (value) => { $store.dispatch('main/setDrawer', value); };
 
   onBeforeRouteUpdate((to, from, next) => {
     if (drawer.value && !isMini.value) {

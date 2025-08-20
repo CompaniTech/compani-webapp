@@ -29,9 +29,7 @@ export const useSideMenu = (activeRoutes, expansionRefs) => {
     }
   };
 
-  watch(loggedUser, () => {
-    userFirstname.value = setUserFirstname();
-  });
+  watch(loggedUser, () => { userFirstname.value = setUserFirstname(); });
 
   const created = () => {
     userFirstname.value = setUserFirstname();

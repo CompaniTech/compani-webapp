@@ -10,7 +10,7 @@ export const useMenuItems = (isAdmin, isTrainer) => {
   });
 
   const trainerActiveRoutes = ref({
-    administrative: { open: false },
+    administrative: { open: true },
     management: { open: false },
   });
 

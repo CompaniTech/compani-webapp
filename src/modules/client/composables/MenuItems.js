@@ -92,7 +92,6 @@ export const useMenuItems = () => {
 
   return {
     // Computed
-    // loggedUser,
     isAdmin,
     isAuxiliaryWithCompany,
     isAuxiliary,
