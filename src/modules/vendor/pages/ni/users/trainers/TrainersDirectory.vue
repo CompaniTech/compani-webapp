@@ -10,7 +10,7 @@
     <trainer-creation-modal v-model="trainerCreationModal" @hide="resetCreationModal" @submit="createTrainer"
       v-model:new-trainer="newTrainer" :validations="v$.newTrainer" :loading="modalLoading" @go-to-next-step="nextStep"
       :email-error="emailError(v$.newTrainer)" :first-step="firstStep" />
-</q-page>
+  </q-page>
 </template>
 
 <script>
