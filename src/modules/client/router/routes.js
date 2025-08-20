@@ -179,6 +179,15 @@ const routes = [
           parent: 'courses',
         },
       },
+      {
+        path: 'ni/courses/completion-certificates',
+        name: 'ni courses completion certificates',
+        component: () => import('src/modules/vendor/pages/ni/billing/CompletionCertificatesDashboard'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'courses',
+        },
+      },
       // All profiles
       {
         path: 'account',
