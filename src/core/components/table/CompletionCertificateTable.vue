@@ -8,10 +8,11 @@
             <template v-if="col.name === 'actions'">
               <div v-if="has(props, 'row.file.link')">
                 <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
-                <ni-button icon="delete" color="primary" type="a" @click="removeFile(props.row._id)" />
+                <ni-button v-if="isVendorInterface" icon="delete" color="primary" type="a"
+                  @click="removeFile(props.row._id)" />
               </div>
               <div v-else>
-                <ni-primary-button label="Générer" icon="add" @click="generate(props.row._id)"
+                <ni-primary-button v-if="isVendorInterface" label="Générer" icon="add" @click="generate(props.row._id)"
                   :disabled="disabledButton" />
               </div>
             </template>
@@ -44,6 +45,7 @@ export default {
     columns: { type: Array, default: () => [] },
     tableLoading: { type: Boolean, default: false },
     disabledButton: { type: Boolean, default: false },
+    isVendorInterface: { type: Boolean, defautl: false },
   },
   components: {
     'ni-simple-table': SimpleTable,
