@@ -18,7 +18,7 @@ export const useSideMenu = (activeRoutes, expansionRefs) => {
   const collapsibleOpening = () => {
     const parentRoute = $route.meta.parent;
 
-    if (expansionRefs.value[parentRoute] && activeRoutes.value[parentRoute]) {
+    if (expansionRefs.value[parentRoute]) {
       activeRoutes.value[parentRoute].open = true;
     }
   };

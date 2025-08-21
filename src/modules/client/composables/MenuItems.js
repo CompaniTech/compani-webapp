@@ -30,8 +30,6 @@ export const useMenuItems = () => {
 
   const isAdmin = computed(() => CLIENT_ADMIN === clientRole.value);
 
-  const isAuxiliaryWithCompany = computed(() => [AUXILIARY, PLANNING_REFERENT].includes(clientRole.value));
-
   const isAuxiliary = computed(() => AUXILIARY_ROLES.includes(clientRole.value));
 
   const isCoach = computed(() => COACH_ROLES.includes(clientRole.value));
@@ -93,7 +91,6 @@ export const useMenuItems = () => {
   return {
     // Computed
     isAdmin,
-    isAuxiliaryWithCompany,
     isAuxiliary,
     isCoach,
     activeRoutes,
