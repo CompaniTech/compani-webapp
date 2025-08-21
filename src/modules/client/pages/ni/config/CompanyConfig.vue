@@ -30,8 +30,8 @@
 
 <script>
 import { useMeta } from 'quasar';
-import { ref, computed } from 'vue';
-import { mapGetters, useStore } from 'vuex';
+import { ref, computed, onMounted } from 'vue';
+import { useStore } from 'vuex';
 import get from 'lodash/get';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
@@ -44,9 +44,9 @@ import InterlocutorModal from '@components/courses/InterlocutorModal';
 import { EDITION, CLIENT_ADMIN, HOLDING_ADMIN } from '@data/constants';
 import { frAddress } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
-import { companyMixin } from '@mixins/companyMixin';
-import { validationMixin } from '@mixins/validationMixin';
-import { configMixin } from 'src/modules/client/mixins/configMixin';
+import { useCompanies } from '@composables/companies';
+import { useValidations } from '@composables/validations';
+import { useConfig } from '@composables/config';
 
 export default {
   name: 'CompanyConfig',
@@ -60,6 +60,7 @@ export default {
   setup () {
     const metaInfo = { title: 'Configuration générale' };
     useMeta(metaInfo);
+    const $store = useStore();
 
     const billingRepresentativeOptions = ref([]);
     const billingRepresentativeModal = ref(false);
@@ -67,9 +68,35 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
 
-    const v$ = useVuelidate();
-    const $store = useStore();
     const company = computed(() => $store.getters['main/getCompany']);
+
+    const companyRules = {
+      company: {
+        name: { required },
+        address: {
+          zipCode: { required },
+          street: { required },
+          city: { required },
+          fullAddress: { required, frAddress },
+          location: { required },
+        },
+      },
+      tmpBillingRepresentativeId: { required },
+    };
+
+    const v$ = useVuelidate(companyRules, { company, tmpBillingRepresentativeId });
+
+    const { addressError } = useCompanies(v$.value);
+
+    const { waitForValidation } = useValidations();
+
+    const { saveTmp, refreshCompany, updateCompany } = useConfig(
+      v$,
+      waitForValidation,
+      billingRepresentativeModalLoading,
+      tmpBillingRepresentativeId,
+      billingRepresentativeModal
+    );
 
     const openBillingRepresentativeModal = (event) => {
       const { action: eventAction } = event;
@@ -93,6 +120,15 @@ export default {
       v$.value.tmpBillingRepresentativeId.$reset();
     };
 
+    onMounted(async () => {
+      const promises = [
+        await refreshCompany(),
+        await refreshBillingRepresentativeOptions(),
+      ];
+
+      await Promise.all(promises);
+    });
+
     return {
       // Data
       billingRepresentativeOptions,
@@ -100,37 +136,17 @@ export default {
       billingRepresentativeModalLabel,
       tmpBillingRepresentativeId,
       billingRepresentativeModalLoading,
+      company,
       // Computed
       v$,
+      addressError,
       // Methods
       openBillingRepresentativeModal,
       refreshBillingRepresentativeOptions,
       resetBillingRepresentative,
+      saveTmp,
+      updateCompany,
     };
-  },
-  mixins: [configMixin, validationMixin, companyMixin],
-  validations () {
-    return {
-      company: {
-        name: { required },
-        address: {
-          zipCode: { required },
-          street: { required },
-          city: { required },
-          fullAddress: { required, frAddress },
-          location: { required },
-        },
-      },
-      tmpBillingRepresentativeId: { required },
-    };
-  },
-  computed: {
-    ...mapGetters({ clientRole: 'main/getClientRole' }),
-  },
-  async mounted () {
-    const promises = [this.refreshCompany(), this.refreshBillingRepresentativeOptions()];
-
-    await Promise.all(promises);
   },
 };
 </script>
