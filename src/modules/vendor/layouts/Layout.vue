@@ -32,36 +32,71 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import { layoutMixin } from '@mixins/layoutMixin';
-import { sideMenuMixin } from '@mixins/sideMenuMixin';
+import { computed, onMounted, ref } from 'vue';
+import { useStore } from 'vuex';
 import { TRAINER, VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER, VENDOR } from '@data/constants';
 import SideMenuFooter from '@components/menu/SideMenuFooter';
 import MenuItem from '@components/menu/MenuItem';
-import { menuItemsMixin } from '../mixins/menuItemsMixin';
+import { useSideMenu } from '@composables/sideMenu';
+import { useLayouts } from '@composables/layouts';
+import { useMenuItems } from '../composables/MenuItems';
 
 export default {
   components: {
     'ni-side-menu-footer': SideMenuFooter,
     'ni-menu-item': MenuItem,
   },
-  mixins: [layoutMixin, sideMenuMixin, menuItemsMixin],
-  mounted () {
-    this.collapsibleOpening();
-  },
-  data () {
+  setup () {
+    const $store = useStore();
+
+    const interfaceType = ref(VENDOR);
+    const expansionRefs = ref({});
+
+    const vendorRole = computed(() => $store.getters['main/getVendorRole']);
+
+    const isAdmin = computed(() => [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
+
+    const isTrainer = computed(() => vendorRole.value === TRAINER);
+
+    const { routes, activeRoutes } = useMenuItems(isAdmin, isTrainer);
+
+    const {
+      userFirstname,
+      companiLogo,
+      collapsibleOpening,
+      collapsibleClosing,
+    } = useSideMenu(activeRoutes, expansionRefs);
+
+    const {
+      isMini,
+      loggedUser,
+      drawer,
+      menuIcon,
+      chevronClasses,
+      chevronContainerClasses,
+      toggleMenu,
+    } = useLayouts(collapsibleClosing);
+
+    onMounted(() => {
+      collapsibleOpening();
+    });
+
     return {
-      interfaceType: VENDOR,
+      // Data
+      interfaceType,
+      userFirstname,
+      companiLogo,
+      isMini,
+      // Computed
+      routes,
+      activeRoutes,
+      loggedUser,
+      drawer,
+      menuIcon,
+      chevronClasses,
+      chevronContainerClasses,
+      toggleMenu,
     };
-  },
-  computed: {
-    ...mapGetters({ vendorRole: 'main/getVendorRole' }),
-    isAdmin () {
-      return [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(this.vendorRole);
-    },
-    isTrainer () {
-      return this.vendorRole === TRAINER;
-    },
   },
 };
 </script>
