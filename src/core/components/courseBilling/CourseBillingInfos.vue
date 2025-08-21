@@ -74,7 +74,10 @@
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
                 <div class="formatted-price" />
-                <div class="formatted-price" />
+                <div class="chip-container status">
+                  <q-chip :class="[getStatusClass(item.status)]"
+                    :label="getItemStatus(item.status)" />
+                </div>
                 <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
                   <q-icon size="20px" name="edit" color="copper-grey-500"
                     @click="openCoursePaymentEditionModal(props.row, item)" />
@@ -142,6 +145,8 @@ import {
   CLIENT_ADMIN,
   EDITION,
   HOLDING_ADMIN,
+  PAYMENT_STATUS_OPTIONS,
+  PENDING,
 } from '@data/constants.js';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSortBy, descendingSortBy } from '@helpers/dates/utils';
@@ -393,6 +398,10 @@ export default {
       ? PAYMENT_OPTIONS.find(option => option.value === item.type).label
       : CREDIT_OPTION.label);
 
+    const getItemStatus = status => PAYMENT_STATUS_OPTIONS.find(s => s.value === status).label;
+
+    const getStatusClass = status => (status === PENDING ? 'orange-chip' : 'green-chip');
+
     const getSortedItems = bill => (bill.courseCreditNote
       ? [...bill.coursePayments, bill.courseCreditNote].sort(ascendingSortBy('date'))
       : bill.coursePayments.sort(ascendingSortBy('date')));
@@ -533,6 +542,7 @@ export default {
       billingRepresentativeModalLoading,
       billingRepresentativeGroupedByCompany,
       tmpBillingRepresentativeId,
+      PAYMENT_STATUS_OPTIONS,
       // Computed
       validations,
       canUpdateBilling,
@@ -551,6 +561,8 @@ export default {
       resetCoursePaymentCreationModal,
       resetCoursePaymentEditionModal,
       getItemType,
+      getItemStatus,
+      getStatusClass,
       getSortedItems,
       getTotal,
       get,
@@ -609,6 +621,8 @@ export default {
   width: 10%
   padding: 4px
   text-align: right
+.status
+  width: 10%
 .edit
   display: flex
   justify-content: flex-end
