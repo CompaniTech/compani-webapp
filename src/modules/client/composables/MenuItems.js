@@ -2,13 +2,7 @@ import { ref, computed } from 'vue';
 import { useStore } from 'vuex';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
-import {
-  CLIENT_ADMIN,
-  AUXILIARY,
-  PLANNING_REFERENT,
-  AUXILIARY_ROLES,
-  COACH_ROLES,
-} from '@data/constants';
+import { CLIENT_ADMIN, AUXILIARY_ROLES, COACH_ROLES } from '@data/constants';
 import { defineAbilitiesFor } from '@helpers/ability';
 
 export const useMenuItems = () => {
