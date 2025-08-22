@@ -187,11 +187,20 @@ export default {
       return filteredCC;
     });
 
+    const isHoldingAdmin = computed(() => get(loggedUser.value, 'role.holding'));
+
+    const companies = computed(() => {
+      if (isClientInterface) {
+        if (isHoldingAdmin.value) return loggedUser.value.holding.companies;
+        return [loggedUser.value.company._id];
+      }
+    });
+
     const refreshCompletionCertificates = async () => {
       try {
         await getCompletionCertificates({
           months: selectedMonths.value,
-          ...(isClientInterface && { company: loggedUser.value.company._id }),
+          ...(isClientInterface && { companies: companies.value }),
         });
       } catch (e) {
         console.error(e);
@@ -281,7 +290,7 @@ export default {
         if (selectedMonths.value.length) {
           await getCompletionCertificates({
             months: selectedMonths.value,
-            ...(isClientInterface && { company: loggedUser.value.company._id }),
+            ...(isClientInterface && { companies: companies.value }),
           });
         } else {
           completionCertificates.value = [];
