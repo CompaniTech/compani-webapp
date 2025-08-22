@@ -44,6 +44,11 @@ export const useMenuItems = () => {
         { name: 'ni courses learners', icon: 'contacts', label: 'Apprenants' },
         { name: 'ni courses bills', icon: 'receipt', label: 'Factures' },
         { name: 'ni courses contacts', icon: 'people', label: 'Contacts Compani' },
+        {
+          name: 'ni courses completion certificates',
+          icon: 'picture_as_pdf',
+          label: 'Certificats réalisation mensuels',
+        },
       ],
     },
     {
