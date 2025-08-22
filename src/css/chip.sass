@@ -13,7 +13,6 @@
     color: $copper-grey-700
     width: 100%
     padding: 0 8px
-    justify-content: flex-end
     margin: 0
     @media screen and (max-width: 767px)
       font-size: 10px
@@ -26,13 +25,23 @@
       background-color: $orange-300
       color: $orange-900
       border: 1px solid $orange-300
-    &.extreme-occupation
+    &__content
+      display: flex
+      justify-content: center
+    &.red-chip
       border: 1px solid $red
       background: $red
       color: $copper-grey-50
-    &__content
-      display: flex
-      justify-content: flex-end
+    &.orange-chip
+      border: 1px solid $peach-200
+      background: $peach-100
+      color: $orange-500
+    &.green-chip
+      border: 1px solid $green-600
+      background: $green-600
+      opacity: 0.5
+      color: $copper-grey-50
+
 
   .avatar
     z-index: 2
