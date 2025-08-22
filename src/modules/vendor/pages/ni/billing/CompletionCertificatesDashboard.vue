@@ -7,8 +7,10 @@
       </template>
     </ni-profile-header>
     <div v-if="displayFilters" class="filters-container">
-      <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
-      <company-select label="Structure" clearable :company-options="companyOptions" :company="selectedCompany"
+      <ni-select v-if="!isClientInterface" caption="Société mère" clearable :options="holdingOptions"
+        v-model="selectedHolding" />
+      <company-select v-if="!isClientInterface || isHoldingAdmin" label="Structure" clearable
+        :company-options="companyOptions" :company="selectedCompany"
         @update="updateSelectedCompany" />
       <ni-select v-model="selectedTrainee" caption="Apprenant" :options="traineeOptions" clearable />
     </div>
@@ -316,6 +318,7 @@ export default {
       holdingOptions,
       displayFilters,
       traineeOptions,
+      isHoldingAdmin,
       // Methods
       updateSelectedMonths,
       updateSelectedCompany,
