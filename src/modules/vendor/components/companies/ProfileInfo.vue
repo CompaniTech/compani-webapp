@@ -14,6 +14,15 @@
             @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" />
       </div>
     </div>
+    <div class="q-mb-xl">
+      <p class="text-weight-bold">Coordonnées bancaires</p>
+      <div class="row gutter-profile">
+        <ni-input caption="IBAN" v-model="company.iban" :error="v$.company.iban.$error" required-field
+          :error-message="ibanErrorMessage" @focus="saveTmp('iban')" @blur="updateCompany('iban')" />
+        <ni-input caption="BIC" v-model="company.bic" :error="v$.company.bic.$error" required-field
+          :error-message="bicErrorMessage" @focus="saveTmp('bic')" @blur="updateCompany('bic')" />
+      </div>
+    </div>
     <ni-coach-list :company="company" />
   </div>
 
@@ -38,7 +47,7 @@ import CoachList from '@components/table/CoachList';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
-import { frAddress } from '@helpers/vuelidateCustomVal';
+import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
 import { useValidations } from '@composables/validations';
 import { useCompanies } from '@composables/companies';
@@ -78,6 +87,8 @@ export default {
           fullAddress: { required, frAddress },
           location: { required },
         },
+        iban: { required, iban },
+        bic: { required, bic },
       },
       tmpSalesRepresentativeId: { required },
     }));
@@ -85,7 +96,7 @@ export default {
 
     const { waitForValidation } = useValidations();
 
-    const { addressError } = useCompanies(v$.value);
+    const { addressError, ibanErrorMessage, bicErrorMessage } = useCompanies(v$);
 
     const saveTmp = (path) => { tmpInput.value = get(company.value, path); };
 
@@ -118,8 +129,10 @@ export default {
           payload = { salesRepresentative: tmpSalesRepresentativeId.value };
         } else {
           v$.value.company.$touch();
-          const isValid = await waitForValidation(v$.value.company, path);
-          if (!isValid) return NotifyWarning('Champ(s) invalide(s)');
+          if (path === 'address') {
+            const isValid = await waitForValidation(v$.value.company, path);
+            if (!isValid) return NotifyWarning('Champ(s) invalide(s)');
+          } else if (v$.value.company[path].$error) return NotifyWarning('Champ invalide');
 
           payload = set({}, path, value);
         }
@@ -182,6 +195,8 @@ export default {
       // Computed
       company,
       addressError,
+      ibanErrorMessage,
+      bicErrorMessage,
       // Methods
       saveTmp,
       trimAndUpdateCompany,
