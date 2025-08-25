@@ -35,6 +35,12 @@ export const bic = (value) => {
   return isValidBIC(value);
 };
 
+export const ics = (value) => {
+  if (!value) return false;
+
+  return /^FR[0-9A-Z]{11}$/.test(value) || false;
+};
+
 export const frAddress = async (value) => {
   if (!value) return true;
 
