@@ -450,7 +450,7 @@ export default {
     };
 
     const templateUploaded = async () => {
-      NotifyPositive('Document chargé.');
+      NotifyPositive('Template chargé.');
 
       await refreshVendorCompany();
     };
