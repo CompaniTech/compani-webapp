@@ -26,7 +26,7 @@
     <div class="q-mb-xl">
       <p class="text-weight-bold">Mandats de prélèvements</p>
        <q-card>
-        <ni-responsive-table :columns="mandatesColumns" :data="company.debitMandates" class="mandate-table"
+        <ni-responsive-table :columns="mandatesColumns" :data="debitMandates" class="mandate-table"
           :loading="mandatesLoading" v-model:pagination="pagination">
           <template #body="{ props }">
             <q-tr :props="props">
@@ -73,6 +73,7 @@ import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
 import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
+import { descendingSortBy } from '@helpers/dates/utils';
 import { downloadDocx } from '@helpers/file';
 import { useValidations } from '@composables/validations';
 import { useCompanies } from '@composables/companies';
@@ -128,6 +129,8 @@ export default {
     const v$ = useVuelidate(companyRules, { company, tmpSalesRepresentativeId });
 
     const { waitForValidation } = useValidations();
+
+    const debitMandates = computed(() => [...company.value.debitMandates].sort(descendingSortBy('createdAt')));
 
     const { addressError, ibanErrorMessage, bicErrorMessage } = useCompanies(v$);
 
@@ -253,6 +256,7 @@ export default {
       v$,
       // Computed
       company,
+      debitMandates,
       addressError,
       ibanErrorMessage,
       bicErrorMessage,
