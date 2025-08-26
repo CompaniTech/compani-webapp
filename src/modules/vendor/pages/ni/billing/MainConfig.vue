@@ -25,6 +25,9 @@
             :error-message="shareCapitalErrorMessage" required-field />
           <ni-input caption="ICS" v-model="vendorCompany.ics" @focus="saveTmp('ics')" @blur="updateVendorCompany('ics')"
             :error="validations.vendorCompany.ics.$error" :error-message="icsErrorMessage" required-field />
+          <ni-file-uploader caption="Template mandat de prélèvement SEPA" path="debitMandateTemplate"
+            :entity="vendorCompany" :url="templateUploadUrl" @delete="validateTemplateDeletion"
+            @uploaded="templateUploaded" drive-storage hide-image :extensions="UPLOAD_TEMPLATE_EXTENSIONS" />
         </div>
       </div>
       <p class="text-weight-bold">Contacts</p>
@@ -119,7 +122,14 @@ import OrganisationCreationModal from 'src/modules/vendor/components/billing/Cou
 import ItemCreationModal from 'src/modules/vendor/components/billing/CourseBillingItemCreationModal';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
-import { REQUIRED_LABEL, EDITION, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN } from '@data/constants';
+import FileUploader from '@components/form/FileUploader';
+import {
+  REQUIRED_LABEL,
+  EDITION,
+  TRAINING_ORGANISATION_MANAGER,
+  VENDOR_ADMIN,
+  UPLOAD_TEMPLATE_EXTENSIONS,
+} from '@data/constants';
 import { useValidations } from '@composables/validations';
 
 export default {
@@ -134,6 +144,7 @@ export default {
     'ni-search-address': SearchAddress,
     'interlocutor-cell': InterlocutorCell,
     'interlocutor-modal': InterlocutorModal,
+    'ni-file-uploader': FileUploader,
   },
   setup () {
     const metaInfo = { title: 'Configuration' };
@@ -246,6 +257,8 @@ export default {
 
       return '';
     });
+
+    const templateUploadUrl = computed(() => `${process.env.API_HOSTNAME}/vendorcompanies/mandate/upload`);
 
     const refreshVendorCompany = async () => {
       try {
@@ -436,6 +449,35 @@ export default {
       validations.value.tmpBillingRepresentativeId.$reset();
     };
 
+    const templateUploaded = async () => {
+      NotifyPositive('Template chargé.');
+
+      await refreshVendorCompany();
+    };
+
+    const deleteTemplate = async () => {
+      try {
+        await VendorCompanies.removeTemplate();
+
+        await refreshVendorCompany();
+        NotifyPositive('Template supprimé.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du template.');
+      }
+    };
+
+    const validateTemplateDeletion = async () => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir supprimer ce template&nbsp;?',
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(deleteTemplate)
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
+
     const created = async () => {
       await refreshVendorCompany();
       await refreshCourseFundingOrganisations();
@@ -464,6 +506,7 @@ export default {
       billingRepresentativeModal,
       billingRepresentativeModalLoading,
       tmpBillingRepresentativeId,
+      UPLOAD_TEMPLATE_EXTENSIONS,
       // Computed
       validations,
       siretErrorMessage,
@@ -472,6 +515,7 @@ export default {
       bicErrorMessage,
       shareCapitalErrorMessage,
       icsErrorMessage,
+      templateUploadUrl,
       // Methods
       refreshCourseFundingOrganisations,
       resetOrganisationAdditionForm,
@@ -487,6 +531,8 @@ export default {
       updateVendorCompany,
       openBillingRepresentativeModal,
       resetBillingRepresentative,
+      templateUploaded,
+      validateTemplateDeletion,
     };
   },
 };
