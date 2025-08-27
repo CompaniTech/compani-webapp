@@ -11,7 +11,7 @@
         <ni-input caption="Raison sociale" v-model="company.name" @focus="saveTmp('name')"
           @blur="trimAndUpdateCompany('name')" :error="v$.company.name.$error" />
         <ni-search-address v-model="company.address" :error-message="addressError" @blur="updateCompany('address')"
-            @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" />
+          @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" />
       </div>
     </div>
     <div class="q-mb-xl">
@@ -36,6 +36,21 @@
                   <ni-button v-if="isLastCreatedMandate(props.row)" @click="downloadMandate(props.row)"
                     icon="file_download" />
                 </template>
+                <template v-else-if="col.name === 'signedMandate'">
+                  <div v-if="!props.row.file" class="row justify-center table-actions">
+                    <q-uploader flat with-credentials :url="getMandateUploadUrl(props.row._id)" field-name="file"
+                      @uploaded="refreshCompany" :accept="DOC_EXTENSIONS" auto-upload />
+                  </div>
+                  <ni-button v-else icon="file_download" @click="downloadSignedMandate(props.row)"
+                    :disable="mandatesLoading" />
+                </template>
+                <template v-else-if="col.name === 'signed'">
+                  <div :class="[{ 'dot dot-green': col.value, 'dot dot-orange': !col.value }]" />
+                </template>
+                <template v-else-if="col.name === 'signedAt'">
+                  <ni-date-input in-modal :model-value="debitMandatesGroupById[props.row._id].signedAt"
+                    @update:model-value="updateMandate($event, props.row)" @focus="saveTmpSignedAt(props.row._id)" />
+                </template>
                 <template v-else>{{ col.value }}</template>
               </q-td>
             </q-tr>
@@ -59,9 +74,11 @@ import { useStore } from 'vuex';
 import { required } from '@vuelidate/validators';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import keyBy from 'lodash/keyBy';
 import Companies from '@api/Companies';
 import Users from '@api/Users';
 import VendorCompanies from '@api/VendorCompanies';
+import GoogleDrive from '@api/GoogleDrive';
 import SearchAddress from '@components/form/SearchAddress';
 import Input from '@components/form/Input';
 import CoachList from '@components/table/CoachList';
@@ -70,6 +87,7 @@ import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
 import ResponsiveTable from '@components/table/ResponsiveTable';
 import Button from '@components/Button';
+import DateInput from '@components/form/DateInput';
 import CompaniDate from '@helpers/dates/companiDates';
 import { frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import { formatAndSortUserOptions } from '@helpers/utils';
@@ -77,7 +95,7 @@ import { descendingSortBy } from '@helpers/dates/utils';
 import { downloadDocx } from '@helpers/file';
 import { useValidations } from '@composables/validations';
 import { useCompanies } from '@composables/companies';
-import { TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, EDITION } from '@data/constants';
+import { TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, EDITION, DOC_EXTENSIONS } from '@data/constants';
 
 export default {
   name: 'ProfileInfo',
@@ -92,6 +110,7 @@ export default {
     'ni-interlocutor-cell': InterlocutorCell,
     'ni-interlocutor-modal': InterlocutorModal,
     'ni-responsive-table': ResponsiveTable,
+    'ni-date-input': DateInput,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -102,8 +121,17 @@ export default {
     const salesRepresentativeModalLoading = ref(false);
     const salesRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const mandatesColumns = ref([
-      { name: 'rum', label: 'RUM', align: 'left', field: 'rum' },
+      { name: 'rum', label: 'RUM', align: 'left', field: 'rum', style: 'min-width: 250px; width: 35%' },
       { name: 'emptyMandate', label: 'Mandat vierge', align: 'center' },
+      { name: 'signedMandate', label: 'Mandat signé', align: 'center' },
+      { name: 'signed', label: 'Signé', align: 'center', field: 'signedAt' },
+      {
+        name: 'signedAt',
+        label: 'Date de signature',
+        align: 'left',
+        field: 'signedAt',
+        style: 'min-width: 110px; width: 20%',
+      },
     ]);
     const pagination = ref({ sortBy: 'createdAt', ascending: true, rowsPerPage: 0 });
     const mandatesLoading = ref(false);
@@ -128,6 +156,8 @@ export default {
     }));
     const v$ = useVuelidate(companyRules, { company, tmpSalesRepresentativeId });
 
+    const debitMandatesGroupById = computed(() => keyBy(company.value.debitMandates, m => m._id));
+
     const { waitForValidation } = useValidations();
 
     const debitMandates = computed(() => [...company.value.debitMandates].sort(descendingSortBy('createdAt')));
@@ -135,6 +165,10 @@ export default {
     const { addressError, ibanErrorMessage, bicErrorMessage } = useCompanies(v$);
 
     const saveTmp = (path) => { tmpInput.value = get(company.value, path); };
+
+    const saveTmpSignedAt = (mandateId) => {
+      tmpInput.value = debitMandatesGroupById.value[mandateId].signedAt;
+    };
 
     const refreshCompany = async () => {
       try {
@@ -234,6 +268,38 @@ export default {
       }
     };
 
+    const updateMandate = async (date, mandate) => {
+      try {
+        if (!date || tmpInput.value === date) return;
+        const params = { _id: company.value._id, mandateId: mandate._id };
+        await Companies.updateMandate(params, { signedAt: date });
+
+        await refreshCompany();
+        NotifyPositive('Modification enregistrée.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification.');
+      }
+    };
+
+    // eslint-disable-next-line max-len
+    const getMandateUploadUrl = mandateId => `${process.env.API_HOSTNAME}/companies/${company.value._id}/mandates/${mandateId}/upload-signed`;
+
+    const downloadSignedMandate = async (mandate) => {
+      if (mandatesLoading.value) return;
+      try {
+        mandatesLoading.value = true;
+        const mandateNumber = company.value.debitMandates.findIndex(m => m._id === mandate._id) + 1;
+        const mandateName = `${company.value.name}_mandat_prelevement_signe_${mandateNumber}`;
+
+        await GoogleDrive.downloadFileById(mandate.file.driveId, mandateName);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        mandatesLoading.value = false;
+      }
+    };
+
     const created = async () => {
       if (!company.value) await refreshCompany();
       await refreshSalesRepresentativeOptions();
@@ -252,6 +318,7 @@ export default {
       mandatesColumns,
       pagination,
       mandatesLoading,
+      DOC_EXTENSIONS,
       // Validations
       v$,
       // Computed
@@ -260,6 +327,7 @@ export default {
       addressError,
       ibanErrorMessage,
       bicErrorMessage,
+      debitMandatesGroupById,
       // Methods
       saveTmp,
       trimAndUpdateCompany,
@@ -269,6 +337,11 @@ export default {
       resetSalesRepresentative,
       isLastCreatedMandate,
       downloadMandate,
+      updateMandate,
+      saveTmpSignedAt,
+      getMandateUploadUrl,
+      refreshCompany,
+      downloadSignedMandate,
     };
   },
 };
