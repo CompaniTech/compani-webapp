@@ -4,7 +4,7 @@ export const OTHER = 'other';
 
 // MEDIA
 export const BLUE_TEXT_LOGO = 'https://storage.googleapis.com/compani-main/icons/compani_texte_bleu.png';
-export const DOC_EXTENSIONS = 'image/jpg, image/jpeg, application/pdf';
+export const DOC_EXTENSIONS = 'application/pdf';
 export const IMAGE_EXTENSIONS = 'image/jpg, image/jpeg, image/png';
 export const VIDEO_EXTENSIONS = 'video/*';
 export const AUDIO_EXTENSIONS = 'audio/*';
