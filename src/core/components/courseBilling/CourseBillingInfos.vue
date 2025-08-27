@@ -74,9 +74,8 @@
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
                 <div class="formatted-price" />
-                <div class="chip-container status">
-                  <q-chip :class="[getStatusClass(item.status)]"
-                    :label="getItemStatus(item.status)" />
+                <div v-if="item.status" class="chip-container status">
+                  <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
                 </div>
                 <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
                   <q-icon size="20px" name="edit" color="copper-grey-500"
