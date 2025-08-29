@@ -101,7 +101,7 @@
             :style="col.style">
             <template v-if="col.name === 'actions'">
               <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex items-center">
-                <div v-if="props.row.slots.some(s => !s.traineesSignature)" class="text-italic text-primary">
+                <div v-if="areSignaturesMissing(props.row.slots)" class="text-italic text-primary">
                   En attente de signature
                 </div>
                 <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
@@ -341,6 +341,8 @@ export default {
         if (column) column.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
     };
+    const areSignaturesMissing = slots => slots
+      .some(s => !s.traineesSignature || s.traineesSignature.some(signature => !signature.signature));
 
     const created = async () => {
       await Promise.all([
@@ -415,6 +417,7 @@ export default {
       openAttendanceSheetEditionModal,
       validateAttendanceSheetGeneration,
       formatSingleAttendanceSheetName,
+      areSignaturesMissing,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,
