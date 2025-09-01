@@ -95,7 +95,8 @@ export default {
       waitForValidation,
       billingRepresentativeModalLoading,
       tmpBillingRepresentativeId,
-      billingRepresentativeModal
+      billingRepresentativeModal,
+      company
     );
 
     const openBillingRepresentativeModal = (event) => {
