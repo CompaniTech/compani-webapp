@@ -121,11 +121,7 @@ export default {
       v$.value.tmpBillingRepresentativeId.$reset();
     };
 
-    onMounted(async () => {
-      const promises = [await refreshCompany(), await refreshBillingRepresentativeOptions()];
-
-      await Promise.all(promises);
-    });
+    onMounted(() => Promise.all([refreshCompany(), refreshBillingRepresentativeOptions()]));
 
     return {
       // Data
