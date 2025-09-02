@@ -196,6 +196,7 @@ export default {
         if (isHoldingAdmin.value) return loggedUser.value.holding.companies;
         return [loggedUser.value.company._id];
       }
+      return [];
     });
 
     const refreshCompletionCertificates = async () => {
