@@ -86,7 +86,7 @@ export default {
 
     const v$ = useVuelidate(companyRules, { company, tmpBillingRepresentativeId });
 
-    const { addressError } = useCompanies(v$.value);
+    const { addressError } = useCompanies(v$);
 
     const { waitForValidation } = useValidations();
 
