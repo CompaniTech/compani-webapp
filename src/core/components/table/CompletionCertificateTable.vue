@@ -33,7 +33,7 @@
 <script>
 import get from 'lodash/get';
 import has from 'lodash/has';
-import { ref } from 'vue';
+import { ref, toRefs } from 'vue';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
 import PrimaryButton from '@components/PrimaryButton';
@@ -53,18 +53,19 @@ export default {
     'ni-primary-button': PrimaryButton,
   },
   emits: ['generate', 'removeFile'],
-  setup (_, { emit }) {
+  setup (props, { emit }) {
+    const { isVendorInterface } = toRefs(props);
     const pagination = ref({ page: 1, rowsPerPage: 15 });
 
     const generate = event => emit('generate', event);
 
     const removeFile = event => emit('removeFile', event);
 
-    const goToCourseProfile = courseId => ({
-      name: 'ni management blended courses info',
-      params: { courseId },
-      query: { defaultTab: 'traineeFollowUp' },
-    });
+    const goToCourseProfile = courseId => (
+      isVendorInterface.value
+        ? { name: 'ni management blended courses info', params: { courseId }, query: { defaultTab: 'traineeFollowUp' } }
+        : { name: 'ni courses info', params: { courseId }, query: { defaultTab: 'traineeFollowUp' } }
+    );
 
     return {
       // Data
