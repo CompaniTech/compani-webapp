@@ -24,6 +24,7 @@ const coachRoutes = [
   { name: 'ni courses contacts' },
   { name: 'ni elearning courses' },
   { name: 'ni elearning courses info' },
+  { name: 'ni courses completion certificates' },
 ];
 const clientAdminRoutes = [
   ...coachRoutes,

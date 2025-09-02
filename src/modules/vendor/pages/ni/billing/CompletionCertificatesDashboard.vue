@@ -1,5 +1,5 @@
 <template>
-  <q-page padding class="vendor-background q-pb-xl">
+  <q-page padding :class="['q-pb-xl', isClientInterface ? 'client-background' : 'vendor-background']">
     <ni-profile-header title="Certificats de réalisation">
       <template #title>
         <ni-select caption="Mois de formation" :options="monthOptions" multiple :model-value="selectedMonths"
@@ -7,14 +7,17 @@
       </template>
     </ni-profile-header>
     <div v-if="displayFilters" class="filters-container">
-      <ni-select caption="Société mère" clearable :options="holdingOptions" v-model="selectedHolding" />
-      <company-select label="Structure" clearable :company-options="companyOptions" :company="selectedCompany"
+      <ni-select v-if="!isClientInterface" caption="Société mère" clearable :options="holdingOptions"
+        v-model="selectedHolding" />
+      <company-select v-if="!isClientInterface || isHoldingAdmin" label="Structure" clearable
+        :company-options="companyOptions" :company="selectedCompany"
         @update="updateSelectedCompany" />
       <ni-select v-model="selectedTrainee" caption="Apprenant" :options="traineeOptions" clearable />
     </div>
     <completion-certificate-table v-if="completionCertificates.length" :columns="columns"
       :completion-certificates="filteredCompletionCertificates" :disabled-button="disableButton"
-      @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
+      @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion"
+      :is-vendor-interface="!isClientInterface" />
     <template v-else>
       <span class="text-italic q-pa-lg">Aucun certificat de réalisation pour les mois sélectionnés.</span>
     </template>
@@ -24,6 +27,8 @@
 <script>
 import { useMeta, useQuasar } from 'quasar';
 import { ref, watch, computed } from 'vue';
+import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 import get from 'lodash/get';
 import has from 'lodash/has';
 import sortedUniqBy from 'lodash/sortedUniqBy';
@@ -60,12 +65,15 @@ export default {
     useMeta(metaInfo);
 
     const $q = useQuasar();
+    const $route = useRoute();
+    const $store = useStore();
 
     const selectedMonths = ref([]);
     const monthOptions = ref([]);
     const selectedCompany = ref('');
     const selectedHolding = ref('');
     const selectedTrainee = ref('');
+    const isClientInterface = !/\/ad\//.test($route.path);
     const columns = ref([
       {
         name: 'traineeName',
@@ -111,6 +119,8 @@ export default {
         style: 'width: 15%',
       },
     ]);
+
+    const loggedUser = computed(() => $store.state.main.loggedUser);
 
     const displayFilters = computed(() => filteredCompletionCertificates.value.length ||
       selectedCompany.value || selectedHolding.value);
@@ -179,9 +189,22 @@ export default {
       return filteredCC;
     });
 
+    const isHoldingAdmin = computed(() => get(loggedUser.value, 'role.holding'));
+
+    const companies = computed(() => {
+      if (isClientInterface) {
+        if (isHoldingAdmin.value) return loggedUser.value.holding.companies;
+        return [loggedUser.value.company._id];
+      }
+      return [];
+    });
+
     const refreshCompletionCertificates = async () => {
       try {
-        await getCompletionCertificates({ months: selectedMonths.value });
+        await getCompletionCertificates({
+          months: selectedMonths.value,
+          ...(isClientInterface && { companies: companies.value }),
+        });
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la récupération des certificats de réalisation.');
@@ -268,7 +291,10 @@ export default {
       clearTimeout(timeout);
       timeout = setTimeout(async () => {
         if (selectedMonths.value.length) {
-          await getCompletionCertificates({ months: selectedMonths.value });
+          await getCompletionCertificates({
+            months: selectedMonths.value,
+            ...(isClientInterface && { companies: companies.value }),
+          });
         } else {
           completionCertificates.value = [];
         }
@@ -285,6 +311,7 @@ export default {
       selectedTrainee,
       disableButton,
       completionCertificates,
+      isClientInterface,
       // Computed
       companyOptions,
       filteredCompletionCertificates,
@@ -292,6 +319,7 @@ export default {
       holdingOptions,
       displayFilters,
       traineeOptions,
+      isHoldingAdmin,
       // Methods
       updateSelectedMonths,
       updateSelectedCompany,
