@@ -122,10 +122,7 @@ export default {
     };
 
     onMounted(async () => {
-      const promises = [
-        await refreshCompany(),
-        await refreshBillingRepresentativeOptions(),
-      ];
+      const promises = [await refreshCompany(), await refreshBillingRepresentativeOptions()];
 
       await Promise.all(promises);
     });
