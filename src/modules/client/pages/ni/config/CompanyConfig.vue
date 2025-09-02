@@ -6,9 +6,9 @@
         <p class="text-weight-bold">Informations de l'organisation</p>
         <div class="row gutter-profile">
           <ni-input caption="Raison sociale" v-model="company.name" @focus="saveTmp('name')"
-            @blur="updateCompany('name')" :error="v$.company.name.$error" />
+            @blur="updateCompany('name')" :error="v$.company.name.$error" required-field />
           <ni-search-address v-model="company.address" :error-message="addressError" @blur="updateCompany('address')"
-            @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" />
+            @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" required-field />
         </div>
       </div>
       <div>
