@@ -328,7 +328,7 @@ export default {
 
     const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
 
-    const loggedUserHolding = computed(() => get(loggedUser.value, 'holding._id'));
+    const loggedUserHolding = computed(() => get(loggedUser.value, 'holding'));
 
     const refreshQuestionnaires = async () => {
       try {
@@ -368,7 +368,7 @@ export default {
           course: course.value._id,
           ...(isClientInterface && {
             ...loggedUserHolding.value
-              ? { holding: loggedUserHolding.value }
+              ? { holding: loggedUserHolding.value._id }
               : { company: loggedUser.value.company._id },
           }),
         };
@@ -576,11 +576,8 @@ export default {
         const params = { course: course.value._id };
 
         if (isClientInterface) {
-          if (loggedUserHolding.value) {
-            params.companies = loggedUserHolding.value.companies;
-          } else {
-            params.companies = [loggedUser.value.company._id];
-          }
+          if (loggedUserHolding.value) params.companies = loggedUserHolding.value.companies;
+          else params.companies = [loggedUser.value.company._id];
         }
 
         promises.push(getCompletionCertificates(params));
