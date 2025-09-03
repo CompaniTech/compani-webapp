@@ -68,7 +68,8 @@
       <div v-else-if="canReadCompletionCertificate">
         <completion-certificate-table v-if="completionCertificates.length" :disabled-button="disableButton"
           :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
-          @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
+          @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion"
+          :is-vendor-interface="isVendorInterface" />
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
