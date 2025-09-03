@@ -572,18 +572,18 @@ export default {
         if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
       }
 
-      if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
-        promises.push(getCompletionCertificates({ course: course.value._id }));
-      }
+      if (isMonthlyCertificateMode.value && canReadCompletionCertificate.value) {
+        const params = { course: course.value._id };
 
-      if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
-        return canReadCompletionCertificate.value;
-      }
+        if (isClientInterface) {
+          if (loggedUserHolding.value) {
+            params.companies = loggedUserHolding.value.companies;
+          } else {
+            params.companies = [loggedUser.value.company._id];
+          }
+        }
 
-      if (isClientInterface) {
-        return loggedUserHolding.value
-          ? { holding: loggedUserHolding.value }
-          : { company: loggedUser.value.company._id };
+        promises.push(getCompletionCertificates(params));
       }
 
       await Promise.all(promises);
