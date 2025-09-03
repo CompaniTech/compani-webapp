@@ -121,6 +121,7 @@
             </template>
             <template v-else-if="col.name === 'trainee' && get(props.row, 'slots.length')">
               {{ formatSingleAttendanceSheetName(col.value, props.row.slots) }}
+              <div v-if="get(props.row, 'trainee.external')" class="unsubscribed text-primary">Pas inscrit</div>
             </template>
             <template v-else>
               {{ col.value }}
