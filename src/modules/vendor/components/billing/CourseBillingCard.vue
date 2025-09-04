@@ -98,7 +98,7 @@
                     <div>
                       Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
                     </div>
-                    <div v-if="get(bill, 'mainFee.percentage')">
+                    <div v-if="has(bill, 'mainFee.percentage')">
                       Pourcentage du montant total : {{ bill.mainFee.percentage }} %
                     </div>
                     <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
@@ -117,7 +117,7 @@
                       </div>
                       <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
                       <div>Quantité : {{ billingPurchase.count }}</div>
-                      <div v-if="billingPurchase.percentage">
+                      <div v-if="has(billingPurchase,'percentage')">
                         Pourcentage du montant total : {{ billingPurchase.percentage }} %
                       </div>
                       <div v-if="billingPurchase.description" class="ellipsis">
@@ -437,7 +437,7 @@ export default {
         billId: bill._id,
         price: billingPurchase.price,
         count: billingPurchase.count,
-        ...(billingPurchase.percentage) && {
+        ...(has(billingPurchase, 'percentage')) && {
           percentage: billingPurchase.percentage,
           billingItem: billingPurchase.billingItem,
         },
@@ -685,7 +685,7 @@ export default {
       query: { defaultTab: 'billing' },
     });
 
-    const isTrainerFeesWithPercentage = billingPurchase => billingPurchase.percentage &&
+    const isTrainerFeesWithPercentage = billingPurchase => has(billingPurchase, 'percentage') &&
       billingPurchase.billingItem === process.env.TRAINER_FEES_BILLING_ITEM;
 
     const updateSelectedBills = billId => emit('update-selected-bills', billId);
@@ -768,6 +768,7 @@ export default {
       goToCompany,
       goToCourse,
       get,
+      has,
       omit,
       pickBy,
       formatPrice,
