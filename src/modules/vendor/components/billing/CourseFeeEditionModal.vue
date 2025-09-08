@@ -46,6 +46,7 @@
 
 <script>
 import { computed, toRefs, watch } from 'vue';
+import has from 'lodash/has';
 import set from 'lodash/set';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
@@ -107,7 +108,7 @@ export default {
       };
     });
 
-    const isTrainerFeesWithPercentage = computed(() => courseFee.value.percentage &&
+    const isTrainerFeesWithPercentage = computed(() => has(courseFee.value, 'percentage') &&
       courseFee.value.billingItem === process.env.TRAINER_FEES_BILLING_ITEM);
 
     const hide = () => emit('hide');
