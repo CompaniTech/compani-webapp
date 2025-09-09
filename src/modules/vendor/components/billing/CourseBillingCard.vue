@@ -302,8 +302,8 @@ export default {
         count: { required, strictPositiveNumber, integerNumber },
       },
       editedBillingPurchase: {
-        price: { required, strictPositiveNumber },
-        count: { required, strictPositiveNumber, integerNumber },
+        ...has(editedBillingPurchase.value, 'price') && { price: { required, strictPositiveNumber } },
+        ...has(editedBillingPurchase.value, 'count') && { count: { required, strictPositiveNumber, integerNumber } },
       },
       billToValidate: {
         billedAt: { required },
@@ -435,8 +435,10 @@ export default {
       editedBillingPurchase.value = {
         _id: billingPurchase._id,
         billId: bill._id,
-        price: billingPurchase.price,
-        count: billingPurchase.count,
+        ...!isTrainerFeesWithPercentage(billingPurchase) && {
+          price: billingPurchase.price,
+          count: billingPurchase.count,
+        },
         ...(has(billingPurchase, 'percentage')) && {
           percentage: billingPurchase.percentage,
           billingItem: billingPurchase.billingItem,
@@ -566,7 +568,11 @@ export default {
         billingPurchaseEditionLoading.value = true;
 
         const { _id: purchaseId, billId, price, count, description } = editedBillingPurchase.value;
-        await CourseBills.updateBillingPurchase(billId, purchaseId, { price, count, description });
+        const payload = {
+          description,
+          ...!isTrainerFeesWithPercentage(editedBillingPurchase.value) && { price, count },
+        };
+        await CourseBills.updateBillingPurchase(billId, purchaseId, payload);
         NotifyPositive('Article modifié.');
 
         billingPurchaseEditionModal.value = false;

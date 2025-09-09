@@ -67,6 +67,7 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
       get(validations, `value.${parent}.count.integerNumber.$response`) === false) {
       count = 'Nombre non valide';
     }
+    if (get(validations, `value.${parent}.count.required.$response`) === false) count = REQUIRED_LABEL;
 
     if (get(validations, `value.${parent}.countUnit.required.$response`) === false) countUnit = REQUIRED_LABEL;
 
