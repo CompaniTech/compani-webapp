@@ -49,7 +49,7 @@
     <elearning-follow-up-table v-if="courseHasElearningStep" :learners="learners" :loading="learnersLoading"
       class="q-mb-xl" is-blended />
     <div class="q-mb-sm">
-      <p class="text-weight-bold" v-if="!isMonthlyCertificateMode || (isRofOrVendorAdmin && isVendorInterface)">
+      <p class="text-weight-bold" v-if="!isMonthlyCertificateMode || canReadCompletionCertificate">
         Attestations / Certificats de réalisation
       </p>
       <ni-banner v-if="!get(course, 'subProgram.program.learningGoals') && isRofOrVendorAdmin && isVendorInterface">
@@ -65,16 +65,17 @@
           label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
           @click="downloadCompletionCertificates(OFFICIAL)" />
       </div>
-      <div v-else-if="isRofOrVendorAdmin && isVendorInterface">
+      <div v-else-if="canReadCompletionCertificate">
         <completion-certificate-table v-if="completionCertificates.length" :disabled-button="disableButton"
           :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
-          @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion" />
+          @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion"
+          :is-vendor-interface="isVendorInterface" />
         <template v-else>
           <span class="text-italic q-pa-lg">Aucun certificat de réalisation n'existe pour cette formation.</span>
         </template>
         <div class="flex justify-end q-mt-md">
-          <ni-primary-button icon="add" label="Ajouter un certificat de réalisation"
-            @click="openCompletionCertificatesModal" />
+          <ni-primary-button v-if="isRofOrVendorAdmin && isVendorInterface" label="Ajouter un certificat de réalisation"
+            icon="add" @click="openCompletionCertificatesModal" />
         </div>
       </div>
     </div>
@@ -328,6 +329,8 @@ export default {
 
     const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
 
+    const loggedUserHolding = computed(() => get(loggedUser.value, 'holding'));
+
     const refreshQuestionnaires = async () => {
       try {
         questionnaires.value = await Courses.getCourseQuestionnaires(course.value._id);
@@ -362,11 +365,12 @@ export default {
 
     const getUnsubscribedAttendances = async () => {
       try {
-        const loggedUserHolding = get(loggedUser.value, 'holding._id');
         const query = {
           course: course.value._id,
           ...(isClientInterface && {
-            ...loggedUserHolding ? { holding: loggedUserHolding } : { company: loggedUser.value.company._id },
+            ...loggedUserHolding.value
+              ? { holding: loggedUserHolding.value._id }
+              : { company: loggedUser.value.company._id },
           }),
         };
         const unsubscribedAttendancesGroupedByTrainees = await Attendances.listUnsubscribed(query);
@@ -569,8 +573,15 @@ export default {
         if (!isClientInterface) promises.push(refreshQuestionnaires(), getQuestionnaireQRCode());
       }
 
-      if (isMonthlyCertificateMode.value && isRofOrVendorAdmin.value) {
-        promises.push(getCompletionCertificates({ course: course.value._id }));
+      if (isMonthlyCertificateMode.value && canReadCompletionCertificate.value) {
+        const params = { course: course.value._id };
+
+        if (isClientInterface) {
+          if (loggedUserHolding.value) params.companies = loggedUserHolding.value.companies;
+          else params.companies = [loggedUser.value.company._id];
+        }
+
+        promises.push(getCompletionCertificates(params));
       }
 
       await Promise.all(promises);

@@ -30,12 +30,10 @@ import {
   TRAINER,
   CLIENT,
 } from '@data/constants';
-import { sideMenuMixin } from '@mixins/sideMenuMixin';
 import Button from '@components/Button';
 
 export default {
   name: 'SideMenuFooter',
-  mixins: [sideMenuMixin],
   props: {
     userId: { type: String, required: true },
     label: { type: String, default: '' },

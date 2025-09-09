@@ -17,4 +17,17 @@ export default {
     const company = await alenviAxios.get(`${process.env.API_HOSTNAME}/companies/${id}`);
     return company.data.data.company;
   },
+  async generateDocxMandate (id, params) {
+    return alenviAxios.get(
+      `${process.env.API_HOSTNAME}/companies/${id}/mandate`,
+      {
+        params,
+        responseType: 'arraybuffer',
+        header: { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+      }
+    );
+  },
+  async updateMandate (params, data) {
+    return alenviAxios.put(`${process.env.API_HOSTNAME}/companies/${params._id}/mandates/${params.mandateId}`, data);
+  },
 };

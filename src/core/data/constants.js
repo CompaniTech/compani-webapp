@@ -4,7 +4,7 @@ export const OTHER = 'other';
 
 // MEDIA
 export const BLUE_TEXT_LOGO = 'https://storage.googleapis.com/compani-main/icons/compani_texte_bleu.png';
-export const DOC_EXTENSIONS = 'image/jpg, image/jpeg, application/pdf';
+export const DOC_EXTENSIONS = 'application/pdf';
 export const IMAGE_EXTENSIONS = 'image/jpg, image/jpeg, image/png';
 export const VIDEO_EXTENSIONS = 'video/*';
 export const AUDIO_EXTENSIONS = 'audio/*';
@@ -108,6 +108,12 @@ export const PAYMENT = 'payment';
 export const PAYMENT_NATURE_OPTIONS = [
   { label: 'Paiement', value: PAYMENT },
   { label: 'Remboursement', value: REFUND },
+];
+const RECEIVED = 'received';
+export const PENDING = 'pending';
+export const PAYMENT_STATUS_OPTIONS = [
+  { label: 'reçu', value: RECEIVED },
+  { label: 'en attente', value: PENDING },
 ];
 
 // PAY
@@ -253,6 +259,9 @@ export const UPLOAD_EXTENSION_OPTIONS = [
   { label: 'Video', value: UPLOAD_VIDEO },
   { label: 'Audio', value: UPLOAD_AUDIO },
 ];
+
+// TEMPLATE UPLOAD
+export const UPLOAD_TEMPLATE_EXTENSIONS = '.docx,.doc';
 
 // ACCESS RULES
 export const FREE_ACCESS = 'free';

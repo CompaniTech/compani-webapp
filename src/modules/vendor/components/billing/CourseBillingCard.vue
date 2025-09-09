@@ -98,7 +98,7 @@
                     <div>
                       Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
                     </div>
-                    <div v-if="get(bill, 'mainFee.percentage')">
+                    <div v-if="has(bill, 'mainFee.percentage')">
                       Pourcentage du montant total : {{ bill.mainFee.percentage }} %
                     </div>
                     <div v-if="get(bill, 'mainFee.description')" class="ellipsis">
@@ -117,7 +117,7 @@
                       </div>
                       <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
                       <div>Quantité : {{ billingPurchase.count }}</div>
-                      <div v-if="billingPurchase.percentage">
+                      <div v-if="has(billingPurchase,'percentage')">
                         Pourcentage du montant total : {{ billingPurchase.percentage }} %
                       </div>
                       <div v-if="billingPurchase.description" class="ellipsis">
@@ -302,8 +302,8 @@ export default {
         count: { required, strictPositiveNumber, integerNumber },
       },
       editedBillingPurchase: {
-        price: { required, strictPositiveNumber },
-        count: { required, strictPositiveNumber, integerNumber },
+        ...has(editedBillingPurchase.value, 'price') && { price: { required, strictPositiveNumber } },
+        ...has(editedBillingPurchase.value, 'count') && { count: { required, strictPositiveNumber, integerNumber } },
       },
       billToValidate: {
         billedAt: { required },
@@ -435,9 +435,11 @@ export default {
       editedBillingPurchase.value = {
         _id: billingPurchase._id,
         billId: bill._id,
-        price: billingPurchase.price,
-        count: billingPurchase.count,
-        ...(billingPurchase.percentage) && {
+        ...!isTrainerFeesWithPercentage(billingPurchase) && {
+          price: billingPurchase.price,
+          count: billingPurchase.count,
+        },
+        ...(has(billingPurchase, 'percentage')) && {
           percentage: billingPurchase.percentage,
           billingItem: billingPurchase.billingItem,
         },
@@ -566,7 +568,11 @@ export default {
         billingPurchaseEditionLoading.value = true;
 
         const { _id: purchaseId, billId, price, count, description } = editedBillingPurchase.value;
-        await CourseBills.updateBillingPurchase(billId, purchaseId, { price, count, description });
+        const payload = {
+          description,
+          ...!isTrainerFeesWithPercentage(editedBillingPurchase.value) && { price, count },
+        };
+        await CourseBills.updateBillingPurchase(billId, purchaseId, payload);
         NotifyPositive('Article modifié.');
 
         billingPurchaseEditionModal.value = false;
@@ -685,7 +691,7 @@ export default {
       query: { defaultTab: 'billing' },
     });
 
-    const isTrainerFeesWithPercentage = billingPurchase => billingPurchase.percentage &&
+    const isTrainerFeesWithPercentage = billingPurchase => has(billingPurchase, 'percentage') &&
       billingPurchase.billingItem === process.env.TRAINER_FEES_BILLING_ITEM;
 
     const updateSelectedBills = billId => emit('update-selected-bills', billId);
@@ -768,6 +774,7 @@ export default {
       goToCompany,
       goToCourse,
       get,
+      has,
       omit,
       pickBy,
       formatPrice,

@@ -8,10 +8,11 @@
             <template v-if="col.name === 'actions'">
               <div v-if="has(props, 'row.file.link')">
                 <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
-                <ni-button icon="delete" color="primary" type="a" @click="removeFile(props.row._id)" />
+                <ni-button v-if="isVendorInterface" icon="delete" color="primary" type="a"
+                  @click="removeFile(props.row._id)" />
               </div>
               <div v-else>
-                <ni-primary-button label="Générer" icon="add" @click="generate(props.row._id)"
+                <ni-primary-button v-if="isVendorInterface" label="Générer" icon="add" @click="generate(props.row._id)"
                   :disabled="disabledButton" />
               </div>
             </template>
@@ -32,7 +33,7 @@
 <script>
 import get from 'lodash/get';
 import has from 'lodash/has';
-import { ref } from 'vue';
+import { ref, toRefs } from 'vue';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
 import PrimaryButton from '@components/PrimaryButton';
@@ -44,6 +45,7 @@ export default {
     columns: { type: Array, default: () => [] },
     tableLoading: { type: Boolean, default: false },
     disabledButton: { type: Boolean, default: false },
+    isVendorInterface: { type: Boolean, defautl: false },
   },
   components: {
     'ni-simple-table': SimpleTable,
@@ -51,18 +53,19 @@ export default {
     'ni-primary-button': PrimaryButton,
   },
   emits: ['generate', 'removeFile'],
-  setup (_, { emit }) {
+  setup (props, { emit }) {
+    const { isVendorInterface } = toRefs(props);
     const pagination = ref({ page: 1, rowsPerPage: 15 });
 
     const generate = event => emit('generate', event);
 
     const removeFile = event => emit('removeFile', event);
 
-    const goToCourseProfile = courseId => ({
-      name: 'ni management blended courses info',
-      params: { courseId },
-      query: { defaultTab: 'traineeFollowUp' },
-    });
+    const goToCourseProfile = courseId => (
+      isVendorInterface.value
+        ? { name: 'ni management blended courses info', params: { courseId }, query: { defaultTab: 'traineeFollowUp' } }
+        : { name: 'ni courses info', params: { courseId }, query: { defaultTab: 'traineeFollowUp' } }
+    );
 
     return {
       // Data

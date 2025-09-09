@@ -32,33 +32,69 @@
 </template>
 
 <script>
-import { layoutMixin } from '@mixins/layoutMixin';
-import { sideMenuMixin } from '@mixins/sideMenuMixin';
+import { ref, computed, onMounted } from 'vue';
 import SideMenuFooter from '@components/menu/SideMenuFooter';
 import MenuItem from '@components/menu/MenuItem';
 import { CLIENT } from '@data/constants';
-import { menuItemsMixin } from '../mixins/menuItemsMixin';
+import { useSideMenu } from '@composables/sideMenu';
+import { useLayouts } from '@composables/layouts';
+import { useMenuItems } from '../composables/MenuItems';
 
 export default {
   name: 'ClientLayout',
-  mixins: [layoutMixin, sideMenuMixin, menuItemsMixin],
   components: {
     'ni-side-menu-footer': SideMenuFooter,
     'ni-menu-item': MenuItem,
   },
-  data () {
+  setup () {
+    const interfaceType = ref(CLIENT);
+    const expansionRefs = ref({});
+
+    const { isCoach, isAuxiliary, activeRoutes, routes } = useMenuItems();
+
+    const {
+      userFirstname,
+      companiLogo,
+      collapsibleOpening,
+      collapsibleClosing,
+    } = useSideMenu(activeRoutes, expansionRefs);
+
+    const {
+      isMini,
+      loggedUser,
+      drawer,
+      menuIcon,
+      chevronClasses,
+      chevronContainerClasses,
+      toggleMenu,
+    } = useLayouts(collapsibleClosing);
+
+    const footerLabel = computed(() => {
+      if (isCoach.value || isAuxiliary.value) return userFirstname.value;
+      return loggedUser.value.identity.lastname;
+    });
+
+    onMounted(() => {
+      collapsibleOpening();
+    });
+
     return {
-      interfaceType: CLIENT,
+      // Data
+      interfaceType,
+      companiLogo,
+      isMini,
+      // Computed
+      footerLabel,
+      activeRoutes,
+      loggedUser,
+      routes,
+      drawer,
+      menuIcon,
+      chevronClasses,
+      chevronContainerClasses,
+      // Method
+      toggleMenu,
     };
-  },
-  mounted () {
-    this.collapsibleOpening();
-  },
-  computed: {
-    footerLabel () {
-      if (this.isCoach || this.isAuxiliary) return this.userFirstname;
-      return this.loggedUser.identity.lastname;
-    },
   },
 };
 </script>

@@ -23,6 +23,11 @@
           <ni-input caption="Capital social" v-model="vendorCompany.shareCapital" @focus="saveTmp('shareCapital')"
             @blur="updateVendorCompany('shareCapital')" :error="validations.vendorCompany.shareCapital.$error"
             :error-message="shareCapitalErrorMessage" required-field />
+          <ni-input caption="ICS" v-model="vendorCompany.ics" @focus="saveTmp('ics')" @blur="updateVendorCompany('ics')"
+            :error="validations.vendorCompany.ics.$error" :error-message="icsErrorMessage" required-field />
+          <ni-file-uploader caption="Template mandat de prélèvement SEPA" path="debitMandateTemplate"
+            :entity="vendorCompany" :url="templateUploadUrl" @delete="validateTemplateDeletion"
+            @uploaded="templateUploaded" drive-storage hide-image :extensions="UPLOAD_TEMPLATE_EXTENSIONS" />
         </div>
       </div>
       <p class="text-weight-bold">Contacts</p>
@@ -57,7 +62,21 @@
       <p class="text-weight-bold q-mt-xl">Articles de facturation</p>
       <q-card>
         <ni-responsive-table :data="courseBillingItems" :columns="courseBillingItemColumns"
-          v-model:pagination="pagination" class="q-mb-md" :loading="itemsLoading" />
+          v-model:pagination="pagination" class="q-mb-md" :loading="itemsLoading">
+          <template #body="{ props }">
+            <q-tr :props="props">
+              <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name">
+                <template v-if="col.name === 'actions'">
+                  <div class="row no-wrap table-actions">
+                    <ni-button icon="delete" @click="validateBillingItemsDeletion(col.value)"
+                      :disable="!!props.row.courseBillCount" />
+                  </div>
+                </template>
+                <template v-else>{{ col.value }}</template>
+              </q-td>
+            </q-tr>
+          </template>
+        </ni-responsive-table>
         <q-card-actions align="right">
           <ni-button color="primary" icon="add" label="Ajouter un article" :disable="itemsLoading"
             @click="openItemCreationModal" />
@@ -81,13 +100,13 @@
 </template>
 
 <script>
-import { useMeta, Dialog } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import get from 'lodash/get';
 import set from 'lodash/set';
-import { frAddress, validSiret, iban, bic, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
+import { frAddress, validSiret, iban, bic, strictPositiveNumber, ics } from '@helpers/vuelidateCustomVal';
 import { sortStrings, formatAndSortUserOptions } from '@helpers/utils';
 import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
 import VendorCompanies from '@api/VendorCompanies';
@@ -103,7 +122,14 @@ import OrganisationCreationModal from 'src/modules/vendor/components/billing/Cou
 import ItemCreationModal from 'src/modules/vendor/components/billing/CourseBillingItemCreationModal';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
-import { REQUIRED_LABEL, EDITION, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN } from '@data/constants';
+import FileUploader from '@components/form/FileUploader';
+import {
+  REQUIRED_LABEL,
+  EDITION,
+  TRAINING_ORGANISATION_MANAGER,
+  VENDOR_ADMIN,
+  UPLOAD_TEMPLATE_EXTENSIONS,
+} from '@data/constants';
 import { useValidations } from '@composables/validations';
 
 export default {
@@ -118,10 +144,12 @@ export default {
     'ni-search-address': SearchAddress,
     'interlocutor-cell': InterlocutorCell,
     'interlocutor-modal': InterlocutorModal,
+    'ni-file-uploader': FileUploader,
   },
   setup () {
     const metaInfo = { title: 'Configuration' };
     useMeta(metaInfo);
+    const $q = useQuasar();
 
     const organisationsLoading = ref(false);
     const itemsLoading = ref(false);
@@ -129,7 +157,7 @@ export default {
     const courseFundingOrganisationColumns = [
       { name: 'name', label: 'Nom', align: 'left', field: 'name' },
       { name: 'address', label: 'Adresse', align: 'left', field: 'address' },
-      { name: 'actions', label: '', align: 'left', field: '_id' },
+      { name: 'actions', label: '', align: 'right', field: '_id', style: 'width: 10%' },
     ];
     const vendorCompany = ref({
       name: '',
@@ -140,9 +168,13 @@ export default {
       iban: '',
       bic: '',
       shareCapital: '',
+      ics: '',
     });
     const courseBillingItems = ref([]);
-    const courseBillingItemColumns = [{ name: 'name', label: 'Nom', align: 'left', field: 'name' }];
+    const courseBillingItemColumns = [
+      { name: 'name', label: 'Nom', align: 'left', field: 'name' },
+      { name: 'actions', label: '', align: 'right', field: '_id', style: 'width: 10%' },
+    ];
     const pagination = { rowsPerPage: 0 };
     const organisationCreationModal = ref(false);
     const itemCreationModal = ref(false);
@@ -166,6 +198,7 @@ export default {
         iban: { required, iban },
         bic: { required, bic },
         shareCapital: { required, strictPositiveNumber },
+        ics: { required, ics },
       },
       tmpBillingRepresentativeId: { required },
     };
@@ -208,6 +241,15 @@ export default {
       return '';
     });
 
+    const icsErrorMessage = computed(() => {
+      const validation = get(validations, 'value.vendorCompany.ics');
+
+      if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
+      if (get(validation, 'ics.$response') === false) return 'ICS non valide';
+
+      return '';
+    });
+
     const shareCapitalErrorMessage = computed(() => {
       const validation = get(validations, 'value.vendorCompany.shareCapital');
       if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
@@ -215,6 +257,8 @@ export default {
 
       return '';
     });
+
+    const templateUploadUrl = computed(() => `${process.env.API_HOSTNAME}/vendorcompanies/mandate/upload`);
 
     const refreshVendorCompany = async () => {
       try {
@@ -316,7 +360,7 @@ export default {
     const deleteOrganisation = async (organisationId) => {
       try {
         await CourseFundingOrganisations.delete(organisationId);
-        refreshCourseFundingOrganisations();
+        await refreshCourseFundingOrganisations();
         NotifyPositive('Financeur supprimé.');
       } catch (e) {
         console.error(e);
@@ -325,7 +369,7 @@ export default {
     };
 
     const validateOrganisationDeletion = (organisationId) => {
-      Dialog.create({
+      $q.dialog({
         title: 'Confirmation',
         message: 'Êtes-vous sûr(e) de vouloir supprimer le financeur&nbsp;?',
         html: true,
@@ -362,6 +406,28 @@ export default {
       }
     };
 
+    const deleteBillingItems = async (billingItemId) => {
+      try {
+        await CourseBillingItems.delete(billingItemId);
+        await refreshCourseBillingItems();
+        NotifyPositive('Article de facturation supprimé.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression de l’article de facturation.');
+      }
+    };
+
+    const validateBillingItemsDeletion = (billingItemId) => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir supprimer l\'article de facturation&nbsp;?',
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => deleteBillingItems(billingItemId))
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
+
     const openBillingRepresentativeModal = (event) => {
       const { action: eventAction } = event;
       const action = eventAction === EDITION ? 'Modifier le ' : 'Ajouter un ';
@@ -383,11 +449,40 @@ export default {
       validations.value.tmpBillingRepresentativeId.$reset();
     };
 
+    const templateUploaded = async () => {
+      NotifyPositive('Template chargé.');
+
+      await refreshVendorCompany();
+    };
+
+    const deleteTemplate = async () => {
+      try {
+        await VendorCompanies.removeTemplate();
+
+        await refreshVendorCompany();
+        NotifyPositive('Template supprimé.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du template.');
+      }
+    };
+
+    const validateTemplateDeletion = async () => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir supprimer ce template&nbsp;?',
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(deleteTemplate)
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
+
     const created = async () => {
-      refreshVendorCompany();
-      refreshCourseFundingOrganisations();
-      refreshCourseBillingItems();
-      refreshBillingRepresentativeOptions();
+      await refreshVendorCompany();
+      await refreshCourseFundingOrganisations();
+      await refreshCourseBillingItems();
+      await refreshBillingRepresentativeOptions();
     };
 
     created();
@@ -411,6 +506,7 @@ export default {
       billingRepresentativeModal,
       billingRepresentativeModalLoading,
       tmpBillingRepresentativeId,
+      UPLOAD_TEMPLATE_EXTENSIONS,
       // Computed
       validations,
       siretErrorMessage,
@@ -418,12 +514,15 @@ export default {
       ibanErrorMessage,
       bicErrorMessage,
       shareCapitalErrorMessage,
+      icsErrorMessage,
+      templateUploadUrl,
       // Methods
       refreshCourseFundingOrganisations,
       resetOrganisationAdditionForm,
       addOrganisation,
       openOrganisationCreationModal,
       validateOrganisationDeletion,
+      validateBillingItemsDeletion,
       refreshCourseBillingItems,
       resetItemAdditionForm,
       addItem,
@@ -432,6 +531,8 @@ export default {
       updateVendorCompany,
       openBillingRepresentativeModal,
       resetBillingRepresentative,
+      templateUploaded,
+      validateTemplateDeletion,
     };
   },
 };
