@@ -112,8 +112,8 @@ export const PAYMENT_NATURE_OPTIONS = [
 const RECEIVED = 'received';
 export const PENDING = 'pending';
 export const PAYMENT_STATUS_OPTIONS = [
-  { label: 'reçu', value: RECEIVED },
-  { label: 'en attente', value: PENDING },
+  { label: 'Reçu', value: RECEIVED },
+  { label: 'En attente', value: PENDING },
 ];
 
 // PAY

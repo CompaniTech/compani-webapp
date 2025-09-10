@@ -193,7 +193,7 @@ export default {
     const coursePaymentCreationModal = ref(false);
     const coursePaymentEditionModal = ref(false);
     const newCoursePayment = ref({ nature: PAYMENT, type: '', netInclTaxes: '', date: '', courseBill: '' });
-    const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '' });
+    const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' });
     const columns = ref([
       {
         name: 'date',
@@ -250,6 +250,7 @@ export default {
         netInclTaxes: { required, positiveNumber },
         type: { required },
         date: { required },
+        status: { required },
       },
       tmpBillingRepresentativeId: { required },
     };
@@ -332,7 +333,7 @@ export default {
         netInclTaxes: courseBill.netInclTaxes,
         courseName: `${company.value.name} - ${courseBill.course.subProgram.program.name} - ${courseBill.course.misc}`,
       };
-      editedCoursePayment.value = pick(coursePayment, ['_id', 'nature', 'netInclTaxes', 'type', 'date']);
+      editedCoursePayment.value = pick(coursePayment, ['_id', 'nature', 'netInclTaxes', 'type', 'date', 'status']);
       coursePaymentEditionModal.value = true;
     };
 
@@ -388,7 +389,7 @@ export default {
     };
 
     const resetCoursePaymentEditionModal = () => {
-      editedCoursePayment.value = { _id: '', nature: '', type: '', netInclTaxes: '', date: '' };
+      editedCoursePayment.value = { _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' };
       coursePaymentMetaInfo.value = { number: '', courseName: '', netInclTaxes: '' };
       validations.value.editedCoursePayment.$reset();
     };
