@@ -12,7 +12,7 @@
       <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl">
         <p class="text-weight-bold">{{ getTableName(index) }}</p>
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns" v-model:pagination="paginations[index]"
-          :hide-bottom="false" :loading="loading">
+          :hide-bottom="false" :loading="loading" v-model:expanded="expandedRows[index]">
           <template #row="{ props }">
             <q-td v-for="col in props.cols" :key="col.name" :props="props">
               <template v-if="col.name === 'number'">
@@ -238,6 +238,7 @@ export default {
     const billingRepresentativeModalLoading = ref(false);
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
+    const expandedRows = ref({ 0: [], 1: [], 2: [] });
 
     const rules = {
       newCoursePayment: {
@@ -543,6 +544,7 @@ export default {
       billingRepresentativeGroupedByCompany,
       tmpBillingRepresentativeId,
       PAYMENT_STATUS_OPTIONS,
+      expandedRows,
       // Computed
       validations,
       canUpdateBilling,
