@@ -12,7 +12,7 @@
       <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl">
         <p class="text-weight-bold">{{ getTableName(index) }}</p>
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns" v-model:pagination="paginations[index]"
-          :hide-bottom="false" :loading="loading">
+          :hide-bottom="false" :loading="loading" v-model:expanded="expandedRows[index]">
           <template #row="{ props }">
             <q-td v-for="col in props.cols" :key="col.name" :props="props">
               <template v-if="col.name === 'number'">
@@ -193,7 +193,7 @@ export default {
     const coursePaymentCreationModal = ref(false);
     const coursePaymentEditionModal = ref(false);
     const newCoursePayment = ref({ nature: PAYMENT, type: '', netInclTaxes: '', date: '', courseBill: '' });
-    const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '' });
+    const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' });
     const columns = ref([
       {
         name: 'date',
@@ -238,6 +238,7 @@ export default {
     const billingRepresentativeModalLoading = ref(false);
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
+    const expandedRows = ref({ 0: [], 1: [], 2: [] });
 
     const rules = {
       newCoursePayment: {
@@ -250,6 +251,7 @@ export default {
         netInclTaxes: { required, positiveNumber },
         type: { required },
         date: { required },
+        status: { required },
       },
       tmpBillingRepresentativeId: { required },
     };
@@ -332,7 +334,7 @@ export default {
         netInclTaxes: courseBill.netInclTaxes,
         courseName: `${company.value.name} - ${courseBill.course.subProgram.program.name} - ${courseBill.course.misc}`,
       };
-      editedCoursePayment.value = pick(coursePayment, ['_id', 'nature', 'netInclTaxes', 'type', 'date']);
+      editedCoursePayment.value = pick(coursePayment, ['_id', 'nature', 'netInclTaxes', 'type', 'date', 'status']);
       coursePaymentEditionModal.value = true;
     };
 
@@ -388,7 +390,7 @@ export default {
     };
 
     const resetCoursePaymentEditionModal = () => {
-      editedCoursePayment.value = { _id: '', nature: '', type: '', netInclTaxes: '', date: '' };
+      editedCoursePayment.value = { _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' };
       coursePaymentMetaInfo.value = { number: '', courseName: '', netInclTaxes: '' };
       validations.value.editedCoursePayment.$reset();
     };
@@ -542,6 +544,7 @@ export default {
       billingRepresentativeGroupedByCompany,
       tmpBillingRepresentativeId,
       PAYMENT_STATUS_OPTIONS,
+      expandedRows,
       // Computed
       validations,
       canUpdateBilling,
