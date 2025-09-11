@@ -101,7 +101,8 @@
             :style="col.style">
             <template v-if="col.name === 'actions'">
               <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex items-center">
-                <div v-if="areSignaturesMissing(props.row.slots)" class="text-italic text-primary">
+                <div v-if="areSignaturesMissing(props.row.slots)" class="text-italic text-primary"
+                  :title="getMissingSignatures(props.row.slots)">
                   En attente de signature
                 </div>
                 <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
@@ -158,10 +159,18 @@ import { computed, toRefs, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import pick from 'lodash/pick';
 import get from 'lodash/get';
-import { DEFAULT_AVATAR, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, DD_MM_YYYY, INTER_B2B } from '@data/constants';
+import {
+  DEFAULT_AVATAR,
+  TRAINING_ORGANISATION_MANAGER,
+  VENDOR_ADMIN,
+  DD_MM_YYYY,
+  INTER_B2B,
+  INTRA,
+  INTRA_HOLDING,
+} from '@data/constants';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
-import { formatQuantity } from '@helpers/utils';
+import { formatQuantity, formatIdentity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { multiply, subtract, divide } from '@helpers/numbers';
 import Button from '@components/Button';
@@ -345,6 +354,22 @@ export default {
     const areSignaturesMissing = slots => slots
       .some(s => !s.traineesSignature || s.traineesSignature.some(signature => !signature.signature));
 
+    const getMissingSignatures = (slots) => {
+      if ([INTRA, INTRA_HOLDING].includes(course.value.type)) {
+        const missingSignatureTraineesIds = slots
+          .flatMap(s => s.traineesSignature
+            .filter(signature => !signature.signature).map(t => t.traineeId));
+
+        const missingNames = course.value.trainees
+          .filter(t => missingSignatureTraineesIds.includes(t._id))
+          .map(t => formatIdentity(t.identity, 'FL'));
+
+        return `${formatQuantity('Signature', missingNames.length, 's', false)} de `
+        + `${missingNames.join(', ')} ${formatQuantity('manquante', missingNames.length, 's', false)}`;
+      }
+      return '';
+    };
+
     const created = async () => {
       await Promise.all([
         refreshAttendances({ course: course.value._id }),
@@ -419,6 +444,7 @@ export default {
       validateAttendanceSheetGeneration,
       formatSingleAttendanceSheetName,
       areSignaturesMissing,
+      getMissingSignatures,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,
