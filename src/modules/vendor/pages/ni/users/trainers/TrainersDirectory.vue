@@ -28,7 +28,7 @@ import TableList from '@components/table/TableList';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useUser } from '@composables/user';
 import { TRAINER, TRAINING_ORGANISATION_MANAGER } from '@data/constants';
-import { formatIdentity, removeDiacritics } from '@helpers/utils';
+import { formatIdentity, removeDiacritics, sortStrings } from '@helpers/utils';
 import TrainerCreationModal from 'src/modules/vendor/components/trainers/TrainerCreationModal';
 
 export default {
@@ -44,7 +44,15 @@ export default {
 
     const trainers = ref([]);
     const tableLoading = ref(false);
-    const columns = ref([{ name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true }]);
+    const columns = ref([{
+      name: 'name',
+      label: 'Nom',
+      field: 'name',
+      format: row => row.fullName,
+      align: 'left',
+      sortable: true,
+      sort: (a, b) => sortStrings(a.lastname, b.lastname),
+    }]);
     const pagination = ref({ sortBy: 'name', descending: false, page: 1, rowsPerPage: 15 });
     const searchStr = ref('');
     const trainerCreationModal = ref(false);
@@ -63,7 +71,7 @@ export default {
 
     const filteredTrainers = computed(() => {
       const formattedString = escapeRegExp(removeDiacritics(searchStr.value));
-      return trainers.value.filter(trainer => trainer.noDiacriticsName.match(new RegExp(formattedString, 'i')));
+      return trainers.value.filter(trainer => trainer.name.noDiacriticsName.match(new RegExp(formattedString, 'i')));
     });
 
     const resetCreationModal = () => {
@@ -87,7 +95,14 @@ export default {
     const formatTrainer = (trainer) => {
       const formattedName = formatIdentity(trainer.identity, 'FL');
 
-      return { ...trainer, name: formattedName, noDiacriticsName: removeDiacritics(formattedName) };
+      return {
+        ...trainer,
+        name: {
+          fullName: formattedName,
+          lastname: trainer.identity.lastname,
+          noDiacriticsName: removeDiacritics(formattedName),
+        },
+      };
     };
 
     const refreshTrainers = async () => {
