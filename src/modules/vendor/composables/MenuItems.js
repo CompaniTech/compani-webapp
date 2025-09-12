@@ -63,6 +63,7 @@ export const useMenuItems = (isAdmin, isTrainer) => {
         },
         { name: 'ni billing dashboard', icon: 'credit_card', label: 'A facturer' },
         { name: 'ni billing directory', icon: 'receipt', label: 'Factures' },
+        { name: 'ni billing payments', icon: 'mdi-bank', label: 'Paiements' },
       ],
     },
   ]);

@@ -337,6 +337,15 @@ const routes = [
         },
       },
       {
+        path: 'ni/billing/payments',
+        name: 'ni billing payments',
+        component: () => import('src/modules/vendor/pages/ni/billing/PaymentsDashboard'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'configuration',
+        },
+      },
+      {
         path: 'ni/pedagogy/categories',
         name: 'ni pedagogy categories',
         component: () => import('src/modules/vendor/pages/ni/pedagogy/CategoriesDirectory'),
