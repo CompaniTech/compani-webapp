@@ -101,9 +101,9 @@
             :style="col.style">
             <template v-if="col.name === 'actions'">
               <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex items-center">
-                <div v-if="areSignaturesMissing(props.row.slots)" class="text-italic text-primary"
-                  :title="getMissingSignatures(props.row.slots)">
+                <div v-if="areSignaturesMissing(props.row.slots)" class="text-italic text-primary">
                   En attente de signature
+                  <q-tooltip>{{ getMissingSignatures(props.row.slots) }}</q-tooltip>
                 </div>
                 <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
