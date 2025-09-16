@@ -101,6 +101,7 @@ export default {
         label: 'Statut',
         field: 'status',
         align: 'center',
+        class: 'status',
       },
     ];
     const refreshPayments = async (params) => {
@@ -133,13 +134,8 @@ export default {
     watch(selectedStatus, () => {
       clearTimeout(timeout);
       timeout = setTimeout(async () => {
-        if (selectedStatus.value.length) {
-          await refreshPayments({
-            status: selectedStatus.value,
-          });
-        } else {
-          paymentList.value = [];
-        }
+        if (selectedStatus.value.length) await refreshPayments({ status: selectedStatus.value });
+        else paymentList.value = [];
       }, 1000);
     });
 
@@ -165,6 +161,8 @@ export default {
 <style lang="sass" scoped>
 .selector
   width: 50%
+.status
+  width: 10%
 .company-name
   color: $primary
   width: fit-content
