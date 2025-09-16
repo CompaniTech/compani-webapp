@@ -17,6 +17,14 @@
               <div v-if="col.name === 'status'" class="chip-container">
                 <q-chip :class="[getStatusClass(col.value)]" :label="getItemStatus(col.value)" />
               </div>
+              <template v-else-if="col.name === 'payer'">
+                <div v-if="props.row.courseBill.isPayerCompany" @click="$event.stopPropagation()">
+                  <router-link :to="goToCompany(props.row.courseBill.payer)" :class="'clickable-name cursor-pointer'">
+                  {{ col.value }}
+                  </router-link>
+                </div>
+                <div v-else class="company-name">{{ col.value }}</div>
+              </template>
               <template v-else>{{ col.value }}</template>
           </q-td>
         </q-tr>
@@ -26,6 +34,7 @@
 </template>
 
 <script>
+import get from 'lodash/get';
 import { useMeta } from 'quasar';
 import { ref, watch } from 'vue';
 import ProfileHeader from '@components/ProfileHeader';
@@ -75,6 +84,12 @@ export default {
         align: 'left',
       },
       {
+        name: 'payer',
+        label: 'Payeur',
+        field: row => get(row, 'courseBill.payer.name', ''),
+        align: 'left',
+      },
+      {
         name: 'type',
         label: 'Type',
         field: 'type',
@@ -105,6 +120,10 @@ export default {
     const getStatusClass = status => (status === PENDING ? 'orange-chip' : 'green-chip');
 
     const updateSelectedStatus = (status) => { selectedStatus.value = status; };
+
+    const goToCompany = row => ({
+      name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'bills' },
+    });
 
     const created = async () => { await refreshPayments({ status: selectedStatus.value }); };
 
@@ -137,6 +156,7 @@ export default {
       updateSelectedStatus,
       getItemStatus,
       getStatusClass,
+      goToCompany,
     };
   },
 };
@@ -145,4 +165,8 @@ export default {
 <style lang="sass" scoped>
 .selector
   width: 50%
+.company-name
+  color: $primary
+  width: fit-content
+  cursor: default
 </style>
