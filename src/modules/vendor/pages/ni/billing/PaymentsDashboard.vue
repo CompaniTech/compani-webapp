@@ -6,7 +6,7 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
-     <template v-if="!paymentList.length">
+    <template v-if="!paymentList.length">
       <span class="text-italic q-pa-lg">Aucun paiement pour les statuts sélectionnés.</span>
     </template>
     <ni-simple-table v-else :data="paymentList" :columns="columns" :loading="tableLoading"
@@ -42,8 +42,9 @@ import Select from '@components/form/Select';
 import { NotifyNegative } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS } from '@data/constants';
-import { formatPrice } from '@helpers/utils';
+import { formatPrice, sortStrings } from '@helpers/utils';
 import CoursePayments from '@api/CoursePayments';
+import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 
 export default {
@@ -68,8 +69,10 @@ export default {
         field: 'date',
         format: value => CompaniDate(value).format(DD_MM_YYYY),
         align: 'left',
+        sortable: true,
+        sort: (a, b) => ascendingSort(CompaniDate(a), CompaniDate(b)),
       },
-      { name: 'number', label: '#', field: 'number', align: 'left' },
+      { name: 'number', label: '#', field: 'number', align: 'left', sortable: true, sort: sortStrings },
       {
         name: 'netInclTaxes',
         label: 'Montant',
@@ -82,12 +85,16 @@ export default {
         label: '# Facture',
         field: row => row.courseBill.number,
         align: 'left',
+        sortable: true,
+        sort: sortStrings,
       },
       {
         name: 'payer',
         label: 'Payeur',
         field: row => get(row, 'courseBill.payer.name', ''),
         align: 'left',
+        sortable: true,
+        sort: sortStrings,
       },
       {
         name: 'type',
@@ -95,6 +102,12 @@ export default {
         field: 'type',
         format: value => PAYMENT_OPTIONS.find(opt => opt.value === value).label,
         align: 'left',
+        sortable: true,
+        sort: (a, b) => {
+          const valueA = PAYMENT_OPTIONS.find(opt => opt.value === a).label;
+          const valueB = PAYMENT_OPTIONS.find(opt => opt.value === b).label;
+          return sortStrings(valueA, valueB);
+        },
       },
       {
         name: 'status',
@@ -126,10 +139,6 @@ export default {
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'bills' },
     });
 
-    const created = async () => { await refreshPayments({ status: selectedStatus.value }); };
-
-    created();
-
     let timeout;
     watch(selectedStatus, () => {
       clearTimeout(timeout);
@@ -137,7 +146,12 @@ export default {
         if (selectedStatus.value.length) await refreshPayments({ status: selectedStatus.value });
         else paymentList.value = [];
       }, 1000);
+      pagination.value = { page: 1, rowsPerPage: 15 };
     });
+
+    const created = async () => { await refreshPayments({ status: selectedStatus.value }); };
+
+    created();
 
     return {
       // Data
@@ -147,7 +161,6 @@ export default {
       columns,
       tableLoading,
       pagination,
-      // Computed
       // Methods
       updateSelectedStatus,
       getItemStatus,
