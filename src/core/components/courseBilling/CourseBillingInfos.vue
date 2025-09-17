@@ -401,7 +401,7 @@ export default {
 
     const getItemStatus = status => PAYMENT_STATUS_OPTIONS.find(s => s.value === status).label;
 
-    const getStatusClass = status => (status === PENDING ? 'orange-chip' : 'green-chip');
+    const getStatusClass = status => (status === PENDING ? 'peach-chip' : 'green-chip');
 
     const getSortedItems = bill => (bill.courseCreditNote
       ? [...bill.coursePayments, bill.courseCreditNote].sort(ascendingSortBy('date'))
