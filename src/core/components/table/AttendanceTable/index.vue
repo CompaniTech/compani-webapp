@@ -103,7 +103,9 @@
               <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex items-center">
                 <div v-if="areSignaturesMissing(props.row.slots)" class="text-italic text-primary">
                   En attente de signature
-                  <q-tooltip>{{ getMissingSignatures(props.row.slots) }}</q-tooltip>
+                  <q-tooltip v-if="[INTRA, INTRA_HOLDING].includes(course.type)">
+                    {{ getMissingSignatures(props.row.slots) }}
+                  </q-tooltip>
                 </div>
                 <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
@@ -332,7 +334,7 @@ export default {
       validateAttendanceSheetGeneration,
       // Validations
       attendanceSheetValidations,
-    } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading);
+    } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading, refreshAttendances);
 
     const getDelimiterClass = (index) => {
       if (index === course.value.trainees.length) return 'unsubscribed-delimiter';
@@ -355,19 +357,15 @@ export default {
       .some(s => !s.traineesSignature || s.traineesSignature.some(signature => !signature.signature));
 
     const getMissingSignatures = (slots) => {
-      if ([INTRA, INTRA_HOLDING].includes(course.value.type)) {
-        const missingSignatureTraineesIds = slots
-          .flatMap(s => s.traineesSignature
-            .filter(signature => !signature.signature).map(t => t.traineeId));
+      const missingSignatureTraineesIds = slots
+        .flatMap(s => s.traineesSignature.filter(signature => !signature.signature).map(t => t.traineeId));
 
-        const missingNames = course.value.trainees
-          .filter(t => missingSignatureTraineesIds.includes(t._id))
-          .map(t => formatIdentity(t.identity, 'FL'));
+      const missingNames = course.value.trainees
+        .filter(t => missingSignatureTraineesIds.includes(t._id))
+        .map(t => formatIdentity(t.identity, 'FL'));
 
-        return `${formatQuantity('Signature', missingNames.length, 's', false)} de `
+      return `${formatQuantity('Signature', missingNames.length, 's', false)} de `
         + `${missingNames.join(', ')} ${formatQuantity('manquante', missingNames.length, 's', false)}`;
-      }
-      return '';
     };
 
     const created = async () => {
@@ -385,6 +383,8 @@ export default {
     return {
       // Data
       DEFAULT_AVATAR,
+      INTRA,
+      INTRA_HOLDING,
       loading,
       modalLoading,
       attendanceSheetTableLoading,

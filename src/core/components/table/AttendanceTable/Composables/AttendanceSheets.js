@@ -17,7 +17,8 @@ export const useAttendanceSheets = (
   isClientInterface,
   canUpdate,
   loggedUser,
-  modalLoading
+  modalLoading,
+  refreshAttendances
 ) => {
   const $q = useQuasar();
   const attendanceSheetTableLoading = ref(false);
@@ -181,6 +182,7 @@ export const useAttendanceSheets = (
       attendanceSheetAdditionModal.value = false;
       NotifyPositive('Feuille d\'émargement ajoutée.');
       await refreshAttendanceSheets();
+      if (isSingleCourse.value) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de l\'ajout de la feuille d\'émargement.');
