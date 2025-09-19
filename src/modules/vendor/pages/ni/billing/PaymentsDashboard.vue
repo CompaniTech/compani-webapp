@@ -6,6 +6,10 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
+    <div>
+      <ni-button v-if="paymentList.length" label="Télécharger le fichier de prélèvements SEPA"
+        @click="openXmlDownloadModal" :disable="!selectedPayments.length" />
+    </div>
     <template v-if="!paymentList.length">
       <span class="text-italic q-pa-lg">Aucun paiement pour les statuts sélectionnés.</span>
     </template>
@@ -45,6 +49,7 @@ import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import { NotifyNegative } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
+import Button from '@components/Button';
 import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS } from '@data/constants';
 import { formatPrice, sortStrings } from '@helpers/utils';
 import CoursePayments from '@api/CoursePayments';
@@ -57,6 +62,7 @@ export default {
     'ni-profile-header': ProfileHeader,
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
+    'ni-button': Button,
   },
   setup () {
     const metaInfo = { title: 'Paiements' };
@@ -150,6 +156,8 @@ export default {
     const goToCompany = row => ({
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'bills' },
     });
+
+    const openXmlDownloadModal = () => { openXmlDownloadModal.value = true; };
 
     let timeout;
     watch(selectedStatus, () => {
