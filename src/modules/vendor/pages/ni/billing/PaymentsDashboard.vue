@@ -25,6 +25,10 @@
                 </div>
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
+              <template v-else-if="col.name === 'actions'">
+                <q-checkbox class="q-ma-md" v-model="selectedPayments" :val="props.row._id" dense
+                  :disable="props.row.status !== PENDING" />
+              </template>
               <template v-else>{{ col.value }}</template>
           </q-td>
         </q-tr>
@@ -116,7 +120,15 @@ export default {
         align: 'center',
         class: 'status',
       },
+      {
+        name: 'actions',
+        label: '',
+        field: '',
+        align: 'center',
+      },
     ];
+    const selectedPayments = ref([]);
+
     const refreshPayments = async (params) => {
       try {
         tableLoading.value = true;
@@ -161,6 +173,8 @@ export default {
       columns,
       tableLoading,
       pagination,
+      selectedPayments,
+      PENDING,
       // Methods
       updateSelectedStatus,
       getItemStatus,
