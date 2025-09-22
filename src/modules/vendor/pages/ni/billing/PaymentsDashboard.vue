@@ -39,15 +39,20 @@
       </template>
     </ni-simple-table>
   </q-page>
+
+  <ni-download-xml-file-modal v-model="xmlDownloadModal" v-model:transaction-name="transactionName"
+    :loading="xmlDownloadLoading" :validations="v$.transactionName" @submit="downloadXmlFile" />
 </template>
 
 <script>
 import get from 'lodash/get';
 import { useMeta } from 'quasar';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
-import { NotifyNegative } from '@components/popup/notify';
+import { NotifyNegative, NotifyWarning } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
 import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS } from '@data/constants';
@@ -55,6 +60,8 @@ import { formatPrice, sortStrings } from '@helpers/utils';
 import CoursePayments from '@api/CoursePayments';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
+import DownloadXMLFileModal from '../../../components/billing/DownloadXMLFileModal';
+import XmlSEPAFileInfos from '../../../../../core/api/XmlSEPAFileInfos';
 
 export default {
   name: 'PaymentsDashboard',
@@ -63,6 +70,7 @@ export default {
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
     'ni-button': Button,
+    'ni-download-xml-file-modal': DownloadXMLFileModal,
   },
   setup () {
     const metaInfo = { title: 'Paiements' };
@@ -134,6 +142,12 @@ export default {
       },
     ];
     const selectedPayments = ref([]);
+    const xmlDownloadModal = ref(false);
+    const transactionName = ref('');
+    const xmlDownloadLoading = ref(false);
+
+    const rules = computed(() => ({ transactionName: { required } }));
+    const v$ = useVuelidate(rules, { transactionName });
 
     const refreshPayments = async (params) => {
       try {
@@ -157,7 +171,23 @@ export default {
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'bills' },
     });
 
-    const openXmlDownloadModal = () => { openXmlDownloadModal.value = true; };
+    const openXmlDownloadModal = () => { xmlDownloadModal.value = true; };
+
+    const downloadXmlFile = async () => {
+      try {
+        xmlDownloadLoading.value = true;
+        v$.value.transactionName.$touch();
+        if (v$.value.transactionName.$error) return NotifyWarning('Champ invalide.');
+
+        await XmlSEPAFileInfos.download({ payments: selectedPayments.value, name: transactionName.value });
+        await refreshPayments({ status: selectedStatus.value });
+        xmlDownloadModal.value = false;
+        xmlDownloadLoading.value = false;
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors du téléchargements du fichier des prélèvements SEPA.');
+      }
+    };
 
     let timeout;
     watch(selectedStatus, () => {
@@ -183,11 +213,17 @@ export default {
       pagination,
       selectedPayments,
       PENDING,
+      xmlDownloadModal,
+      transactionName,
+      xmlDownloadLoading,
+      v$,
       // Methods
       updateSelectedStatus,
       getItemStatus,
       getStatusClass,
       goToCompany,
+      openXmlDownloadModal,
+      downloadXmlFile,
     };
   },
 };
