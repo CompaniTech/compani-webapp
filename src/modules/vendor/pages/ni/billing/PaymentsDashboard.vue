@@ -62,6 +62,7 @@ import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import DownloadXMLFileModal from '../../../components/billing/DownloadXMLFileModal';
 import XmlSEPAFileInfos from '../../../../../core/api/XmlSEPAFileInfos';
+import { RECEIVED } from '../../../../../core/data/constants';
 
 export default {
   name: 'PaymentsDashboard',
@@ -163,8 +164,16 @@ export default {
 
     const getItemStatus = status => PAYMENT_STATUS_OPTIONS.find(s => s.value === status).label;
 
-    const getStatusClass = status => (status === PENDING ? 'orange-chip' : 'green-chip');
-
+    const getStatusClass = (status) => {
+      switch (status) {
+        case PENDING:
+          return 'orange-chip';
+        case RECEIVED:
+          return 'green-chip';
+        default:
+          return 'peach-chip';
+      }
+    };
     const updateSelectedStatus = (status) => { selectedStatus.value = status; };
 
     const goToCompany = row => ({
@@ -181,11 +190,13 @@ export default {
 
         await XmlSEPAFileInfos.download({ payments: selectedPayments.value, name: transactionName.value });
         await refreshPayments({ status: selectedStatus.value });
-        xmlDownloadModal.value = false;
-        xmlDownloadLoading.value = false;
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors du téléchargements du fichier des prélèvements SEPA.');
+      } finally {
+        xmlDownloadModal.value = false;
+        xmlDownloadLoading.value = false;
+        selectedPayments.value = [];
       }
     };
 
@@ -233,7 +244,7 @@ export default {
 .selector
   width: 50%
 .status
-  width: 10%
+  width: 15%
 .company-name
   color: $primary
   width: fit-content
