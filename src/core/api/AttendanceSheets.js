@@ -13,7 +13,7 @@ export default {
   async update (attendanceSheetId, payload) {
     await alenviAxios.put(`${process.env.API_HOSTNAME}/attendancesheets/${attendanceSheetId}`, payload);
   },
-  async delete (attendanceSheetId) {
-    await alenviAxios.delete(`${process.env.API_HOSTNAME}/attendancesheets/${attendanceSheetId}`);
+  async delete (attendanceSheetId, params) {
+    await alenviAxios.delete(`${process.env.API_HOSTNAME}/attendancesheets/${attendanceSheetId}`, { params });
   },
 };

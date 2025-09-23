@@ -238,18 +238,31 @@ export const useAttendanceSheets = (
       message,
       html: true,
       ok: true,
+      ...attendanceSheet.slots && {
+        options: {
+          type: 'checkbox',
+          model: [],
+          items: [{
+            label: 'Supprimer les émargements associés à cette feuille d\'émargement',
+            value: true,
+          }],
+          size: '32px',
+          class: 'text-14',
+        },
+      },
       cancel: 'Annuler',
-    }).onOk(() => deleteAttendanceSheet(attendanceSheet._id))
+    }).onOk(value => deleteAttendanceSheet(attendanceSheet._id, !!value && value[0]))
       .onCancel(() => NotifyPositive('Suppression annulée.'));
   };
 
-  const deleteAttendanceSheet = async (attendanceSheetId) => {
+  const deleteAttendanceSheet = async (attendanceSheetId, shouldDeleteAttendances) => {
     try {
       $q.loading.show();
-      await AttendanceSheets.delete(attendanceSheetId);
+      await AttendanceSheets.delete(attendanceSheetId, { shouldDeleteAttendances });
 
       NotifyPositive('Feuille d\'émargement supprimée.');
       await refreshAttendanceSheets();
+      if (shouldDeleteAttendances) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de la suppresion de la feuille d\'émargement.');
