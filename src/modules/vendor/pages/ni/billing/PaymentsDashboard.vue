@@ -30,8 +30,7 @@
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
               <template v-else-if="col.name === 'actions'">
-                <q-checkbox class="q-ma-md" v-model="selectedPayments" :val="props.row._id" dense
-                  :disable="props.row.status !== PENDING" />
+                <q-checkbox class="q-ma-md" v-model="selectedPayments" :val="props.row._id" dense />
               </template>
               <template v-else>{{ col.value }}</template>
           </q-td>
@@ -41,7 +40,8 @@
   </q-page>
 
   <ni-xml-file-download-modal v-model="xmlFileDownloadModal" v-model:transaction-name="transactionName"
-    :loading="xmlFileDownloadLoading" :validations="v$.transactionName" @submit="getXmlFile" />
+    :loading="xmlFileDownloadLoading" :validations="v$.transactionName" @submit="getXmlFile"
+    @hide="resetXmlFileDownload" />
 </template>
 
 <script>
@@ -190,14 +190,22 @@ export default {
 
         await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
         await refreshPayments({ status: selectedStatus.value });
+
+        xmlFileDownloadModal.value = false;
+        selectedPayments.value = [];
       } catch (e) {
         console.error(e);
+        if ([409, 404].includes(e.status)) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors du téléchargements du fichier des prélèvements SEPA.');
       } finally {
-        xmlFileDownloadModal.value = false;
         xmlFileDownloadLoading.value = false;
-        selectedPayments.value = [];
       }
+    };
+
+    const resetXmlFileDownload = () => {
+      xmlFileDownloadModal.value = false;
+      xmlFileDownloadLoading.value = false;
+      transactionName.value = '';
     };
 
     let timeout;
@@ -235,6 +243,7 @@ export default {
       goToCompany,
       openXmlFileModal,
       getXmlFile,
+      resetXmlFileDownload,
     };
   },
 };
