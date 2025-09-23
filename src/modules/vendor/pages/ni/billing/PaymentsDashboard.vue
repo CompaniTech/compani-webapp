@@ -196,7 +196,7 @@ export default {
         selectedPayments.value = [];
       } catch (e) {
         console.error(e);
-        if ([409, 404].includes(e.status)) return NotifyNegative(e.data.message);
+        if ([409, 404, 403].includes(e.status)) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors du téléchargements du fichier des prélèvements SEPA.');
       } finally {
         xmlFileDownloadLoading.value = false;
