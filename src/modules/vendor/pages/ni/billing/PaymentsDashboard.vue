@@ -8,7 +8,7 @@
     </ni-profile-header>
     <div>
       <ni-button v-if="paymentList.length" label="Télécharger le fichier de prélèvements SEPA"
-        @click="openXmlDownloadModal" :disable="!selectedPayments.length" />
+        @click="openXmlFileModal" :disable="!selectedPayments.length" />
     </div>
     <template v-if="!paymentList.length">
       <span class="text-italic q-pa-lg">Aucun paiement pour les statuts sélectionnés.</span>
@@ -40,8 +40,8 @@
     </ni-simple-table>
   </q-page>
 
-  <ni-download-xml-file-modal v-model="xmlDownloadModal" v-model:transaction-name="transactionName"
-    :loading="xmlDownloadLoading" :validations="v$.transactionName" @submit="downloadXmlFile" />
+  <ni-xml-file-download-modal v-model="xmlFileDownloadModal" v-model:transaction-name="transactionName"
+    :loading="xmlFileDownloadLoading" :validations="v$.transactionName" @submit="getXmlFile" />
 </template>
 
 <script>
@@ -60,7 +60,7 @@ import { formatPrice, sortStrings } from '@helpers/utils';
 import CoursePayments from '@api/CoursePayments';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
-import DownloadXMLFileModal from '../../../components/billing/DownloadXMLFileModal';
+import XmlFileDownloadModal from '../../../components/billing/XmlFileDownloadModal.vue';
 import XmlSEPAFileInfos from '../../../../../core/api/XmlSEPAFileInfos';
 import { RECEIVED } from '../../../../../core/data/constants';
 
@@ -71,7 +71,7 @@ export default {
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
     'ni-button': Button,
-    'ni-download-xml-file-modal': DownloadXMLFileModal,
+    'ni-xml-file-download-modal': XmlFileDownloadModal,
   },
   setup () {
     const metaInfo = { title: 'Paiements' };
@@ -143,9 +143,9 @@ export default {
       },
     ];
     const selectedPayments = ref([]);
-    const xmlDownloadModal = ref(false);
+    const xmlFileDownloadModal = ref(false);
     const transactionName = ref('');
-    const xmlDownloadLoading = ref(false);
+    const xmlFileDownloadLoading = ref(false);
 
     const rules = computed(() => ({ transactionName: { required } }));
     const v$ = useVuelidate(rules, { transactionName });
@@ -180,22 +180,22 @@ export default {
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'bills' },
     });
 
-    const openXmlDownloadModal = () => { xmlDownloadModal.value = true; };
+    const openXmlFileModal = () => { xmlFileDownloadModal.value = true; };
 
-    const downloadXmlFile = async () => {
+    const getXmlFile = async () => {
       try {
-        xmlDownloadLoading.value = true;
+        xmlFileDownloadLoading.value = true;
         v$.value.transactionName.$touch();
         if (v$.value.transactionName.$error) return NotifyWarning('Champ invalide.');
 
-        await XmlSEPAFileInfos.download({ payments: selectedPayments.value, name: transactionName.value });
+        await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
         await refreshPayments({ status: selectedStatus.value });
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors du téléchargements du fichier des prélèvements SEPA.');
       } finally {
-        xmlDownloadModal.value = false;
-        xmlDownloadLoading.value = false;
+        xmlFileDownloadModal.value = false;
+        xmlFileDownloadLoading.value = false;
         selectedPayments.value = [];
       }
     };
@@ -224,17 +224,17 @@ export default {
       pagination,
       selectedPayments,
       PENDING,
-      xmlDownloadModal,
+      xmlFileDownloadModal,
       transactionName,
-      xmlDownloadLoading,
+      xmlFileDownloadLoading,
       v$,
       // Methods
       updateSelectedStatus,
       getItemStatus,
       getStatusClass,
       goToCompany,
-      openXmlDownloadModal,
-      downloadXmlFile,
+      openXmlFileModal,
+      getXmlFile,
     };
   },
 };

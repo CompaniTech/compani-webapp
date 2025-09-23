@@ -19,7 +19,7 @@ import Input from '@components/form/Input';
 import Button from '@components/Button';
 
 export default {
-  name: 'DownloadXMLFileModal',
+  name: 'XmlFileDownloadModal',
   components: {
     'ni-modal': Modal,
     'ni-input': Input,
