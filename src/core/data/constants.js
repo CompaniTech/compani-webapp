@@ -115,7 +115,7 @@ export const PENDING = 'pending';
 export const PAYMENT_STATUS_OPTIONS = [
   { label: 'Reçu', value: RECEIVED },
   { label: 'En attente', value: PENDING },
-  { label: 'Fichier xml associé', value: XML_GENERATED },
+  { label: 'Fichier XML associé', value: XML_GENERATED },
 ];
 
 // PAY

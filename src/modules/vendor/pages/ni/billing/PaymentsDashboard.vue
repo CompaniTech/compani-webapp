@@ -55,14 +55,13 @@ import Select from '@components/form/Select';
 import { NotifyNegative, NotifyWarning } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
-import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS } from '@data/constants';
+import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED } from '@data/constants';
 import { formatPrice, sortStrings } from '@helpers/utils';
 import CoursePayments from '@api/CoursePayments';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import XmlFileDownloadModal from '../../../components/billing/XmlFileDownloadModal.vue';
 import XmlSEPAFileInfos from '../../../../../core/api/XmlSEPAFileInfos';
-import { RECEIVED } from '../../../../../core/data/constants';
 
 export default {
   name: 'PaymentsDashboard',

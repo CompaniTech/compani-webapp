@@ -145,6 +145,7 @@ import {
   HOLDING_ADMIN,
   PAYMENT_STATUS_OPTIONS,
   PENDING,
+  RECEIVED,
 } from '@data/constants.js';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSortBy, descendingSortBy } from '@helpers/dates/utils';
@@ -164,7 +165,6 @@ import { useCourseBilling } from '@composables/courseBills';
 import CoursePaymentCreationModal from 'src/modules/vendor/components/billing/CoursePaymentCreationModal';
 import CoursePaymentEditionModal from 'src/modules/vendor/components/billing/CoursePaymentEditionModal';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
-import { RECEIVED } from '../../data/constants';
 
 export default {
   name: 'CourseBillingInfos',
