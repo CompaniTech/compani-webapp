@@ -73,7 +73,6 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
-                <div class="formatted-price" />
                 <div v-if="item.status" class="chip-container status">
                   <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
                 </div>
@@ -165,6 +164,7 @@ import { useCourseBilling } from '@composables/courseBills';
 import CoursePaymentCreationModal from 'src/modules/vendor/components/billing/CoursePaymentCreationModal';
 import CoursePaymentEditionModal from 'src/modules/vendor/components/billing/CoursePaymentEditionModal';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
+import { RECEIVED } from '../../data/constants';
 
 export default {
   name: 'CourseBillingInfos',
@@ -401,7 +401,16 @@ export default {
 
     const getItemStatus = status => PAYMENT_STATUS_OPTIONS.find(s => s.value === status).label;
 
-    const getStatusClass = status => (status === PENDING ? 'peach-chip' : 'green-chip');
+    const getStatusClass = (status) => {
+      switch (status) {
+        case PENDING:
+          return 'orange-chip';
+        case RECEIVED:
+          return 'green-chip';
+        default:
+          return 'peach-chip';
+      }
+    };
 
     const getSortedItems = bill => (bill.courseCreditNote
       ? [...bill.coursePayments, bill.courseCreditNote].sort(ascendingSortBy('date'))
@@ -624,7 +633,8 @@ export default {
   padding: 4px
   text-align: right
 .status
-  width: 10%
+  width: 15%
+  margin: 0px 24px
 .edit
   display: flex
   justify-content: flex-end

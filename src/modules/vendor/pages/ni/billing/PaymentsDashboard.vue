@@ -174,6 +174,7 @@ export default {
           return 'peach-chip';
       }
     };
+
     const updateSelectedStatus = (status) => { selectedStatus.value = status; };
 
     const goToCompany = row => ({
