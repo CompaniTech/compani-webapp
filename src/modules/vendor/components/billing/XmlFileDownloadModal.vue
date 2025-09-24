@@ -4,7 +4,7 @@
         Télécharger le <span class="text-weight-bold">fichier de prélèvements SEPA</span>
       </template>
       <ni-input :model-value="transactionName" caption="Nom du lot de prélèvements" required-field
-        @update:model-value="update($event)" />
+        @update:model-value="update($event)" :error="validations.$error" />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" label="Télécharger" icon-right="add" color="white"
           :loading="loading" @click="submit" />

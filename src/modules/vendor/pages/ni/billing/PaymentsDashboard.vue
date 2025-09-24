@@ -189,6 +189,7 @@ export default {
       xmlFileDownloadModal.value = false;
       xmlFileDownloadLoading.value = false;
       transactionName.value = '';
+      v$.value.transactionName.$reset();
     };
 
     let timeout;
@@ -199,6 +200,7 @@ export default {
         else paymentList.value = [];
       }, 1000);
       pagination.value = { page: 1, rowsPerPage: 15 };
+      selectedPayments.value = [];
     });
 
     const created = async () => { await refreshPayments({ status: selectedStatus.value }); };
