@@ -6,6 +6,10 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
+    <div>
+      <ni-button v-if="paymentList.length" label="Télécharger le fichier de prélèvements SEPA"
+        @click="openXmlFileModal" :disable="!selectedPayments.length" />
+    </div>
     <template v-if="!paymentList.length">
       <span class="text-italic q-pa-lg">Aucun paiement pour les statuts sélectionnés.</span>
     </template>
@@ -25,27 +29,39 @@
                 </div>
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
+              <template v-else-if="col.name === 'actions'">
+                <q-checkbox class="q-ma-md" v-model="selectedPayments" :val="props.row._id" dense />
+              </template>
               <template v-else>{{ col.value }}</template>
           </q-td>
         </q-tr>
       </template>
     </ni-simple-table>
   </q-page>
+
+  <ni-xml-file-download-modal v-model="xmlFileDownloadModal" v-model:transaction-name="transactionName"
+    :loading="xmlFileDownloadLoading" :validations="v$.transactionName" @submit="getXmlFile"
+    @hide="resetXmlFileDownload" />
 </template>
 
 <script>
 import get from 'lodash/get';
 import { useMeta } from 'quasar';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
-import { NotifyNegative } from '@components/popup/notify';
+import { NotifyNegative, NotifyWarning } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
-import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS } from '@data/constants';
-import { formatPrice, sortStrings } from '@helpers/utils';
+import Button from '@components/Button';
+import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED } from '@data/constants';
 import CoursePayments from '@api/CoursePayments';
+import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
+import { formatPrice, sortStrings } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
+import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
 export default {
   name: 'PaymentsDashboard',
@@ -53,6 +69,8 @@ export default {
     'ni-profile-header': ProfileHeader,
     'ni-select': Select,
     'ni-simple-table': SimpleTable,
+    'ni-button': Button,
+    'ni-xml-file-download-modal': XmlFileDownloadModal,
   },
   setup () {
     const metaInfo = { title: 'Paiements' };
@@ -73,13 +91,7 @@ export default {
         sort: (a, b) => ascendingSort(CompaniDate(a), CompaniDate(b)),
       },
       { name: 'number', label: '#', field: 'number', align: 'left', sortable: true, sort: sortStrings },
-      {
-        name: 'netInclTaxes',
-        label: 'Montant',
-        field: 'netInclTaxes',
-        format: formatPrice,
-        align: 'left',
-      },
+      { name: 'netInclTaxes', label: 'Montant', field: 'netInclTaxes', format: formatPrice, align: 'left' },
       {
         name: 'courseBillNumber',
         label: '# Facture',
@@ -109,14 +121,17 @@ export default {
           return sortStrings(valueA, valueB);
         },
       },
-      {
-        name: 'status',
-        label: 'Statut',
-        field: 'status',
-        align: 'center',
-        class: 'status',
-      },
+      { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status' },
+      { name: 'actions', label: '', field: '', align: 'center' },
     ];
+    const selectedPayments = ref([]);
+    const xmlFileDownloadModal = ref(false);
+    const transactionName = ref('');
+    const xmlFileDownloadLoading = ref(false);
+
+    const rules = computed(() => ({ transactionName: { required } }));
+    const v$ = useVuelidate(rules, { transactionName });
+
     const refreshPayments = async (params) => {
       try {
         tableLoading.value = true;
@@ -131,13 +146,51 @@ export default {
 
     const getItemStatus = status => PAYMENT_STATUS_OPTIONS.find(s => s.value === status).label;
 
-    const getStatusClass = status => (status === PENDING ? 'orange-chip' : 'green-chip');
+    const getStatusClass = (status) => {
+      switch (status) {
+        case PENDING:
+          return 'orange-chip';
+        case RECEIVED:
+          return 'green-chip';
+        default:
+          return 'peach-chip';
+      }
+    };
 
     const updateSelectedStatus = (status) => { selectedStatus.value = status; };
 
     const goToCompany = row => ({
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'bills' },
     });
+
+    const openXmlFileModal = () => { xmlFileDownloadModal.value = true; };
+
+    const getXmlFile = async () => {
+      try {
+        xmlFileDownloadLoading.value = true;
+        v$.value.transactionName.$touch();
+        if (v$.value.transactionName.$error) return NotifyWarning('Champ invalide.');
+
+        await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
+        await refreshPayments({ status: selectedStatus.value });
+
+        xmlFileDownloadModal.value = false;
+        selectedPayments.value = [];
+      } catch (e) {
+        console.error(e);
+        if ([409, 404, 403].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors du téléchargement du fichier des prélèvements SEPA.');
+      } finally {
+        xmlFileDownloadLoading.value = false;
+      }
+    };
+
+    const resetXmlFileDownload = () => {
+      xmlFileDownloadModal.value = false;
+      xmlFileDownloadLoading.value = false;
+      transactionName.value = '';
+      v$.value.transactionName.$reset();
+    };
 
     let timeout;
     watch(selectedStatus, () => {
@@ -147,6 +200,7 @@ export default {
         else paymentList.value = [];
       }, 1000);
       pagination.value = { page: 1, rowsPerPage: 15 };
+      selectedPayments.value = [];
     });
 
     const created = async () => { await refreshPayments({ status: selectedStatus.value }); };
@@ -161,11 +215,20 @@ export default {
       columns,
       tableLoading,
       pagination,
+      selectedPayments,
+      PENDING,
+      xmlFileDownloadModal,
+      transactionName,
+      xmlFileDownloadLoading,
+      v$,
       // Methods
       updateSelectedStatus,
       getItemStatus,
       getStatusClass,
       goToCompany,
+      openXmlFileModal,
+      getXmlFile,
+      resetXmlFileDownload,
     };
   },
 };
@@ -175,7 +238,7 @@ export default {
 .selector
   width: 50%
 .status
-  width: 10%
+  width: 15%
 .company-name
   color: $primary
   width: fit-content
