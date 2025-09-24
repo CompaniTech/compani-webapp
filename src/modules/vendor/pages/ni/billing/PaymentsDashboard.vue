@@ -56,12 +56,12 @@ import { NotifyNegative, NotifyWarning } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
 import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED } from '@data/constants';
-import { formatPrice, sortStrings } from '@helpers/utils';
 import CoursePayments from '@api/CoursePayments';
+import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
+import { formatPrice, sortStrings } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
-import XmlFileDownloadModal from '../../../components/billing/XmlFileDownloadModal.vue';
-import XmlSEPAFileInfos from '../../../../../core/api/XmlSEPAFileInfos';
+import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
 export default {
   name: 'PaymentsDashboard',
@@ -91,13 +91,7 @@ export default {
         sort: (a, b) => ascendingSort(CompaniDate(a), CompaniDate(b)),
       },
       { name: 'number', label: '#', field: 'number', align: 'left', sortable: true, sort: sortStrings },
-      {
-        name: 'netInclTaxes',
-        label: 'Montant',
-        field: 'netInclTaxes',
-        format: formatPrice,
-        align: 'left',
-      },
+      { name: 'netInclTaxes', label: 'Montant', field: 'netInclTaxes', format: formatPrice, align: 'left' },
       {
         name: 'courseBillNumber',
         label: '# Facture',
@@ -127,19 +121,8 @@ export default {
           return sortStrings(valueA, valueB);
         },
       },
-      {
-        name: 'status',
-        label: 'Statut',
-        field: 'status',
-        align: 'center',
-        class: 'status',
-      },
-      {
-        name: 'actions',
-        label: '',
-        field: '',
-        align: 'center',
-      },
+      { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status' },
+      { name: 'actions', label: '', field: '', align: 'center' },
     ];
     const selectedPayments = ref([]);
     const xmlFileDownloadModal = ref(false);
@@ -195,8 +178,8 @@ export default {
         selectedPayments.value = [];
       } catch (e) {
         console.error(e);
-        if ([409, 404, 403].includes(e.status)) return NotifyNegative(e.data.message);
-        NotifyNegative('Erreur lors du téléchargements du fichier des prélèvements SEPA.');
+        if ([409, 404, 403].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors du téléchargement du fichier des prélèvements SEPA.');
       } finally {
         xmlFileDownloadLoading.value = false;
       }

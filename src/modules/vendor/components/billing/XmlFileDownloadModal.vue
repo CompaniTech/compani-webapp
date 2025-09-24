@@ -13,7 +13,6 @@
 </template>
 
 <script>
-import { toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
@@ -32,18 +31,13 @@ export default {
     validations: { type: Object, default: () => ({}) },
   },
   emits: ['submit', 'hide', 'update:model-value', 'update:transaction-name'],
-  setup (props, { emit }) {
-    const { transactionName, modelValue } = toRefs(props);
-
+  setup (_, { emit }) {
     const submit = () => emit('submit');
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const update = (event) => { emit('update:transaction-name', event); };
 
     return {
-      // Data
-      transactionName,
-      modelValue,
       // Methods
       submit,
       hide,
