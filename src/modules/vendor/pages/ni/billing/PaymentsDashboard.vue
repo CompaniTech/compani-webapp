@@ -61,6 +61,7 @@ import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
 import { formatPrice, sortStrings } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
+import { downloadFile } from '@helpers/file';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
 export default {
@@ -165,13 +166,27 @@ export default {
 
     const openXmlFileModal = () => { xmlFileDownloadModal.value = true; };
 
+    const getFileName = (file) => {
+      const contentDisposition = file.headers['content-disposition'];
+      let filename = '.xml';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (match && match[1]) filename = match[1];
+      }
+
+      return filename;
+    };
+
     const getXmlFile = async () => {
       try {
         xmlFileDownloadLoading.value = true;
         v$.value.transactionName.$touch();
         if (v$.value.transactionName.$error) return NotifyWarning('Champ invalide.');
 
-        await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
+        const file = await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
+        const fileName = getFileName(file);
+        await downloadFile(file, fileName);
+
         await refreshPayments({ status: selectedStatus.value });
 
         xmlFileDownloadModal.value = false;
