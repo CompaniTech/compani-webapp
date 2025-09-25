@@ -101,9 +101,15 @@
             :style="col.style">
             <template v-if="col.name === 'actions'">
               <div v-if="!props.row.file" class="justify-end overflow-hidden-nowrap flex items-center">
-                <div v-if="!props.row.signatures.trainee" class="text-italic text-primary">En attente de signature</div>
+                <div v-if="areSignaturesMissing(props.row.slots)" class="text-italic text-primary">
+                  En attente de signature
+                  <q-tooltip v-if="[INTRA, INTRA_HOLDING].includes(course.type)">
+                    {{ getMissingSignatures(props.row.slots) }}
+                  </q-tooltip>
+                </div>
+                <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
-                  @click="generateAttendanceSheet(props.row._id)" />
+                  @click="validateAttendanceSheetGeneration(props.row)" />
                 <ni-button v-if="canUpdate" icon="delete" color="primary"
                   @click="validateAttendanceSheetDeletion(props.row)" :disable="!!course.archivedAt" />
               </div>
@@ -118,6 +124,7 @@
             </template>
             <template v-else-if="col.name === 'trainee' && get(props.row, 'slots.length')">
               {{ formatSingleAttendanceSheetName(col.value, props.row.slots) }}
+              <div v-if="get(props.row, 'trainee.external')" class="unsubscribed text-primary">Pas inscrit</div>
             </template>
             <template v-else>
               {{ col.value }}
@@ -154,10 +161,18 @@ import { computed, toRefs, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import pick from 'lodash/pick';
 import get from 'lodash/get';
-import { DEFAULT_AVATAR, TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN, DD_MM_YYYY } from '@data/constants';
+import {
+  DEFAULT_AVATAR,
+  TRAINING_ORGANISATION_MANAGER,
+  VENDOR_ADMIN,
+  DD_MM_YYYY,
+  INTER_B2B,
+  INTRA,
+  INTRA_HOLDING,
+} from '@data/constants';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
-import { formatQuantity } from '@helpers/utils';
+import { formatQuantity, formatIdentity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { multiply, subtract, divide } from '@helpers/numbers';
 import Button from '@components/Button';
@@ -285,6 +300,11 @@ export default {
       return lastPassedSlot ? lastPassedSlot._id : null;
     });
 
+    const isInterCourseInProgress = computed(() => {
+      const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
+      return course.value.type === INTER_B2B && CompaniDate().isBefore(lastSlot.endDate);
+    });
+
     const {
       // Data
       attendanceSheetTableLoading,
@@ -311,10 +331,10 @@ export default {
       resetAttendanceSheetEditionModal,
       updateAttendanceSheet,
       openAttendanceSheetEditionModal,
-      generateAttendanceSheet,
+      validateAttendanceSheetGeneration,
       // Validations
       attendanceSheetValidations,
-    } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading);
+    } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading, refreshAttendances);
 
     const getDelimiterClass = (index) => {
       if (index === course.value.trainees.length) return 'unsubscribed-delimiter';
@@ -333,6 +353,20 @@ export default {
         if (column) column.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
     };
+    const areSignaturesMissing = slots => slots
+      .some(s => !s.traineesSignature || s.traineesSignature.some(signature => !signature.signature));
+
+    const getMissingSignatures = (slots) => {
+      const missingSignatureTraineesIds = slots
+        .flatMap(s => s.traineesSignature.filter(signature => !signature.signature).map(t => t.traineeId));
+
+      const missingNames = course.value.trainees
+        .filter(t => missingSignatureTraineesIds.includes(t._id))
+        .map(t => formatIdentity(t.identity, 'FL'));
+
+      return `${formatQuantity('Signature', missingNames.length, 's', false)} de `
+        + `${missingNames.join(', ')} ${formatQuantity('manquante', missingNames.length, 's', false)}`;
+    };
 
     const created = async () => {
       await Promise.all([
@@ -349,6 +383,8 @@ export default {
     return {
       // Data
       DEFAULT_AVATAR,
+      INTRA,
+      INTRA_HOLDING,
       loading,
       modalLoading,
       attendanceSheetTableLoading,
@@ -382,6 +418,7 @@ export default {
       notLinkedSlotOptions,
       editionSlotsGroupedByStep,
       isSingleCourse,
+      isInterCourseInProgress,
       // Methods
       get,
       attendanceCheckboxValue,
@@ -404,8 +441,10 @@ export default {
       updateAttendanceSheet,
       formatQuantity,
       openAttendanceSheetEditionModal,
-      generateAttendanceSheet,
+      validateAttendanceSheetGeneration,
       formatSingleAttendanceSheetName,
+      areSignaturesMissing,
+      getMissingSignatures,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,

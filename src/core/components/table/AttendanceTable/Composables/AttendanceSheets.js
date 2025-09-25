@@ -8,6 +8,7 @@ import { required, requiredIf } from '@vuelidate/validators';
 import AttendanceSheets from '@api/AttendanceSheets';
 import { INTER_B2B, SINGLE, DD_MM_YYYY, GENERATION } from '@data/constants';
 import { formatIdentity, sortStrings } from '@helpers/utils';
+import { descendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
 
@@ -16,7 +17,8 @@ export const useAttendanceSheets = (
   isClientInterface,
   canUpdate,
   loggedUser,
-  modalLoading
+  modalLoading,
+  refreshAttendances
 ) => {
   const $q = useQuasar();
   const attendanceSheetTableLoading = ref(false);
@@ -24,7 +26,7 @@ export const useAttendanceSheets = (
   const attendanceSheetEditionModal = ref(false);
   const attendanceSheets = ref([]);
   const newAttendanceSheet = ref({ course: course.value._id });
-  const editedAttendanceSheet = ref({ _id: '', slots: [], trainee: {} });
+  const editedAttendanceSheet = ref({ _id: '', slots: [], trainee: {}, shouldUpdateAttendances: false });
   const editionSlotsGroupedByStep = ref({});
   const attendanceSheetColumns = ref([
     {
@@ -98,7 +100,8 @@ export const useAttendanceSheets = (
 
   const disableSheetDeletion = attendanceSheet => !get(attendanceSheet, 'file.link') || !!course.value.archivedAt;
 
-  const disableSheetEdition = attendanceSheet => !!course.value.archivedAt || !!get(attendanceSheet, 'signatures');
+  const disableSheetEdition = attendanceSheet => !!course.value.archivedAt ||
+    (attendanceSheet.slots || []).some(s => s.trainerSignature);
 
   const refreshAttendanceSheets = async () => {
     try {
@@ -155,7 +158,7 @@ export const useAttendanceSheets = (
   const formatPayload = () => {
     const { course: newAttendanceSheetCourse, file, trainee, trainer, date, slots } = newAttendanceSheet.value;
     const form = new FormData();
-    if ([INTER_B2B, SINGLE].includes(course.value.type)) form.append('trainee', trainee);
+    if ([INTER_B2B, SINGLE].includes(course.value.type)) form.append('trainees', trainee);
     else form.append('date', date);
     form.append('course', newAttendanceSheetCourse);
     form.append('trainer', trainer);
@@ -179,6 +182,7 @@ export const useAttendanceSheets = (
       attendanceSheetAdditionModal.value = false;
       NotifyPositive('Feuille d\'émargement ajoutée.');
       await refreshAttendanceSheets();
+      if (isSingleCourse.value) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de l\'ajout de la feuille d\'émargement.');
@@ -203,31 +207,62 @@ export const useAttendanceSheets = (
     }
   };
 
+  const validateAttendanceSheetGeneration = (attendanceSheet) => {
+    const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
+    const isLastSlotSigned = !!attendanceSheet.slots.find(s => s._id === lastSlot._id);
+
+    if (!isLastSlotSigned && course.value.type === INTER_B2B) {
+      const message = 'Vous n\'avez pas émargé tous les créneaux. <br />'
+        + 'Êtes-vous sûr(e) de vouloir générer cette feuille d\'émargement&nbsp;?';
+      $q.dialog({
+        title: 'Confirmation',
+        message,
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => generateAttendanceSheet(attendanceSheet._id))
+        .onCancel(() => NotifyPositive('Génération annulée.'));
+    } else return generateAttendanceSheet(attendanceSheet._id);
+  };
+
   const validateAttendanceSheetDeletion = (attendanceSheet) => {
     if (!canUpdate.value) return NotifyNegative('Impossible de supprimer la feuille d\'émargement.');
 
-    const message = attendanceSheet.signatures
-      ? 'Êtes-vous sûr·e de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
+    const message = (attendanceSheet.slots || []).some(s => s.trainerSignature)
+      ? 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
       + 'également supprimées.'
-      : 'Êtes-vous sûr·e de vouloir supprimer cette feuille d\'émargement&nbsp;?';
+      : 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;?';
 
     $q.dialog({
       title: 'Confirmation',
       message,
       html: true,
       ok: true,
+      ...attendanceSheet.slots && {
+        options: {
+          type: 'checkbox',
+          model: [],
+          items: [{
+            label: 'Supprimer les émargements associés à cette feuille d\'émargement',
+            value: true,
+          }],
+          size: '32px',
+          class: 'text-14',
+        },
+      },
       cancel: 'Annuler',
-    }).onOk(() => deleteAttendanceSheet(attendanceSheet._id))
+    }).onOk(value => deleteAttendanceSheet(attendanceSheet._id, !!value && value[0]))
       .onCancel(() => NotifyPositive('Suppression annulée.'));
   };
 
-  const deleteAttendanceSheet = async (attendanceSheetId) => {
+  const deleteAttendanceSheet = async (attendanceSheetId, shouldDeleteAttendances) => {
     try {
       $q.loading.show();
-      await AttendanceSheets.delete(attendanceSheetId);
+      await AttendanceSheets.delete(attendanceSheetId, { shouldDeleteAttendances });
 
       NotifyPositive('Feuille d\'émargement supprimée.');
       await refreshAttendanceSheets();
+      if (shouldDeleteAttendances) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de la suppresion de la feuille d\'émargement.');
@@ -246,6 +281,7 @@ export const useAttendanceSheets = (
       _id: attendanceSheet._id,
       slots: linkedSlots.map(slot => slot._id),
       trainee: attendanceSheet.trainee,
+      shouldUpdateAttendances: true,
     };
 
     const groupedSlots = groupBy([...linkedSlots, ...notLinkedSlotOptions.value], 'step');
@@ -265,11 +301,13 @@ export const useAttendanceSheets = (
       if (v$.value.editedAttendanceSheet.$error) return NotifyWarning('Champs(s) invalide(s)');
       modalLoading.value = true;
 
-      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots: editedAttendanceSheet.value.slots });
+      const { slots, shouldUpdateAttendances } = editedAttendanceSheet.value;
+      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots, shouldUpdateAttendances });
 
       attendanceSheetEditionModal.value = false;
       NotifyPositive('Feuille d\'émargement modifiée.');
       await refreshAttendanceSheets();
+      if (shouldUpdateAttendances) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de l\'édition de la feuille d\'émargement.');
@@ -280,7 +318,7 @@ export const useAttendanceSheets = (
 
   const resetAttendanceSheetEditionModal = () => {
     v$.value.editedAttendanceSheet.$reset();
-    editedAttendanceSheet.value = { _id: '', slots: [], trainee: {} };
+    editedAttendanceSheet.value = { _id: '', slots: [], trainee: {}, shouldUpdateAttendances: false };
     editionSlotsGroupedByStep.value = {};
   };
 
@@ -312,7 +350,7 @@ export const useAttendanceSheets = (
     openAttendanceSheetEditionModal,
     updateAttendanceSheet,
     resetAttendanceSheetEditionModal,
-    generateAttendanceSheet,
+    validateAttendanceSheetGeneration,
     // Validations
     attendanceSheetValidations: v$,
   };
