@@ -265,7 +265,8 @@ export const useAttendanceSheets = (
       if (shouldDeleteAttendances) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
-      NotifyNegative('Erreur lors de la suppresion de la feuille d\'émargement.');
+      if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
+      else NotifyNegative('Erreur lors de la suppression de la feuille d\'émargement.');
     } finally {
       $q.loading.hide();
     }
@@ -310,7 +311,8 @@ export const useAttendanceSheets = (
       if (shouldUpdateAttendances) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
-      NotifyNegative('Erreur lors de l\'édition de la feuille d\'émargement.');
+      if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
+      else NotifyNegative('Erreur lors de l\'édition de la feuille d\'émargement.');
     } finally {
       modalLoading.value = false;
     }
