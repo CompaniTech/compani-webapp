@@ -8,8 +8,6 @@
       @update:model-value="update($event, 'slots')" type="checkbox" inline :options-groups="slotOptions"
       caption="Sélectionner les créneaux auxquels a été présent·e le/la participant·e"
       :error="validations.slots.$error" :group-titles="stepsName" />
-    <q-checkbox dense label="Mettre à jour les émargements" :model-value="editedAttendanceSheet.shouldUpdateAttendances"
-      @update:model-value="update($event, 'shouldUpdateAttendances')" class="q-my-md last" />
     <template #footer>
     <ni-button class="full-width modal-btn bg-primary" label="Modifier la feuille d'émargement" :loading="loading"
       icon-right="add" @click="submit" color="white" />
