@@ -26,7 +26,7 @@ export const useAttendanceSheets = (
   const attendanceSheetEditionModal = ref(false);
   const attendanceSheets = ref([]);
   const newAttendanceSheet = ref({ course: course.value._id });
-  const editedAttendanceSheet = ref({ _id: '', slots: [], trainee: {}, shouldUpdateAttendances: false });
+  const editedAttendanceSheet = ref({ _id: '', slots: [], trainee: {} });
   const editionSlotsGroupedByStep = ref({});
   const attendanceSheetColumns = ref([
     {
@@ -42,7 +42,7 @@ export const useAttendanceSheets = (
       align: 'left',
       field: row => formatIdentity(get(row, 'trainee.identity'), 'FL'),
     },
-    { name: 'actions', label: '', align: 'left' },
+    { name: 'actions', label: '', align: 'left', style: 'width : 20%' },
   ]);
   const stepsById = ref(keyBy(course.value.subProgram.steps, '_id'));
 
@@ -282,7 +282,6 @@ export const useAttendanceSheets = (
       _id: attendanceSheet._id,
       slots: linkedSlots.map(slot => slot._id),
       trainee: attendanceSheet.trainee,
-      shouldUpdateAttendances: true,
     };
 
     const groupedSlots = groupBy([...linkedSlots, ...notLinkedSlotOptions.value], 'step');
@@ -302,13 +301,13 @@ export const useAttendanceSheets = (
       if (v$.value.editedAttendanceSheet.$error) return NotifyWarning('Champs(s) invalide(s)');
       modalLoading.value = true;
 
-      const { slots, shouldUpdateAttendances } = editedAttendanceSheet.value;
-      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots, shouldUpdateAttendances });
+      const { slots } = editedAttendanceSheet.value;
+      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots });
 
       attendanceSheetEditionModal.value = false;
       NotifyPositive('Feuille d\'émargement modifiée.');
       await refreshAttendanceSheets();
-      if (shouldUpdateAttendances) await refreshAttendances({ course: course.value._id });
+      await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
       if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
@@ -320,7 +319,7 @@ export const useAttendanceSheets = (
 
   const resetAttendanceSheetEditionModal = () => {
     v$.value.editedAttendanceSheet.$reset();
-    editedAttendanceSheet.value = { _id: '', slots: [], trainee: {}, shouldUpdateAttendances: false };
+    editedAttendanceSheet.value = { _id: '', slots: [], trainee: {} };
     editionSlotsGroupedByStep.value = {};
   };
 
