@@ -17,6 +17,9 @@
       @update:model-value="update($event, 'type')" @blur="validations.type.$touch" :error="validations.type.$error" />
     <ni-date-input :model-value="editedCoursePayment.date" @update:model-value="update($event, 'date')" in-modal
       required-field :error="validations.date.$error" @blur="validations.date.$touch" caption="Date" />
+    <ni-select in-modal caption="Statut" :model-value="editedCoursePayment.status" required-field
+      :options="PAYMENT_STATUS_OPTIONS" @update:model-value="update($event, 'status')"
+      @blur="validations.status.$touch" :error="validations.status.$error" />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" :label="`Éditer le ${ paymentNature.toLowerCase() }`"
         icon-right="add" color="white" :loading="loading" @click="submit" />
@@ -34,7 +37,13 @@ import Button from '@components/Button';
 import DateInput from '@components/form/DateInput';
 import Modal from '@components/modal/Modal';
 import { formatPrice } from '@helpers/utils';
-import { REQUIRED_LABEL, PAYMENT_OPTIONS, PAYMENT_NATURE_OPTIONS, CESU } from '@data/constants';
+import {
+  REQUIRED_LABEL,
+  PAYMENT_OPTIONS,
+  PAYMENT_NATURE_OPTIONS,
+  CESU,
+  PAYMENT_STATUS_OPTIONS,
+} from '@data/constants';
 
 export default {
   name: 'CoursePaymentCreationModal',
@@ -76,6 +85,7 @@ export default {
       // Data
       paymentOptions,
       PAYMENT_NATURE_OPTIONS,
+      PAYMENT_STATUS_OPTIONS,
       // Computed
       netInclTaxesError,
       paymentNature,

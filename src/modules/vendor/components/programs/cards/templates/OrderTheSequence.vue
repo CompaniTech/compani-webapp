@@ -7,6 +7,9 @@
       <ni-input v-for="(orderedAnswers, i) in card.orderedAnswers" :key="i" :caption="`Réponse ${i + 1}`"
         v-model="orderedAnswers.text" @focus="saveTmp(`orderedAnswers[${i}].text`)" @blur="updateTextAnswer(i)"
         :disable="disableEdition" :error="getError('orderedAnswers', i)" class="input" required-field />
+      <q-checkbox label="Les réponses sont à classer par ordre chronologique" v-model="card.isChronological" dense
+        @update:model-value="updateCard('isChronological')" :disable="disableEdition" />
+      <p :class="`text-italic text-12`"> Par défaut les réponses sont à classer par ordre de pertinence</p>
     </div>
     <ni-input caption="Correction" v-model="card.explanation" required-field @focus="saveTmp('explanation')"
       @blur="updateCard('explanation')" :error="v$.card.explanation.$error" type="textarea" :disable="disableEdition" />

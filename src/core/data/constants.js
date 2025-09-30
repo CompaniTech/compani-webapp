@@ -109,11 +109,13 @@ export const PAYMENT_NATURE_OPTIONS = [
   { label: 'Paiement', value: PAYMENT },
   { label: 'Remboursement', value: REFUND },
 ];
-const RECEIVED = 'received';
+export const RECEIVED = 'received';
+const XML_GENERATED = 'xml_generated';
 export const PENDING = 'pending';
 export const PAYMENT_STATUS_OPTIONS = [
-  { label: 'reçu', value: RECEIVED },
-  { label: 'en attente', value: PENDING },
+  { label: 'Reçu', value: RECEIVED },
+  { label: 'En attente', value: PENDING },
+  { label: 'Fichier XML associé', value: XML_GENERATED },
 ];
 
 // PAY

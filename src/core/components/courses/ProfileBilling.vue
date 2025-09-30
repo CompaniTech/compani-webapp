@@ -455,10 +455,9 @@ export default {
         NotifyPositive('Facture(s) créée(s).');
 
         billCreationModal.value = false;
-        resetCompaniesSelectionModal();
         await refreshCourseBills();
         unrollBill({ quantity: newBillsQuantity.value });
-        resetBillsQuantity();
+        resetCompaniesSelectionModal();
       } catch (e) {
         console.error(e);
         if (e.status === 409) return NotifyNegative(e.data.message);

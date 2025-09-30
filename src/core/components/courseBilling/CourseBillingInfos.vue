@@ -12,7 +12,7 @@
       <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl">
         <p class="text-weight-bold">{{ getTableName(index) }}</p>
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns" v-model:pagination="paginations[index]"
-          :hide-bottom="false" :loading="loading">
+          :hide-bottom="false" :loading="loading" v-model:expanded="expandedRows[index]">
           <template #row="{ props }">
             <q-td v-for="col in props.cols" :key="col.name" :props="props">
               <template v-if="col.name === 'number'">
@@ -73,7 +73,6 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
-                <div class="formatted-price" />
                 <div v-if="item.status" class="chip-container status">
                   <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
                 </div>
@@ -146,6 +145,7 @@ import {
   HOLDING_ADMIN,
   PAYMENT_STATUS_OPTIONS,
   PENDING,
+  RECEIVED,
 } from '@data/constants.js';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSortBy, descendingSortBy } from '@helpers/dates/utils';
@@ -193,7 +193,7 @@ export default {
     const coursePaymentCreationModal = ref(false);
     const coursePaymentEditionModal = ref(false);
     const newCoursePayment = ref({ nature: PAYMENT, type: '', netInclTaxes: '', date: '', courseBill: '' });
-    const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '' });
+    const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' });
     const columns = ref([
       {
         name: 'date',
@@ -238,6 +238,7 @@ export default {
     const billingRepresentativeModalLoading = ref(false);
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
+    const expandedRows = ref({ 0: [], 1: [], 2: [] });
 
     const rules = {
       newCoursePayment: {
@@ -250,6 +251,7 @@ export default {
         netInclTaxes: { required, positiveNumber },
         type: { required },
         date: { required },
+        status: { required },
       },
       tmpBillingRepresentativeId: { required },
     };
@@ -332,7 +334,7 @@ export default {
         netInclTaxes: courseBill.netInclTaxes,
         courseName: `${company.value.name} - ${courseBill.course.subProgram.program.name} - ${courseBill.course.misc}`,
       };
-      editedCoursePayment.value = pick(coursePayment, ['_id', 'nature', 'netInclTaxes', 'type', 'date']);
+      editedCoursePayment.value = pick(coursePayment, ['_id', 'nature', 'netInclTaxes', 'type', 'date', 'status']);
       coursePaymentEditionModal.value = true;
     };
 
@@ -388,7 +390,7 @@ export default {
     };
 
     const resetCoursePaymentEditionModal = () => {
-      editedCoursePayment.value = { _id: '', nature: '', type: '', netInclTaxes: '', date: '' };
+      editedCoursePayment.value = { _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' };
       coursePaymentMetaInfo.value = { number: '', courseName: '', netInclTaxes: '' };
       validations.value.editedCoursePayment.$reset();
     };
@@ -399,7 +401,16 @@ export default {
 
     const getItemStatus = status => PAYMENT_STATUS_OPTIONS.find(s => s.value === status).label;
 
-    const getStatusClass = status => (status === PENDING ? 'orange-chip' : 'green-chip');
+    const getStatusClass = (status) => {
+      switch (status) {
+        case PENDING:
+          return 'orange-chip';
+        case RECEIVED:
+          return 'green-chip';
+        default:
+          return 'peach-chip';
+      }
+    };
 
     const getSortedItems = bill => (bill.courseCreditNote
       ? [...bill.coursePayments, bill.courseCreditNote].sort(ascendingSortBy('date'))
@@ -542,6 +553,7 @@ export default {
       billingRepresentativeGroupedByCompany,
       tmpBillingRepresentativeId,
       PAYMENT_STATUS_OPTIONS,
+      expandedRows,
       // Computed
       validations,
       canUpdateBilling,
@@ -621,7 +633,8 @@ export default {
   padding: 4px
   text-align: right
 .status
-  width: 10%
+  width: 15%
+  margin: 0px 24px
 .edit
   display: flex
   justify-content: flex-end

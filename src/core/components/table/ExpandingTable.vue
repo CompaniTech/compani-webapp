@@ -2,7 +2,8 @@
   <q-card class="relative-position table-spinner-container" flat>
     <q-table v-if="!loading" :columns="columns" :class="tableClass" :pagination="pagination" :row-key="rowKey"
       :hide-bottom="hideBottom" :visible-columns="formattedVisibleColumns" binary-state-sort :hide-header="hideHeader"
-      :expanded="expanded" @update:pagination="$emit('update:pagination', $event)" :separator="separator" :rows="data">
+      :expanded="expanded" @update:pagination="$emit('update:pagination', $event)" :separator="separator" :rows="data"
+      @update:expanded="$emit('update:expanded', $event)">
       <template #header="props">
         <q-tr :props="props">
           <q-th v-for="col in props.cols" :key="col.name" :props="props"> {{ col.label }} </q-th>
@@ -43,7 +44,7 @@ import Pagination from '@components/table/Pagination';
 
 export default {
   name: 'ExpandingTable',
-  emits: ['update:pagination'],
+  emits: ['update:pagination', 'update:expanded'],
   components: {
     'ni-pagination': Pagination,
   },
