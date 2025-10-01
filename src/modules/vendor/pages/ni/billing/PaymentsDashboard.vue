@@ -193,7 +193,12 @@ export default {
         selectedPayments.value = [];
       } catch (e) {
         console.error(e);
-        if ([409, 404, 403].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        if (e.data instanceof Blob) {
+          const text = await e.data.text();
+          const error = JSON.parse(text);
+          if ([409, 404, 403].includes(error.statusCode) && error.message) return NotifyNegative(error.message);
+        }
+
         NotifyNegative('Erreur lors du téléchargement du fichier des prélèvements SEPA.');
       } finally {
         xmlFileDownloadLoading.value = false;
