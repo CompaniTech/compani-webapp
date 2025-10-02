@@ -61,6 +61,7 @@ import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
 import { formatPrice, sortStrings } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
+import { downloadFile } from '@helpers/file';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
 export default {
@@ -171,14 +172,21 @@ export default {
         v$.value.transactionName.$touch();
         if (v$.value.transactionName.$error) return NotifyWarning('Champ invalide.');
 
-        await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
+        const file = await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
+        const fileName = `Prelevements_SEPA_${transactionName.value.replace(/ /g, '')}.xml`;
+        await downloadFile(file, fileName);
+
         await refreshPayments({ status: selectedStatus.value });
 
         xmlFileDownloadModal.value = false;
         selectedPayments.value = [];
       } catch (e) {
         console.error(e);
-        if ([409, 404, 403].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        if (e.data instanceof Blob) {
+          const text = await e.data.text();
+          const error = JSON.parse(text);
+          if ([409, 404, 403].includes(error.statusCode) && error.message) return NotifyNegative(error.message);
+        }
         NotifyNegative('Erreur lors du téléchargement du fichier des prélèvements SEPA.');
       } finally {
         xmlFileDownloadLoading.value = false;
