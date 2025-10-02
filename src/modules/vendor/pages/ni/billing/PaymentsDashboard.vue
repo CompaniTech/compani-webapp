@@ -166,17 +166,6 @@ export default {
 
     const openXmlFileModal = () => { xmlFileDownloadModal.value = true; };
 
-    const getFileName = (file) => {
-      const contentDisposition = file.headers['content-disposition'];
-      let filename = '.xml';
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (match && match[1]) filename = match[1];
-      }
-
-      return filename;
-    };
-
     const getXmlFile = async () => {
       try {
         xmlFileDownloadLoading.value = true;
@@ -184,7 +173,7 @@ export default {
         if (v$.value.transactionName.$error) return NotifyWarning('Champ invalide.');
 
         const file = await XmlSEPAFileInfos.create({ payments: selectedPayments.value, name: transactionName.value });
-        const fileName = getFileName(file);
+        const fileName = `Prelevements_SEPA_${transactionName.value.replace(/ /g, '')}.xml`;
         await downloadFile(file, fileName);
 
         await refreshPayments({ status: selectedStatus.value });
@@ -198,7 +187,6 @@ export default {
           const error = JSON.parse(text);
           if ([409, 404, 403].includes(error.statusCode) && error.message) return NotifyNegative(error.message);
         }
-
         NotifyNegative('Erreur lors du téléchargement du fichier des prélèvements SEPA.');
       } finally {
         xmlFileDownloadLoading.value = false;
