@@ -123,6 +123,12 @@ export default {
         },
       },
       { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status' },
+      {
+        name: 'xmlSEPAFileInfosName',
+        label: 'Nom de lot',
+        align: 'center',
+        field: row => get(row, 'xmlSEPAFileInfos.name'),
+      },
       { name: 'actions', label: '', field: '', align: 'center' },
     ];
     const selectedPayments = ref([]);
