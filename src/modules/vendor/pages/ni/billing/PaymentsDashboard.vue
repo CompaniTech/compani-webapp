@@ -128,6 +128,8 @@ export default {
         label: 'Nom de lot',
         align: 'center',
         field: row => get(row, 'xmlSEPAFileInfos.name'),
+        sortable: true,
+        sort: sortStrings,
       },
       { name: 'actions', label: '', field: '', align: 'center' },
     ];
