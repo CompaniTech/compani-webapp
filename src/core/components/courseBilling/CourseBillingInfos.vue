@@ -66,7 +66,12 @@
               </div>
               <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props" class="q-my-sm row">
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
-                <div class="payment">{{ item.number }} ({{ getItemType(item) }})</div>
+                <div class="payment">
+                  {{ item.number }} ({{ getItemType(item) }}
+                  <template v-if="item.status === XML_GENERATED">
+                    associé au lot <span class="text-weight-bold">{{ item.xmlSEPAFileInfos.name }}</span>
+                  </template>)
+                </div>
                 <div class="progress" />
                 <div class="formatted-price" />
                 <div v-if="item.netInclTaxes >=0" class="formatted-price">
@@ -146,6 +151,7 @@ import {
   PAYMENT_STATUS_OPTIONS,
   PENDING,
   RECEIVED,
+  XML_GENERATED,
 } from '@data/constants.js';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSortBy, descendingSortBy } from '@helpers/dates/utils';
@@ -554,6 +560,7 @@ export default {
       tmpBillingRepresentativeId,
       PAYMENT_STATUS_OPTIONS,
       expandedRows,
+      XML_GENERATED,
       // Computed
       validations,
       canUpdateBilling,

@@ -110,7 +110,7 @@ export const PAYMENT_NATURE_OPTIONS = [
   { label: 'Remboursement', value: REFUND },
 ];
 export const RECEIVED = 'received';
-const XML_GENERATED = 'xml_generated';
+export const XML_GENERATED = 'xml_generated';
 export const PENDING = 'pending';
 export const PAYMENT_STATUS_OPTIONS = [
   { label: 'Reçu', value: RECEIVED },
