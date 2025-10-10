@@ -185,7 +185,8 @@ export const useAttendanceSheets = (
       if (isSingleCourse.value) await refreshAttendances({ course: course.value._id });
     } catch (e) {
       console.error(e);
-      NotifyNegative('Erreur lors de l\'ajout de la feuille d\'émargement.');
+      if (e.status === 413) NotifyNegative('Fichier trop volumineux (5Mo maximum).');
+      else NotifyNegative('Erreur lors de l\'ajout de la feuille d\'émargement.');
     } finally {
       modalLoading.value = false;
     }
