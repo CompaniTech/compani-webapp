@@ -3,10 +3,10 @@
     <template #title>
       Ajouter une liste d'<span class="text-weight-bold">apprenants</span>
     </template>
-    <p>{{ constraints }}</p>
-    <ni-input in-modal caption="Liste d'apprenants" type="file" @blur="validations.file.$touch" last required-field
-      :model-value="csv.file" @update:model-value="update($event, 'file')"
-      :extensions="[CSV_EXTENSION]" :error="validations.file.$error" />
+    <p v-html="constraints" />
+    <ni-input in-modal caption="Liste d'apprenants" type="file" @blur="validations.$touch" last required-field
+      :model-value="csv" @update:model-value="update($event)"
+      :extensions="[CSV_EXTENSION]" :error="validations.$error" />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Ajouter la liste des apprenants" :loading="loading"
         icon-right="add" @click="submit" color="white" />
@@ -15,7 +15,6 @@
 </template>
 
 <script>
-import { toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
@@ -31,21 +30,19 @@ export default {
   props: {
     modelValue: { type: Boolean, default: false },
     constraints: { type: String, default: '' },
-    csv: { type: Object, default: () => ({}) },
+    csv: { type: File, default: null },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
   },
   emits: ['hide', 'update:model-value', 'update:csv', 'submit'],
-  setup (props, { emit }) {
-    const { csv } = toRefs(props);
-
+  setup (_, { emit }) {
     const hide = () => emit('hide');
 
     const input = event => emit('update:model-value', event);
 
     const submit = () => emit('submit');
 
-    const update = (event, prop) => emit('update:csv', { ...csv.value, [prop]: event });
+    const update = event => emit('update:csv', event);
 
     return {
       // Data

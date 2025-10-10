@@ -161,15 +161,23 @@ export default {
 
     const course = computed(() => $store.state.course.course);
 
-    const csv = ref({ file: '' });
-    const constraints = 'Les champs firstname, lastname et company sont obligatoires. Assurez-vous de rentrer un format'
-      + ' d\'email ou de téléphone valide. Si vous ne connaissez pas l\'email d\'un apprenant, pensez à remplir le '
-      + 'champ suffix.';
+    const csv = ref(null);
+    const constraints = `
+      <ul class="text-14">
+        <li>Les champs <span class="text-weight-bold">firstname</span>, <span class="text-weight-bold">lastname</span>
+          et <span class="text-weight-bold">company</span> sont obligatoires.</li>
+        <li>Les autres champs sont optionnels.
+        <li>Assurez-vous de rentrer un format d'email, d'indicatif téléphonique (+33) ou de téléphone (10 chiffres)
+          valide.</li>
+        <li>Si vous ne connaissez pas l'email d'un apprenant, pensez à remplir le champ <span class="text-weight-bold">
+          suffix</span> (@xxx.xx).</li>
+      </ul>
+    `;
 
     const traineeModalLoading = ref(false);
 
     const csvUploadRules = computed(() => ({
-      csv: { file: { required } },
+      csv: { required },
     }));
 
     const v$ = useVuelidate(csvUploadRules, { csv });
@@ -372,7 +380,7 @@ export default {
 
     const resetCsvUploadModal = () => {
       v$.value.csv.$reset();
-      csv.value = { file: '' };
+      csv.value = null;
     };
 
     const uploadCsv = async () => {
@@ -381,11 +389,11 @@ export default {
         if (v$.value.csv.$error) return NotifyWarning('Champ(s) invalide(s)');
         csvLoading.value = true;
         const form = new FormData();
-        form.append('file', csv.value.file);
+        form.append('file', csv.value);
         await Courses.uploadCsv(course.value._id, form);
 
         csvUploadModal.value = false;
-        NotifyPositive('List d\'apprenants ajoutée.');
+        NotifyPositive('Liste d\'apprenants ajoutée.');
         refresh();
       } catch (e) {
         console.error(e);
