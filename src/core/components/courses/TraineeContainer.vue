@@ -80,7 +80,7 @@
       v-model:certified-trainees="editedCertifications" :trainee-options="traineeOptions"
       :loading="certificationUpdateLoading" @submit="updateCertifications" />
 
-    <upload-csv-modal v-model="csvUploadModal" @hide="resetCsvUploadModal" @submit="uploadCsv" v-model:csv="csv"
+    <upload-csv-modal v-model="csvUploadModal" @hide="resetCsvUploadModal" @submit="uploadTraineesCsv" v-model:csv="csv"
       :loading="csvLoading" :validations="csvValidations.csv" :constraints="constraints" />
   </div>
 </template>
@@ -383,21 +383,23 @@ export default {
       csv.value = null;
     };
 
-    const uploadCsv = async () => {
+    const uploadTraineesCsv = async () => {
       try {
         v$.value.csv.$touch();
         if (v$.value.csv.$error) return NotifyWarning('Champ(s) invalide(s)');
+
         csvLoading.value = true;
         const form = new FormData();
         form.append('file', csv.value);
-        await Courses.uploadCsv(course.value._id, form);
+        await Courses.uploadTraineesCsv(course.value._id, form);
 
         csvUploadModal.value = false;
         NotifyPositive('Liste d\'apprenants ajoutée.');
         refresh();
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de l\'ajout des apprenants.');
+        if ([403, 400].includes(e.status) && e.data.message) NotifyNegative(e.data.message);
+        else NotifyNegative('Erreur lors de l\'ajout des apprenants.');
       } finally {
         csvLoading.value = false;
       }
@@ -484,7 +486,7 @@ export default {
       resetCertificationUpdateModal,
       updateCertifications,
       resetCsvUploadModal,
-      uploadCsv,
+      uploadTraineesCsv,
       openCsvUploadModal,
       // Validations
       csvValidations: v$,

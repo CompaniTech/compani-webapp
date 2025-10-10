@@ -18,7 +18,7 @@
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
-import { INTER_B2B, SINGLE, CSV_EXTENSION } from '@data/constants';
+import { CSV_EXTENSION } from '@data/constants';
 
 export default {
   name: 'UploadCsvModal',
@@ -46,10 +46,7 @@ export default {
 
     return {
       // Data
-      INTER_B2B,
-      SINGLE,
       CSV_EXTENSION,
-      // Computed
       // Methods
       hide,
       input,
