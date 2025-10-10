@@ -15,6 +15,15 @@
     </template>
     <ni-simple-table v-else :data="paymentList" :columns="columns" :loading="tableLoading"
       v-model:pagination="pagination">
+      <template #header="{ props }">
+        <q-tr :props="props">
+          <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">{{ col.label }}</q-th>
+          <q-th auto-width>
+            <q-checkbox class="q-mr-md" :model-value="multipleSelection" @update:model-value="selectPaymentList"
+              dense />
+          </q-th>
+        </q-tr>
+      </template>
       <template #body="{ props }">
         <q-tr :props="props">
           <q-td :props="props" v-for="col in props.cols" :key="col.name" :class="col.name" :style="col.style">
@@ -29,10 +38,10 @@
                 </div>
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
-              <template v-else-if="col.name === 'actions'">
-                <q-checkbox class="q-ma-md" v-model="selectedPayments" :val="props.row._id" dense />
-              </template>
               <template v-else>{{ col.value }}</template>
+          </q-td>
+          <q-td align="right" auto-width>
+            <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense />
           </q-td>
         </q-tr>
       </template>
@@ -137,6 +146,7 @@ export default {
     const xmlFileDownloadModal = ref(false);
     const transactionName = ref('');
     const xmlFileDownloadLoading = ref(false);
+    const multipleSelection = ref(false);
 
     const TRANSACTION_NAME_MAX_LENGTH = 140;
     const rules = computed(() => ({
@@ -211,6 +221,27 @@ export default {
       v$.value.transactionName.$reset();
     };
 
+    const visiblePayments = computed(() => {
+      const { rowsPerPage, page } = pagination.value;
+      if (rowsPerPage === 0) return paymentList.value;
+
+      const start = (page - 1) * rowsPerPage;
+      return paymentList.value.slice(start, start + rowsPerPage);
+    });
+
+    const selectPaymentList = (value) => {
+      multipleSelection.value = value;
+      if (value) {
+        const visibleIds = visiblePayments.value.map(p => p._id);
+        selectedPayments.value = [...new Set([...selectedPayments.value, ...visibleIds])];
+      } else {
+        const visibleIds = visiblePayments.value.map(p => p._id);
+        selectedPayments.value = selectedPayments.value.filter(paymentId => !visibleIds.includes(paymentId));
+      }
+    };
+
+    watch(pagination, () => { multipleSelection.value = false; });
+
     let timeout;
     watch(selectedStatus, () => {
       clearTimeout(timeout);
@@ -240,6 +271,7 @@ export default {
       transactionName,
       xmlFileDownloadLoading,
       v$,
+      multipleSelection,
       // Methods
       updateSelectedStatus,
       getItemStatus,
@@ -248,6 +280,7 @@ export default {
       openXmlFileModal,
       getXmlFile,
       resetXmlFileDownload,
+      selectPaymentList,
     };
   },
 };
