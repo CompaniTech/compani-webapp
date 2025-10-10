@@ -15,6 +15,15 @@
     </template>
     <ni-simple-table v-else :data="paymentList" :columns="columns" :loading="tableLoading"
       v-model:pagination="pagination">
+      <template #header="{ props }">
+        <q-tr :props="props">
+          <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">{{ col.label }}</q-th>
+          <q-th auto-width>
+            <q-checkbox class="q-mr-sm" :model-value="multipleSelection" @update:model-value="selectPaymentList"
+              dense />
+          </q-th>
+        </q-tr>
+      </template>
       <template #body="{ props }">
         <q-tr :props="props">
           <q-td :props="props" v-for="col in props.cols" :key="col.name" :class="col.name" :style="col.style">
@@ -29,19 +38,27 @@
                 </div>
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
-              <template v-else-if="col.name === 'actions'">
-                <q-checkbox class="q-ma-md" v-model="selectedPayments" :val="props.row._id" dense />
-              </template>
               <template v-else>{{ col.value }}</template>
+          </q-td>
+          <q-td align="right" auto-width>
+            <q-checkbox class="q-mr-sm" v-model="selectedPayments" :val="props.row._id" dense />
           </q-td>
         </q-tr>
       </template>
     </ni-simple-table>
+    <div class="fixed fab-custom">
+      <q-btn class="q-my-sm q-mx-lg" no-caps rounded icon="payment" label="Modifier les paiements"
+        @click="openCoursePaymentEditionModal" color="primary" :disable="!selectedPayments.length" />
+    </div>
   </q-page>
 
   <ni-xml-file-download-modal v-model="xmlFileDownloadModal" v-model:transaction-name="transactionName"
     :loading="xmlFileDownloadLoading" :validations="v$.transactionName" @submit="getXmlFile"
     @hide="resetXmlFileDownload" />
+
+  <ni-multiple-course-payment-edition-modal v-model="multipleCoursePaymentEditionModal"
+    v-model:status="multipleEditionStatus" :loading="multipleCoursePaymentEditionLoading"
+    @submit="editPaymentList" @hide="resetMultiplePaymentEditionModal" :validations="v$.multipleEditionStatus" />
 </template>
 
 <script>
@@ -52,17 +69,18 @@ import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
-import { NotifyNegative, NotifyWarning } from '@components/popup/notify';
+import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
 import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED } from '@data/constants';
 import CoursePayments from '@api/CoursePayments';
 import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
-import { formatPrice, sortStrings } from '@helpers/utils';
+import { formatPrice, sortStrings, formatQuantity } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
+import MultipleCoursePaymentEditionModal from 'src/modules/vendor/components/billing/MultipleCoursePaymentEditionModal';
 
 export default {
   name: 'PaymentsDashboard',
@@ -72,6 +90,7 @@ export default {
     'ni-simple-table': SimpleTable,
     'ni-button': Button,
     'ni-xml-file-download-modal': XmlFileDownloadModal,
+    'ni-multiple-course-payment-edition-modal': MultipleCoursePaymentEditionModal,
   },
   setup () {
     const metaInfo = { title: 'Paiements' };
@@ -137,9 +156,16 @@ export default {
     const xmlFileDownloadModal = ref(false);
     const transactionName = ref('');
     const xmlFileDownloadLoading = ref(false);
+    const multipleSelection = ref(false);
+    const multipleEditionStatus = ref('');
+    const multipleCoursePaymentEditionModal = ref(false);
+    const multipleCoursePaymentEditionLoading = ref(false);
 
-    const rules = computed(() => ({ transactionName: { required } }));
-    const v$ = useVuelidate(rules, { transactionName });
+    const rules = computed(() => ({
+      transactionName: { required },
+      multipleEditionStatus: { required },
+    }));
+    const v$ = useVuelidate(rules, { transactionName, multipleEditionStatus });
 
     const refreshPayments = async (params) => {
       try {
@@ -208,6 +234,27 @@ export default {
       v$.value.transactionName.$reset();
     };
 
+    const visiblePayments = computed(() => {
+      const { rowsPerPage, page } = pagination.value;
+      if (rowsPerPage === 0) return paymentList.value;
+
+      const start = (page - 1) * rowsPerPage;
+      return paymentList.value.slice(start, start + rowsPerPage);
+    });
+
+    const selectPaymentList = (value) => {
+      multipleSelection.value = value;
+      if (value) {
+        const visibleIds = visiblePayments.value.map(p => p._id);
+        selectedPayments.value = [...new Set([...selectedPayments.value, ...visibleIds])];
+      } else {
+        const visibleIds = visiblePayments.value.map(p => p._id);
+        selectedPayments.value = selectedPayments.value.filter(paymentId => !visibleIds.includes(paymentId));
+      }
+    };
+
+    watch(pagination, () => { multipleSelection.value = false; });
+
     let timeout;
     watch(selectedStatus, () => {
       clearTimeout(timeout);
@@ -218,6 +265,35 @@ export default {
       pagination.value = { page: 1, rowsPerPage: 15 };
       selectedPayments.value = [];
     });
+
+    const openCoursePaymentEditionModal = async () => {
+      multipleCoursePaymentEditionModal.value = true;
+    };
+
+    const resetMultiplePaymentEditionModal = () => {
+      multipleEditionStatus.value = '';
+      v$.value.multipleEditionStatus.$reset();
+    };
+
+    const editPaymentList = async () => {
+      try {
+        v$.value.multipleEditionStatus.$touch();
+        if (v$.value.multipleEditionStatus.$error) return NotifyWarning('Champ invalide.');
+
+        multipleCoursePaymentEditionLoading.value = true;
+        await CoursePayments.updatePaymentList({ _ids: selectedPayments.value, status: multipleEditionStatus.value });
+        await refreshPayments({ status: selectedStatus.value });
+
+        NotifyPositive(`${formatQuantity('paiement modifié', selectedPayments.value.length)}.`);
+
+        selectedPayments.value = [];
+        multipleCoursePaymentEditionLoading.value = false;
+        multipleCoursePaymentEditionModal.value = false;
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de l\'edition des paiements.');
+      }
+    };
 
     const created = async () => { await refreshPayments({ status: selectedStatus.value }); };
 
@@ -237,6 +313,10 @@ export default {
       transactionName,
       xmlFileDownloadLoading,
       v$,
+      multipleSelection,
+      multipleCoursePaymentEditionModal,
+      multipleEditionStatus,
+      multipleCoursePaymentEditionLoading,
       // Methods
       updateSelectedStatus,
       getItemStatus,
@@ -245,6 +325,10 @@ export default {
       openXmlFileModal,
       getXmlFile,
       resetXmlFileDownload,
+      selectPaymentList,
+      openCoursePaymentEditionModal,
+      editPaymentList,
+      resetMultiplePaymentEditionModal,
     };
   },
 };

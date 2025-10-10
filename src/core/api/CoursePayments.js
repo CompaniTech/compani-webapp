@@ -12,4 +12,7 @@ export default {
 
     return coursePayments.data.data.coursePayments;
   },
+  async updatePaymentList (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/coursepayments/list-edition`, payload);
+  },
 };
