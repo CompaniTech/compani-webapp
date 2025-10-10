@@ -49,7 +49,7 @@ import get from 'lodash/get';
 import { useMeta } from 'quasar';
 import { ref, watch, computed } from 'vue';
 import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
+import { required, maxLength } from '@vuelidate/validators';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import { NotifyNegative, NotifyWarning } from '@components/popup/notify';
@@ -138,7 +138,10 @@ export default {
     const transactionName = ref('');
     const xmlFileDownloadLoading = ref(false);
 
-    const rules = computed(() => ({ transactionName: { required } }));
+    const TRANSACTION_NAME_MAX_LENGTH = 140;
+    const rules = computed(() => ({
+      transactionName: { required, maxLength: maxLength(TRANSACTION_NAME_MAX_LENGTH) },
+    }));
     const v$ = useVuelidate(rules, { transactionName });
 
     const refreshPayments = async (params) => {
