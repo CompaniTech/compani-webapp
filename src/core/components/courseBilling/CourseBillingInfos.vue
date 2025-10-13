@@ -383,7 +383,8 @@ export default {
         }
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la modification du règlement.');
+        if (e.status === 400 && e.data.message) NotifyNegative(e.data.message);
+        else NotifyNegative('Erreur lors de la modification du règlement.');
       } finally {
         paymentEditionLoading.value = false;
       }

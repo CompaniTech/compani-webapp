@@ -288,11 +288,13 @@ export default {
         NotifyPositive(`${formatQuantity('paiement modifié', selectedPayments.value.length)}.`);
 
         selectedPayments.value = [];
-        multipleCoursePaymentEditionLoading.value = false;
         multipleCoursePaymentEditionModal.value = false;
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de l\'edition des paiements.');
+        if (e.status === 400 && e.data.message) NotifyNegative(e.data.message);
+        else NotifyNegative('Erreur lors de l\'edition des paiements.');
+      } finally {
+        multipleCoursePaymentEditionLoading.value = false;
       }
     };
 
