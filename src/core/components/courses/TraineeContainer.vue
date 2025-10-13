@@ -166,7 +166,9 @@ export default {
       <ul class="text-14">
         <li>Les champs <span class="text-weight-bold">firstname</span>, <span class="text-weight-bold">lastname</span>
           et <span class="text-weight-bold">company</span> sont obligatoires.</li>
-        <li>Les autres champs sont optionnels.
+        <li>Les autres champs (<span class="text-weight-bold">email</span>, <span class="text-weight-bold">phone</span>,
+          <span class="text-weight-bold">countryCode</span>, <span class="text-weight-bold">suffix</span>)
+          sont optionnels.
         <li>Assurez-vous de rentrer un format d'email, d'indicatif téléphonique (+33) ou de téléphone (10 chiffres)
           valide.</li>
         <li>Si vous ne connaissez pas l'email d'un apprenant, pensez à remplir le champ <span class="text-weight-bold">
