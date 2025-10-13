@@ -4,7 +4,7 @@
       Éditer les <span class="text-weight-bold">paiements</span>
     </template>
     <ni-select in-modal caption="Statut" :model-value="status" @update:model-value="updateStatus($event)"
-      required-field :options="PAYMENT_STATUS_OPTIONS" @blur="validations.$touch" :error="validations.$error" />
+      required-field :options="statusOptions" @blur="validations.$touch" :error="validations.$error" />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" :label="'Éditer le statut des paiements'"
         icon-right="add" color="white" :loading="loading" @click="submit" />
@@ -16,7 +16,7 @@
 import Modal from '@components/modal/Modal';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
-import { PAYMENT_STATUS_OPTIONS } from '@data/constants';
+import { PAYMENT_STATUS_OPTIONS, XML_GENERATED } from '@data/constants';
 
 export default {
   name: 'MultipleCoursePaymentEditionModal',
@@ -33,6 +33,8 @@ export default {
   },
   emits: ['submit', 'hide', 'update:model-value', 'update:status'],
   setup (_, { emit }) {
+    const statusOptions = PAYMENT_STATUS_OPTIONS.filter(status => status.value !== XML_GENERATED);
+
     const submit = () => emit('submit');
 
     const hide = () => emit('hide');
@@ -43,7 +45,7 @@ export default {
 
     return {
       // Data
-      PAYMENT_STATUS_OPTIONS,
+      statusOptions,
       // Methods
       hide,
       submit,

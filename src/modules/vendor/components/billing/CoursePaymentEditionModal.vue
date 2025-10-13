@@ -18,7 +18,7 @@
     <ni-date-input :model-value="editedCoursePayment.date" @update:model-value="update($event, 'date')" in-modal
       required-field :error="validations.date.$error" @blur="validations.date.$touch" caption="Date" />
     <ni-select in-modal caption="Statut" :model-value="editedCoursePayment.status" required-field
-      :options="PAYMENT_STATUS_OPTIONS" @update:model-value="update($event, 'status')"
+      :options="statusOptions" @update:model-value="update($event, 'status')"
       @blur="validations.status.$touch" :error="validations.status.$error" />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" :label="`Éditer le ${ paymentNature.toLowerCase() }`"
@@ -43,6 +43,7 @@ import {
   PAYMENT_NATURE_OPTIONS,
   CESU,
   PAYMENT_STATUS_OPTIONS,
+  XML_GENERATED,
 } from '@data/constants';
 
 export default {
@@ -64,6 +65,7 @@ export default {
   emits: ['hide', 'update:model-value', 'submit', 'update:edited-course-payment'],
   setup (props, { emit }) {
     const paymentOptions = PAYMENT_OPTIONS.filter(option => option.value !== CESU);
+    const statusOptions = PAYMENT_STATUS_OPTIONS.filter(status => status.value !== XML_GENERATED);
 
     const netInclTaxesError = computed(() => (
       get(props.validations, 'netInclTaxes.required.$response') === false ? REQUIRED_LABEL : 'Montant TTC non valide'
@@ -84,8 +86,8 @@ export default {
     return {
       // Data
       paymentOptions,
+      statusOptions,
       PAYMENT_NATURE_OPTIONS,
-      PAYMENT_STATUS_OPTIONS,
       // Computed
       netInclTaxesError,
       paymentNature,
