@@ -48,7 +48,7 @@
     "webpack": "~5.99.5"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "~7.27.5",
+    "@babel/eslint-parser": "~7.28.4",
     "@babel/preset-env": "~7.27.2",
     "@eslint/eslintrc": "~3.3.1",
     "@eslint/js": "~9.29.0",
