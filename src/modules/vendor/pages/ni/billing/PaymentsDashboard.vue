@@ -17,10 +17,12 @@
       v-model:pagination="pagination">
       <template #header="{ props }">
         <q-tr :props="props">
-          <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">{{ col.label }}</q-th>
-          <q-th auto-width>
-            <q-checkbox class="q-mr-sm" :model-value="multipleSelection" @update:model-value="selectPaymentList"
-              dense />
+          <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+            <div v-if="col.name === 'actions'">
+              <q-checkbox class="q-mr-sm" :model-value="multipleSelection" @update:model-value="selectPaymentList"
+                dense />
+            </div>
+            <template v-else>{{ col.label }}</template>
           </q-th>
         </q-tr>
       </template>
@@ -38,10 +40,10 @@
                 </div>
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
+              <template v-else-if="col.name === 'actions'">
+                <q-checkbox class="q-mr-sm" v-model="selectedPayments" :val="props.row._id" dense />
+              </template>
               <template v-else>{{ col.value }}</template>
-          </q-td>
-          <q-td align="right" auto-width>
-            <q-checkbox class="q-mr-sm" v-model="selectedPayments" :val="props.row._id" dense />
           </q-td>
         </q-tr>
       </template>
@@ -245,13 +247,11 @@ export default {
 
     const selectPaymentList = (value) => {
       multipleSelection.value = value;
-      if (value) {
-        const visibleIds = visiblePayments.value.map(p => p._id);
-        selectedPayments.value = [...new Set([...selectedPayments.value, ...visibleIds])];
-      } else {
-        const visibleIds = visiblePayments.value.map(p => p._id);
-        selectedPayments.value = selectedPayments.value.filter(paymentId => !visibleIds.includes(paymentId));
-      }
+      const visibleIds = visiblePayments.value.map(p => p._id);
+
+      selectedPayments.value = value
+        ? [...new Set([...selectedPayments.value, ...visibleIds])]
+        : selectedPayments.value.filter(paymentId => !visibleIds.includes(paymentId));
     };
 
     watch(pagination, () => { multipleSelection.value = false; });
