@@ -13,7 +13,7 @@
     <template v-if="!paymentList.length">
       <span class="text-italic q-pa-lg">Aucun paiement pour les statuts sélectionnés.</span>
     </template>
-    <ni-simple-table v-else :data="paymentList" :columns="columns" :loading="tableLoading"
+    <ni-simple-table v-else :data="sortedPayments" :columns="columns" :loading="tableLoading"
       :pagination="{ rowsPerPage: 0 }" hide-bottom virtual-scroll>
       <template #header="{ props }">
         <q-tr :props="props">
@@ -22,7 +22,14 @@
               <q-checkbox class="q-mr-md" :model-value="multipleSelection" @update:model-value="selectPaymentList"
                 dense />
             </div>
-            <template v-else>{{ col.label }}</template>
+            <div v-else-if="sortableColumns.includes(col.name)" @click="onSort(col)" class="align-center">
+              {{ col.label }}
+              <q-icon :name="sortDesc[col.name] ? 'arrow_downward' : 'arrow_upward'" size="14px"
+                class="q-ml-xs" color="copper-grey-500" />
+            </div>
+            <template v-else>
+              {{ col.label }}
+            </template>
           </q-th>
         </q-tr>
       </template>
@@ -108,39 +115,17 @@ export default {
         field: 'date',
         format: value => CompaniDate(value).format(DD_MM_YYYY),
         align: 'left',
-        sortable: true,
-        sort: (a, b) => ascendingSort(CompaniDate(a), CompaniDate(b)),
       },
-      { name: 'number', label: '#', field: 'number', align: 'left', sortable: true, sort: sortStrings },
+      { name: 'number', label: '#', field: 'number', align: 'left' },
       { name: 'netInclTaxes', label: 'Montant', field: 'netInclTaxes', format: formatPrice, align: 'left' },
-      {
-        name: 'courseBillNumber',
-        label: '# Facture',
-        field: row => row.courseBill.number,
-        align: 'left',
-        sortable: true,
-        sort: sortStrings,
-      },
-      {
-        name: 'payer',
-        label: 'Payeur',
-        field: row => get(row, 'courseBill.payer.name', ''),
-        align: 'left',
-        sortable: true,
-        sort: sortStrings,
-      },
+      { name: 'courseBillNumber', label: '# Facture', field: row => row.courseBill.number, align: 'left' },
+      { name: 'payer', label: 'Payeur', field: row => get(row, 'courseBill.payer.name', ''), align: 'left' },
       {
         name: 'type',
         label: 'Type',
         field: 'type',
         format: value => PAYMENT_OPTIONS.find(opt => opt.value === value).label,
         align: 'left',
-        sortable: true,
-        sort: (a, b) => {
-          const valueA = PAYMENT_OPTIONS.find(opt => opt.value === a).label;
-          const valueB = PAYMENT_OPTIONS.find(opt => opt.value === b).label;
-          return sortStrings(valueA, valueB);
-        },
       },
       { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status' },
       {
@@ -148,11 +133,10 @@ export default {
         label: 'Nom de lot',
         align: 'center',
         field: row => get(row, 'xmlSEPAFileInfos.name'),
-        sortable: true,
-        sort: sortStrings,
       },
       { name: 'actions', label: '', field: '', align: 'center' },
     ];
+    const sortableColumns = ['date', 'courseBillNumber', 'payer', 'type', 'xmlSEPAFileInfosName'];
     const selectedPayments = ref([]);
     const xmlFileDownloadModal = ref(false);
     const transactionName = ref('');
@@ -161,6 +145,14 @@ export default {
     const multipleEditionStatus = ref('');
     const multipleCoursePaymentEditionModal = ref(false);
     const multipleCoursePaymentEditionLoading = ref(false);
+    const sortBy = ref(null);
+    const sortDesc = ref({
+      date: false,
+      courseBillNumber: false,
+      payer: false,
+      type: false,
+      xmlSEPAFileInfosName: false,
+    });
 
     const TRANSACTION_NAME_MAX_LENGTH = 140;
     const rules = computed(() => ({
@@ -168,6 +160,53 @@ export default {
       multipleEditionStatus: { required },
     }));
     const v$ = useVuelidate(rules, { transactionName, multipleEditionStatus });
+
+    const sortedPayments = computed(() => {
+      if (!sortBy.value) return paymentList.value;
+
+      switch (sortBy.value) {
+        case 'payer': {
+          const sortDir = sortDesc.value.payer ? -1 : 1;
+          return [...paymentList.value]
+            .sort((a, b) => sortStrings(a.courseBill.payer.name, b.courseBill.payer.name) * sortDir);
+        }
+        case 'courseBillNumber': {
+          const sortDir = sortDesc.value.courseBillNumber ? -1 : 1;
+          return [...paymentList.value].sort((a, b) => sortStrings(a.courseBill.number, b.courseBill.number) * sortDir);
+        }
+        case 'type': {
+          const sortDir = sortDesc.value.type ? -1 : 1;
+          return [...paymentList.value].sort((a, b) => {
+            const valueA = PAYMENT_OPTIONS.find(opt => opt.value === a.type).label;
+            const valueB = PAYMENT_OPTIONS.find(opt => opt.value === b.type).label;
+            return sortStrings(valueA, valueB) * sortDir;
+          });
+        }
+        case 'xmlSEPAFileInfosName': {
+          const sortDir = sortDesc.value.xmlSEPAFileInfosName ? -1 : 1;
+          return [...paymentList.value]
+            .sort((a, b) => {
+              const valueA = get(a, 'xmlSEPAFileInfos.name', '');
+              const valueB = get(b, 'xmlSEPAFileInfos.name', '');
+
+              return sortStrings(valueA, valueB) * sortDir;
+            });
+        }
+        case 'date':
+          return [...paymentList.value]
+            .sort((a, b) => (sortDesc.value.date
+              ? ascendingSort(CompaniDate(a.date), CompaniDate(b.date))
+              : ascendingSort(CompaniDate(b.date), CompaniDate(a.date))
+            ));
+        default:
+          return paymentList;
+      }
+    });
+
+    const onSort = (col) => {
+      sortBy.value = col.name;
+      sortDesc.value[col.name] = !sortDesc.value[col.name];
+    };
 
     const refreshPayments = async (params) => {
       try {
@@ -305,6 +344,11 @@ export default {
       multipleCoursePaymentEditionModal,
       multipleEditionStatus,
       multipleCoursePaymentEditionLoading,
+      sortBy,
+      sortDesc,
+      sortableColumns,
+      // Computed
+      sortedPayments,
       // Methods
       updateSelectedStatus,
       getItemStatus,
@@ -317,6 +361,7 @@ export default {
       openCoursePaymentEditionModal,
       editPaymentList,
       resetMultiplePaymentEditionModal,
+      onSort,
     };
   },
 };
