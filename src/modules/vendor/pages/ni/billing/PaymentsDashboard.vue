@@ -14,12 +14,12 @@
       <span class="text-italic q-pa-lg">Aucun paiement pour les statuts sélectionnés.</span>
     </template>
     <ni-simple-table v-else :data="paymentList" :columns="columns" :loading="tableLoading"
-      v-model:pagination="pagination">
+      :pagination="{ rowsPerPage: 0 }" hide-bottom virtual-scroll>
       <template #header="{ props }">
         <q-tr :props="props">
           <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
             <div v-if="col.name === 'actions'">
-              <q-checkbox class="q-mr-sm" :model-value="multipleSelection" @update:model-value="selectPaymentList"
+              <q-checkbox class="q-mr-md" :model-value="multipleSelection" @update:model-value="selectPaymentList"
                 dense />
             </div>
             <template v-else>{{ col.label }}</template>
@@ -41,7 +41,7 @@
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
               <template v-else-if="col.name === 'actions'">
-                <q-checkbox class="q-mr-sm" v-model="selectedPayments" :val="props.row._id" dense />
+                <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense />
               </template>
               <template v-else>{{ col.value }}</template>
           </q-td>
@@ -101,7 +101,6 @@ export default {
     const selectedStatus = ref([PENDING]);
     const paymentList = ref([]);
     const tableLoading = ref(false);
-    const pagination = ref({ page: 1, rowsPerPage: 15 });
     const columns = [
       {
         name: 'date',
@@ -179,6 +178,7 @@ export default {
         NotifyNegative('Erreur lors de la récupération des paiements.');
       } finally {
         tableLoading.value = false;
+        multipleSelection.value = false;
       }
     };
 
@@ -237,24 +237,11 @@ export default {
       v$.value.transactionName.$reset();
     };
 
-    const visiblePayments = computed(() => {
-      const { rowsPerPage, page } = pagination.value;
-      if (rowsPerPage === 0) return paymentList.value;
-
-      const start = (page - 1) * rowsPerPage;
-      return paymentList.value.slice(start, start + rowsPerPage);
-    });
-
     const selectPaymentList = (value) => {
       multipleSelection.value = value;
-      const visibleIds = visiblePayments.value.map(p => p._id);
 
-      selectedPayments.value = value
-        ? [...new Set([...selectedPayments.value, ...visibleIds])]
-        : selectedPayments.value.filter(paymentId => !visibleIds.includes(paymentId));
+      selectedPayments.value = value ? paymentList.value.map(p => p._id) : [];
     };
-
-    watch(pagination, () => { multipleSelection.value = false; });
 
     let timeout;
     watch(selectedStatus, () => {
@@ -263,7 +250,6 @@ export default {
         if (selectedStatus.value.length) await refreshPayments({ status: selectedStatus.value });
         else paymentList.value = [];
       }, 1000);
-      pagination.value = { page: 1, rowsPerPage: 15 };
       selectedPayments.value = [];
     });
 
@@ -309,7 +295,6 @@ export default {
       paymentList,
       columns,
       tableLoading,
-      pagination,
       selectedPayments,
       PENDING,
       xmlFileDownloadModal,
