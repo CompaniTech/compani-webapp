@@ -88,6 +88,7 @@
 <script>
 import { subject } from '@casl/ability';
 import { computed, ref, toRefs } from 'vue';
+import { useQuasar } from 'quasar';
 import { useStore } from 'vuex';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
@@ -140,6 +141,7 @@ export default {
   setup (props, { emit }) {
     const { validations, potentialTrainees } = toRefs(props);
 
+    const $q = useQuasar();
     const $store = useStore();
 
     const editedCertifications = ref([]);
@@ -400,8 +402,20 @@ export default {
         refresh();
       } catch (e) {
         console.error(e);
-        if ([403, 400].includes(e.status) && e.data.message) NotifyNegative(e.data.message);
-        else NotifyNegative('Erreur lors de l\'ajout des apprenants.');
+        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors de l\'ajout des apprenants.');
+        const { errorsByTrainee } = e.data;
+
+        const message = Object.entries(errorsByTrainee)
+          .map(([key, values]) => `<span class="text-weight-bold">${key}</span> : ${values.join(', ')}`)
+          .join('<br>');
+
+        $q.dialog({
+          title: 'L\'ajout des apprenants a échoué',
+          message,
+          html: true,
+          ok: 'ok',
+        });
       } finally {
         csvLoading.value = false;
       }
