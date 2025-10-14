@@ -141,7 +141,6 @@ export default {
     const xmlFileDownloadModal = ref(false);
     const transactionName = ref('');
     const xmlFileDownloadLoading = ref(false);
-    const multipleSelection = ref(false);
     const multipleEditionStatus = ref('');
     const multipleCoursePaymentEditionModal = ref(false);
     const multipleCoursePaymentEditionLoading = ref(false);
@@ -202,6 +201,9 @@ export default {
           return paymentList;
       }
     });
+
+    const multipleSelection = computed(() => sortedPayments.value.length &&
+      selectedPayments.value.length === sortedPayments.value.length);
 
     const onSort = (col) => {
       sortBy.value = col.name;
@@ -340,7 +342,6 @@ export default {
       transactionName,
       xmlFileDownloadLoading,
       v$,
-      multipleSelection,
       multipleCoursePaymentEditionModal,
       multipleEditionStatus,
       multipleCoursePaymentEditionLoading,
@@ -349,6 +350,7 @@ export default {
       sortableColumns,
       // Computed
       sortedPayments,
+      multipleSelection,
       // Methods
       updateSelectedStatus,
       getItemStatus,
