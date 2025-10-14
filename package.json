@@ -45,7 +45,7 @@
     "vuedraggable": "~4.1.0",
     "vuelidate": "~0.7.6",
     "vuex": "~4.1.0",
-    "webpack": "~5.99.5"
+    "webpack": "~5.102.1"
   },
   "devDependencies": {
     "@babel/eslint-parser": "~7.28.4",
