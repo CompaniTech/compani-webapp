@@ -68,7 +68,7 @@
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div class="payment">
                   {{ item.number }} ({{ getItemType(item) }}
-                  <template v-if="item.status === XML_GENERATED">
+                  <template v-if="get(item, 'xmlSEPAFileInfos.name')">
                     associé au lot <span class="text-weight-bold">{{ item.xmlSEPAFileInfos.name }}</span>
                   </template>)
                 </div>

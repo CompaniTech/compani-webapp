@@ -43,7 +43,6 @@ import {
   PAYMENT_NATURE_OPTIONS,
   CESU,
   PAYMENT_STATUS_OPTIONS,
-  XML_GENERATED,
 } from '@data/constants';
 
 export default {
@@ -65,7 +64,7 @@ export default {
   emits: ['hide', 'update:model-value', 'submit', 'update:edited-course-payment'],
   setup (props, { emit }) {
     const paymentOptions = PAYMENT_OPTIONS.filter(option => option.value !== CESU);
-    const statusOptions = PAYMENT_STATUS_OPTIONS.filter(status => status.value !== XML_GENERATED);
+    const statusOptions = PAYMENT_STATUS_OPTIONS;
 
     const netInclTaxesError = computed(() => (
       get(props.validations, 'netInclTaxes.required.$response') === false ? REQUIRED_LABEL : 'Montant TTC non valide'
