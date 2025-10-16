@@ -4,7 +4,7 @@
         Télécharger le <span class="text-weight-bold">fichier de prélèvements SEPA</span>
       </template>
       <ni-input :model-value="transactionName" caption="Nom du lot de prélèvements" required-field
-        @update:model-value="update($event)" :error="validations.$error" />
+        @update:model-value="update($event)" :error="validations.$error" :error-message="errorMessage" />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" label="Télécharger" icon-right="add" color="white"
           :loading="loading" @click="submit" />
@@ -13,9 +13,12 @@
 </template>
 
 <script>
+import { computed, toRefs } from 'vue';
+import get from 'lodash/get';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
+import { REQUIRED_LABEL } from '@data/constants';
 
 export default {
   name: 'XmlFileDownloadModal',
@@ -31,11 +34,19 @@ export default {
     validations: { type: Object, default: () => ({}) },
   },
   emits: ['submit', 'hide', 'update:model-value', 'update:transaction-name'],
-  setup (_, { emit }) {
+  setup (props, { emit }) {
+    const { validations } = toRefs(props);
     const submit = () => emit('submit');
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const update = (event) => { emit('update:transaction-name', event); };
+
+    const errorMessage = computed(() => {
+      if (get(validations.value, 'required.$response') === false) return REQUIRED_LABEL;
+      if (get(validations.value, 'maxLength.$response') === false) return '140 caractères maximum.';
+
+      return '';
+    });
 
     return {
       // Methods
@@ -43,6 +54,8 @@ export default {
       hide,
       input,
       update,
+      // Computed
+      errorMessage,
     };
   },
 };

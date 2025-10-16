@@ -150,7 +150,7 @@ export default {
     const openTraineeEditionModal = async (trainee) => {
       editedTrainee.value = {
         ...editedTrainee.value,
-        ...(!trainee.contact.countryCode && { contact: { countryCode: '+33' } }),
+        ...(!get(trainee, 'contact.countryCode') && { contact: { countryCode: '+33' } }),
         ...pick(
           trainee,
           ['_id', 'identity.firstname', 'identity.lastname', 'local.email', 'contact.phone', 'contact.countryCode']

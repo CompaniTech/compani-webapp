@@ -5,6 +5,7 @@ export const OTHER = 'other';
 // MEDIA
 export const BLUE_TEXT_LOGO = 'https://storage.googleapis.com/compani-main/icons/compani_texte_bleu.png';
 export const DOC_EXTENSIONS = 'application/pdf';
+export const CSV_EXTENSION = 'text/csv';
 export const IMAGE_EXTENSIONS = 'image/jpg, image/jpeg, image/png';
 export const VIDEO_EXTENSIONS = 'video/*';
 export const AUDIO_EXTENSIONS = 'audio/*';
@@ -110,7 +111,7 @@ export const PAYMENT_NATURE_OPTIONS = [
   { label: 'Remboursement', value: REFUND },
 ];
 export const RECEIVED = 'received';
-const XML_GENERATED = 'xml_generated';
+export const XML_GENERATED = 'xml_generated';
 export const PENDING = 'pending';
 export const PAYMENT_STATUS_OPTIONS = [
   { label: 'Reçu', value: RECEIVED },

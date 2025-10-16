@@ -47,6 +47,8 @@
         <ni-trainee-table v-else :trainees="course.trainees" @refresh="refresh" :loading="loading"
           table-class="q-pb-md" />
         <q-card-actions v-if="canUpdateTrainees" align="right" class="q-pa-sm">
+          <ni-button v-if="canUpdateUploadCsv" color="primary" icon="upload" label="Ajouter une liste de personnes"
+            :disable="loading" @click="openCsvUploadModal" />
           <ni-button v-if="canUpdateCompanies" color="primary" icon="add" label="Rattacher une structure"
             :disable="loading" @click="openCompanyAdditionModal" />
           <ni-button v-if="course.companies.length && course.type !== SINGLE" color="primary" icon="add"
@@ -77,16 +79,22 @@
     <certifications-update-modal v-model="certificationsUpdateModal" @hide="resetCertificationUpdateModal"
       v-model:certified-trainees="editedCertifications" :trainee-options="traineeOptions"
       :loading="certificationUpdateLoading" @submit="updateCertifications" />
+
+    <upload-csv-modal v-model="csvUploadModal" @hide="resetCsvUploadModal" @submit="uploadTraineesCsv" v-model:csv="csv"
+      :loading="csvLoading" :validations="csvValidations.csv" :constraints="constraints" />
   </div>
 </template>
 
 <script>
 import { subject } from '@casl/ability';
 import { computed, ref, toRefs } from 'vue';
+import { useQuasar } from 'quasar';
 import { useStore } from 'vuex';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
 import groupBy from 'lodash/groupBy';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import Courses from '@api/Courses';
 import { TRAINER, INTRA, SINGLE } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
@@ -103,6 +111,7 @@ import LearnerCreationModal from '@components/courses/LearnerCreationModal';
 import TraineeTable from '@components/courses/TraineeTable';
 import ExpandingTable from '@components/table/ExpandingTable';
 import CompanyAdditionModal from '@components/courses/CompanyAdditionModal';
+import UploadCsvModal from '@components/courses/UploadCsvModal';
 import CertificationsUpdateModal from '@components/courses/CertificationsUpdateModal';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import { useLearnersCreation } from '@composables/learnersCreation';
@@ -126,22 +135,27 @@ export default {
     'ni-expanding-table': ExpandingTable,
     'company-addition-modal': CompanyAdditionModal,
     'certifications-update-modal': CertificationsUpdateModal,
+    'upload-csv-modal': UploadCsvModal,
   },
   emits: ['refresh', 'update', 'update:maxTrainees'],
   setup (props, { emit }) {
     const { validations, potentialTrainees } = toRefs(props);
 
+    const $q = useQuasar();
     const $store = useStore();
 
     const editedCertifications = ref([]);
     const certificationsUpdateModal = ref(false);
     const certificationUpdateLoading = ref(false);
+    const csvUploadModal = ref(false);
+    const csvLoading = ref(false);
 
     const canUpdateTrainees = ref(false);
     const canUpdateCompanies = ref(false);
     const canAccessCompany = ref(false);
     const canAccessEveryTrainee = ref(false);
     const canUpdateCertifyingTest = ref(false);
+    const canUpdateUploadCsv = ref(false);
 
     const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
 
@@ -149,7 +163,28 @@ export default {
 
     const course = computed(() => $store.state.course.course);
 
+    const csv = ref(null);
+    const constraints = `
+      <ul class="text-14">
+        <li>Les champs <span class="text-weight-bold">firstname</span>, <span class="text-weight-bold">lastname</span>
+          et <span class="text-weight-bold">company</span> sont obligatoires.</li>
+        <li>Les autres champs (<span class="text-weight-bold">email</span>, <span class="text-weight-bold">phone</span>,
+          <span class="text-weight-bold">countryCode</span>, <span class="text-weight-bold">suffix</span>)
+          sont optionnels.
+        <li>Assurez-vous de rentrer un format d'email, d'indicatif téléphonique (+33) ou de téléphone (10 chiffres)
+          valide.</li>
+        <li>Si vous ne connaissez pas l'email d'une personne, pensez à remplir le champ <span class="text-weight-bold">
+          suffix</span> (@xxx.xx).</li>
+      </ul>
+    `;
+
     const traineeModalLoading = ref(false);
+
+    const csvUploadRules = computed(() => ({
+      csv: { required },
+    }));
+
+    const v$ = useVuelidate(csvUploadRules, { csv });
 
     const companyColumns = computed(() => [
       {
@@ -255,6 +290,7 @@ export default {
       canAccessCompany.value = ability.can('read', subject('Course', course.value), 'companies');
       canAccessEveryTrainee.value = ability.can('read', subject('Course', course.value), 'all_trainees');
       canUpdateCertifyingTest.value = ability.can('update', subject('Course', course.value), 'certifying_test');
+      canUpdateUploadCsv.value = ability.can('set', subject('Course', course.value), 'learner_list');
     };
 
     const resetTraineeAdditionForm = () => {
@@ -342,6 +378,49 @@ export default {
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'infos' },
     });
 
+    const openCsvUploadModal = () => {
+      csvUploadModal.value = true;
+    };
+
+    const resetCsvUploadModal = () => {
+      v$.value.csv.$reset();
+      csv.value = null;
+    };
+
+    const uploadTraineesCsv = async () => {
+      try {
+        v$.value.csv.$touch();
+        if (v$.value.csv.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        csvLoading.value = true;
+        const form = new FormData();
+        form.append('file', csv.value);
+        await Courses.uploadTraineesCsv(course.value._id, form);
+
+        csvUploadModal.value = false;
+        NotifyPositive('Liste de stagiaires ajoutée.');
+        refresh();
+      } catch (e) {
+        console.error(e);
+        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors de l\'ajout du/de la stagiaire.');
+        const { errorsByTrainee } = e.data;
+
+        const message = Object.entries(errorsByTrainee)
+          .map(([key, values]) => `<li><span class="text-weight-bold">${key}</span> : ${values.join(', ')}</li>`)
+          .join('<br>');
+
+        $q.dialog({
+          title: 'L\'ajout des personnes a échoué',
+          message: `<ul class="text-14">${message}</ul>`,
+          html: true,
+          ok: 'ok',
+        });
+      } finally {
+        csvLoading.value = false;
+      }
+    };
+
     const created = async () => {
       defineCourseAbilities();
       if (![INTRA, SINGLE].includes(course.value.type) && canUpdateCompanies.value) await getPotentialCompanies();
@@ -373,9 +452,14 @@ export default {
       canAccessCompany,
       canUpdateTrainees,
       canUpdateCertifyingTest,
+      canUpdateUploadCsv,
       editedCertifications,
       certificationsUpdateModal,
       certificationUpdateLoading,
+      csv,
+      csvUploadModal,
+      csvLoading,
+      constraints,
       // Validations
       learnerValidation,
       traineeRegistrationValidation,
@@ -417,6 +501,11 @@ export default {
       openCertificationsUpdateModal,
       resetCertificationUpdateModal,
       updateCertifications,
+      resetCsvUploadModal,
+      uploadTraineesCsv,
+      openCsvUploadModal,
+      // Validations
+      csvValidations: v$,
     };
   },
 };

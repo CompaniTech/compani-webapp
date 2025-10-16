@@ -341,7 +341,7 @@ export default {
       courseBills.value.filter(bill => !bill.courseCreditNote).forEach((cb) => {
         const billingItemsPrice = cb.billingPurchaseList
           .reduce((acc, item) => add(acc, (multiply(item.price, item.count))), 0);
-        const billPrice = add(multiply(cb.mainFee.count, cb.mainFee.price), billingItemsPrice);
+        const billPrice = add(multiply(cb.mainFee.count, cb.mainFee.price || 0), billingItemsPrice);
 
         billedPrice = add(billedPrice, billPrice);
         if (cb.billedAt) validatedPrice = add(validatedPrice, billPrice);

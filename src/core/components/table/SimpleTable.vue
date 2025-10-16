@@ -5,7 +5,7 @@
       :visible-columns="formattedVisibleColumns" :hide-bottom="shouldHideBottom" @row-click="$emit('row-click', $event)"
       @update:pagination="$emit('update:pagination', $event)" @update:selected="$emit('update:selected', $event)"
       :class="['q-pa-sm large-table sticky-header', isClientInterface ? 'client-header' : 'vendor-header']"
-      :row-key="rowKey">
+      :row-key="rowKey" :virtual-scroll="virtualScroll">
       <template #header="props">
         <slot name="header" :props="props">
           <q-tr :props="props">
@@ -63,6 +63,7 @@ export default {
     separator: { type: String, default: 'horizontal' },
     hideBottom: { type: Boolean, default: false },
     rowsPerPageOptions: { type: Array, default: () => [15, 50, 100, 200, 300] },
+    virtualScroll: { type: Boolean, default: false },
   },
   emits: ['update:pagination', 'update:selected', 'row-click', 'update:expanded'],
   components: {
