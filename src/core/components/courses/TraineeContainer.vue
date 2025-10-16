@@ -47,7 +47,7 @@
         <ni-trainee-table v-else :trainees="course.trainees" @refresh="refresh" :loading="loading"
           table-class="q-pb-md" />
         <q-card-actions v-if="canUpdateTrainees" align="right" class="q-pa-sm">
-          <ni-button v-if="canUpdateUploadCsv" color="primary" icon="upload" label="Ajouter une liste d'apprenants"
+          <ni-button v-if="canUpdateUploadCsv" color="primary" icon="upload" label="Ajouter une liste de personnes"
             :disable="loading" @click="openCsvUploadModal" />
           <ni-button v-if="canUpdateCompanies" color="primary" icon="add" label="Rattacher une structure"
             :disable="loading" @click="openCompanyAdditionModal" />
@@ -88,6 +88,7 @@
 <script>
 import { subject } from '@casl/ability';
 import { computed, ref, toRefs } from 'vue';
+import { useQuasar } from 'quasar';
 import { useStore } from 'vuex';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
@@ -140,6 +141,7 @@ export default {
   setup (props, { emit }) {
     const { validations, potentialTrainees } = toRefs(props);
 
+    const $q = useQuasar();
     const $store = useStore();
 
     const editedCertifications = ref([]);
@@ -171,7 +173,7 @@ export default {
           sont optionnels.
         <li>Assurez-vous de rentrer un format d'email, d'indicatif téléphonique (+33) ou de téléphone (10 chiffres)
           valide.</li>
-        <li>Si vous ne connaissez pas l'email d'un apprenant, pensez à remplir le champ <span class="text-weight-bold">
+        <li>Si vous ne connaissez pas l'email d'une personne, pensez à remplir le champ <span class="text-weight-bold">
           suffix</span> (@xxx.xx).</li>
       </ul>
     `;
@@ -396,12 +398,24 @@ export default {
         await Courses.uploadTraineesCsv(course.value._id, form);
 
         csvUploadModal.value = false;
-        NotifyPositive('Liste d\'apprenants ajoutée.');
+        NotifyPositive('Liste de stagiaires ajoutée.');
         refresh();
       } catch (e) {
         console.error(e);
-        if ([403, 400].includes(e.status) && e.data.message) NotifyNegative(e.data.message);
-        else NotifyNegative('Erreur lors de l\'ajout des apprenants.');
+        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors de l\'ajout du/de la stagiaire.');
+        const { errorsByTrainee } = e.data;
+
+        const message = Object.entries(errorsByTrainee)
+          .map(([key, values]) => `<li><span class="text-weight-bold">${key}</span> : ${values.join(', ')}</li>`)
+          .join('<br>');
+
+        $q.dialog({
+          title: 'L\'ajout des personnes a échoué',
+          message: `<ul class="text-14">${message}</ul>`,
+          html: true,
+          ok: 'ok',
+        });
       } finally {
         csvLoading.value = false;
       }
