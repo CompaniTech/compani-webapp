@@ -14,11 +14,7 @@
       {{ formatQuantity('créneau', course.slots.length + course.slotsToPlan.length, 'x') }}
     </div>
     <div><span class="text-weight-bold">Durée :</span> {{ totalDuration }}</div>
-    <div>
-      <span class="text-weight-bold">Effectif :</span>
-      {{ course.misc ? `${course.misc}, ` : '' }}{{ !isInterCourse ? 'jusqu\'à ' : '' }}
-      {{ formatQuantity('stagiaire', learnersCount) }}
-    </div>
+    <div><span class="text-weight-bold">Effectif :</span> {{ learnersName }}</div>
     <div><span class="text-weight-bold">Dates :</span> {{ dates }}</div>
     <div><span class="text-weight-bold">Lieux :</span> {{ addressList }}</div>
     <div>
@@ -98,6 +94,11 @@ export default {
         .filter(t => t.registrationCompany === newGeneratedTrainingContractInfos.value.company).length;
     });
 
+    const learnersName = computed(() => course.value.trainees
+      .filter(trainee => trainee.registrationCompany === newGeneratedTrainingContractInfos.value.company)
+      .map(trainee => formatIdentity(trainee.identity, 'FL'))
+      .join(', '));
+
     const companyName = computed(() => course.value.companies
       .find(c => c._id === newGeneratedTrainingContractInfos.value.company).name);
 
@@ -117,6 +118,7 @@ export default {
       learnersCount,
       companyName,
       trainersName,
+      learnersName,
       // Methods
       hide,
       input,
