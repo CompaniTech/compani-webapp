@@ -17,7 +17,8 @@
 </template>
 
 <script>
-import { toRefs } from 'vue';
+import { toRefs, nextTick } from 'vue';
+import get from 'lodash/get';
 import set from 'lodash/set';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
@@ -34,6 +35,7 @@ export default {
     isIntraCourse: { type: Boolean, default: true },
     isInterCourse: { type: Boolean, default: true },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
+    coursePrices: { type: Array, default: () => [] },
   },
   components: {
     'ni-modal': Modal,
@@ -43,16 +45,26 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-generated-training-contract-infos'],
   setup (props, { emit }) {
-    const { newGeneratedTrainingContractInfos } = toRefs(props);
+    const { newGeneratedTrainingContractInfos, coursePrices } = toRefs(props);
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
-    const update = (event, path) => {
+    const update = async (event, path) => {
       emit(
         'update:new-generated-training-contract-infos',
         set({ ...newGeneratedTrainingContractInfos.value }, path, event)
       );
+      await nextTick();
+
+      if (path === 'company' && coursePrices.value.length) {
+        const price = coursePrices.value.find(p => p.company === event);
+        const computedPrice = get(price, 'global', 0) + get(price, 'trainerFees', 0);
+        emit(
+          'update:new-generated-training-contract-infos',
+          set({ ...newGeneratedTrainingContractInfos.value }, 'price', computedPrice)
+        );
+      }
     };
 
     return {
