@@ -43,7 +43,7 @@
     v-model:new-generated-training-contract-infos="newGeneratedTrainingContractInfos" :is-intra-course="isIntraCourse"
     @submit="openTrainingContractInfosModal" @hide="resetGeneratedTrainingContractInfos" :error-message="errorMessage"
     :validations="validations.newGeneratedTrainingContractInfos" :is-inter-course="isInterCourse"
-    :course-prices="course.prices" />
+    :course="course" />
 
   <training-contract-infos-modal v-model="trainingContractInfosModal" :course="course"
     @submit="generateTrainingContract" :loading="pdfLoading" @hide="resetGeneratedTrainingContractInfos"

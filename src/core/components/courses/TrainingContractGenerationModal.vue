@@ -24,6 +24,7 @@ import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
 import Select from '@components/form/Select';
+import { add, divide, toFixedToFloat } from '@helpers/numbers';
 
 export default {
   name: 'TrainingContractGenerationModal',
@@ -35,7 +36,7 @@ export default {
     isIntraCourse: { type: Boolean, default: true },
     isInterCourse: { type: Boolean, default: true },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
-    coursePrices: { type: Array, default: () => [] },
+    course: { type: Object, default: () => ({}) },
   },
   components: {
     'ni-modal': Modal,
@@ -45,7 +46,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-generated-training-contract-infos'],
   setup (props, { emit }) {
-    const { newGeneratedTrainingContractInfos, coursePrices } = toRefs(props);
+    const { newGeneratedTrainingContractInfos, course, isInterCourse } = toRefs(props);
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
@@ -57,12 +58,16 @@ export default {
       );
       await nextTick();
 
-      if (path === 'company' && coursePrices.value.length) {
-        const price = coursePrices.value.find(p => p.company === event);
-        const computedPrice = get(price, 'global', 0) + get(price, 'trainerFees', 0);
+      if (path === 'company' && course.value.prices.length) {
+        const price = course.value.prices.find(p => p.company === event);
+        const traineeLength = isInterCourse.value
+          ? course.value.trainees.filter(t => t.registrationCompany === event).length
+          : 1;
+        const computedPrice = Number(divide(add(get(price, 'global', 0), get(price, 'trainerFees', 0)), traineeLength));
+        const displayedPrice = Number.isNaN(computedPrice) ? 0 : toFixedToFloat(computedPrice);
         emit(
           'update:new-generated-training-contract-infos',
-          set({ ...newGeneratedTrainingContractInfos.value }, 'price', computedPrice)
+          set({ ...newGeneratedTrainingContractInfos.value }, 'price', displayedPrice)
         );
       }
     };

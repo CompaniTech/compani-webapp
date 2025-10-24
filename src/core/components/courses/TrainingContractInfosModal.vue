@@ -32,7 +32,7 @@
       </div>
       <div>
         <span class="text-weight-bold">Prix total :</span>
-        {{ Number(newGeneratedTrainingContractInfos.price) * learnersCount }} €
+        {{ toFixedToFloat(Number(newGeneratedTrainingContractInfos.price) * learnersCount, 1) }} €
       </div>
     </div>
     <template #footer>
@@ -50,6 +50,7 @@ import { formatIdentity, formatQuantity } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { SHORT_DURATION_H_MM, E_LEARNING } from '@data/constants';
 import { useCourseDocumentInfosModal } from '@composables/courseDocumentInfosModal';
+import { toFixedToFloat } from '@helpers/numbers';
 
 export default {
   name: 'TrainingContractInfosModal',
@@ -125,6 +126,7 @@ export default {
       submit,
       formatIdentity,
       formatQuantity,
+      toFixedToFloat,
     };
   },
 };
