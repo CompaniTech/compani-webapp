@@ -109,4 +109,7 @@ export default {
   async uploadTraineesCsv (courseId, payload) {
     await alenviAxios.put(`${process.env.API_HOSTNAME}/courses/${courseId}/trainees-csv`, payload);
   },
+  async uploadSingleCoursesCsv (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/courses/single-courses-csv`, payload);
+  },
 };
