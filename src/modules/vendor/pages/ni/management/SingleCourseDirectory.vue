@@ -141,11 +141,13 @@ export default {
           <span class="text-weight-bold">company</span>, <span class="text-weight-bold">subProgram</span> et 
           <span class="text-weight-bold">operationsRepresentative</span> sont obligatoires.</li>
         <li>Les autres champs (<span class="text-weight-bold">email</span>, <span class="text-weight-bold">phone</span>,
-          <span class="text-weight-bold">countryCode</span>, <span class="text-weight-bold">suffix</span> et 
-          <span class="text-weight-bold">estimatedStartDate</span>) sont optionnels.
+          <span class="text-weight-bold">countryCode</span>, <span class="text-weight-bold">suffix</span>, 
+          <span class="text-weight-bold">trainers</span> et <span class="text-weight-bold">estimatedStartDate</span>) 
+          sont optionnels.
         <li>Assurez-vous de rentrer un format d'email, d'indicatif téléphonique (+33), de téléphone (10 chiffres), de 
-          sous-programme (id), de chargé des opérations (email) et de date de début (AAAA-MM-JJ) valide.</li>
-        <li>Si vous ne connaissez pas l'email d'une personne, pensez à remplir le champ <span class="text-weight-bold">
+          sous-programme (id), de chargé des opérations (email), d'intervenants (emails séparés par une virgule) et de 
+          date de début (AAAA-MM-JJ) valide.</li>
+        <li>Si vous ne connaissez pas l'email d'un apprenant, pensez à remplir le champ <span class="text-weight-bold">
           suffix</span> (@xxx.xx).</li>
       </ul>
     `;
