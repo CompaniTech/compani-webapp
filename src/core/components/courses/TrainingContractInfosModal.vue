@@ -46,6 +46,7 @@
 import { computed, toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
+import { useCourses } from '@composables/courses';
 import { formatIdentity, formatQuantity } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { SHORT_DURATION_H_MM, E_LEARNING } from '@data/constants';
@@ -59,7 +60,6 @@ export default {
     course: { type: Object, default: () => ({}) },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
-    isInterCourse: { type: Boolean, default: true },
   },
   components: {
     'ni-modal': Modal,
@@ -67,7 +67,9 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit'],
   setup (props, { emit }) {
-    const { course, newGeneratedTrainingContractInfos, isInterCourse } = toRefs(props);
+    const { course, newGeneratedTrainingContractInfos } = toRefs(props);
+
+    const { isInterCourse } = useCourses(course);
 
     const slots = computed(() => course.value.slots);
     const { liveDuration, dates, addressList } = useCourseDocumentInfosModal(course, slots);
@@ -120,6 +122,7 @@ export default {
       companyName,
       trainersName,
       learnersName,
+      isInterCourse,
       // Methods
       hide,
       input,

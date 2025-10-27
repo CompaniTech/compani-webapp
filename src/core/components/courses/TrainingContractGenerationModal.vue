@@ -24,6 +24,7 @@ import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
 import Select from '@components/form/Select';
+import { useCourses } from '@composables/courses';
 import { add, divide, toFixedToFloat } from '@helpers/numbers';
 
 export default {
@@ -33,8 +34,6 @@ export default {
     errorMessage: { type: String, default: () => '' },
     validations: { type: Object, default: () => ({}) },
     companyOptions: { type: Array, default: () => [] },
-    isIntraCourse: { type: Boolean, default: true },
-    isInterCourse: { type: Boolean, default: true },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
     course: { type: Object, default: () => ({}) },
   },
@@ -46,7 +45,8 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-generated-training-contract-infos'],
   setup (props, { emit }) {
-    const { newGeneratedTrainingContractInfos, course, isInterCourse } = toRefs(props);
+    const { newGeneratedTrainingContractInfos, course } = toRefs(props);
+    const { isIntraCourse, isInterCourse } = useCourses(course);
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
@@ -73,6 +73,9 @@ export default {
     };
 
     return {
+      // Computed
+      isIntraCourse,
+      isInterCourse,
       // Methods
       hide,
       input,
