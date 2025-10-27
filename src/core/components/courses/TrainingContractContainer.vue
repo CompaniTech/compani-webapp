@@ -40,13 +40,13 @@
   </div>
 
   <training-contract-generation-modal v-model="trainingContractGenerationModal" :company-options="companyOptions"
-    v-model:new-generated-training-contract-infos="newGeneratedTrainingContractInfos" :is-intra-course="isIntraCourse"
-    @submit="openTrainingContractInfosModal" @hide="resetGeneratedTrainingContractInfos" :error-message="errorMessage"
-    :validations="validations.newGeneratedTrainingContractInfos" :is-inter-course="isInterCourse" />
+    v-model:new-generated-training-contract-infos="newGeneratedTrainingContractInfos" :error-message="errorMessage"
+    @submit="openTrainingContractInfosModal" @hide="resetGeneratedTrainingContractInfos" :course="course"
+    :validations="validations.newGeneratedTrainingContractInfos" />
 
   <training-contract-infos-modal v-model="trainingContractInfosModal" :course="course"
     @submit="generateTrainingContract" :loading="pdfLoading" @hide="resetGeneratedTrainingContractInfos"
-    :new-generated-training-contract-infos="newGeneratedTrainingContractInfos" :is-inter-course="isInterCourse" />
+    :new-generated-training-contract-infos="newGeneratedTrainingContractInfos" />
 
   <training-contract-creation-modal v-model="trainingContractCreationModal" :company-options="companyOptions"
     v-model:new-training-contract="newTrainingContract" @submit="createTrainingContract" :loading="pdfLoading"
@@ -101,10 +101,12 @@ export default {
     const { course, trainingContracts } = toRefs(props);
     const $q = useQuasar();
 
-    const { pdfLoading, isIntraCourse, isInterCourse, isVendorInterface } = useCourses(course);
+    const { pdfLoading, isIntraCourse, isVendorInterface } = useCourses(course);
 
     const newGeneratedTrainingContractInfos = ref({
-      price: 0,
+      price: isIntraCourse.value && get(course.value, 'prices[0].global')
+        ? get(course.value, 'prices[0].global', 0) + get(course.value, 'prices[0].trainerFees', 0)
+        : 0,
       company: isIntraCourse.value ? course.value.companies[0]._id : '',
     });
     const newTrainingContract = ref({ company: '' });
@@ -170,7 +172,9 @@ export default {
     const resetGeneratedTrainingContractInfos = () => {
       if (!trainingContractInfosModal.value) {
         newGeneratedTrainingContractInfos.value = {
-          price: 0,
+          price: isIntraCourse.value && get(course.value, 'prices[0].global')
+            ? get(course.value, 'prices[0].global', 0) + get(course.value, 'prices[0].trainerFees', 0)
+            : 0,
           company: isIntraCourse.value ? course.value.companies[0]._id : '',
         };
       }
@@ -296,7 +300,6 @@ export default {
       customFields,
       companyOptions,
       isIntraCourse,
-      isInterCourse,
       isVendorInterface,
       areAllTrainingContractsUploaded,
       disableGenerationButton,

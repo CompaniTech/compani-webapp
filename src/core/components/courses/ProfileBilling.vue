@@ -594,6 +594,8 @@ export default {
         const payload = { prices: { company, [path]: editedPrice } };
         await Courses.update(course.value._id, payload);
         NotifyPositive('Modification enregistrée.');
+
+        await refreshCourse();
       } catch (error) {
         console.error(error);
         NotifyNegative('Erreur lors de la modification.');

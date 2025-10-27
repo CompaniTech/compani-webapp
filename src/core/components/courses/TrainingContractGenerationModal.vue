@@ -17,12 +17,15 @@
 </template>
 
 <script>
-import { toRefs } from 'vue';
+import { toRefs, nextTick } from 'vue';
+import get from 'lodash/get';
 import set from 'lodash/set';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
 import Select from '@components/form/Select';
+import { useCourses } from '@composables/courses';
+import { add, divide, toFixedToFloat } from '@helpers/numbers';
 
 export default {
   name: 'TrainingContractGenerationModal',
@@ -31,9 +34,8 @@ export default {
     errorMessage: { type: String, default: () => '' },
     validations: { type: Object, default: () => ({}) },
     companyOptions: { type: Array, default: () => [] },
-    isIntraCourse: { type: Boolean, default: true },
-    isInterCourse: { type: Boolean, default: true },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
+    course: { type: Object, default: () => ({}) },
   },
   components: {
     'ni-modal': Modal,
@@ -43,19 +45,37 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-generated-training-contract-infos'],
   setup (props, { emit }) {
-    const { newGeneratedTrainingContractInfos } = toRefs(props);
+    const { newGeneratedTrainingContractInfos, course } = toRefs(props);
+    const { isIntraCourse, isInterCourse } = useCourses(course);
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
-    const update = (event, path) => {
+    const update = async (event, path) => {
       emit(
         'update:new-generated-training-contract-infos',
         set({ ...newGeneratedTrainingContractInfos.value }, path, event)
       );
+      await nextTick();
+
+      if (path === 'company' && course.value.prices.length) {
+        const price = course.value.prices.find(p => p.company === event);
+        const traineeLength = isInterCourse.value
+          ? course.value.trainees.filter(t => t.registrationCompany === event).length
+          : 1;
+        const computedPrice = Number(divide(add(get(price, 'global', 0), get(price, 'trainerFees', 0)), traineeLength));
+        const displayedPrice = Number.isNaN(computedPrice) ? 0 : toFixedToFloat(computedPrice);
+        emit(
+          'update:new-generated-training-contract-infos',
+          set({ ...newGeneratedTrainingContractInfos.value }, 'price', displayedPrice)
+        );
+      }
     };
 
     return {
+      // Computed
+      isIntraCourse,
+      isInterCourse,
       // Methods
       hide,
       input,
