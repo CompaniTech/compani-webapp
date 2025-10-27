@@ -366,9 +366,7 @@ export default {
       return true;
     };
 
-    const openCsvUploadModal = () => {
-      csvUploadModal.value = true;
-    };
+    const openCsvUploadModal = () => { csvUploadModal.value = true; };
 
     const resetCsvUploadModal = () => {
       v$.value.csv.$reset();

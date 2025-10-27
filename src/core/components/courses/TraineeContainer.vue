@@ -378,9 +378,7 @@ export default {
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'infos' },
     });
 
-    const openCsvUploadModal = () => {
-      csvUploadModal.value = true;
-    };
+    const openCsvUploadModal = () => { csvUploadModal.value = true; };
 
     const resetCsvUploadModal = () => {
       v$.value.csv.$reset();
