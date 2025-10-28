@@ -15,6 +15,8 @@
         @update:model-value="updateSelectedProgram" />
       <ni-select :options="statusOptions" :model-value="selectedStatus" @update:model-value="updateSelectedStatus" />
     </div>
+    <ni-button color="primary" icon="upload" label="Ajouter une liste de formations" :disable="modalLoading"
+      @click="openCsvUploadModal" />
     <ni-table-list :data="courses" :columns="columns" v-model:pagination="pagination"
       :path="path">
       <template #body="{ col }">
@@ -38,11 +40,14 @@
       :validations="v$.newCourse" :loading="modalLoading" @hide="resetCreationModal"
       @submit="createCourse([SINGLE])" :admin-user-options="adminUserOptions"
       :trainee-options="traineeOptions" :course-types="SINGLE_TYPE" />
+
+    <upload-csv-modal v-model="csvUploadModal" @hide="resetCsvUploadModal" @submit="uploadTraineesCsv" v-model:csv="csv"
+      :loading="modalLoading" :validations="v$.csv" :constraints="constraints" />
   </q-page>
 </template>
 
 <script>
-import { useMeta } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import TableList from '@components/table/TableList';
 import DirectoryHeader from '@components/DirectoryHeader';
@@ -59,11 +64,15 @@ import useVuelidate from '@vuelidate/core';
 import { required, requiredIf, or } from '@vuelidate/validators';
 import compact from 'lodash/compact';
 import get from 'lodash/get';
+import Courses from '@api/Courses';
 import Holdings from '@api/Holdings';
 import Programs from '@api/Programs';
 import Users from '@api/Users';
 import Select from '@components/form/Select';
+import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
+import UploadCsvModal from '@components/courses/UploadCsvModal';
+import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import CourseCreationModal from 'src/modules/vendor/components/courses/CourseCreationModal';
 import { useCourseCreation } from '@composables/courseCreation';
 import { useCourseFilters } from '@composables/courseFilters';
@@ -90,10 +99,13 @@ export default {
     'ni-directory-header': DirectoryHeader,
     'company-select': CompanySelect,
     'ni-select': Select,
+    'ni-button': Button,
     'ni-table-list': TableList,
     'course-creation-modal': CourseCreationModal,
+    'upload-csv-modal': UploadCsvModal,
   },
   setup () {
+    const $q = useQuasar();
     const $store = useStore();
     const metaInfo = { title: 'Kanban formations individuelles' };
     useMeta(metaInfo);
@@ -121,6 +133,24 @@ export default {
     const companiesHoldings = ref([]);
     const activeCourses = ref([]);
     const archivedCourses = ref([]);
+    const csvUploadModal = ref(false);
+    const csv = ref(null);
+    const constraints = `
+      <ul class="text-14">
+        <li>Les champs <span class="text-weight-bold">firstname</span>, <span class="text-weight-bold">lastname</span>,
+          <span class="text-weight-bold">company</span>, <span class="text-weight-bold">subProgram</span> et 
+          <span class="text-weight-bold">operationsRepresentative</span> sont obligatoires.</li>
+        <li>Les autres champs (<span class="text-weight-bold">email</span>, <span class="text-weight-bold">phone</span>,
+          <span class="text-weight-bold">countryCode</span>, <span class="text-weight-bold">suffix</span>, 
+          <span class="text-weight-bold">trainers</span> et <span class="text-weight-bold">estimatedStartDate</span>) 
+          sont optionnels.
+        <li>Assurez-vous de rentrer un format d'email, d'indicatif téléphonique (+33), de téléphone (10 chiffres), de 
+          sous-programme (id), de chargé des opérations (email), d'intervenants (emails séparés par une virgule) et de 
+          date de début (AAAA-MM-JJ) valide.</li>
+        <li>Si vous ne connaissez pas l'email d'un apprenant, pensez à remplir le champ <span class="text-weight-bold">
+          suffix</span> (@xxx.xx).</li>
+      </ul>
+    `;
 
     const pagination = ref({ sortBy: 'name', descending: false, page: 1, rowsPerPage: 15 });
     const columns = ref([
@@ -195,8 +225,9 @@ export default {
           trainerFees: { strictPositiveNumber: or(strictPositiveNumber, value => value === '') },
         },
       },
+      csv: { required },
     }));
-    const v$ = useVuelidate(rules, { newCourse });
+    const v$ = useVuelidate(rules, { newCourse, csv });
 
     const {
       refreshActiveCourses,
@@ -335,6 +366,47 @@ export default {
       return true;
     };
 
+    const openCsvUploadModal = () => { csvUploadModal.value = true; };
+
+    const resetCsvUploadModal = () => {
+      v$.value.csv.$reset();
+      csv.value = null;
+    };
+
+    const uploadTraineesCsv = async () => {
+      try {
+        v$.value.csv.$touch();
+        if (v$.value.csv.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        modalLoading.value = true;
+        const form = new FormData();
+        form.append('file', csv.value);
+        await Courses.uploadSingleCoursesCsv(form);
+
+        csvUploadModal.value = false;
+        NotifyPositive('Liste de formations créées.');
+        await refreshActiveCourses(SINGLE);
+      } catch (e) {
+        console.error(e);
+        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors de la création des formations.');
+        const { errorsByTrainee } = e.data;
+
+        const message = Object.entries(errorsByTrainee)
+          .map(([key, values]) => `<li><span class="text-weight-bold">${key}</span> : ${values.join(', ')}</li>`)
+          .join('<br>');
+
+        $q.dialog({
+          title: 'La création des formations a échoué',
+          message: `<ul class="text-14">${message}</ul>`,
+          html: true,
+          ok: 'ok',
+        });
+      } finally {
+        modalLoading.value = false;
+      }
+    };
+
     onBeforeRouteLeave((to) => {
       if (to.name !== 'ni management blended courses info') {
         resetFilters();
@@ -370,6 +442,9 @@ export default {
       adminUserOptions,
       statusOptions,
       traineeOptions,
+      csvUploadModal,
+      csv,
+      constraints,
       // Computed
       selectedHolding,
       holdingFilterOptions,
@@ -386,6 +461,9 @@ export default {
       // Methods
       openCourseCreationModal,
       resetCreationModal,
+      openCsvUploadModal,
+      resetCsvUploadModal,
+      uploadTraineesCsv,
       createCourse,
       updateSelectedHolding,
       updateSelectedCompany,
