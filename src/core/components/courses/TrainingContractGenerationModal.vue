@@ -5,7 +5,8 @@
     </template>
     <ni-input in-modal :caption="isInterCourse ? 'Prix par stagiaire' : 'Prix du programme'" suffix="€" required-field
       :error="validations.price.$error" type="number" :model-value="newGeneratedTrainingContractInfos.price"
-      @blur="validations.price.$touch" :error-message="errorMessage" @update:model-value="update($event, 'price')" />
+      :disable="!!companyPrice" @blur="validations.price.$touch" :error-message="errorMessage"
+      @update:model-value="update($event, 'price')" />
     <ni-select v-if="!isIntraCourse" in-modal :model-value="newGeneratedTrainingContractInfos.company"
       @update:model-value="update($event, 'company')" caption="Structure" :options="companyOptions" required-field
       :error="validations.company.$error" @blur="validations.company.$touch" />
@@ -36,6 +37,7 @@ export default {
     companyOptions: { type: Array, default: () => [] },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
     course: { type: Object, default: () => ({}) },
+    companyPrice: { type: Number, default: 0 },
   },
   components: {
     'ni-modal': Modal,

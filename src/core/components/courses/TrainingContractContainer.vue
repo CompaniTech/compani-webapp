@@ -12,7 +12,7 @@
         </ni-banner>
         <template v-if="isIntraCourse">
           <ni-bi-color-button v-if="!trainingContracts.length" icon="file_download" :disable="disableGenerationButton"
-            label="Générer la convention de formation" @click="trainingContractGenerationModal = true" size="16px" />
+            label="Générer la convention de formation" @click="openTrainingContractGenerationModal" size="16px" />
         </template>
       </div>
       <template v-if="!isIntraCourse && (isVendorInterface || hasHoldingRole)">
@@ -42,9 +42,9 @@
   <training-contract-generation-modal v-model="trainingContractGenerationModal" :company-options="companyOptions"
     v-model:new-generated-training-contract-infos="newGeneratedTrainingContractInfos" :error-message="errorMessage"
     @submit="openTrainingContractInfosModal" @hide="resetGeneratedTrainingContractInfos" :course="course"
-    :validations="validations.newGeneratedTrainingContractInfos" />
+    :validations="validations.newGeneratedTrainingContractInfos" :company-price="companyPrice" />
 
-  <training-contract-infos-modal v-model="trainingContractInfosModal" :course="course"
+  <training-contract-infos-modal v-model="trainingContractInfosModal" :course="course" :company-price="companyPrice"
     @submit="generateTrainingContract" :loading="pdfLoading" @hide="resetGeneratedTrainingContractInfos"
     :new-generated-training-contract-infos="newGeneratedTrainingContractInfos" />
 
@@ -169,6 +169,14 @@ export default {
     const disableUploadButton = computed(() => pdfLoading.value || !!course.value.archivedAt ||
       trainingContracts.value.length === course.value.companies.length);
 
+    const companyPrice = computed(() => {
+      if (newGeneratedTrainingContractInfos.value.company) {
+        const price = course.value.prices.find(p => p.company === newGeneratedTrainingContractInfos.value.company);
+        return Number(get(price, 'global', 0) + get(price, 'trainerFees', 0));
+      }
+      return 0;
+    });
+
     const resetGeneratedTrainingContractInfos = () => {
       if (!trainingContractInfosModal.value) {
         newGeneratedTrainingContractInfos.value = {
@@ -198,6 +206,11 @@ export default {
 
       trainingContractGenerationModal.value = false;
       trainingContractInfosModal.value = true;
+    };
+
+    const openTrainingContractGenerationModal = () => {
+      if (!companyPrice.value) trainingContractGenerationModal.value = true;
+      else openTrainingContractInfosModal();
     };
 
     const generateTrainingContract = async () => {
@@ -304,7 +317,9 @@ export default {
       areAllTrainingContractsUploaded,
       disableGenerationButton,
       disableUploadButton,
+      companyPrice,
       // Methods
+      openTrainingContractGenerationModal,
       openTrainingContractInfosModal,
       resetGeneratedTrainingContractInfos,
       generateTrainingContract,

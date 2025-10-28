@@ -23,7 +23,7 @@
     </div>
     <div v-if="!isInterCourse" class="q-mb-md">
       <span class="text-weight-bold">Prix du programme :</span>
-      {{ Number(newGeneratedTrainingContractInfos.price) }} €
+      {{ Number(companyPrice) || Number(newGeneratedTrainingContractInfos.price) }} €
     </div>
     <div v-else class="q-mb-md">
       <div>
@@ -32,7 +32,8 @@
       </div>
       <div>
         <span class="text-weight-bold">Prix total :</span>
-        {{ toFixedToFloat(Number(newGeneratedTrainingContractInfos.price) * learnersCount, 1) }} €
+        {{ Number(companyPrice) ||
+          toFixedToFloat(Number(newGeneratedTrainingContractInfos.price) * learnersCount, 1) }} €
       </div>
     </div>
     <template #footer>
@@ -60,6 +61,7 @@ export default {
     course: { type: Object, default: () => ({}) },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
+    companyPrice: { type: Number, default: 0 },
   },
   components: {
     'ni-modal': Modal,
