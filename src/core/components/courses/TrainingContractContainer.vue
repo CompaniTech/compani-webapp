@@ -39,7 +39,7 @@
     </div>
   </div>
 
-  <training-contract-generation-modal v-model="trainingContractGenerationModal" :company-options="companyOptions"
+  <training-contract-generation-modal v-model="trainingContractGenerationModal" :company-options="formattedOptions"
     v-model:new-generated-training-contract-infos="newGeneratedTrainingContractInfos" :error-message="errorMessage"
     @submit="openTrainingContractInfosModal" @hide="resetGeneratedTrainingContractInfos" :course="course"
     :validations="validations.newGeneratedTrainingContractInfos" :company-price="companyPrice" />
@@ -76,6 +76,7 @@ import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { downloadFile } from '@helpers/file';
 import { formatQuantity, formatDownloadName, formatAndSortOptions } from '@helpers/utils';
 import { composeCourseName } from '@helpers/courses';
+import { add } from '@helpers/numbers';
 
 export default {
   name: 'TrainingContractContainer',
@@ -163,6 +164,24 @@ export default {
 
     const companyOptions = computed(() => formatAndSortOptions(course.value.companies, 'name'));
 
+    const formattedOptions = computed(() => {
+      const companiesWithoutPrice = course.value.companies
+        .filter(c => !course.value.prices.find(p => p.company === c._id && p.global));
+      if (companiesWithoutPrice.length) {
+        const companiesWithoutBills = companiesWithoutPrice
+          .filter(c => !course.value.bills.find(b => b.companies.includes(c._id)))
+          .map(c => c._id);
+
+        return companyOptions.value.map((opt) => {
+          if (companiesWithoutBills.includes(opt.value)) {
+            return { ...opt, disable: true, verbatim: 'Prix de la formation manquant' };
+          }
+          return opt;
+        });
+      }
+      return companyOptions.value;
+    });
+
     const disableGenerationButton = computed(() => !!missingInfos.value.length || pdfLoading.value ||
       !!course.value.archivedAt);
 
@@ -172,7 +191,7 @@ export default {
     const companyPrice = computed(() => {
       if (newGeneratedTrainingContractInfos.value.company) {
         const price = course.value.prices.find(p => p.company === newGeneratedTrainingContractInfos.value.company);
-        return Number(get(price, 'global', 0) + get(price, 'trainerFees', 0));
+        return Number(add(get(price, 'global', 0), get(price, 'trainerFees', 0)));
       }
       return 0;
     });
@@ -209,8 +228,11 @@ export default {
     };
 
     const openTrainingContractGenerationModal = () => {
-      if (!companyPrice.value) trainingContractGenerationModal.value = true;
-      else openTrainingContractInfosModal();
+      if (!companyPrice.value) {
+        const bill = course.value.bills.find(b => b.companies.includes(course.value.companies[0]._id));
+        if (bill) trainingContractGenerationModal.value = true;
+        else NotifyWarning('Le prix de la formation pour cette structure n\'est pas renseigné.');
+      } else openTrainingContractInfosModal();
     };
 
     const generateTrainingContract = async () => {
@@ -312,6 +334,7 @@ export default {
       validations,
       customFields,
       companyOptions,
+      formattedOptions,
       isIntraCourse,
       isVendorInterface,
       areAllTrainingContractsUploaded,
