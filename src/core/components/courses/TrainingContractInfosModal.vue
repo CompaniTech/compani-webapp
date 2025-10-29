@@ -14,11 +14,7 @@
       {{ formatQuantity('créneau', course.slots.length + course.slotsToPlan.length, 'x') }}
     </div>
     <div><span class="text-weight-bold">Durée :</span> {{ totalDuration }}</div>
-    <div>
-      <span class="text-weight-bold">Effectif :</span>
-      {{ course.misc ? `${course.misc}, ` : '' }}{{ !isInterCourse ? 'jusqu\'à ' : '' }}
-      {{ formatQuantity('stagiaire', learnersCount) }}
-    </div>
+    <div><span class="text-weight-bold">Effectif :</span> {{ learnersName }}</div>
     <div><span class="text-weight-bold">Dates :</span> {{ dates }}</div>
     <div><span class="text-weight-bold">Lieux :</span> {{ addressList }}</div>
     <div>
@@ -27,7 +23,7 @@
     </div>
     <div v-if="!isInterCourse" class="q-mb-md">
       <span class="text-weight-bold">Prix du programme :</span>
-      {{ Number(newGeneratedTrainingContractInfos.price) }} €
+      {{ Number(companyPrice) || Number(newGeneratedTrainingContractInfos.price) }} €
     </div>
     <div v-else class="q-mb-md">
       <div>
@@ -36,7 +32,8 @@
       </div>
       <div>
         <span class="text-weight-bold">Prix total :</span>
-        {{ Number(newGeneratedTrainingContractInfos.price) * learnersCount }} €
+        {{ Number(companyPrice) ||
+          toFixedToFloat(Number(newGeneratedTrainingContractInfos.price) * learnersCount, 1) }} €
       </div>
     </div>
     <template #footer>
@@ -50,10 +47,12 @@
 import { computed, toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
+import { useCourses } from '@composables/courses';
 import { formatIdentity, formatQuantity } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { SHORT_DURATION_H_MM, E_LEARNING } from '@data/constants';
 import { useCourseDocumentInfosModal } from '@composables/courseDocumentInfosModal';
+import { toFixedToFloat } from '@helpers/numbers';
 
 export default {
   name: 'TrainingContractInfosModal',
@@ -62,7 +61,7 @@ export default {
     course: { type: Object, default: () => ({}) },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
-    isInterCourse: { type: Boolean, default: true },
+    companyPrice: { type: Number, default: 0 },
   },
   components: {
     'ni-modal': Modal,
@@ -70,7 +69,9 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit'],
   setup (props, { emit }) {
-    const { course, newGeneratedTrainingContractInfos, isInterCourse } = toRefs(props);
+    const { course, newGeneratedTrainingContractInfos } = toRefs(props);
+
+    const { isInterCourse } = useCourses(course);
 
     const slots = computed(() => course.value.slots);
     const { liveDuration, dates, addressList } = useCourseDocumentInfosModal(course, slots);
@@ -98,6 +99,11 @@ export default {
         .filter(t => t.registrationCompany === newGeneratedTrainingContractInfos.value.company).length;
     });
 
+    const learnersName = computed(() => course.value.trainees
+      .filter(trainee => trainee.registrationCompany === newGeneratedTrainingContractInfos.value.company)
+      .map(trainee => formatIdentity(trainee.identity, 'FL'))
+      .join(', '));
+
     const companyName = computed(() => course.value.companies
       .find(c => c._id === newGeneratedTrainingContractInfos.value.company).name);
 
@@ -117,12 +123,15 @@ export default {
       learnersCount,
       companyName,
       trainersName,
+      learnersName,
+      isInterCourse,
       // Methods
       hide,
       input,
       submit,
       formatIdentity,
       formatQuantity,
+      toFixedToFloat,
     };
   },
 };

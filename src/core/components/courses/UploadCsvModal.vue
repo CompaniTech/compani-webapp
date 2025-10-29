@@ -1,14 +1,14 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input">
     <template #title>
-      Ajouter une liste de <span class="text-weight-bold">personnes</span>
+      Ajouter un <span class="text-weight-bold">fichier CSV</span>
     </template>
     <p v-html="constraints" />
-    <ni-input in-modal caption="Liste de personnes" type="file" @blur="validations.$touch" last required-field
+    <ni-input in-modal caption="Fichier CSV" type="file" @blur="validations.$touch" last required-field
       :model-value="csv" @update:model-value="update($event)"
       :extensions="[CSV_EXTENSION]" :error="validations.$error" />
     <template #footer>
-      <ni-button class="full-width modal-btn bg-primary" label="Ajouter la liste des personnes" :loading="loading"
+      <ni-button class="full-width modal-btn bg-primary" label="Ajouter le fichier CSV" :loading="loading"
         icon-right="add" @click="submit" color="white" />
     </template>
   </ni-modal>
