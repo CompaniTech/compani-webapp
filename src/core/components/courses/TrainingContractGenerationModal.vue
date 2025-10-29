@@ -5,10 +5,22 @@
     </template>
     <ni-input in-modal :caption="isInterCourse ? 'Prix par stagiaire' : 'Prix du programme'" suffix="€" required-field
       :error="validations.price.$error" type="number" :model-value="newGeneratedTrainingContractInfos.price"
-      @blur="validations.price.$touch" :error-message="errorMessage" @update:model-value="update($event, 'price')" />
+      :disable="!!companyPrice || !newGeneratedTrainingContractInfos.company" @blur="validations.price.$touch"
+      :error-message="errorMessage" @update:model-value="update($event, 'price')" />
     <ni-select v-if="!isIntraCourse" in-modal :model-value="newGeneratedTrainingContractInfos.company"
       @update:model-value="update($event, 'company')" caption="Structure" :options="companyOptions" required-field
-      :error="validations.company.$error" @blur="validations.company.$touch" />
+      :error="validations.company.$error" @blur="validations.company.$touch" option-slot>
+      <template #option="{ scope }">
+          <q-item v-bind="scope.itemProps">
+            <q-item-section>
+              <q-item-label>{{ scope.opt.label }}</q-item-label>
+              <q-item-label class="details">
+                <div class="q-mb-xs">{{ scope.opt.verbatim }}</div>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+      </template>
+    </ni-select>
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Ajouter le prix" icon-right="add" color="white"
         @click="submit" />
@@ -36,6 +48,7 @@ export default {
     companyOptions: { type: Array, default: () => [] },
     newGeneratedTrainingContractInfos: { type: Object, default: () => ({}) },
     course: { type: Object, default: () => ({}) },
+    companyPrice: { type: Number, default: 0 },
   },
   components: {
     'ni-modal': Modal,
@@ -85,3 +98,10 @@ export default {
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.details
+  font-size: 14px
+  color: $copper-grey-500
+  font-style: italic
+</style>
