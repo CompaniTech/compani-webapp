@@ -14,7 +14,11 @@
       {{ formatQuantity('créneau', course.slots.length + course.slotsToPlan.length, 'x') }}
     </div>
     <div><span class="text-weight-bold">Durée :</span> {{ totalDuration }}</div>
-    <div><span class="text-weight-bold">Effectif :</span> {{ learnersName }}</div>
+    <div v-if="learnersName"><span class="text-weight-bold">Effectif :</span> {{ learnersName }}</div>
+    <div v-else>
+      <span class="text-weight-bold">Effectif :</span>
+      {{ course.misc ? `${course.misc}, ` : '' }}jusqu\'à {{ formatQuantity('stagiaire', learnersCount) }}
+    </div>
     <div><span class="text-weight-bold">Dates :</span> {{ dates }}</div>
     <div><span class="text-weight-bold">Lieux :</span> {{ addressList }}</div>
     <div>

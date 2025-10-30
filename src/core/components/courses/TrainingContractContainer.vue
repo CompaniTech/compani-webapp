@@ -71,7 +71,7 @@ import TrainingContractCreationModal from '@components/courses/TrainingContractC
 import TrainingContractTable from '@components/courses/TrainingContractTable';
 import { NotifyWarning, NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { useCourses } from '@composables/courses';
-import { REQUIRED_LABEL, ON_SITE, DOC_EXTENSIONS, E_LEARNING, IMAGE_EXTENSIONS } from '@data/constants';
+import { REQUIRED_LABEL, ON_SITE, DOC_EXTENSIONS, E_LEARNING, IMAGE_EXTENSIONS, INTER_B2B } from '@data/constants';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { downloadFile } from '@helpers/file';
 import { formatQuantity, formatDownloadName, formatAndSortOptions } from '@helpers/utils';
@@ -175,6 +175,10 @@ export default {
         return companyOptions.value.map((opt) => {
           if (companiesWithoutBills.includes(opt.value)) {
             return { ...opt, disable: true, verbatim: 'Prix de la formation manquant' };
+          }
+          if (course.value.type === INTER_B2B) {
+            const noTraineeFromCompany = !course.value.trainees.some(t => t.registrationCompany === opt.value);
+            if (noTraineeFromCompany) return { ...opt, disable: true, verbatim: 'Apprenants manquants' };
           }
           return opt;
         });
