@@ -50,8 +50,6 @@ export default {
     stepTypes: { type: Array, default: () => [] },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
-    isRofOrVendorAdmin: { type: Boolean, default: false },
-    isVendorInterface: { type: Boolean, default: false },
     isOnlySlot: { type: Boolean, default: false },
     isPlannedSlot: { type: Boolean, default: false },
     canCreateSlot: { type: Boolean, default: false },

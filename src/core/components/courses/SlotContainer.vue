@@ -90,8 +90,7 @@
 
     <slot-edition-modal v-model="editionModal" :edited-course-slot="editedCourseSlot" :step-types="stepTypes"
       :validations="v$.editedCourseSlot" @hide="resetEditionModal" :loading="modalLoading" @delete="deleteCourseSlot"
-      @submit="updateCourseSlot" @update="setCourseSlot" :is-rof-or-vendor-admin="isRofOrVendorAdmin"
-      :is-vendor-interface="isVendorInterface" :is-only-slot="isOnlySlot" :is-planned-slot="isPlannedSlot"
+      @submit="updateCourseSlot" @update="setCourseSlot" :is-only-slot="isOnlySlot" :is-planned-slot="isPlannedSlot"
       @unplan-slot="unplanSlot" :can-create-slot="canCreateSlot" />
 
     <multiple-slot-creation-modal v-model="multipleSlotCreationModal" v-model:slots-to-add="slotsToAdd"
@@ -509,7 +508,6 @@ export default {
       courseSlotsByStepAndDate,
       stepList,
       canCreateSlot,
-      loggedUser,
       // Methods
       get,
       omit,
