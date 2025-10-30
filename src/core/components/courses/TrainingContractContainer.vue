@@ -71,7 +71,7 @@ import TrainingContractCreationModal from '@components/courses/TrainingContractC
 import TrainingContractTable from '@components/courses/TrainingContractTable';
 import { NotifyWarning, NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { useCourses } from '@composables/courses';
-import { REQUIRED_LABEL, ON_SITE, DOC_EXTENSIONS, E_LEARNING, IMAGE_EXTENSIONS, INTER_B2B } from '@data/constants';
+import { REQUIRED_LABEL, ON_SITE, DOC_EXTENSIONS, E_LEARNING, IMAGE_EXTENSIONS } from '@data/constants';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { downloadFile } from '@helpers/file';
 import { formatQuantity, formatDownloadName, formatAndSortOptions } from '@helpers/utils';
@@ -165,6 +165,14 @@ export default {
     const companyOptions = computed(() => formatAndSortOptions(course.value.companies, 'name'));
 
     const formattedOptions = computed(() => {
+      const options = companyOptions.value.map((opt) => {
+        if (!isIntraCourse.value) {
+          const noTraineeFromCompany = !course.value.trainees.some(t => t.registrationCompany === opt.value);
+          if (noTraineeFromCompany) return { ...opt, disable: true, verbatim: 'Apprenants manquants' };
+        }
+        return opt;
+      });
+
       const companiesWithoutPrice = course.value.companies
         .filter(c => !course.value.prices.find(p => p.company === c._id && p.global));
       if (companiesWithoutPrice.length) {
@@ -172,18 +180,14 @@ export default {
           .filter(c => !course.value.bills.find(b => b.companies.includes(c._id)))
           .map(c => c._id);
 
-        return companyOptions.value.map((opt) => {
+        return options.map((opt) => {
           if (companiesWithoutBills.includes(opt.value)) {
             return { ...opt, disable: true, verbatim: 'Prix de la formation manquant' };
-          }
-          if (course.value.type === INTER_B2B) {
-            const noTraineeFromCompany = !course.value.trainees.some(t => t.registrationCompany === opt.value);
-            if (noTraineeFromCompany) return { ...opt, disable: true, verbatim: 'Apprenants manquants' };
           }
           return opt;
         });
       }
-      return companyOptions.value;
+      return options;
     });
 
     const disableGenerationButton = computed(() => !!missingInfos.value.length || pdfLoading.value ||
@@ -220,12 +224,6 @@ export default {
     const openTrainingContractInfosModal = () => {
       validations.value.newGeneratedTrainingContractInfos.$touch();
       if (validations.value.newGeneratedTrainingContractInfos.$error) return NotifyWarning('Champ(s) invalide(s)');
-
-      const noTraineeFromCompany = !course.value.trainees
-        .some(t => t.registrationCompany === newGeneratedTrainingContractInfos.value.company);
-      if (!isIntraCourse.value && noTraineeFromCompany) {
-        return NotifyWarning('Il n\'y a aucun(e) stagiaire rattaché(e) à la formation pour cette structure.');
-      }
 
       trainingContractGenerationModal.value = false;
       trainingContractInfosModal.value = true;
