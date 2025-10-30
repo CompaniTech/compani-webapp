@@ -77,7 +77,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="q-mt-sm" v-if="canEdit && isRofOrVendorAdmin && isVendorInterface" align="right">
+                <div class="q-mt-sm" v-if="canCreateSlot" align="right">
                   <ni-button label="Ajouter des créneaux" color="primary" icon="add"
                     @click="openMultipleSlotCreationModal(step.key)" :disable="slotCreationLoading" />
                 </div>
@@ -92,7 +92,7 @@
       :validations="v$.editedCourseSlot" @hide="resetEditionModal" :loading="modalLoading" @delete="deleteCourseSlot"
       @submit="updateCourseSlot" @update="setCourseSlot" :is-rof-or-vendor-admin="isRofOrVendorAdmin"
       :is-vendor-interface="isVendorInterface" :is-only-slot="isOnlySlot" :is-planned-slot="isPlannedSlot"
-      @unplan-slot="unplanSlot" />
+      @unplan-slot="unplanSlot" :can-create-slot="canCreateSlot" />
 
     <multiple-slot-creation-modal v-model="multipleSlotCreationModal" v-model:slots-to-add="slotsToAdd"
       @hide="resetCreationModal" @submit="createCourseSlots" :validations="v$.slotsToAdd"
@@ -109,6 +109,7 @@ import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 import tail from 'lodash/tail';
 import groupBy from 'lodash/groupBy';
+import { subject } from '@casl/ability';
 import useVuelidate from '@vuelidate/core';
 import { required, requiredIf } from '@vuelidate/validators';
 import CourseSlots from '@api/CourseSlots';
@@ -129,6 +130,7 @@ import {
   SHORT_DURATION_H_MM,
   SINGLE,
 } from '@data/constants';
+import { defineAbilitiesForCourse } from '@helpers/ability';
 import { formatQuantity } from '@helpers/utils';
 import { getStepTypeLabel, formatSlotSchedule } from '@helpers/courses';
 import { ascendingSort, getISOTotalDuration } from '@helpers/dates/utils';
@@ -239,6 +241,14 @@ export default {
       type: step.type,
       typeLabel: getStepTypeLabel(step.type),
     })));
+
+    const loggedUser = computed(() => $store.state.main.loggedUser);
+
+    const canCreateSlot = computed(() => {
+      const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
+
+      return ability.can('create', subject('Course', course.value), 'slot');
+    });
 
     const rules = computed(() => ({
       editedCourseSlot: {
@@ -498,6 +508,8 @@ export default {
       stepTypes,
       courseSlotsByStepAndDate,
       stepList,
+      canCreateSlot,
+      loggedUser,
       // Methods
       get,
       omit,
