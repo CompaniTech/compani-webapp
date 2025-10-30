@@ -165,6 +165,14 @@ export default {
     const companyOptions = computed(() => formatAndSortOptions(course.value.companies, 'name'));
 
     const formattedOptions = computed(() => {
+      const options = companyOptions.value.map((opt) => {
+        if (!isIntraCourse.value) {
+          const noTraineeFromCompany = !course.value.trainees.some(t => t.registrationCompany === opt.value);
+          if (noTraineeFromCompany) return { ...opt, disable: true, verbatim: 'Apprenants manquants' };
+        }
+        return opt;
+      });
+
       const companiesWithoutPrice = course.value.companies
         .filter(c => !course.value.prices.find(p => p.company === c._id && p.global));
       if (companiesWithoutPrice.length) {
@@ -172,14 +180,14 @@ export default {
           .filter(c => !course.value.bills.find(b => b.companies.includes(c._id)))
           .map(c => c._id);
 
-        return companyOptions.value.map((opt) => {
+        return options.map((opt) => {
           if (companiesWithoutBills.includes(opt.value)) {
             return { ...opt, disable: true, verbatim: 'Prix de la formation manquant' };
           }
           return opt;
         });
       }
-      return companyOptions.value;
+      return options;
     });
 
     const disableGenerationButton = computed(() => !!missingInfos.value.length || pdfLoading.value ||
@@ -216,12 +224,6 @@ export default {
     const openTrainingContractInfosModal = () => {
       validations.value.newGeneratedTrainingContractInfos.$touch();
       if (validations.value.newGeneratedTrainingContractInfos.$error) return NotifyWarning('Champ(s) invalide(s)');
-
-      const noTraineeFromCompany = !course.value.trainees
-        .some(t => t.registrationCompany === newGeneratedTrainingContractInfos.value.company);
-      if (!isIntraCourse.value && noTraineeFromCompany) {
-        return NotifyWarning('Il n\'y a aucun(e) stagiaire rattaché(e) à la formation pour cette structure.');
-      }
 
       trainingContractGenerationModal.value = false;
       trainingContractInfosModal.value = true;
