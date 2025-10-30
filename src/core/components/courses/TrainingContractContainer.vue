@@ -177,7 +177,7 @@ export default {
         .filter(c => !course.value.prices.find(p => p.company === c._id && p.global));
       if (companiesWithoutPrice.length) {
         const companiesWithoutBills = companiesWithoutPrice
-          .filter(c => !course.value.bills.find(b => b.companies.includes(c._id)))
+          .filter(c => !(course.value.bills || []).find(b => b.companies.includes(c._id)))
           .map(c => c._id);
 
         return options.map((opt) => {

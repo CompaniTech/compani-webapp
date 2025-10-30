@@ -4,7 +4,7 @@
       Editer un <span class="text-weight-bold">créneau</span>
     </template>
     <div class="modal-icon">
-      <ni-button v-if="isRofOrVendorAdmin && isVendorInterface && !isPlannedSlot" icon="delete"
+      <ni-button v-if="canCreateSlot && !isPlannedSlot" icon="delete"
         @click="validateDeletion(editedCourseSlot._id)" :disable="isOnlySlot" />
       <ni-button class="bg-copper-grey-100" color="copper-grey-800" v-if="isPlannedSlot" label="Supprimer la date"
         @click="validateDatesDeletion(editedCourseSlot)" />
@@ -50,10 +50,9 @@ export default {
     stepTypes: { type: Array, default: () => [] },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
-    isRofOrVendorAdmin: { type: Boolean, default: false },
-    isVendorInterface: { type: Boolean, default: false },
     isOnlySlot: { type: Boolean, default: false },
     isPlannedSlot: { type: Boolean, default: false },
+    canCreateSlot: { type: Boolean, default: false },
   },
   components: {
     'ni-button': Button,
