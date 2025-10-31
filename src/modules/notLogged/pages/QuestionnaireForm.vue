@@ -118,6 +118,7 @@ export default {
             questionnaire: questionnaires.value[0]._id,
             user: trainee.value,
             questionnaireAnswersList: $store.state.questionnaire.answerList,
+            timeline: courseTimeline.value,
           };
           promises.push(QuestionnaireHistories.create(payload));
         } else {
@@ -135,6 +136,7 @@ export default {
               questionnaire: questionnaireId,
               user: trainee.value,
               questionnaireAnswersList: answers,
+              timeline: courseTimeline.value,
             };
             promises.push(QuestionnaireHistories.create(payload));
           }
