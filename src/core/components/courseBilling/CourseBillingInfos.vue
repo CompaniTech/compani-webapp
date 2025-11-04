@@ -68,7 +68,7 @@
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div class="payment">
                   {{ item.number }} ({{ getItemType(item) }}
-                  <template v-if="get(item, 'xmlSEPAFileInfos.name')">
+                  <template v-if="get(item, 'xmlSEPAFileInfos.name') && isVendorInterface">
                     associé au lot <span class="text-weight-bold">{{ item.xmlSEPAFileInfos.name }}</span>
                   </template>)
                 </div>
@@ -78,7 +78,7 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
-                <div v-if="item.status" class="chip-container status">
+                <div v-if="item.status && isVendorInterface" class="chip-container status">
                   <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
                 </div>
                 <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
@@ -562,6 +562,7 @@ export default {
       PAYMENT_STATUS_OPTIONS,
       expandedRows,
       XML_GENERATED,
+      isVendorInterface,
       // Computed
       validations,
       canUpdateBilling,
