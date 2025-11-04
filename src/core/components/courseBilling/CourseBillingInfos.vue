@@ -55,6 +55,9 @@
               <template v-else-if="col.name === 'expand'">
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
+              <template v-else-if="col.name === 'actions' && props.row.total !== 0">
+                <q-checkbox v-model="selectedBills" :val="props.row._id" />
+              </template>
               <template v-else>{{ col.value }}</template>
             </q-td>
           </template>
@@ -64,7 +67,9 @@
                 class="text-italic text-center">
                 Aucun règlement renseigné.
               </div>
-              <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props" class="q-my-sm row">
+              <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props"
+                class="q-my-sm flex row items-center">
+                <div v-if="isVendorInterface" class="checkbox-empty" />
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div class="payment">
                   {{ item.number }} ({{ getItemType(item) }}
@@ -200,7 +205,35 @@ export default {
     const coursePaymentEditionModal = ref(false);
     const newCoursePayment = ref({ nature: PAYMENT, type: '', netInclTaxes: '', date: '', courseBill: '' });
     const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' });
+    const paginations = ref([{ page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }]);
+    const billingRepresentativeGroupedByCompany = ref({});
+    const billingRepresentativeModal = ref(false);
+    const billingRepresentativeModalLoading = ref(false);
+    const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
+    const tmpBillingRepresentativeId = ref('');
+    const expandedRows = ref({ 0: [], 1: [], 2: [] });
+    const selectedBills = ref([]);
+
+    const rules = {
+      newCoursePayment: {
+        nature: { required },
+        netInclTaxes: { required, positiveNumber },
+        type: { required },
+        date: { required },
+      },
+      editedCoursePayment: {
+        netInclTaxes: { required, positiveNumber },
+        type: { required },
+        date: { required },
+        status: { required },
+      },
+      tmpBillingRepresentativeId: { required },
+    };
+
+    const { isVendorInterface } = useCourses();
+
     const columns = ref([
+      ...(isVendorInterface && [{ name: 'actions', label: '', align: 'right', field: '' }]),
       {
         name: 'date',
         label: 'Date',
@@ -238,31 +271,6 @@ export default {
       { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
       { name: 'expand', classes: 'expand' },
     ]);
-    const paginations = ref([{ page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }]);
-    const billingRepresentativeGroupedByCompany = ref({});
-    const billingRepresentativeModal = ref(false);
-    const billingRepresentativeModalLoading = ref(false);
-    const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
-    const tmpBillingRepresentativeId = ref('');
-    const expandedRows = ref({ 0: [], 1: [], 2: [] });
-
-    const rules = {
-      newCoursePayment: {
-        nature: { required },
-        netInclTaxes: { required, positiveNumber },
-        type: { required },
-        date: { required },
-      },
-      editedCoursePayment: {
-        netInclTaxes: { required, positiveNumber },
-        type: { required },
-        date: { required },
-        status: { required },
-      },
-      tmpBillingRepresentativeId: { required },
-    };
-
-    const { isVendorInterface } = useCourses();
 
     const validations = useVuelidate(rules, { newCoursePayment, editedCoursePayment, tmpBillingRepresentativeId });
 
@@ -563,6 +571,7 @@ export default {
       expandedRows,
       XML_GENERATED,
       isVendorInterface,
+      selectedBills,
       // Computed
       validations,
       canUpdateBilling,
@@ -628,8 +637,9 @@ export default {
 .cell
   padding: 0
   width: 100%
+  background-color: $copper-grey-100
 .date
-  width: 10%
+  width: 8%
   padding: 4px
 .payment
   width: 30%
@@ -637,6 +647,10 @@ export default {
 .progress
   width: 15%
   padding: 4px
+.checkbox
+  width: 5%
+  &-empty
+    width: 3%
 .formatted-price
   width: 10%
   padding: 4px
