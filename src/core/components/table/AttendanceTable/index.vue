@@ -54,8 +54,9 @@
                   <q-icon name="supervisor_account" />
                   {{ traineesCount(col.slot) }}
                 </div>
-                <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="slotCheckboxValue(col.slot)"
-                  dense size="sm" @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox" />
+                <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="isSlotChecked(col.slot)"
+                  dense size="sm" @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox"
+                  :checked-icon="getSlotCheckedIcon(col.slot)" :color="getSlotIconColor(col.slot)" />
               </div>
             </q-th>
           </q-tr>
@@ -75,8 +76,10 @@
                   <q-item-label v-if="props.row.external" class="unsubscribed">Pas inscrit</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot)" dense size="sm"
-                @update:model-value="updateAttendanceCheckbox(col.value, col.slot)" :disable="disableCheckbox" />
+              <q-checkbox v-else :model-value="isAttendanceChecked(col.value, col.slot)" dense size="sm"
+                @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
+                :disable="disableCheckbox" :checked-icon="getAttendanceCheckedIcon(col.value, col.slot)"
+                :color="getAttendanceIconColor(col.value, col.slot)" />
             </q-td>
           </q-tr>
         </template>
@@ -169,6 +172,8 @@ import {
   INTER_B2B,
   INTRA,
   INTRA_HOLDING,
+  PRESENT,
+  MISSING,
 } from '@data/constants';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
@@ -368,6 +373,42 @@ export default {
         + `${missingNames.join(', ')} ${formatQuantity('manquante', missingNames.length, 's', false)}`;
     };
 
+    const isSlotChecked = (slot) => {
+      if (slotCheckboxValue(slot, PRESENT)) return true;
+      if (slotCheckboxValue(slot, MISSING)) return true;
+      return false;
+    };
+
+    const getSlotCheckedIcon = (slot) => {
+      if (slotCheckboxValue(slot, PRESENT)) return 'mdi-checkbox-marked';
+      if (slotCheckboxValue(slot, MISSING)) return 'mdi-alert-box';
+      return 'mdi-checkbox-blank-outline';
+    };
+
+    const getSlotIconColor = (slot) => {
+      if (slotCheckboxValue(slot, PRESENT)) return 'primary';
+      if (slotCheckboxValue(slot, MISSING)) return 'orange-500';
+      return '';
+    };
+
+    const isAttendanceChecked = (trainee, slot) => {
+      if (attendanceCheckboxValue(trainee, slot, PRESENT)) return true;
+      if (attendanceCheckboxValue(trainee, slot, MISSING)) return true;
+      return false;
+    };
+
+    const getAttendanceCheckedIcon = (trainee, slot) => {
+      if (attendanceCheckboxValue(trainee, slot, PRESENT)) return 'check_box';
+      if (attendanceCheckboxValue(trainee, slot, MISSING)) return 'mdi-alert-box';
+      return 'mdi-checkbox-blank-outline';
+    };
+
+    const getAttendanceIconColor = (trainee, slot) => {
+      if (attendanceCheckboxValue(trainee, slot, PRESENT)) return 'primary';
+      if (attendanceCheckboxValue(trainee, slot, MISSING)) return 'orange-500';
+      return '';
+    };
+
     const created = async () => {
       await Promise.all([
         refreshAttendances({ course: course.value._id }),
@@ -445,6 +486,12 @@ export default {
       formatSingleAttendanceSheetName,
       areSignaturesMissing,
       getMissingSignatures,
+      isSlotChecked,
+      getSlotCheckedIcon,
+      getSlotIconColor,
+      isAttendanceChecked,
+      getAttendanceCheckedIcon,
+      getAttendanceIconColor,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,
@@ -516,4 +563,6 @@ export default {
   font-size: 12px
   font-style: italic
   padding: 4px 16px
+::v-deep .table thead th .q-checkbox__inner .q-icon
+  font-size: 21px
 </style>

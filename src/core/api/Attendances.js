@@ -15,6 +15,9 @@ export default {
   async create (payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/attendances`, payload);
   },
+  async update (params) {
+    await alenviAxios.put(`${process.env.API_HOSTNAME}/attendances`, null, { params });
+  },
   async delete (params) {
     await alenviAxios.delete(`${process.env.API_HOSTNAME}/attendances`, { params });
   },
