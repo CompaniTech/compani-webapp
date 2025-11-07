@@ -54,9 +54,16 @@
                   <q-icon name="supervisor_account" />
                   {{ traineesCount(col.slot) }}
                 </div>
-                <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="isSlotChecked(col.slot)"
-                  dense size="sm" @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox"
-                  :checked-icon="getSlotCheckedIcon(col.slot)" :color="getSlotIconColor(col.slot)" />
+                <template v-if="slotCheckboxValue(col.slot, MISSING)">
+                  <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="true" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox"
+                    checked-icon="mdi-alert-box" color="orange-500" />
+                </template>
+                <template v-else>
+                  <q-checkbox v-if="canUpdate && course.trainees.length" :disable="disableCheckbox"
+                    :model-value="slotCheckboxValue(col.slot, PRESENT)" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot)" />
+                </template>
               </div>
             </q-th>
           </q-tr>
@@ -76,10 +83,13 @@
                   <q-item-label v-if="props.row.external" class="unsubscribed">Pas inscrit</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-checkbox v-else :model-value="isAttendanceChecked(col.value, col.slot)" dense size="sm"
+              <q-checkbox v-else-if="attendanceCheckboxValue(col.value, col.slot, MISSING)" :model-value="true" dense
+                size="sm" @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
+                :disable="disableCheckbox" checked-icon="mdi-alert-box"
+                color="orange-500" />
+              <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot, PRESENT)" dense size="sm"
                 @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
-                :disable="disableCheckbox" :checked-icon="getAttendanceCheckedIcon(col.value, col.slot)"
-                :color="getAttendanceIconColor(col.value, col.slot)" />
+                :disable="disableCheckbox" />
             </q-td>
           </q-tr>
         </template>
@@ -373,42 +383,6 @@ export default {
         + `${missingNames.join(', ')} ${formatQuantity('manquante', missingNames.length, 's', false)}`;
     };
 
-    const isSlotChecked = (slot) => {
-      if (slotCheckboxValue(slot, PRESENT)) return true;
-      if (slotCheckboxValue(slot, MISSING)) return true;
-      return false;
-    };
-
-    const getSlotCheckedIcon = (slot) => {
-      if (slotCheckboxValue(slot, PRESENT)) return 'mdi-checkbox-marked';
-      if (slotCheckboxValue(slot, MISSING)) return 'mdi-alert-box';
-      return 'mdi-checkbox-blank-outline';
-    };
-
-    const getSlotIconColor = (slot) => {
-      if (slotCheckboxValue(slot, PRESENT)) return 'primary';
-      if (slotCheckboxValue(slot, MISSING)) return 'orange-500';
-      return '';
-    };
-
-    const isAttendanceChecked = (trainee, slot) => {
-      if (attendanceCheckboxValue(trainee, slot, PRESENT)) return true;
-      if (attendanceCheckboxValue(trainee, slot, MISSING)) return true;
-      return false;
-    };
-
-    const getAttendanceCheckedIcon = (trainee, slot) => {
-      if (attendanceCheckboxValue(trainee, slot, PRESENT)) return 'check_box';
-      if (attendanceCheckboxValue(trainee, slot, MISSING)) return 'mdi-alert-box';
-      return 'mdi-checkbox-blank-outline';
-    };
-
-    const getAttendanceIconColor = (trainee, slot) => {
-      if (attendanceCheckboxValue(trainee, slot, PRESENT)) return 'primary';
-      if (attendanceCheckboxValue(trainee, slot, MISSING)) return 'orange-500';
-      return '';
-    };
-
     const created = async () => {
       await Promise.all([
         refreshAttendances({ course: course.value._id }),
@@ -426,6 +400,8 @@ export default {
       DEFAULT_AVATAR,
       INTRA,
       INTRA_HOLDING,
+      MISSING,
+      PRESENT,
       loading,
       modalLoading,
       attendanceSheetTableLoading,
@@ -486,12 +462,6 @@ export default {
       formatSingleAttendanceSheetName,
       areSignaturesMissing,
       getMissingSignatures,
-      isSlotChecked,
-      getSlotCheckedIcon,
-      getSlotIconColor,
-      isAttendanceChecked,
-      getAttendanceCheckedIcon,
-      getAttendanceIconColor,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,
