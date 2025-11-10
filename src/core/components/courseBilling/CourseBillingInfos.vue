@@ -68,7 +68,7 @@
                 Aucun règlement renseigné.
               </div>
               <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props"
-                class="q-my-sm flex row items-center">
+                class="row items-center no-wrap">
                 <div v-if="isVendorInterface" class="checkbox-empty" />
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div class="payment">
@@ -650,13 +650,15 @@ export default {
 .checkbox
   width: 5%
   &-empty
-    width: 3%
+    width: 48px
+    height: 48px
+    padding: 4px
 .formatted-price
   width: 10%
   padding: 4px
   text-align: right
 .status
-  width: 15%
+  width: 14%
   margin: 0px 24px
 .edit
   display: flex
