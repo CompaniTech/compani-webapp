@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { helpers } from '@vuelidate/validators';
+import { helpers, email } from '@vuelidate/validators';
 import { isValidIBAN, isValidBIC } from 'ibantools';
 import { FILL_THE_GAPS_MAX_GAPS_COUNT } from '@data/constants';
 import { isGreaterThan, isGreaterThanOrEqual } from '@helpers/numbers';

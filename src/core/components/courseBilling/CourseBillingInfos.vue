@@ -56,7 +56,7 @@
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
               <template v-else-if="col.name === 'actions' && props.row.total !== 0">
-                <q-checkbox v-model="selectedBills" :val="props.row._id" />
+                <q-checkbox v-model="billListInfos.selectedBills" :val="props.row._id" />
               </template>
               <template v-else>{{ col.value }}</template>
             </q-td>
@@ -121,6 +121,15 @@
       @submit="updateCompany" :label="billingRepresentativeModalLabel" :loading="billingRepresentativeModalLoading"
       :interlocutors-options="billingRepresentativeGroupedByCompany[company._id]" @hide="resetBillingRepresentative"
       :validations="validations.tmpBillingRepresentativeId" />
+
+    <ni-send-bill-modal v-model="sendBillModal" v-model:bill-list-infos="billListInfos"
+      :loading="sendBillModalLoading" :email-options="adminUserOptions" :validations="validations.billListInfos"
+      @submit="sendBills" @hide="resetBillListReceivers" />
+
+    <div class="fixed fab-custom">
+      <q-btn class="q-my-sm q-mx-lg" no-caps rounded icon="mail" label="Envoyer par email"
+        @click="openSendBillModal" color="primary" :disable="!billListInfos.selectedBills.length" />
+    </div>
   </div>
 </template>
 
@@ -167,15 +176,17 @@ import {
   truncate,
   formatName,
   formatQuantity,
+  formatIdentity,
 } from '@helpers/utils';
 import { positiveNumber } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesFor } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
+import { hasUserAccessToCompany } from '@helpers/userCompanies';
 import { useCourses } from '@composables/courses';
 import { useCourseBilling } from '@composables/courseBills';
+import SendBillModal from '@components/courseBilling/SendBillModal';
 import CoursePaymentCreationModal from 'src/modules/vendor/components/billing/CoursePaymentCreationModal';
 import CoursePaymentEditionModal from 'src/modules/vendor/components/billing/CoursePaymentEditionModal';
-import { hasUserAccessToCompany } from '@helpers/userCompanies';
 
 export default {
   name: 'CourseBillingInfos',
@@ -190,6 +201,7 @@ export default {
     'ni-course-payment-edition-modal': CoursePaymentEditionModal,
     'ni-interlocutor-cell': InterlocutorCell,
     'ni-interlocutor-modal': InterlocutorModal,
+    'ni-send-bill-modal': SendBillModal,
   },
   emits: ['refresh-company'],
   setup (props, { emit }) {
@@ -212,7 +224,10 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
     const expandedRows = ref({ 0: [], 1: [], 2: [] });
-    const selectedBills = ref([]);
+    const billListInfos = ref({ selectedBills: [], receivers: [] });
+    const sendBillModal = ref(false);
+    const sendBillModalLoading = ref(false);
+    const adminUserOptions = ref([]);
 
     const rules = {
       newCoursePayment: {
@@ -228,6 +243,7 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
+      billListInfos: { receivers: { required } },
     };
 
     const { isVendorInterface } = useCourses();
@@ -272,7 +288,10 @@ export default {
       { name: 'expand', classes: 'expand' },
     ]);
 
-    const validations = useVuelidate(rules, { newCoursePayment, editedCoursePayment, tmpBillingRepresentativeId });
+    const validations = useVuelidate(
+      rules,
+      { newCoursePayment, editedCoursePayment, tmpBillingRepresentativeId, billListInfos }
+    );
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
 
@@ -538,9 +557,55 @@ export default {
       }
     });
 
+    const openSendBillModal = () => {
+      sendBillModal.value = true;
+      billListInfos.value.receivers = adminUserOptions.value.map(user => user.value);
+    };
+
+    const sendBills = async () => {
+      try {
+        sendBillModalLoading.value = true;
+        validations.value.billListInfos.$touch();
+        if (validations.value.billListInfos.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        sendBillModal.value = false;
+        await refreshCourseBills();
+        NotifyPositive(`${formatQuantity('facture envoyée', billListInfos.value.selectedBills.length)} par email.`);
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de l\'envoi de factures.');
+      } finally {
+        sendBillModalLoading.value = false;
+      }
+    };
+
+    const refreshAdminUsers = async () => {
+      try {
+        const adminUsers = await Users.list({ role: CLIENT_ADMIN, company: company.value._id });
+        adminUserOptions.value = adminUsers
+          .map(el => ({
+            value: el.local.email,
+            label: el.local.email,
+            identity: formatIdentity(el.identity, 'FL'),
+            additionalFilters: [el.local.email],
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+      } catch (e) {
+        console.error(e);
+        adminUserOptions.value = [];
+      }
+    };
+
+    const resetBillListReceivers = async () => {
+      billListInfos.value.receivers = [];
+      validations.value.billListInfos.$reset();
+
+      await refreshAdminUsers();
+    };
+
     const created = async () => {
       if (get(company.value, '_id')) {
-        await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions()]);
+        await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions(), refreshAdminUsers()]);
       }
     };
 
@@ -571,7 +636,10 @@ export default {
       expandedRows,
       XML_GENERATED,
       isVendorInterface,
-      selectedBills,
+      billListInfos,
+      sendBillModal,
+      sendBillModalLoading,
+      adminUserOptions,
       // Computed
       validations,
       canUpdateBilling,
@@ -603,6 +671,9 @@ export default {
       openBillingRepresentativeModal,
       updateCompany,
       resetBillingRepresentative,
+      openSendBillModal,
+      sendBills,
+      resetBillListReceivers,
     };
   },
 };

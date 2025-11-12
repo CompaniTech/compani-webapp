@@ -9,7 +9,8 @@
       :class="{ 'no-border': noBorder, 'borders': inModal && !noBorder , 'no-bottom': noError }" :error="error"
       :display-value="displayedValue" :hide-selected="!multiple" fill-input :input-debounce="0" :emit-value="!multiple"
       ref="selectInput" :option-disable="optionDisable" :data-cy="dataCy" :hide-dropdown-icon="!!icon"
-      :error-message="errorMessage" :multiple="multiple" :use-chips="multiple">
+      :error-message="errorMessage" :multiple="multiple" :use-chips="multiple" new-value-mode="add"
+      @new-value="addNewValue">
       <template #append>
         <ni-button v-if="modelValue && !disable && clearable" icon="close" @click.stop="resetValue" size="sm" />
         <ni-button v-if="icon" :icon="icon" class="select-icon primary-icon"
@@ -56,7 +57,7 @@ export default {
     noBorder: { type: Boolean, default: false },
     blurOnSelection: { type: Boolean, default: true },
   },
-  emits: ['focus', 'blur', 'update:model-value'],
+  emits: ['focus', 'blur', 'update:model-value', 'add-new-value'],
   components: {
     'ni-button': Button,
   },
@@ -95,6 +96,8 @@ export default {
       if (blurOnSelection.value) selectInput.value.blur();
     };
 
+    const addNewValue = (value) => { emit('add-new-value', value); };
+
     const formatStringForFiltering = str => escapeRegExp(removeDiacritics(str.toLowerCase()));
 
     const onFilter = (val, update) => {
@@ -128,6 +131,7 @@ export default {
       onInput,
       onFilter,
       resetValue,
+      addNewValue,
     };
   },
 };
