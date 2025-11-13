@@ -56,7 +56,7 @@
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
               <template v-else-if="col.name === 'actions' && props.row.total !== 0">
-                <q-checkbox v-model="billListInfos.selectedBills" :val="props.row._id" />
+                <q-checkbox v-model="selectedBills" :val="props.row._id" />
               </template>
               <template v-else>{{ col.value }}</template>
             </q-td>
@@ -128,7 +128,7 @@
 
     <div class="fixed fab-custom">
       <q-btn class="q-my-sm q-mx-lg" no-caps rounded icon="mail" label="Envoyer par email"
-        @click="openSendBillModal" color="primary" :disable="!billListInfos.selectedBills.length" />
+        @click="openSendBillModal" color="primary" :disable="!selectedBills.length" />
     </div>
   </div>
 </template>
@@ -228,6 +228,7 @@ export default {
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
     const adminUserOptions = ref([]);
+    const selectedBills = ref([]);
 
     const rules = {
       newCoursePayment: {
@@ -558,8 +559,14 @@ export default {
     });
 
     const openSendBillModal = () => {
-      sendBillModal.value = true;
+      const allCourseBills = Object.values(courseBillList.value).flat();
+      const selectedCourseBills = allCourseBills
+        .filter(cb => selectedBills.value.includes(cb._id))
+        .map(cb => pick(cb, ['_id', 'number', 'course.misc', 'course.subProgram.program.name', 'netInclTaxes']));
+
+      billListInfos.value.selectedBills = selectedCourseBills;
       billListInfos.value.receivers = adminUserOptions.value.map(user => user.value);
+      sendBillModal.value = true;
     };
 
     const sendBills = async () => {
@@ -597,7 +604,7 @@ export default {
     };
 
     const resetBillListInfos = async () => {
-      billListInfos.value = { selectedBills: billListInfos.value.selectedBills, receivers: [], type: '', text: '' };
+      billListInfos.value = { selectedBills: [], receivers: [], type: '', text: '' };
       validations.value.billListInfos.$reset();
 
       await refreshAdminUsers();
@@ -640,6 +647,7 @@ export default {
       sendBillModal,
       sendBillModalLoading,
       adminUserOptions,
+      selectedBills,
       // Computed
       validations,
       canUpdateBilling,

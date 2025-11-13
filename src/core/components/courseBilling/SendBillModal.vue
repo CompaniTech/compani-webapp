@@ -3,9 +3,16 @@
     <template #title>
        Envoyer <span class="text-weight-bold">les factures par email</span>
     </template>
-    <div v-for="billInfos of billListInfos" :key="billInfos" class="text-copper-grey-600">
-      <!-- {{ billInfos }} -->
-    </div>
+    <ni-banner class="bg-copper-grey-100 q-ma-md" icon="info_outline">
+      <template #message>
+        <div v-for="bill of billListInfos.selectedBills" :key="bill._id" class="banner-details">
+          <span class="text-bold">
+            {{ bill.number }} ({{ formatPrice(bill.netInclTaxes)}})
+          </span>
+          : {{ composeCourseName(bill.course) }}
+        </div>
+      </template>
+    </ni-banner>
     <ni-select caption="Destinataires" :model-value="billListInfos.receivers" :options="receiversOptions"
       multiple in-modal @update:model-value="updateBillListInfos($event, 'receivers')" @add-new-value="addNewValue"
       :error="validations.receivers.$error" :error-message="emailError" required-field />
@@ -29,7 +36,10 @@ import Select from '@components/form/Select';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
 import OptionGroup from '@components/form/OptionGroup';
+import Banner from '@components/Banner';
 import { REQUIRED_LABEL, EMAIL_OPTIONS, END_COURSE, MIDDLE_COURSE, START_COURSE, VAEI } from '@data/constants';
+import { composeCourseName } from '@helpers/courses';
+import { formatPrice } from '@helpers/utils';
 import { set } from 'lodash';
 
 export default {
@@ -47,6 +57,7 @@ export default {
     'ni-select': Select,
     'ni-option-group': OptionGroup,
     'ni-input': Input,
+    'ni-banner': Banner,
   },
   emits: ['hide', 'update:model-value', 'update:bill-list-infos', 'submit'],
   setup (props, { emit }) {
@@ -146,6 +157,8 @@ export default {
       submit,
       updateBillListInfos,
       addNewValue,
+      composeCourseName,
+      formatPrice,
     };
   },
 };
@@ -154,6 +167,8 @@ export default {
 .details
   font-size: 14px
   color: $copper-grey-500
+.banner-details
+  font-size: 12px
 :deep(.q-option-group)
   .q-radio
     .q-radio__label
