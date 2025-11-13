@@ -244,7 +244,7 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
-      billListInfos: { receivers: { required, validEmailsArray }, type: { required } },
+      billListInfos: { receivers: { required, validEmailsArray }, type: { required }, text: { required } },
     };
 
     const { isVendorInterface } = useCourses();

@@ -20,7 +20,7 @@
       @update:model-value="updateBillListInfos($event, 'type')" caption="Type d'email" :options="EMAIL_OPTIONS"
       type="radio" :error="validations.type.$error" required-field inline />
     <ni-input caption="Corps de l'email" :model-value="billListInfos.text" required-field in-modal
-      @update:model-value="updateBillListInfos($event, 'text')" type="textarea" />
+      @update:model-value="updateBillListInfos($event, 'text')" type="textarea" :error="validations.text.$error" />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Envoyer par email"
         icon-right="send" color="white" :loading="loading" @click="submit" />
