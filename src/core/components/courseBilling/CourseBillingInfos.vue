@@ -562,7 +562,10 @@ export default {
       const allCourseBills = Object.values(courseBillList.value).flat();
       const selectedCourseBills = allCourseBills
         .filter(cb => selectedBills.value.includes(cb._id))
-        .map(cb => pick(cb, ['_id', 'number', 'course.misc', 'course.subProgram.program.name', 'netInclTaxes']));
+        .map(cb => pick(
+          cb,
+          ['_id', 'number', 'course.misc', 'course.subProgram.program.name', 'netInclTaxes', 'billedAt']
+        ));
 
       billListInfos.value.selectedBills = selectedCourseBills;
       billListInfos.value.receivers = adminUserOptions.value.map(user => user.value);

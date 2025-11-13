@@ -7,7 +7,7 @@
       <template #message>
         <div v-for="bill of billListInfos.selectedBills" :key="bill._id" class="banner-details">
           <span class="text-bold">
-            {{ bill.number }} ({{ formatPrice(bill.netInclTaxes)}})
+            {{ bill.number }} ({{ formatPrice(bill.netInclTaxes) }})
           </span>
           : {{ composeCourseName(bill.course) }}
         </div>
@@ -39,7 +39,8 @@ import OptionGroup from '@components/form/OptionGroup';
 import Banner from '@components/Banner';
 import { REQUIRED_LABEL, EMAIL_OPTIONS, END_COURSE, MIDDLE_COURSE, START_COURSE, VAEI } from '@data/constants';
 import { composeCourseName } from '@helpers/courses';
-import { formatPrice } from '@helpers/utils';
+import { formatPrice, formatQuantity } from '@helpers/utils';
+import CompaniDate from '@helpers/dates/companiDates';
 import { set } from 'lodash';
 
 export default {
@@ -68,6 +69,21 @@ export default {
       get(validations.value, 'receivers.required.$response') === false ? REQUIRED_LABEL : 'Email non valide'
     ));
 
+    const severalSelectedBills = computed(() => billListInfos.value.selectedBills.length > 1);
+
+    const billListMonth = computed(() => {
+      const firstBillMonthDate = CompaniDate(billListInfos.value.selectedBills[0].billedAt).format('MMMM yyyy');
+      const everyBillDateOnSameMonth = billListInfos.value.selectedBills
+        .every(bill => CompaniDate(bill.billedAt).format('MMMM yyyy') === firstBillMonthDate);
+
+      return everyBillDateOnSameMonth ? firstBillMonthDate : '';
+    });
+
+    const billListNumbers = computed(() => billListInfos.value.selectedBills.map(bill => bill.number).join(', '));
+
+    const billListCourseNames = computed(() => billListInfos.value.selectedBills
+      .map(bill => `"${composeCourseName(bill.course)}"`).join(', '));
+
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
@@ -93,6 +109,9 @@ export default {
       updateBillListInfos([...billListInfos.value.receivers, newOption], 'receivers');
     };
 
+    const displayBillMonth = month => (
+      `${['a', 'e', 'i', 'o', 'u', 'y'].includes(month[0].toLowerCase()) ? 'd’' : 'de '}${billListMonth.value}`);
+
     watch(
       emailOptions,
       (newOptions) => { if (newOptions.length) receiversOptions.value = [...newOptions]; },
@@ -104,8 +123,9 @@ export default {
       switch (newType) {
         case VAEI:
           emailText = 'Madame, Monsieur,\r\n\r\n'
-          + 'Vous trouverez en PJ la ou les factures correspondant à l\'accompagnement VAE Inversée du mois de'
-          + ' **[A REMPLIR]**.\r\n\r\n'
+          + `Vous trouverez en PJ ${severalSelectedBills.value ? 'les factures' : 'la facture'} correspondant à`
+          + ' l\'accompagnement VAE Inversée du mois'
+          + ` ${billListMonth.value ? displayBillMonth(billListMonth.value) : ' **[A REMPLIR]**'}.\r\n\r\n`
           + 'Sauf contre-indication de votre part, je procéderai au prélèvement de ce montant dans les prochains'
           + ' jours ouvrés. \r\n\r\n'
           + 'Restant à votre disposition,\n'
@@ -113,28 +133,35 @@ export default {
           break;
         case START_COURSE:
           emailText = 'Madame, Monsieur,\r\n\r\n'
-          + 'À la suite du démarrage de la formation "**[A REMPLIR]**",'
-          + ' je vous informe de la mise à disposition de la facture **[A REMPLIR]** dans votre espace COMPANI.\r\n\r\n'
+          + `À la suite du démarrage ${severalSelectedBills.value ? 'des formations' : 'de la formation'}`
+          + `${billListCourseNames.value}, je vous informe de la mise à disposition`
+          + ` ${severalSelectedBills.value ? 'des factures' : 'de la facture'} ${billListNumbers.value} dans`
+          + ' votre espace COMPANI.\r\n\r\n'
           + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
-          + ' le RIB est indiqué dans la facture.\r\n\r\n'
+          + ` le RIB est indiqué dans ${severalSelectedBills.value ? 'les factures' : 'la facture'}.\r\n\r\n`
           + 'Restant à votre disposition,\n'
           + 'Bien à vous,';
           break;
         case MIDDLE_COURSE:
           emailText = 'Madame, Monsieur,\r\n\r\n'
-          + 'La formation "**[A REMPLIR]**" étant arrivée à mi-parcours,'
-          + ' je vous informe de la mise à disposition de la facture **[A REMPLIR]** dans votre espace COMPANI.\r\n\r\n'
+          + `${severalSelectedBills.value ? 'Les formations' : 'La formation'} ${billListCourseNames.value} étant`
+          + ` ${formatQuantity('arrivée', severalSelectedBills.value ? 2 : 1, 's', false)} à mi-parcours,`
+          + ` je vous informe de la mise à disposition ${severalSelectedBills.value ? 'des factures' : 'de la facture'}`
+          + ` ${billListNumbers.value} dans votre espace COMPANI.\r\n\r\n`
           + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
-          + ' le RIB est indiqué dans la facture.\r\n\r\n'
+          + ` le RIB est indiqué dans ${severalSelectedBills.value ? 'les factures' : 'la facture'}.\r\n\r\n`
           + 'Restant à votre disposition,\n'
           + 'Bien à vous,';
           break;
         case END_COURSE:
           emailText = 'Madame, Monsieur,\r\n\r\n'
-          + 'La formation "**[A REMPLIR]**" étant arrivée à son terme,",'
-          + ' je vous informe de la mise à disposition de la facture **[A REMPLIR]** dans votre espace COMPANI.\r\n\r\n'
+          + `${severalSelectedBills.value ? 'Les formations' : 'La formation'} ${billListCourseNames.value} étant`
+          + ` ${formatQuantity('arrivée', severalSelectedBills.value ? 2 : 1, 's', false)} à`
+          + ` ${severalSelectedBills.value ? 'leur' : 'son'} terme, je vous informe de la mise à disposition`
+          + ` ${severalSelectedBills.value ? 'des factures' : 'de la facture'} ${billListNumbers.value} dans votre`
+          + ' espace COMPANI.\r\n\r\n'
           + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
-          + ' le RIB est indiqué dans la facture.\r\n\r\n'
+          + ` le RIB est indiqué dans ${severalSelectedBills.value ? 'les factures' : 'la facture'}.\r\n\r\n`
           + 'Restant à votre disposition,\n'
           + 'Bien à vous,';
           break;
