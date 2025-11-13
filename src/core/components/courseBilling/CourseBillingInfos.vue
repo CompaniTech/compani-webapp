@@ -124,7 +124,7 @@
 
     <ni-send-bill-modal v-model="sendBillModal" v-model:bill-list-infos="billListInfos"
       :loading="sendBillModalLoading" :email-options="adminUserOptions" :validations="validations.billListInfos"
-      @submit="sendBills" @hide="resetBillListReceivers" />
+      @submit="sendBills" @hide="resetBillListInfos" />
 
     <div class="fixed fab-custom">
       <q-btn class="q-my-sm q-mx-lg" no-caps rounded icon="mail" label="Envoyer par email"
@@ -224,7 +224,7 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
     const expandedRows = ref({ 0: [], 1: [], 2: [] });
-    const billListInfos = ref({ selectedBills: [], receivers: [] });
+    const billListInfos = ref({ selectedBills: [], receivers: [], type: '' });
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
     const adminUserOptions = ref([]);
@@ -243,7 +243,7 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
-      billListInfos: { receivers: { required, validEmailsArray } },
+      billListInfos: { receivers: { required, validEmailsArray }, type: { required } },
     };
 
     const { isVendorInterface } = useCourses();
@@ -596,8 +596,8 @@ export default {
       }
     };
 
-    const resetBillListReceivers = async () => {
-      billListInfos.value.receivers = [];
+    const resetBillListInfos = async () => {
+      billListInfos.value = { selectedBills: billListInfos.value.selectedBills, receivers: [], type: '' };
       validations.value.billListInfos.$reset();
 
       await refreshAdminUsers();
@@ -673,7 +673,7 @@ export default {
       resetBillingRepresentative,
       openSendBillModal,
       sendBills,
-      resetBillListReceivers,
+      resetBillListInfos,
     };
   },
 };
