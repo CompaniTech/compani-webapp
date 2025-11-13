@@ -126,7 +126,7 @@
       :loading="sendBillModalLoading" :email-options="adminUserOptions" :validations="validations.billListInfos"
       @submit="sendBills" @hide="resetBillListInfos" />
 
-    <div class="fixed fab-custom">
+    <div v-if="isVendorInterface" class="fixed fab-custom">
       <q-btn class="q-my-sm q-mx-lg" no-caps rounded icon="mail" label="Envoyer par email"
         @click="openSendBillModal" color="primary" :disable="!selectedBills.length" />
     </div>
@@ -250,7 +250,7 @@ export default {
     const { isVendorInterface } = useCourses();
 
     const columns = ref([
-      ...(isVendorInterface && [{ name: 'actions', label: '', align: 'right', field: '' }]),
+      ...(isVendorInterface ? [{ name: 'actions', label: '', align: 'right', field: '' }] : []),
       {
         name: 'date',
         label: 'Date',
@@ -615,8 +615,10 @@ export default {
 
     const created = async () => {
       if (get(company.value, '_id')) {
-        await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions(), refreshAdminUsers()]);
+        await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions()]);
       }
+
+      if (isVendorInterface) await refreshAdminUsers();
     };
 
     created();
