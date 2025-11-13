@@ -121,3 +121,8 @@ export const urlAddress = (value) => {
 
   return value.match(/^(?:http(s)?:\/\/)[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+$/) || false;
 };
+
+export const validEmailsArray = (value) => {
+  if (!Array.isArray(value)) return false;
+  return value.every(v => email.$validator(v));
+};

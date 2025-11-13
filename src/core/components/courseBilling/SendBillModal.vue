@@ -8,7 +8,7 @@
     </div>
     <ni-select caption="Destinataires" :model-value="billListInfos.receivers" :options="receiversOptions"
       multiple in-modal @update:model-value="updateReceivers" @add-new-value="addNewValue"
-      :error="validations.receivers.$error" :error-message="emailError" />
+      :error="validations.receivers.$error" :error-message="emailError" required-field />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Envoyer par email"
         icon-right="send" color="white" :loading="loading" @click="submit" />

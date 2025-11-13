@@ -178,7 +178,7 @@ import {
   formatQuantity,
   formatIdentity,
 } from '@helpers/utils';
-import { positiveNumber } from '@helpers/vuelidateCustomVal';
+import { positiveNumber, validEmailsArray } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesFor } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
@@ -243,7 +243,7 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
-      billListInfos: { receivers: { required } },
+      billListInfos: { receivers: { required, validEmailsArray } },
     };
 
     const { isVendorInterface } = useCourses();
