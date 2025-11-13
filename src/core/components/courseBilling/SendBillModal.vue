@@ -12,6 +12,8 @@
     <ni-option-group in-modal :model-value="billListInfos.type"
       @update:model-value="updateBillListInfos($event, 'type')" caption="Type d'email" :options="EMAIL_OPTIONS"
       type="radio" :error="validations.type.$error" required-field inline />
+    <ni-input caption="Corps de l'email" :model-value="billListInfos.text" required-field in-modal
+      @update:model-value="updateBillListInfos($event, 'text')" type="textarea" />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Envoyer par email"
         icon-right="send" color="white" :loading="loading" @click="submit" />
@@ -24,9 +26,10 @@ import { toRefs, ref, computed, watch } from 'vue';
 import get from 'lodash/get';
 import Modal from '@components/modal/Modal';
 import Select from '@components/form/Select';
+import Input from '@components/form/Input';
 import Button from '@components/Button';
 import OptionGroup from '@components/form/OptionGroup';
-import { REQUIRED_LABEL, EMAIL_OPTIONS } from '@data/constants';
+import { REQUIRED_LABEL, EMAIL_OPTIONS, END_COURSE, MIDDLE_COURSE, START_COURSE, VAEI } from '@data/constants';
 import { set } from 'lodash';
 
 export default {
@@ -43,6 +46,7 @@ export default {
     'ni-button': Button,
     'ni-select': Select,
     'ni-option-group': OptionGroup,
+    'ni-input': Input,
   },
   emits: ['hide', 'update:model-value', 'update:bill-list-infos', 'submit'],
   setup (props, { emit }) {
@@ -83,6 +87,52 @@ export default {
       (newOptions) => { if (newOptions.length) receiversOptions.value = [...newOptions]; },
       { immediate: true }
     );
+
+    watch(() => billListInfos.value.type, (newType) => {
+      let emailText = '';
+      switch (newType) {
+        case VAEI:
+          emailText = 'Madame, Monsieur,\r\n\r\n'
+          + 'Vous trouverez en PJ la ou les factures correspondant à l\'accompagnement VAE Inversée du mois de'
+          + ' **[A REMPLIR]**.\r\n\r\n'
+          + 'Sauf contre-indication de votre part, je procéderai au prélèvement de ce montant dans les prochains'
+          + ' jours ouvrés. \r\n\r\n'
+          + 'Restant à votre disposition,\n'
+          + 'Bien à vous,';
+          break;
+        case START_COURSE:
+          emailText = 'Madame, Monsieur,\r\n\r\n'
+          + 'À la suite du démarrage de la formation "**[A REMPLIR]**",'
+          + ' je vous informe de la mise à disposition de la facture **[A REMPLIR]** dans votre espace COMPANI.\r\n\r\n'
+          + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
+          + ' le RIB est indiqué dans la facture.\r\n\r\n'
+          + 'Restant à votre disposition,\n'
+          + 'Bien à vous,';
+          break;
+        case MIDDLE_COURSE:
+          emailText = 'Madame, Monsieur,\r\n\r\n'
+          + 'La formation "**[A REMPLIR]**" étant arrivée à mi-parcours,'
+          + ' je vous informe de la mise à disposition de la facture **[A REMPLIR]** dans votre espace COMPANI.\r\n\r\n'
+          + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
+          + ' le RIB est indiqué dans la facture.\r\n\r\n'
+          + 'Restant à votre disposition,\n'
+          + 'Bien à vous,';
+          break;
+        case END_COURSE:
+          emailText = 'Madame, Monsieur,\r\n\r\n'
+          + 'La formation "**[A REMPLIR]**" étant arrivée à son terme,",'
+          + ' je vous informe de la mise à disposition de la facture **[A REMPLIR]** dans votre espace COMPANI.\r\n\r\n'
+          + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
+          + ' le RIB est indiqué dans la facture.\r\n\r\n'
+          + 'Restant à votre disposition,\n'
+          + 'Bien à vous,';
+          break;
+        default:
+          emailText = '';
+      }
+
+      billListInfos.value.text = emailText;
+    });
 
     return {
       // Data

@@ -224,7 +224,7 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
     const expandedRows = ref({ 0: [], 1: [], 2: [] });
-    const billListInfos = ref({ selectedBills: [], receivers: [], type: '' });
+    const billListInfos = ref({ selectedBills: [], receivers: [], type: '', text: '' });
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
     const adminUserOptions = ref([]);
@@ -597,7 +597,7 @@ export default {
     };
 
     const resetBillListInfos = async () => {
-      billListInfos.value = { selectedBills: billListInfos.value.selectedBills, receivers: [], type: '' };
+      billListInfos.value = { selectedBills: billListInfos.value.selectedBills, receivers: [], type: '', text: '' };
       validations.value.billListInfos.$reset();
 
       await refreshAdminUsers();

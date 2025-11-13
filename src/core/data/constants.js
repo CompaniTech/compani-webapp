@@ -23,9 +23,9 @@ export const CIVILITY_OPTIONS = [
 export const CONTRACT = 'contract';
 
 // EMAILS
-const VAEI = 'vaei';
+export const VAEI = 'vaei';
 export const START_COURSE = 'start_course';
-const MIDDLE_COURSE = 'middle_course';
+export const MIDDLE_COURSE = 'middle_course';
 export const END_COURSE = 'end_course';
 export const EMAIL_OPTIONS = [
   { label: 'VAEI', value: VAEI },
