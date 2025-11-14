@@ -15,7 +15,17 @@
     </ni-banner>
     <ni-select caption="Destinataires" :model-value="billListInfos.recipientEmails" :options="recipientOptions"
       multiple in-modal @update:model-value="updateBillListInfos($event, 'recipientEmails')" required-field
-      @add-new-value="addNewValue" :error="validations.recipientEmails.$error" :error-message="emailError" />
+      @add-new-value="addNewValue" :error="validations.recipientEmails.$error" :error-message="emailError"
+      option-slot>
+      <template #option="{ scope }">
+        <q-item v-bind="scope.itemProps">
+          <q-item-section>
+            <q-item-label>{{ scope.opt.identity || '' }}</q-item-label>
+            <q-item-label class="details"><div class="q-mb-xs">{{ scope.opt.value }}</div></q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </ni-select>
     <ni-option-group in-modal :model-value="billListInfos.type"
       @update:model-value="updateBillListInfos($event, 'type')" caption="Type d'email" :options="EMAIL_OPTIONS"
       type="radio" :error="validations.type.$error" required-field inline />
