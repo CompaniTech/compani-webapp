@@ -13,9 +13,9 @@
         </div>
       </template>
     </ni-banner>
-    <ni-select caption="Destinataires" :model-value="billListInfos.receivers" :options="receiversOptions"
-      multiple in-modal @update:model-value="updateBillListInfos($event, 'receivers')" @add-new-value="addNewValue"
-      :error="validations.receivers.$error" :error-message="emailError" required-field />
+    <ni-select caption="Destinataires" :model-value="billListInfos.recipientEmails" :options="recipientOptions"
+      multiple in-modal @update:model-value="updateBillListInfos($event, 'recipientEmails')" required-field
+      @add-new-value="addNewValue" :error="validations.recipientEmails.$error" :error-message="emailError" />
     <ni-option-group in-modal :model-value="billListInfos.type"
       @update:model-value="updateBillListInfos($event, 'type')" caption="Type d'email" :options="EMAIL_OPTIONS"
       type="radio" :error="validations.type.$error" required-field inline />
@@ -63,10 +63,10 @@ export default {
   emits: ['hide', 'update:model-value', 'update:bill-list-infos', 'submit'],
   setup (props, { emit }) {
     const { emailOptions, validations, billListInfos } = toRefs(props);
-    const receiversOptions = ref([]);
+    const recipientOptions = ref([]);
 
     const emailError = computed(() => (
-      get(validations.value, 'receivers.required.$response') === false ? REQUIRED_LABEL : 'Email non valide'
+      get(validations.value, 'recipientEmails.required.$response') === false ? REQUIRED_LABEL : 'Email non valide'
     ));
 
     const severalSelectedBills = computed(() => billListInfos.value.selectedBills.length > 1);
@@ -89,24 +89,24 @@ export default {
     const submit = () => emit('submit');
 
     const updateBillListInfos = (event, path) => {
-      if (path === 'receivers') {
-        let newReceivers = event;
+      if (path === 'recipientEmails') {
+        let newRecipientEmails = event;
         if (event.some(el => typeof el !== 'string')) {
-          newReceivers = event.map(el => el.value || el);
+          newRecipientEmails = event.map(el => el.value || el);
         }
-        emit('update:bill-list-infos', set({ ...billListInfos.value }, path, newReceivers));
+        emit('update:bill-list-infos', set({ ...billListInfos.value }, path, newRecipientEmails));
       } else {
         emit('update:bill-list-infos', set({ ...billListInfos.value }, path, event));
       }
     };
 
     const addNewValue = (value) => {
-      if (!value || receiversOptions.value.map(opt => opt.value).includes(value)) return;
+      if (!value || recipientOptions.value.map(opt => opt.value).includes(value)) return;
 
       const newOption = { label: value, value, additionalFilters: [value] };
-      receiversOptions.value = [...receiversOptions.value, newOption];
+      recipientOptions.value = [...recipientOptions.value, newOption];
 
-      updateBillListInfos([...billListInfos.value.receivers, newOption], 'receivers');
+      updateBillListInfos([...billListInfos.value.recipientEmails, newOption], 'recipientEmails');
     };
 
     const displayBillMonth = month => (
@@ -114,7 +114,7 @@ export default {
 
     watch(
       emailOptions,
-      (newOptions) => { if (newOptions.length) receiversOptions.value = [...newOptions]; },
+      (newOptions) => { if (newOptions.length) recipientOptions.value = [...newOptions]; },
       { immediate: true }
     );
 
@@ -174,7 +174,7 @@ export default {
 
     return {
       // Data
-      receiversOptions,
+      recipientOptions,
       EMAIL_OPTIONS,
       // Computed
       emailError,

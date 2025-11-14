@@ -224,7 +224,7 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
     const expandedRows = ref({ 0: [], 1: [], 2: [] });
-    const billListInfos = ref({ selectedBills: [], receivers: [], type: '', text: '' });
+    const billListInfos = ref({ selectedBills: [], recipientEmails: [], type: '', text: '' });
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
     const adminUserOptions = ref([]);
@@ -244,7 +244,7 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
-      billListInfos: { receivers: { required, validEmailsArray }, type: { required }, text: { required } },
+      billListInfos: { recipientEmails: { required, validEmailsArray }, type: { required }, text: { required } },
     };
 
     const { isVendorInterface } = useCourses();
@@ -568,7 +568,7 @@ export default {
         ));
 
       billListInfos.value.selectedBills = selectedCourseBills;
-      billListInfos.value.receivers = adminUserOptions.value.map(user => user.value);
+      billListInfos.value.recipientEmails = adminUserOptions.value.map(user => user.value);
       sendBillModal.value = true;
     };
 
@@ -607,7 +607,7 @@ export default {
     };
 
     const resetBillListInfos = async () => {
-      billListInfos.value = { selectedBills: [], receivers: [], type: '', text: '' };
+      billListInfos.value = { selectedBills: [], recipientEmails: [], type: '', text: '' };
       validations.value.billListInfos.$reset();
 
       await refreshAdminUsers();
