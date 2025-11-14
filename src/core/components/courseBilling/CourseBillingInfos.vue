@@ -146,6 +146,7 @@ import CourseBills from '@api/CourseBills';
 import CoursePayments from '@api/CoursePayments';
 import Users from '@api/Users';
 import Companies from '@api/Companies';
+import Email from '@api/Email';
 import Button from '@components/Button';
 import Progress from '@components/CourseProgress';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
@@ -579,12 +580,16 @@ export default {
         validations.value.billListInfos.$touch();
         if (validations.value.billListInfos.$error) return NotifyWarning('Champ(s) invalide(s).');
 
+        const { selectedBills: courseBills, recipientEmails, type, text: content } = billListInfos.value;
+        await Email.sendBillList({ bills: courseBills.map(b => b._id), recipientEmails, type, content });
+
         sendBillModal.value = false;
         selectedBills.value = [];
         NotifyPositive(`${formatQuantity('facture envoyée', billListInfos.value.selectedBills.length)} par email.`);
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de l\'envoi de factures.');
+        if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
+        else NotifyNegative('Erreur lors de l\'envoi de factures.');
       } finally {
         sendBillModalLoading.value = false;
       }
