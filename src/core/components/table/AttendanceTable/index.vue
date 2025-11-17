@@ -103,6 +103,11 @@
       <ni-button v-if="courseHasSlot && canUpdate && !isSingleCourse" color="primary" icon="add" class="q-mb-sm"
         :disable="loading" label="Ajouter un·e participant·e non inscrit·e"
         @click="openTraineeAttendanceAdditionModal" />
+      <div class="q-pa-md text-14">
+        <span><q-icon name="mdi-checkbox-marked" color="primary" class="q-py-xs" />1 clic : présent / </span>
+        <span><q-icon name="mdi-alert-box" color="orange-500" class="q-py-xs" /> 2 clics : absent / </span>
+        <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
+      </div>
     </q-card>
 
     <ni-simple-table :data="formattedAttendanceSheets" :columns="attendanceSheetColumns"
