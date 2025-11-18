@@ -120,7 +120,8 @@ export default {
     };
 
     const displayBillMonth = month => (
-      `${['a', 'e', 'i', 'o', 'u', 'y'].includes(month[0].toLowerCase()) ? 'd’' : 'de '}${billListMonth.value}`);
+      `${['a', 'o'].includes(month[0].toLowerCase()) ? 'd’' : 'de '}${billListMonth.value}`
+    );
 
     watch(
       emailOptions,

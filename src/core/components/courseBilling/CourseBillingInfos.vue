@@ -558,9 +558,10 @@ export default {
       }
     });
 
-    const openSendBillModal = () => {
-      const allCourseBills = Object.values(courseBillList.value).flat();
-      const selectedCourseBills = allCourseBills
+    const openSendBillModal = async () => {
+      await refreshAdminUsers();
+
+      const selectedCourseBills = courseBillList.value
         .filter(cb => selectedBills.value.includes(cb._id))
         .map(cb => pick(
           cb,
@@ -609,16 +610,12 @@ export default {
     const resetBillListInfos = async () => {
       billListInfos.value = { selectedBills: [], recipientEmails: [], type: '', text: '' };
       validations.value.billListInfos.$reset();
-
-      await refreshAdminUsers();
     };
 
     const created = async () => {
       if (get(company.value, '_id')) {
         await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions()]);
       }
-
-      if (isVendorInterface) await refreshAdminUsers();
     };
 
     created();

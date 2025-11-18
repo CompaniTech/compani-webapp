@@ -96,7 +96,11 @@ export default {
       if (blurOnSelection.value) selectInput.value.blur();
     };
 
-    const addNewValue = (value) => { emit('add-new-value', value); };
+    const addNewValue = (value) => {
+      emit('add-new-value', value);
+
+      selectInput.value.updateInputValue('');
+    };
 
     const formatStringForFiltering = str => escapeRegExp(removeDiacritics(str.toLowerCase()));
 
