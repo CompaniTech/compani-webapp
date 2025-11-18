@@ -154,7 +154,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
     }
   };
 
-  const updateAttendanceCheckbox = async (traineeId, slotId, isExternal) => {
+  const updateAttendanceCheckbox = async (traineeId, slotId, isUnsubscribed) => {
     try {
       if (!canUpdate.value) {
         NotifyNegative('Impossible de modifier l\'émargement.');
@@ -163,7 +163,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
 
       loading.value = true;
       if (attendanceCheckboxValue(traineeId, slotId, PRESENT)) {
-        if (isExternal) await Attendances.delete({ trainee: traineeId, courseSlot: slotId });
+        if (isUnsubscribed) await Attendances.delete({ trainee: traineeId, courseSlot: slotId });
         else await Attendances.update({ trainee: traineeId, courseSlot: slotId });
       } else if (attendanceCheckboxValue(traineeId, slotId, MISSING)) {
         await Attendances.delete({ trainee: traineeId, courseSlot: slotId });
