@@ -16,7 +16,7 @@
     <ni-select caption="Destinataires" :model-value="billListInfos.recipientEmails" :options="recipientOptions"
       multiple in-modal @update:model-value="updateBillListInfos($event, 'recipientEmails')" required-field
       @add-new-value="addNewValue" :error="validations.recipientEmails.$error" :error-message="emailError"
-      option-slot>
+      option-slot clearable :blur-on-selection="false">
       <template #option="{ scope }">
         <q-item v-bind="scope.itemProps">
           <q-item-section>
