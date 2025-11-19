@@ -580,7 +580,7 @@ export default {
         if (validations.value.billListInfos.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         sendBillModal.value = false;
-        await refreshCourseBills();
+        selectedBills.value = [];
         NotifyPositive(`${formatQuantity('facture envoyée', billListInfos.value.selectedBills.length)} par email.`);
       } catch (e) {
         console.error(e);

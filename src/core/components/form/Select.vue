@@ -98,7 +98,6 @@ export default {
 
     const addNewValue = (value) => {
       emit('add-new-value', value);
-
       selectInput.value.updateInputValue('');
     };
 
