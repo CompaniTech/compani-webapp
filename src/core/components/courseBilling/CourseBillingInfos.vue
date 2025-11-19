@@ -55,6 +55,9 @@
               <template v-else-if="col.name === 'expand'">
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
+              <template v-else-if="col.name === 'actions' && props.row.total !== 0">
+                <q-checkbox v-model="selectedBills" :val="props.row._id" />
+              </template>
               <template v-else>{{ col.value }}</template>
             </q-td>
           </template>
@@ -64,7 +67,9 @@
                 class="text-italic text-center">
                 Aucun règlement renseigné.
               </div>
-              <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props" class="q-my-sm row">
+              <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props"
+                class="row items-center no-wrap">
+                <div v-if="isVendorInterface" class="checkbox-empty" />
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div class="payment">
                   {{ item.number }} ({{ getItemType(item) }}
@@ -116,6 +121,15 @@
       @submit="updateCompany" :label="billingRepresentativeModalLabel" :loading="billingRepresentativeModalLoading"
       :interlocutors-options="billingRepresentativeGroupedByCompany[company._id]" @hide="resetBillingRepresentative"
       :validations="validations.tmpBillingRepresentativeId" />
+
+    <ni-send-bill-modal v-model="sendBillModal" v-model:bill-list-infos="billListInfos"
+      :loading="sendBillModalLoading" :email-options="adminUserOptions" :validations="validations.billListInfos"
+      @submit="sendBills" @hide="resetBillListInfos" />
+
+    <div v-if="isVendorInterface" class="fixed fab-custom">
+      <q-btn class="q-my-sm q-mx-lg" no-caps rounded icon="mail" label="Envoyer par email"
+        @click="openSendBillModal" color="primary" :disable="!selectedBills.length" />
+    </div>
   </div>
 </template>
 
@@ -162,15 +176,17 @@ import {
   truncate,
   formatName,
   formatQuantity,
+  formatIdentity,
 } from '@helpers/utils';
-import { positiveNumber } from '@helpers/vuelidateCustomVal';
+import { positiveNumber, validEmailsArray } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesFor } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
+import { hasUserAccessToCompany } from '@helpers/userCompanies';
 import { useCourses } from '@composables/courses';
 import { useCourseBilling } from '@composables/courseBills';
+import SendBillModal from '@components/courseBilling/SendBillModal';
 import CoursePaymentCreationModal from 'src/modules/vendor/components/billing/CoursePaymentCreationModal';
 import CoursePaymentEditionModal from 'src/modules/vendor/components/billing/CoursePaymentEditionModal';
-import { hasUserAccessToCompany } from '@helpers/userCompanies';
 
 export default {
   name: 'CourseBillingInfos',
@@ -185,6 +201,7 @@ export default {
     'ni-course-payment-edition-modal': CoursePaymentEditionModal,
     'ni-interlocutor-cell': InterlocutorCell,
     'ni-interlocutor-modal': InterlocutorModal,
+    'ni-send-bill-modal': SendBillModal,
   },
   emits: ['refresh-company'],
   setup (props, { emit }) {
@@ -200,7 +217,40 @@ export default {
     const coursePaymentEditionModal = ref(false);
     const newCoursePayment = ref({ nature: PAYMENT, type: '', netInclTaxes: '', date: '', courseBill: '' });
     const editedCoursePayment = ref({ _id: '', nature: '', type: '', netInclTaxes: '', date: '', status: '' });
+    const paginations = ref([{ page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }]);
+    const billingRepresentativeGroupedByCompany = ref({});
+    const billingRepresentativeModal = ref(false);
+    const billingRepresentativeModalLoading = ref(false);
+    const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
+    const tmpBillingRepresentativeId = ref('');
+    const expandedRows = ref({ 0: [], 1: [], 2: [] });
+    const billListInfos = ref({ selectedBills: [], recipientEmails: [], type: '', text: '' });
+    const sendBillModal = ref(false);
+    const sendBillModalLoading = ref(false);
+    const adminUserOptions = ref([]);
+    const selectedBills = ref([]);
+
+    const rules = {
+      newCoursePayment: {
+        nature: { required },
+        netInclTaxes: { required, positiveNumber },
+        type: { required },
+        date: { required },
+      },
+      editedCoursePayment: {
+        netInclTaxes: { required, positiveNumber },
+        type: { required },
+        date: { required },
+        status: { required },
+      },
+      tmpBillingRepresentativeId: { required },
+      billListInfos: { recipientEmails: { required, validEmailsArray }, type: { required }, text: { required } },
+    };
+
+    const { isVendorInterface } = useCourses();
+
     const columns = ref([
+      ...(isVendorInterface ? [{ name: 'actions', label: '', align: 'right', field: '' }] : []),
       {
         name: 'date',
         label: 'Date',
@@ -238,33 +288,11 @@ export default {
       { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
       { name: 'expand', classes: 'expand' },
     ]);
-    const paginations = ref([{ page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }, { page: 1, rowsPerPage: 15 }]);
-    const billingRepresentativeGroupedByCompany = ref({});
-    const billingRepresentativeModal = ref(false);
-    const billingRepresentativeModalLoading = ref(false);
-    const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
-    const tmpBillingRepresentativeId = ref('');
-    const expandedRows = ref({ 0: [], 1: [], 2: [] });
 
-    const rules = {
-      newCoursePayment: {
-        nature: { required },
-        netInclTaxes: { required, positiveNumber },
-        type: { required },
-        date: { required },
-      },
-      editedCoursePayment: {
-        netInclTaxes: { required, positiveNumber },
-        type: { required },
-        date: { required },
-        status: { required },
-      },
-      tmpBillingRepresentativeId: { required },
-    };
-
-    const { isVendorInterface } = useCourses();
-
-    const validations = useVuelidate(rules, { newCoursePayment, editedCoursePayment, tmpBillingRepresentativeId });
+    const validations = useVuelidate(
+      rules,
+      { newCoursePayment, editedCoursePayment, tmpBillingRepresentativeId, billListInfos }
+    );
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
 
@@ -530,6 +558,60 @@ export default {
       }
     });
 
+    const openSendBillModal = async () => {
+      await refreshAdminUsers();
+
+      const selectedCourseBills = courseBillList.value
+        .filter(cb => selectedBills.value.includes(cb._id))
+        .map(cb => pick(
+          cb,
+          ['_id', 'number', 'course.misc', 'course.subProgram.program.name', 'netInclTaxes', 'billedAt']
+        ));
+
+      billListInfos.value.selectedBills = selectedCourseBills;
+      billListInfos.value.recipientEmails = adminUserOptions.value.map(user => user.value);
+      sendBillModal.value = true;
+    };
+
+    const sendBills = async () => {
+      try {
+        sendBillModalLoading.value = true;
+        validations.value.billListInfos.$touch();
+        if (validations.value.billListInfos.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        sendBillModal.value = false;
+        selectedBills.value = [];
+        NotifyPositive(`${formatQuantity('facture envoyée', billListInfos.value.selectedBills.length)} par email.`);
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de l\'envoi de factures.');
+      } finally {
+        sendBillModalLoading.value = false;
+      }
+    };
+
+    const refreshAdminUsers = async () => {
+      try {
+        const adminUsers = await Users.list({ role: CLIENT_ADMIN, company: company.value._id });
+        adminUserOptions.value = adminUsers
+          .map(el => ({
+            value: el.local.email,
+            label: el.local.email,
+            identity: formatIdentity(el.identity, 'FL'),
+            additionalFilters: [el.local.email],
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+      } catch (e) {
+        console.error(e);
+        adminUserOptions.value = [];
+      }
+    };
+
+    const resetBillListInfos = async () => {
+      billListInfos.value = { selectedBills: [], recipientEmails: [], type: '', text: '' };
+      validations.value.billListInfos.$reset();
+    };
+
     const created = async () => {
       if (get(company.value, '_id')) {
         await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions()]);
@@ -563,6 +645,11 @@ export default {
       expandedRows,
       XML_GENERATED,
       isVendorInterface,
+      billListInfos,
+      sendBillModal,
+      sendBillModalLoading,
+      adminUserOptions,
+      selectedBills,
       // Computed
       validations,
       canUpdateBilling,
@@ -594,6 +681,9 @@ export default {
       openBillingRepresentativeModal,
       updateCompany,
       resetBillingRepresentative,
+      openSendBillModal,
+      sendBills,
+      resetBillListInfos,
     };
   },
 };
@@ -628,8 +718,9 @@ export default {
 .cell
   padding: 0
   width: 100%
+  background-color: $copper-grey-100
 .date
-  width: 10%
+  width: 8%
   padding: 4px
 .payment
   width: 30%
@@ -637,12 +728,18 @@ export default {
 .progress
   width: 15%
   padding: 4px
+.checkbox
+  width: 5%
+  &-empty
+    width: 48px
+    height: 48px
+    padding: 4px
 .formatted-price
   width: 10%
   padding: 4px
   text-align: right
 .status
-  width: 15%
+  width: 14%
   margin: 0px 24px
 .edit
   display: flex
