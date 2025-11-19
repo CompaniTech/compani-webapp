@@ -54,8 +54,16 @@
                   <q-icon name="supervisor_account" />
                   {{ traineesCount(col.slot) }}
                 </div>
-                <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="slotCheckboxValue(col.slot)"
-                  dense size="sm" @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox" />
+                <template v-if="slotCheckboxValue(col.slot, MISSING)">
+                  <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="true" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox"
+                    checked-icon="mdi-alert-box" color="orange-500" />
+                </template>
+                <template v-else>
+                  <q-checkbox v-if="canUpdate && course.trainees.length" :disable="disableCheckbox"
+                    :model-value="slotCheckboxValue(col.slot, PRESENT)" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot)" />
+                </template>
               </div>
             </q-th>
           </q-tr>
@@ -75,8 +83,13 @@
                   <q-item-label v-if="props.row.external" class="unsubscribed">Pas inscrit</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot)" dense size="sm"
-                @update:model-value="updateAttendanceCheckbox(col.value, col.slot)" :disable="disableCheckbox" />
+              <q-checkbox v-else-if="attendanceCheckboxValue(col.value, col.slot, MISSING)" :model-value="true" dense
+                size="sm" @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
+                :disable="disableCheckbox" checked-icon="mdi-alert-box"
+                color="orange-500" />
+              <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot, PRESENT)" dense size="sm"
+                @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
+                :disable="disableCheckbox" />
             </q-td>
           </q-tr>
         </template>
@@ -90,6 +103,11 @@
       <ni-button v-if="courseHasSlot && canUpdate && !isSingleCourse" color="primary" icon="add" class="q-mb-sm"
         :disable="loading" label="Ajouter un·e participant·e non inscrit·e"
         @click="openTraineeAttendanceAdditionModal" />
+      <div class="q-pa-md text-14">
+        <span><q-icon name="mdi-checkbox-marked" color="primary" class="q-py-xs" />1 clic : présent / </span>
+        <span><q-icon name="mdi-alert-box" color="orange-500" class="q-py-xs" /> 2 clics : absent / </span>
+        <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
+      </div>
     </q-card>
 
     <ni-simple-table :data="formattedAttendanceSheets" :columns="attendanceSheetColumns"
@@ -169,6 +187,8 @@ import {
   INTER_B2B,
   INTRA,
   INTRA_HOLDING,
+  PRESENT,
+  MISSING,
 } from '@data/constants';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
@@ -385,6 +405,8 @@ export default {
       DEFAULT_AVATAR,
       INTRA,
       INTRA_HOLDING,
+      MISSING,
+      PRESENT,
       loading,
       modalLoading,
       attendanceSheetTableLoading,
@@ -516,4 +538,6 @@ export default {
   font-size: 12px
   font-style: italic
   padding: 4px 16px
+::v-deep .table thead th .q-checkbox__inner .q-icon
+  font-size: 21px
 </style>

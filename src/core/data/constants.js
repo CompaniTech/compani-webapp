@@ -417,3 +417,7 @@ export const CREATION_METHOD_OPTIONS = [
 export const YES = 'Oui';
 export const NO = 'Non';
 export const NO_DATA = 'Aucune donnée';
+
+// COURSE SLOT STATUS
+export const PRESENT = 'present';
+export const MISSING = 'missing';
