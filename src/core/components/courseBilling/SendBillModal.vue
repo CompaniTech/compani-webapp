@@ -105,6 +105,8 @@ export default {
           newRecipientEmails = event.map(el => el.value || el);
         }
         emit('update:bill-list-infos', set({ ...billListInfos.value }, path, newRecipientEmails));
+      } else if (path === 'text') {
+        emit('update:bill-list-infos', set({ ...billListInfos.value }, path, event.replaceAll(/\n/g, '\r\n')));
       } else {
         emit('update:bill-list-infos', set({ ...billListInfos.value }, path, event));
       }
