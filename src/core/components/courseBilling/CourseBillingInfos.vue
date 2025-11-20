@@ -55,7 +55,7 @@
               <template v-else-if="col.name === 'expand'">
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
-              <template v-else-if="col.name === 'actions' && props.row.total !== 0">
+              <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)">
                 <q-checkbox v-model="selectedBills" :val="props.row._id" />
               </template>
               <template v-else>{{ col.value }}</template>
@@ -69,7 +69,7 @@
               </div>
               <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props"
                 class="row items-center no-wrap">
-                <div v-if="isVendorInterface" class="checkbox-empty" />
+                <div v-if="isVendorInterface && displayCheckbox" :class="{'checkbox-empty': displayCheckbox}" />
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div class="payment">
                   {{ item.number }} ({{ getItemType(item) }}
@@ -183,6 +183,7 @@ import { positiveNumber, validEmailsArray } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesFor } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
+import { isEqualTo } from '@helpers/numbers';
 import { useCourses } from '@composables/courses';
 import { useCourseBilling } from '@composables/courseBills';
 import SendBillModal from '@components/courseBilling/SendBillModal';
@@ -250,46 +251,6 @@ export default {
 
     const { isVendorInterface } = useCourses();
 
-    const columns = ref([
-      ...(isVendorInterface ? [{ name: 'actions', label: '', align: 'right', field: '' }] : []),
-      {
-        name: 'date',
-        label: 'Date',
-        field: 'billedAt',
-        format: value => CompaniDate(value).format(DD_MM_YYYY),
-        align: 'left',
-        classes: 'date',
-      },
-      { name: 'number', label: '#', field: 'number', align: 'left', classes: 'payment' },
-      { name: 'progress', label: 'Avancement formation', field: 'progress', align: 'center', classes: 'progress' },
-      {
-        name: 'netInclTaxes',
-        label: 'Montant',
-        field: 'netInclTaxes',
-        format: formatPrice,
-        align: 'right',
-        classes: 'formatted-price',
-      },
-      {
-        name: 'paid',
-        label: 'Réglé / crédité',
-        field: 'paid',
-        format: formatPrice,
-        align: 'right',
-        classes: 'formatted-price',
-      },
-      {
-        name: 'total',
-        label: 'Solde',
-        field: 'total',
-        format: formatPriceWithSign,
-        align: 'right',
-        classes: 'text-weight-bold formatted-price',
-      },
-      { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
-      { name: 'expand', classes: 'expand' },
-    ]);
-
     const validations = useVuelidate(
       rules,
       { newCoursePayment, editedCoursePayment, tmpBillingRepresentativeId, billListInfos }
@@ -328,6 +289,51 @@ export default {
         ...otherBillsPayedByCompany.length && { 2: otherBillsPayedByCompany },
       };
     });
+
+    const displayCheckbox = computed(() => isVendorInterface &&
+      courseBillList.value.some(cb => !isEqualTo(cb.total, 0)));
+
+    const columns = computed(() => [
+      ...(displayCheckbox.value
+        ? [{ name: 'actions', label: '', align: 'right', field: '' }]
+        : []),
+      {
+        name: 'date',
+        label: 'Date',
+        field: 'billedAt',
+        format: value => CompaniDate(value).format(DD_MM_YYYY),
+        align: 'left',
+        classes: 'date',
+      },
+      { name: 'number', label: '#', field: 'number', align: 'left', classes: 'payment' },
+      { name: 'progress', label: 'Avancement formation', field: 'progress', align: 'center', classes: 'progress' },
+      {
+        name: 'netInclTaxes',
+        label: 'Montant',
+        field: 'netInclTaxes',
+        format: formatPrice,
+        align: 'right',
+        classes: 'formatted-price',
+      },
+      {
+        name: 'paid',
+        label: 'Réglé / crédité',
+        field: 'paid',
+        format: formatPrice,
+        align: 'right',
+        classes: 'formatted-price',
+      },
+      {
+        name: 'total',
+        label: 'Solde',
+        field: 'total',
+        format: formatPriceWithSign,
+        align: 'right',
+        classes: 'text-weight-bold formatted-price',
+      },
+      { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
+      { name: 'expand', classes: 'expand' },
+    ]);
 
     const { pdfLoading, downloadBill, downloadCreditNote } = useCourseBilling(courseBillList);
 
@@ -659,6 +665,7 @@ export default {
       validations,
       canUpdateBilling,
       groupedCourseBills,
+      displayCheckbox,
       // Methods
       refreshCourseBills,
       formatPrice,
@@ -689,6 +696,7 @@ export default {
       openSendBillModal,
       sendBills,
       resetBillListInfos,
+      isEqualTo,
     };
   },
 };
@@ -725,7 +733,7 @@ export default {
   width: 100%
   background-color: $copper-grey-100
 .date
-  width: 8%
+  width: 10%
   padding: 4px
 .payment
   width: 30%
