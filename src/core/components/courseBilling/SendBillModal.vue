@@ -105,6 +105,8 @@ export default {
           newRecipientEmails = event.map(el => el.value || el);
         }
         emit('update:bill-list-infos', set({ ...billListInfos.value }, path, newRecipientEmails));
+      } else if (path === 'text') {
+        emit('update:bill-list-infos', set({ ...billListInfos.value }, path, event.replaceAll(/\n/g, '\r\n')));
       } else {
         emit('update:bill-list-infos', set({ ...billListInfos.value }, path, event));
       }
@@ -139,7 +141,7 @@ export default {
           + ` ${billListMonth.value ? displayBillMonth(billListMonth.value) : ' **[A REMPLIR]**'}.\r\n\r\n`
           + 'Sauf contre-indication de votre part, je procéderai au prélèvement de ce montant dans les prochains'
           + ' jours ouvrés. \r\n\r\n'
-          + 'Restant à votre disposition,\n'
+          + 'Restant à votre disposition,\r\n'
           + 'Bien à vous,';
           break;
         case START_COURSE:
@@ -150,7 +152,7 @@ export default {
           + ' votre espace COMPANI.\r\n\r\n'
           + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
           + ` le RIB est indiqué dans ${severalSelectedBills.value ? 'les factures' : 'la facture'}.\r\n\r\n`
-          + 'Restant à votre disposition,\n'
+          + 'Restant à votre disposition,\r\n'
           + 'Bien à vous,';
           break;
         case MIDDLE_COURSE:
@@ -161,7 +163,7 @@ export default {
           + ` ${billListNumbers.value} dans votre espace COMPANI.\r\n\r\n`
           + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
           + ` le RIB est indiqué dans ${severalSelectedBills.value ? 'les factures' : 'la facture'}.\r\n\r\n`
-          + 'Restant à votre disposition,\n'
+          + 'Restant à votre disposition,\r\n'
           + 'Bien à vous,';
           break;
         case END_COURSE:
@@ -173,7 +175,7 @@ export default {
           + ' espace COMPANI.\r\n\r\n'
           + 'Je vous remercie de procéder au règlement de ce montant dans les meilleurs délais, sur le compte dont'
           + ` le RIB est indiqué dans ${severalSelectedBills.value ? 'les factures' : 'la facture'}.\r\n\r\n`
-          + 'Restant à votre disposition,\n'
+          + 'Restant à votre disposition,\r\n'
           + 'Bien à vous,';
           break;
         default:
