@@ -11,8 +11,9 @@
     <template v-if="Object.keys(groupedCourseBills).length">
       <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl">
         <p class="text-weight-bold">{{ getTableName(index) }}</p>
-        <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns" v-model:pagination="paginations[index]"
-          :hide-bottom="false" :loading="loading" v-model:expanded="expandedRows[index]">
+        <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns(index)"
+          v-model:pagination="paginations[index]" :hide-bottom="false" :loading="loading"
+          v-model:expanded="expandedRows[index]">
           <template #row="{ props }">
             <q-td v-for="col in props.cols" :key="col.name" :props="props">
               <template v-if="col.name === 'number'">
@@ -69,7 +70,8 @@
               </div>
               <div v-else v-for="item in getSortedItems(props.row)" :key="item._id" :props="props"
                 class="row items-center no-wrap">
-                <div v-if="isVendorInterface && displayCheckbox" :class="{'checkbox-empty': displayCheckbox}" />
+                <div v-if="isVendorInterface && displayCheckbox[index]"
+                  :class="{'checkbox-empty': displayCheckbox[index]}" />
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div class="payment">
                   {{ item.number }} ({{ getItemType(item) }}
@@ -290,11 +292,11 @@ export default {
       };
     });
 
-    const displayCheckbox = computed(() => isVendorInterface &&
-      courseBillList.value.some(cb => !isEqualTo(cb.total, 0)));
+    const displayCheckbox = computed(() => Object.values(groupedCourseBills.value)
+      .map(bills => isVendorInterface && bills.some(cb => !isEqualTo(cb.total, 0))));
 
-    const columns = computed(() => [
-      ...(displayCheckbox.value
+    const columns = index => [
+      ...(displayCheckbox.value[index]
         ? [{ name: 'actions', label: '', align: 'right', field: '' }]
         : []),
       {
@@ -333,7 +335,7 @@ export default {
       },
       { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
       { name: 'expand', classes: 'expand' },
-    ]);
+    ];
 
     const { pdfLoading, downloadBill, downloadCreditNote } = useCourseBilling(courseBillList);
 
