@@ -79,8 +79,8 @@ export default {
       return { pre: 'Nouveau', type: 'créneau', post: 'le', infos };
     };
 
-    const getSlotCreationDetails = () => get(courseHistory, 'slot.address.fullAddress') ||
-      get(courseHistory, 'slot  .meetingLink') ||
+    const getSlotCreationDetails = () => get(courseHistory.value, 'slot.address.fullAddress') ||
+      get(courseHistory.value, 'slot.meetingLink') ||
       'Pas d\'adresse renseignée.';
 
     const getSlotDeletionTitle = () => {
@@ -91,10 +91,10 @@ export default {
 
     const getSlotDeletionDetails = () => {
       let address = '.\r\nPas d\'adresse renseignée.';
-      if (get(courseHistory, 'slot.address.fullAddress')) {
-        address = ` au ${get(courseHistory, 'slot.address.fullAddress')}`;
-      } else if (get(courseHistory, 'slot.meetingLink')) {
-        address = ` sur ${get(courseHistory, 'slot.meetingLink')}`;
+      if (get(courseHistory.value, 'slot.address.fullAddress')) {
+        address = ` au ${get(courseHistory.value, 'slot.address.fullAddress')}`;
+      } else if (get(courseHistory.value, 'slot.meetingLink')) {
+        address = ` sur ${get(courseHistory.value, 'slot.meetingLink')}`;
       }
 
       return `Créneau initialement prévu de ${CompaniDate(courseHistory.value.slot.startDate).format(HHhMM)}`
