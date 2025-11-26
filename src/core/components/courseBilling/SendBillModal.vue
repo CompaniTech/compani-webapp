@@ -27,7 +27,7 @@
       </template>
     </ni-select>
     <ni-option-group in-modal :model-value="billListInfos.type"
-      @update:model-value="updateBillListInfos($event, 'type')" caption="Type d'email" :options="EMAIL_OPTIONS"
+      @update:model-value="updateBillListInfos($event, 'type')" caption="Type d'email" :options="formattedEmailOptions"
       type="radio" :error="validations.type.$error" required-field inline />
     <ni-input caption="Corps de l'email" :model-value="billListInfos.text" required-field in-modal
       @update:model-value="updateBillListInfos($event, 'text')" type="textarea" :error="validations.text.$error" />
@@ -47,7 +47,7 @@ import Input from '@components/form/Input';
 import Button from '@components/Button';
 import OptionGroup from '@components/form/OptionGroup';
 import Banner from '@components/Banner';
-import { REQUIRED_LABEL, EMAIL_OPTIONS, END_COURSE, MIDDLE_COURSE, START_COURSE, VAEI } from '@data/constants';
+import { REQUIRED_LABEL, EMAIL_OPTIONS, END_COURSE, MIDDLE_COURSE, START_COURSE, VAEI, RESEND } from '@data/constants';
 import { composeCourseName } from '@helpers/courses';
 import { formatPrice, formatQuantity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -93,6 +93,15 @@ export default {
 
     const billListCourseNames = computed(() => billListInfos.value.selectedBills
       .map(bill => `"${composeCourseName(bill.course)}"`).join(', '));
+
+    const formattedEmailOptions = computed(() => {
+      const everyBillHaveBeenSent = billListInfos.value.selectedBills
+        .every(bill => get(bill, 'sendingDates', []).length >= 1);
+      if (everyBillHaveBeenSent) {
+        return EMAIL_OPTIONS.map(opt => (opt.value === RESEND ? opt : { ...opt, disable: true }));
+      }
+      return EMAIL_OPTIONS.map(opt => (opt.value !== RESEND ? opt : { ...opt, disable: true }));
+    });
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
@@ -178,6 +187,17 @@ export default {
           + 'Restant à votre disposition,\r\n'
           + 'Bien à vous,';
           break;
+        case RESEND: {
+          const plural = severalSelectedBills.value;
+          emailText = 'Madame, Monsieur,\r\n\r\n'
+          + `Sauf erreur de notre part, ${plural ? 'les factures' : 'la facture'} ${billListNumbers.value}`
+          + ` ${plural ? 'n\'ont pas encore été réglées' : 'n\'a pas encore été réglée'}.\r\n\r\n`
+          + 'Nous vous remercions de bien vouloir effectuer le paiement dans les plus brefs délais ou de nous indiquer'
+          + ' si celui-ci a déjà été effectué.\r\n\r\n'
+          + 'Restant à votre disposition,\r\n'
+          + 'Bien à vous,';
+          break;
+        }
         default:
           emailText = '';
       }
@@ -188,9 +208,9 @@ export default {
     return {
       // Data
       recipientOptions,
-      EMAIL_OPTIONS,
       // Computed
       emailError,
+      formattedEmailOptions,
       // Methods
       hide,
       input,
