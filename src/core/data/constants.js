@@ -27,11 +27,13 @@ export const VAEI = 'vaei';
 export const START_COURSE = 'start_course';
 export const MIDDLE_COURSE = 'middle_course';
 export const END_COURSE = 'end_course';
+export const RESEND = 'resend';
 export const EMAIL_OPTIONS = [
   { label: 'VAEI', value: VAEI },
   { label: 'Début de formation', value: START_COURSE },
   { label: 'Mi-formation', value: MIDDLE_COURSE },
   { label: 'Fin de formation', value: END_COURSE },
+  { label: 'Relance', value: RESEND },
 ];
 
 // EVENTS

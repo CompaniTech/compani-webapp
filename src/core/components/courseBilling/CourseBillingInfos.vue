@@ -169,6 +169,7 @@ import {
   PENDING,
   RECEIVED,
   XML_GENERATED,
+  RESEND,
 } from '@data/constants.js';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSortBy, descendingSortBy } from '@helpers/dates/utils';
@@ -574,11 +575,17 @@ export default {
         .filter(cb => selectedBills.value.includes(cb._id))
         .map(cb => pick(
           cb,
-          ['_id', 'number', 'course.misc', 'course.subProgram.program.name', 'netInclTaxes', 'billedAt']
+          ['_id', 'number', 'course.misc', 'course.subProgram.program.name', 'netInclTaxes', 'billedAt', 'sendingDates']
         ));
+
+      const sendingDatesNumber = [...new Set(selectedCourseBills.map(cb => get(cb, 'sendingDates', []).length))];
+      if (sendingDatesNumber.includes(0) && sendingDatesNumber.length > 1) {
+        return NotifyWarning('Impossible: certaines factures ont été envoyées au moins une fois mais pas toutes.');
+      }
 
       billListInfos.value.selectedBills = selectedCourseBills;
       billListInfos.value.recipientEmails = adminUserOptions.value.map(user => user.value);
+      if (sendingDatesNumber[0] >= 1) billListInfos.value.type = RESEND;
       sendBillModal.value = true;
     };
 
@@ -594,6 +601,8 @@ export default {
         sendBillModal.value = false;
         selectedBills.value = [];
         NotifyPositive(`${formatQuantity('facture envoyée', billListInfos.value.selectedBills.length)} par email.`);
+
+        await refreshCourseBills();
       } catch (e) {
         console.error(e);
         if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
