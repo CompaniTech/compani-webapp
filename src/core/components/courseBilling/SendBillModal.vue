@@ -95,8 +95,7 @@ export default {
       .map(bill => `"${composeCourseName(bill.course)}"`).join(', '));
 
     const formattedEmailOptions = computed(() => {
-      const everyBillHaveBeenSent = billListInfos.value.selectedBills
-        .every(bill => get(bill, 'sendingDates', []).length >= 1);
+      const everyBillHaveBeenSent = billListInfos.value.selectedBills.every(bill => bill.sendingDates);
       if (everyBillHaveBeenSent) {
         return EMAIL_OPTIONS.map(opt => (opt.value === RESEND ? opt : { ...opt, disable: true }));
       }
