@@ -14,7 +14,7 @@
             <ni-indicator :indicator="presentTraineesCount" />
             <span class="text-center">
               {{ formatQuantity('apprenant·e inscrit·e', presentTraineesCount, 's', false) }}
-              ayant émargé<br>au moins une fois
+              présent·es<br>au moins une fois
             </span>
           </div>
           <div class="column items-center">
@@ -31,7 +31,7 @@
             * Ces données ne prennent pas en compte les émargements des stagiaires non-inscrits<br>
           </span>
           <span class="meta-infos-footer">
-            ** Taux d'absence réel : ne prend en compte que les apprenant·es inscrit·es ayant émargé au moins une fois
+            ** Taux d'absence réel : ne prend en compte que les apprenant·es inscrit·es présent·es au moins une fois
           </span>
         </div>
       </q-card>
@@ -194,7 +194,7 @@ import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
 import { formatQuantity, formatIdentity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
-import { multiply, subtract, divide } from '@helpers/numbers';
+import { multiply, divide } from '@helpers/numbers';
 import Button from '@components/Button';
 import PrimaryButton from '@components/PrimaryButton';
 import SimpleTable from '@components/table/SimpleTable';
@@ -292,23 +292,23 @@ export default {
     const attendancesForRegisteredTrainees = computed(() => attendances.value
       .filter(a => course.value.trainees.some(t => t._id === a.trainee)));
 
-    const presentTraineesCount = computed(() => course.value.trainees
-      .filter(trainee => attendancesForRegisteredTrainees.value.some(a => a.trainee === trainee._id))
-      .length);
+    const traineesWithPresences = computed(() => course.value.trainees
+      .map(trainee => attendancesForRegisteredTrainees.value.filter(a => a.trainee === trainee._id))
+      .filter(traineeAttendances => traineeAttendances.some(a => a.status === PRESENT)));
+
+    const presentTraineesCount = computed(() => traineesWithPresences.value.length);
 
     const absenceRate = computed(() => {
-      const numerator = attendancesForRegisteredTrainees.value.length;
-      const denominator = multiply(course.value.slots.length, registeredTraineesCount.value);
-      const res = denominator > 0 ? multiply(subtract(1, divide(numerator, denominator)), 100) : 100;
-
+      const numerator = attendancesForRegisteredTrainees.value.filter(a => a.status === MISSING).length;
+      const denominator = attendancesForRegisteredTrainees.value.length;
+      const res = denominator ? multiply(divide(numerator, denominator), 100) : 100;
       return Math.round(res);
     });
 
     const realAbsenceRate = computed(() => {
-      const numerator = attendancesForRegisteredTrainees.value.length;
-      const denominator = multiply(course.value.slots.length, presentTraineesCount.value);
-      const res = denominator > 0 ? multiply(subtract(1, divide(numerator, denominator)), 100) : 100;
-
+      const denominator = traineesWithPresences.value.flat().length;
+      const numerator = traineesWithPresences.value.flat().filter(a => a.status === MISSING).length;
+      const res = denominator ? multiply(divide(numerator, denominator), 100) : 100;
       return Math.round(res);
     });
 
