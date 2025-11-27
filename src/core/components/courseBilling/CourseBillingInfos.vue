@@ -85,6 +85,7 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
+                <div :style="{ width: '7%' }" />
                 <div v-if="item.status && isVendorInterface" class="chip-container status">
                   <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
                 </div>
@@ -333,6 +334,14 @@ export default {
         format: formatPriceWithSign,
         align: 'right',
         classes: 'text-weight-bold formatted-price',
+      },
+      {
+        name: 'sendingDates',
+        label: 'Envoyée le',
+        field: 'sendingDates',
+        format: values => (values || []).map(v => CompaniDate(v).format(DD_MM_YYYY)).join(', '),
+        align: 'center',
+        classes: 'sendingDates',
       },
       { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
       { name: 'expand', classes: 'expand' },
@@ -775,4 +784,8 @@ export default {
   padding: 4px
 .download-credit-note
   text-decoration: underline
+.sendingDates
+  width: 20%
+  padding: 4px
+  color: $copper-500
 </style>
