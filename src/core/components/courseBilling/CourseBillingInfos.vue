@@ -85,7 +85,7 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
-                <div :style="{ width: '7%' }" />
+                <div :style="{ width: isVendorInterface ? '7%' : '28%'}" />
                 <div v-if="item.status && isVendorInterface" class="chip-container status">
                   <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
                 </div>
