@@ -83,7 +83,7 @@ export default {
         field: 'sendingDates',
         align: 'center',
         format: values => (values || []).map(v => CompaniDate(v).format(DD_MM_YYYY)).join(', '),
-        classes: 'sendingDates',
+        classes: 'sending-dates',
       },
       { name: 'action', label: '', field: 'course' },
     ];
@@ -146,8 +146,8 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-.sendingDates
-  width: 20%
+.sending-dates
+  width: 10%
   padding: 4px
   color: $copper-500
 </style>

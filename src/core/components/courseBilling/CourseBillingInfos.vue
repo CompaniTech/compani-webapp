@@ -348,7 +348,7 @@ export default {
         label: 'Envoyée le',
         field: 'sendingDates',
         format: values => (values || []).map(v => CompaniDate(v).format(DD_MM_YYYY)).join(', '),
-        align: 'right',
+        align: 'center',
         classes: 'sending-dates',
       },
       { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
@@ -776,6 +776,7 @@ export default {
   width: 5%
   &-empty
     width: 5%
+    min-width: 48px
     height: 48px
     padding: 4px
 .formatted-price
