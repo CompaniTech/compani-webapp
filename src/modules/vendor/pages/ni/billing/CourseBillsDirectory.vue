@@ -77,6 +77,14 @@ export default {
         format: formatPrice,
         align: 'left',
       },
+      {
+        name: 'sendingDates',
+        label: 'Envoyée le',
+        field: 'sendingDates',
+        align: 'center',
+        format: values => (values || []).map(v => CompaniDate(v).format(DD_MM_YYYY)).join(', '),
+        classes: 'sending-dates',
+      },
       { name: 'action', label: '', field: 'course' },
     ];
     const pagination = ref({ sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 });
@@ -136,3 +144,10 @@ export default {
 
 };
 </script>
+
+<style lang="sass" scoped>
+.sending-dates
+  width: 10%
+  padding: 4px
+  color: $copper-500
+</style>
