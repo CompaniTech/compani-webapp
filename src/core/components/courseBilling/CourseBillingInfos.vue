@@ -87,7 +87,7 @@
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
                 <div class="formatted-price" />
                 <div v-if="item.status && isVendorInterface" class="status">
-                  <div class="chip-container">
+                  <div class="chip-container q-my-md">
                     <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
                   </div>
                 </div>
@@ -349,7 +349,7 @@ export default {
         field: 'sendingDates',
         format: values => (values || []).map(v => CompaniDate(v).format(DD_MM_YYYY)).join(', '),
         align: 'right',
-        classes: 'sendingDates',
+        classes: 'sending-dates',
       },
       { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
       { name: 'expand', classes: 'expand' },
@@ -784,7 +784,7 @@ export default {
   text-align: right
 .status
   width: 20%
-  padding: 0px 48px
+  padding: 0px 24px
 .edit
   display: flex
   justify-content: flex-end
@@ -795,7 +795,7 @@ export default {
   padding: 4px
 .download-credit-note
   text-decoration: underline
-.sendingDates
+.sending-dates
   width: 10%
   padding: 4px
   color: $copper-500
