@@ -73,7 +73,7 @@
                 <div v-if="isVendorInterface && displayCheckbox[index]"
                   :class="{'checkbox-empty': displayCheckbox[index]}" />
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
-                <div class="payment">
+                <div :class="[displayCheckbox[index] ? 'payment' : 'payment-without-checkbox']">
                   {{ item.number }} ({{ getItemType(item) }}
                   <template v-if="get(item, 'xmlSEPAFileInfos.name') && isVendorInterface">
                     associé au lot <span class="text-weight-bold">{{ item.xmlSEPAFileInfos.name }}</span>
@@ -85,9 +85,11 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
-                <div :style="{ width: isVendorInterface ? '7%' : '28%'}" />
-                <div v-if="item.status && isVendorInterface" class="chip-container status">
-                  <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
+                <div class="formatted-price" />
+                <div v-if="item.status && isVendorInterface" class="status">
+                  <div class="chip-container">
+                    <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
+                  </div>
                 </div>
                 <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
                   <q-icon size="20px" name="edit" color="copper-grey-500"
@@ -299,7 +301,7 @@ export default {
 
     const columns = index => [
       ...(displayCheckbox.value[index]
-        ? [{ name: 'actions', label: '', align: 'right', field: '' }]
+        ? [{ name: 'actions', label: '', align: 'center', field: '' }]
         : []),
       {
         name: 'date',
@@ -309,7 +311,13 @@ export default {
         align: 'left',
         classes: 'date',
       },
-      { name: 'number', label: '#', field: 'number', align: 'left', classes: 'payment' },
+      {
+        name: 'number',
+        label: '#',
+        field: 'number',
+        align: 'left',
+        classes: displayCheckbox.value[index] ? 'payment' : 'payment-without-checkbox',
+      },
       { name: 'progress', label: 'Avancement formation', field: 'progress', align: 'center', classes: 'progress' },
       {
         name: 'netInclTaxes',
@@ -340,7 +348,7 @@ export default {
         label: 'Envoyée le',
         field: 'sendingDates',
         format: values => (values || []).map(v => CompaniDate(v).format(DD_MM_YYYY)).join(', '),
-        align: 'center',
+        align: 'right',
         classes: 'sendingDates',
       },
       { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
@@ -756,15 +764,18 @@ export default {
   width: 10%
   padding: 4px
 .payment
-  width: 30%
+  width: 20%
+  padding: 4px
+.payment-without-checkbox
+  width: 25%
   padding: 4px
 .progress
-  width: 15%
+  width: 10%
   padding: 4px
 .checkbox
   width: 5%
   &-empty
-    width: 48px
+    width: 5%
     height: 48px
     padding: 4px
 .formatted-price
@@ -772,8 +783,8 @@ export default {
   padding: 4px
   text-align: right
 .status
-  width: 14%
-  margin: 0px 24px
+  width: 20%
+  padding: 0px 48px
 .edit
   display: flex
   justify-content: flex-end
@@ -785,7 +796,7 @@ export default {
 .download-credit-note
   text-decoration: underline
 .sendingDates
-  width: 20%
+  width: 10%
   padding: 4px
   color: $copper-500
 </style>
