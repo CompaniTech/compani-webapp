@@ -109,6 +109,14 @@
         <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
           :disable="disableAttendanceSheetDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
       </div>
+      <div v-if="isVendorInterface">
+        <div v-if="isRofOrVendorAdmin">
+          <ni-bi-color-button v-if="course.folderId" icon="folder" label="Dossier Apprenant" size="16px"
+            :href="`https://drive.google.com/drive/u/0/folders/${course.folderId}`" />
+        </div>
+        <ni-bi-color-button v-if="course.sheetId" icon="mdi-file-excel" label="Fichier apprenant" size="16px"
+          :href="`https://docs.google.com/spreadsheets/d/${course.sheetId}`" />
+      </div>
     </div>
     <training-contract-container v-if="canGetTrainingContracts" :course="course" :has-holding-role="hasHoldingRole"
       :is-rof-or-vendor-admin="isRofOrVendorAdmin" :training-contracts="trainingContracts"
