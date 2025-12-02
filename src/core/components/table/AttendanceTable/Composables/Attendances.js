@@ -7,7 +7,16 @@ import { required } from '@vuelidate/validators';
 import Attendances from '@api/Attendances';
 import Holdings from '@api/Holdings';
 import Users from '@api/Users';
-import { HH_MM, DAY_OF_WEEK_SHORT, DAY_OF_MONTH, MONTH_SHORT, COURSE, INTRA, INTRA_HOLDING } from '@data/constants';
+import {
+  HH_MM,
+  DAY_OF_WEEK_SHORT,
+  DAY_OF_MONTH,
+  MONTH_SHORT,
+  COURSE, INTRA,
+  INTRA_HOLDING,
+  PRESENT,
+  MISSING,
+} from '@data/constants';
 import { upperCaseFirstLetter, formatIdentity, sortStrings, formatAndSortIdentityOptions } from '@helpers/utils';
 import { minArrayLength } from '@helpers/vuelidateCustomVal';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -118,9 +127,9 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
     }
   };
 
-  const attendanceCheckboxValue = (traineeId, slotId) => {
+  const attendanceCheckboxValue = (traineeId, slotId, status) => {
     if (attendances.value.length) {
-      return !!attendances.value.find(a => a.trainee === traineeId && a.courseSlot === slotId);
+      return !!attendances.value.find(a => a.status === status && a.trainee === traineeId && a.courseSlot === slotId);
     }
     return false;
   };
@@ -145,7 +154,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
     }
   };
 
-  const updateAttendanceCheckbox = async (traineeId, slotId) => {
+  const updateAttendanceCheckbox = async (traineeId, slotId, isUnsubscribed) => {
     try {
       if (!canUpdate.value) {
         NotifyNegative('Impossible de modifier l\'émargement.');
@@ -153,7 +162,10 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
       }
 
       loading.value = true;
-      if (attendanceCheckboxValue(traineeId, slotId)) {
+      if (attendanceCheckboxValue(traineeId, slotId, PRESENT)) {
+        if (isUnsubscribed) await Attendances.delete({ trainee: traineeId, courseSlot: slotId });
+        else await Attendances.update({ trainee: traineeId, courseSlot: slotId });
+      } else if (attendanceCheckboxValue(traineeId, slotId, MISSING)) {
         await Attendances.delete({ trainee: traineeId, courseSlot: slotId });
       } else {
         await Attendances.create({ trainee: traineeId, courseSlot: slotId });
@@ -203,9 +215,9 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
     traineeAdditionModal.value = true;
   };
 
-  const slotCheckboxValue = (slotId) => {
-    const attendancesForRegisteredLearners = attendances.value.filter(a => a.courseSlot === slotId &&
-      course.value.trainees.some(t => t._id === a.trainee));
+  const slotCheckboxValue = (slotId, status) => {
+    const attendancesForRegisteredLearners = attendances.value.filter(a => a.status === status &&
+      a.courseSlot === slotId && course.value.trainees.some(t => t._id === a.trainee));
 
     return attendancesForRegisteredLearners.length === course.value.trainees.length;
   };
@@ -215,7 +227,8 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
       loading.value = true;
       if (!canUpdate.value) return NotifyNegative('Impossible d\'ajouter un·e participant·e.');
 
-      if (slotCheckboxValue(slotId)) await Attendances.delete({ courseSlot: slotId });
+      if (slotCheckboxValue(slotId, PRESENT)) await Attendances.update({ courseSlot: slotId });
+      else if (slotCheckboxValue(slotId, MISSING)) await Attendances.delete({ courseSlot: slotId });
       else await Attendances.create({ courseSlot: slotId });
 
       await refreshAttendances({ courseSlot: slotId });

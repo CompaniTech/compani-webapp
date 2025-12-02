@@ -64,16 +64,19 @@
                   <div class="step-name">{{ step.name }}</div>
                   <div class="dates">{{ CompaniDate(slot.startDate).format(DD_MM_YYYY) }}</div>
                   <div class="hours">{{ formatSlotSchedule(slot) }}</div>
-                  <div v-if="slot.attendances.length">
+                  <div v-if="hasSlotPresences(slot)">
                     <q-icon size="12px" name="check_circle" color="green-600 attendance" />
                     <span class="text-green-600">Présent(e)</span>
+                  </div>
+                  <div v-else-if="hasSlotAbsences(slot)">
+                    <q-icon size="12px" name="fas fa-times-circle" color="orange-700 attendance" />
+                    <span class="text-orange-700">Absent(e)</span>
                   </div>
                   <div v-else-if="CompaniDate().isBefore(slot.endDate)" class="attendance">
                     <span class="q-mx-sm text-italic text-copper-grey-800">à venir</span>
                   </div>
                   <div v-else>
-                    <q-icon size="12px" name="fas fa-times-circle" color="orange-700 attendance" />
-                    <span class="text-orange-700">Absent(e)</span>
+                    <span class="q-mx-sm text-italic text-copper-grey-800">non rempli</span>
                   </div>
                 </div>
               </div>
@@ -147,6 +150,8 @@ import {
   MONTH,
   DAY,
   TRAINEE,
+  PRESENT,
+  MISSING,
 } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -361,6 +366,9 @@ export default {
       }
     };
 
+    const hasSlotPresences = slot => slot.attendances.find(a => a.status === PRESENT);
+    const hasSlotAbsences = slot => slot.attendances.find(a => a.status === MISSING);
+
     const created = async () => {
       await getUserCourses();
       computeChartsData();
@@ -403,6 +411,8 @@ export default {
       formatSlotSchedule,
       CompaniDate,
       CompaniDuration,
+      hasSlotPresences,
+      hasSlotAbsences,
     };
   },
 };

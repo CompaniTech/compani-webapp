@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { helpers } from '@vuelidate/validators';
+import { helpers, email } from '@vuelidate/validators';
 import { isValidIBAN, isValidBIC } from 'ibantools';
 import { FILL_THE_GAPS_MAX_GAPS_COUNT } from '@data/constants';
 import { isGreaterThan, isGreaterThanOrEqual } from '@helpers/numbers';
@@ -120,4 +120,9 @@ export const urlAddress = (value) => {
   if (!value) return true;
 
   return value.match(/^(?:http(s)?:\/\/)[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+$/) || false;
+};
+
+export const validEmailsArray = (value) => {
+  if (!Array.isArray(value)) return false;
+  return value.every(v => email.$validator(v));
 };

@@ -14,7 +14,7 @@
             <ni-indicator :indicator="presentTraineesCount" />
             <span class="text-center">
               {{ formatQuantity('apprenant·e inscrit·e', presentTraineesCount, 's', false) }}
-              ayant émargé<br>au moins une fois
+              présent·es<br>au moins une fois
             </span>
           </div>
           <div class="column items-center">
@@ -31,7 +31,7 @@
             * Ces données ne prennent pas en compte les émargements des stagiaires non-inscrits<br>
           </span>
           <span class="meta-infos-footer">
-            ** Taux d'absence réel : ne prend en compte que les apprenant·es inscrit·es ayant émargé au moins une fois
+            ** Taux d'absence réel : ne prend en compte que les apprenant·es inscrit·es présent·es au moins une fois
           </span>
         </div>
       </q-card>
@@ -54,8 +54,16 @@
                   <q-icon name="supervisor_account" />
                   {{ traineesCount(col.slot) }}
                 </div>
-                <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="slotCheckboxValue(col.slot)"
-                  dense size="sm" @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox" />
+                <template v-if="slotCheckboxValue(col.slot, MISSING)">
+                  <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="true" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox"
+                    checked-icon="mdi-alert-box" color="orange-500" />
+                </template>
+                <template v-else>
+                  <q-checkbox v-if="canUpdate && course.trainees.length" :disable="disableCheckbox"
+                    :model-value="slotCheckboxValue(col.slot, PRESENT)" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot)" />
+                </template>
               </div>
             </q-th>
           </q-tr>
@@ -75,8 +83,13 @@
                   <q-item-label v-if="props.row.external" class="unsubscribed">Pas inscrit</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot)" dense size="sm"
-                @update:model-value="updateAttendanceCheckbox(col.value, col.slot)" :disable="disableCheckbox" />
+              <q-checkbox v-else-if="attendanceCheckboxValue(col.value, col.slot, MISSING)" :model-value="true" dense
+                size="sm" @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
+                :disable="disableCheckbox" checked-icon="mdi-alert-box"
+                color="orange-500" />
+              <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot, PRESENT)" dense size="sm"
+                @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
+                :disable="disableCheckbox" />
             </q-td>
           </q-tr>
         </template>
@@ -90,6 +103,11 @@
       <ni-button v-if="courseHasSlot && canUpdate && !isSingleCourse" color="primary" icon="add" class="q-mb-sm"
         :disable="loading" label="Ajouter un·e participant·e non inscrit·e"
         @click="openTraineeAttendanceAdditionModal" />
+      <div class="q-pa-md text-14">
+        <span><q-icon name="mdi-checkbox-marked" color="primary" class="q-py-xs" />1 clic : présent / </span>
+        <span><q-icon name="mdi-alert-box" color="orange-500" class="q-py-xs" /> 2 clics : absent / </span>
+        <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
+      </div>
     </q-card>
 
     <ni-simple-table :data="formattedAttendanceSheets" :columns="attendanceSheetColumns"
@@ -169,12 +187,14 @@ import {
   INTER_B2B,
   INTRA,
   INTRA_HOLDING,
+  PRESENT,
+  MISSING,
 } from '@data/constants';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
 import { formatQuantity, formatIdentity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
-import { multiply, subtract, divide } from '@helpers/numbers';
+import { multiply, divide } from '@helpers/numbers';
 import Button from '@components/Button';
 import PrimaryButton from '@components/PrimaryButton';
 import SimpleTable from '@components/table/SimpleTable';
@@ -272,23 +292,23 @@ export default {
     const attendancesForRegisteredTrainees = computed(() => attendances.value
       .filter(a => course.value.trainees.some(t => t._id === a.trainee)));
 
-    const presentTraineesCount = computed(() => course.value.trainees
-      .filter(trainee => attendancesForRegisteredTrainees.value.some(a => a.trainee === trainee._id))
-      .length);
+    const traineesWithPresences = computed(() => course.value.trainees
+      .map(trainee => attendancesForRegisteredTrainees.value.filter(a => a.trainee === trainee._id))
+      .filter(traineeAttendances => traineeAttendances.some(a => a.status === PRESENT)));
+
+    const presentTraineesCount = computed(() => traineesWithPresences.value.length);
 
     const absenceRate = computed(() => {
-      const numerator = attendancesForRegisteredTrainees.value.length;
-      const denominator = multiply(course.value.slots.length, registeredTraineesCount.value);
-      const res = denominator > 0 ? multiply(subtract(1, divide(numerator, denominator)), 100) : 100;
-
+      const numerator = attendancesForRegisteredTrainees.value.filter(a => a.status === MISSING).length;
+      const denominator = attendancesForRegisteredTrainees.value.length;
+      const res = denominator ? multiply(divide(numerator, denominator), 100) : 100;
       return Math.round(res);
     });
 
     const realAbsenceRate = computed(() => {
-      const numerator = attendancesForRegisteredTrainees.value.length;
-      const denominator = multiply(course.value.slots.length, presentTraineesCount.value);
-      const res = denominator > 0 ? multiply(subtract(1, divide(numerator, denominator)), 100) : 100;
-
+      const denominator = traineesWithPresences.value.flat().length;
+      const numerator = traineesWithPresences.value.flat().filter(a => a.status === MISSING).length;
+      const res = denominator ? multiply(divide(numerator, denominator), 100) : 100;
       return Math.round(res);
     });
 
@@ -385,6 +405,8 @@ export default {
       DEFAULT_AVATAR,
       INTRA,
       INTRA_HOLDING,
+      MISSING,
+      PRESENT,
       loading,
       modalLoading,
       attendanceSheetTableLoading,
@@ -516,4 +538,6 @@ export default {
   font-size: 12px
   font-style: italic
   padding: 4px 16px
+::v-deep .table thead th .q-checkbox__inner .q-icon
+  font-size: 21px
 </style>

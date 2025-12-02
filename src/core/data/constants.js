@@ -22,6 +22,20 @@ export const CIVILITY_OPTIONS = [
 // CONTRACTS
 export const CONTRACT = 'contract';
 
+// EMAILS
+export const VAEI = 'vaei';
+export const START_COURSE = 'start_course';
+export const MIDDLE_COURSE = 'middle_course';
+export const END_COURSE = 'end_course';
+export const RESEND = 'resend';
+export const EMAIL_OPTIONS = [
+  { label: 'VAEI', value: VAEI },
+  { label: 'Début de formation', value: START_COURSE },
+  { label: 'Mi-formation', value: MIDDLE_COURSE },
+  { label: 'Fin de formation', value: END_COURSE },
+  { label: 'Relance', value: RESEND },
+];
+
 // EVENTS
 export const ABSENCE = 'absence';
 
@@ -190,8 +204,6 @@ export const ACTIVITY_TYPES = [
 
 // QUESTIONNAIRE
 export const QUESTIONNAIRE = 'questionnaire';
-export const START_COURSE = 'start_course';
-export const END_COURSE = 'end_course';
 export const VALIDATE = 'validate';
 export const ADJUST = 'adjust';
 
@@ -417,3 +429,7 @@ export const CREATION_METHOD_OPTIONS = [
 export const YES = 'Oui';
 export const NO = 'Non';
 export const NO_DATA = 'Aucune donnée';
+
+// COURSE SLOT STATUS
+export const PRESENT = 'present';
+export const MISSING = 'missing';
