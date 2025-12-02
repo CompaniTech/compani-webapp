@@ -114,8 +114,8 @@
           <ni-bi-color-button v-if="course.folderId" icon="folder" label="Dossier Apprenant" size="16px"
             :href="`https://drive.google.com/drive/u/0/folders/${course.folderId}`" />
         </div>
-        <ni-bi-color-button v-if="course.sheetId" icon="mdi-file-excel" label="Fichier apprenant" size="16px"
-          :href="`https://docs.google.com/spreadsheets/d/${course.sheetId}`" />
+        <ni-bi-color-button v-if="course.gSheetId" icon="mdi-file-excel" label="Fichier de suivi apprenant" size="16px"
+          :href="`https://docs.google.com/spreadsheets/d/${course.gSheetId}`" />
       </div>
     </div>
     <training-contract-container v-if="canGetTrainingContracts" :course="course" :has-holding-role="hasHoldingRole"
