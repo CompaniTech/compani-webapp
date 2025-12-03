@@ -41,6 +41,7 @@ import {
   TRAINER_DELETION,
   COURSE_INTERRUPTION,
   COURSE_RESTART,
+  SLOT_RESTRICTION,
 } from '@data/constants';
 import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -210,6 +211,8 @@ export default {
 
     const getRestartTitle = () => ({ type: 'Reprise', post: 'de la formation' });
 
+    const getSlotRestrictionTitle = () => ({ pre: 'Édition de la liste des', type: 'apprenants concernés' });
+
     const formatedHistory = computed(() => {
       switch (courseHistory.value.action) {
         case TRAINEE_DELETION:
@@ -234,6 +237,8 @@ export default {
           return { title: getInterruptionTitle() };
         case COURSE_RESTART:
           return { title: getRestartTitle() };
+        case SLOT_RESTRICTION:
+          return { title: getSlotRestrictionTitle() };
         case SLOT_CREATION:
         default:
           return { title: getSlotCreationTitle(), details: getSlotCreationDetails() };

@@ -264,6 +264,7 @@ export const TRAINER_ADDITION = 'trainer_addition';
 export const TRAINER_DELETION = 'trainer_deletion';
 export const COURSE_INTERRUPTION = 'course_interruption';
 export const COURSE_RESTART = 'course_restart';
+export const SLOT_RESTRICTION = 'slot_restriction';
 
 // MEDIA UPLOAD
 export const UPLOAD_IMAGE = 'image';
