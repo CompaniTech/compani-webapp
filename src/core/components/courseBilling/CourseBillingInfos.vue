@@ -9,7 +9,8 @@
       </div>
     </div>
     <template v-if="Object.keys(groupedCourseBills).length">
-      <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl">
+      <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl"
+        :class="{ 'client-layout': !isVendorInterface }">
         <p class="text-weight-bold">{{ getTableName(index) }}</p>
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns(index)"
           v-model:pagination="paginations[index]" :hide-bottom="false" :loading="loading"
@@ -85,16 +86,23 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
-                <div class="formatted-price" />
-                <div v-if="item.status && isVendorInterface" class="status">
-                  <div class="chip-container q-my-md">
-                    <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
+                <template v-if="isVendorInterface">
+                  <div class="formatted-price" />
+                  <div v-if="item.status" class="status">
+                    <div class="chip-container q-my-md">
+                      <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
+                    </div>
                   </div>
-                </div>
-                <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
-                  <q-icon size="20px" name="edit" color="copper-grey-500"
-                    @click="openCoursePaymentEditionModal(props.row, item)" />
-                </div>
+                  <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
+                    <q-icon size="20px" name="edit" color="copper-grey-500"
+                      @click="openCoursePaymentEditionModal(props.row, item)" />
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="formatted-price" />
+                  <div class="sending-dates" />
+                  <div class="expand" />
+                </template>
               </div>
             </q-td>
           </template>
@@ -351,7 +359,9 @@ export default {
         align: 'center',
         classes: 'sending-dates',
       },
-      { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
+      ...(isVendorInterface
+        ? [{ name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' }]
+        : []),
       { name: 'expand', classes: 'expand' },
     ];
 
@@ -800,4 +810,11 @@ export default {
   width: 10%
   padding: 4px
   color: $copper-500
+.client-layout
+  .payment-without-checkbox
+    width: 24%
+  .formatted-price
+    width: 12%
+  .sending-dates
+    width: 15%
 </style>
