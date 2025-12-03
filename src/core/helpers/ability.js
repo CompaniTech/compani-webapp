@@ -60,6 +60,7 @@ export const defineAbilitiesForCourse = (user) => {
     can('update', 'Course', 'sms');
     can('read', 'Course', 'history');
     can('create', 'Course', 'slot');
+    can('update', 'Course', 'concerned_trainees', { type: { $ne: SINGLE } });
     if ([VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole)) {
       can('update', 'Course', 'company_representative', { type: { $in: [INTRA, INTRA_HOLDING, SINGLE] } });
       can('update', 'Course', 'interlocutor');

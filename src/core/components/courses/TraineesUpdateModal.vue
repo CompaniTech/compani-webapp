@@ -5,7 +5,7 @@
       <template #message>{{ message }}</template>
     </ni-banner>
     <ni-option-group in-modal :model-value="trainees" @update:model-value="update" type="checkbox"
-      :options="traineeOptions" />
+      :options="traineeOptions" :error="validations.$error" />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" :label="`Modifier ${title}`" icon-right="edit"
         color="white" :loading="loading" @click="submit" />
@@ -28,6 +28,7 @@ export default {
     loading: { type: Boolean, default: false },
     title: { type: String, default: 'les certifications' },
     message: { type: String, default: 'Les personnes sélectionnées passeront la certification' },
+    validations: { type: Object, default: () => ({}) },
   },
   components: {
     'ni-modal': Modal,
