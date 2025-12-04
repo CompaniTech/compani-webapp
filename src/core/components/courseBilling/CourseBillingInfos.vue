@@ -9,8 +9,8 @@
       </div>
     </div>
     <template v-if="Object.keys(groupedCourseBills).length">
-      <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl"
-        :class="{ 'client-layout': !isVendorInterface }">
+      <div v-for="index of Object.keys(groupedCourseBills)" :key="index"
+        :class="[{ 'client-layout': !isVendorInterface }, 'q-mb-xl']">
         <p class="text-weight-bold">{{ getTableName(index) }}</p>
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns(index)"
           v-model:pagination="paginations[index]" :hide-bottom="false" :loading="loading"
