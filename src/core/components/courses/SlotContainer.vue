@@ -36,17 +36,22 @@
                   :key="day" class="row q-ml-xl q-my-sm">
                   <div class="text-weight-bold q-mr-md">{{ day[0] }}</div>
                   <div>
-                    <div v-for="slot in day[1]" :key="slot._id" @click="openEditionModal(slot)"
-                      :class="getSlotClass(step)">
-                      <div class="q-mr-md">{{ formatSlotSchedule(slot) }}</div>
-                      <div v-if="step.type === ON_SITE" class="q-mr-md">{{ getSlotAddress(slot) }}</div>
-                      <div v-else class="q-mr-md ellipsis link-container">
-                        <a class="link" :href="slot.meetingLink" target="_blank" @click="$event.stopPropagation()">
-                          {{ slot.meetingLink }}
-                        </a>
-                        {{ !slot.meetingLink ? 'Lien vers la visio non renseigné' : '' }}
+                    <div v-for="slot in day[1]" :key="slot._id" @click="openEditionModal(slot)">
+                      <div :class="getSlotClass(step)">
+                        <div class="q-mr-md">{{ formatSlotSchedule(slot) }}</div>
+                        <div v-if="step.type === ON_SITE" class="q-mr-md">{{ getSlotAddress(slot) }}</div>
+                        <div v-else class="q-mr-md ellipsis link-container">
+                          <a class="link" :href="slot.meetingLink" target="_blank" @click="$event.stopPropagation()">
+                            {{ slot.meetingLink }}
+                          </a>
+                          {{ !slot.meetingLink ? 'Lien vers la visio non renseigné' : '' }}
+                        </div>
+                        <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
                       </div>
-                      <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
+                      <div v-if="slot.trainees" class="text-italic text-12 q-mb-md">
+                        Apprenants concernés par le créneau :
+                        {{ traineeOptions.filter(t => slot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -91,7 +96,8 @@
     <slot-edition-modal v-model="editionModal" :edited-course-slot="editedCourseSlot" :step-types="stepTypes"
       :validations="v$.editedCourseSlot" @hide="resetEditionModal" :loading="modalLoading" @delete="deleteCourseSlot"
       @submit="updateCourseSlot" @update="setCourseSlot" :is-only-slot="isOnlySlot" :is-planned-slot="isPlannedSlot"
-      @unplan-slot="unplanSlot" :can-create-slot="canCreateSlot" />
+      @unplan-slot="unplanSlot" :can-create-slot="canCreateSlot" :trainee-options="traineeOptions"
+      :can-update-concerned-trainees="canUpdateConcernedTrainees" />
 
     <multiple-slot-creation-modal v-model="multipleSlotCreationModal" v-model:slots-to-add="slotsToAdd"
       @hide="resetCreationModal" @submit="createCourseSlots" :validations="v$.slotsToAdd"
@@ -107,6 +113,7 @@ import set from 'lodash/set';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 import tail from 'lodash/tail';
+import unset from 'lodash/unset';
 import groupBy from 'lodash/groupBy';
 import { subject } from '@casl/ability';
 import useVuelidate from '@vuelidate/core';
@@ -130,7 +137,7 @@ import {
   SINGLE,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
-import { formatQuantity } from '@helpers/utils';
+import { formatQuantity, formatAndSortIdentityOptions } from '@helpers/utils';
 import { getStepTypeLabel, formatSlotSchedule } from '@helpers/courses';
 import { ascendingSort, getISOTotalDuration } from '@helpers/dates/utils';
 import {
@@ -191,6 +198,8 @@ export default {
       return CompaniDuration(totalISO).format(SHORT_DURATION_H_MM);
     });
 
+    const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
+
     const formatSlotTitle = computed(() => {
       const slotsToPlanLength = course.value.slotsToPlan.length;
       const slotDatesWithDuplicate = course.value.slots
@@ -247,6 +256,12 @@ export default {
       const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
 
       return ability.can('create', subject('Course', course.value), 'slot');
+    });
+
+    const canUpdateConcernedTrainees = computed(() => {
+      const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
+
+      return ability.can('update', subject('Course', course.value), 'concerned_trainees');
     });
 
     const rules = computed(() => ({
@@ -315,6 +330,7 @@ export default {
         address: {},
         meetingLink: get(slot, 'meetingLink') || '',
         step: slot.step,
+        ...slot.trainees && { trainees: slot.trainees },
       };
 
       if (slot.address) editedCourseSlot.value.address = { ...slot.address };
@@ -323,11 +339,12 @@ export default {
       editionModal.value = true;
     };
 
-    const resetEditionModal = () => {
+    const resetEditionModal = (shouldRefresh) => {
       editedCourseSlot.value = {};
       v$.value.editedCourseSlot.$reset();
       isOnlySlot.value = false;
       isPlannedSlot.value = false;
+      if (shouldRefresh) emit('refresh');
     };
 
     const formatEditionPayload = (courseSlot) => {
@@ -401,6 +418,10 @@ export default {
 
     const setCourseSlot = (payload) => {
       const { path, value } = payload;
+      if (path === 'trainees' && Array.isArray(value) && value.length === 0) {
+        unset(editedCourseSlot.value, path);
+        return;
+      }
       set(editedCourseSlot.value, path, value);
     };
 
@@ -508,6 +529,8 @@ export default {
       courseSlotsByStepAndDate,
       stepList,
       canCreateSlot,
+      canUpdateConcernedTrainees,
+      traineeOptions,
       // Methods
       get,
       omit,

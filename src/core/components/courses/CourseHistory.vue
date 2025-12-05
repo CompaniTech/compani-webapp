@@ -41,6 +41,7 @@ import {
   TRAINER_DELETION,
   COURSE_INTERRUPTION,
   COURSE_RESTART,
+  SLOT_RESTRICTION,
 } from '@data/constants';
 import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -210,6 +211,15 @@ export default {
 
     const getRestartTitle = () => ({ type: 'Reprise', post: 'de la formation' });
 
+    const getSlotRestrictionTitle = () => {
+      const date = CompaniDate(courseHistory.value.slot.startDate).format(DD_MM_YYYY);
+      const startHour = CompaniDate(courseHistory.value.slot.startDate).format(HHhMM);
+      const endHour = CompaniDate(courseHistory.value.slot.endDate).format(HHhMM);
+      const infos = `${date} de ${startHour} à ${endHour}`;
+
+      return { pre: 'Édition de la liste des', type: 'apprenants concernés', post: ' pour le créneau du', infos };
+    };
+
     const formatedHistory = computed(() => {
       switch (courseHistory.value.action) {
         case TRAINEE_DELETION:
@@ -234,6 +244,8 @@ export default {
           return { title: getInterruptionTitle() };
         case COURSE_RESTART:
           return { title: getRestartTitle() };
+        case SLOT_RESTRICTION:
+          return { title: getSlotRestrictionTitle() };
         case SLOT_CREATION:
         default:
           return { title: getSlotCreationTitle(), details: getSlotCreationDetails() };

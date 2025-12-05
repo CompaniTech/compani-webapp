@@ -59,6 +59,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
         weekDay: upperCaseFirstLetter(CompaniDate(s.startDate).format(DAY_OF_WEEK_SHORT)),
         startHour: CompaniDate(s.startDate).format(HH_MM),
         endHour: CompaniDate(s.endDate).format(HH_MM),
+        trainees: s.trainees,
       })),
     ];
   });
@@ -215,20 +216,20 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
     traineeAdditionModal.value = true;
   };
 
-  const slotCheckboxValue = (slotId, status) => {
+  const slotCheckboxValue = (slotId, trainees, status) => {
+    const concernedTrainees = trainees || course.value.trainees.map(t => t._id);
     const attendancesForRegisteredLearners = attendances.value.filter(a => a.status === status &&
-      a.courseSlot === slotId && course.value.trainees.some(t => t._id === a.trainee));
+      a.courseSlot === slotId && concernedTrainees.some(t => t === a.trainee));
 
-    return attendancesForRegisteredLearners.length === course.value.trainees.length;
+    return attendancesForRegisteredLearners.length === concernedTrainees.length;
   };
 
-  const updateSlotCheckbox = async (slotId) => {
+  const updateSlotCheckbox = async (slotId, trainees) => {
     try {
       loading.value = true;
       if (!canUpdate.value) return NotifyNegative('Impossible d\'ajouter un·e participant·e.');
-
-      if (slotCheckboxValue(slotId, PRESENT)) await Attendances.update({ courseSlot: slotId });
-      else if (slotCheckboxValue(slotId, MISSING)) await Attendances.delete({ courseSlot: slotId });
+      if (slotCheckboxValue(slotId, trainees, PRESENT)) await Attendances.update({ courseSlot: slotId });
+      else if (slotCheckboxValue(slotId, trainees, MISSING)) await Attendances.delete({ courseSlot: slotId });
       else await Attendances.create({ courseSlot: slotId });
 
       await refreshAttendances({ courseSlot: slotId });
@@ -246,6 +247,9 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
 
     return { name, params: { learnerId: row._id }, query: { defaultTab: 'courses' } };
   };
+
+  const isTraineeConcerned = (concernedTrainees, trainee) => trainee.external || !concernedTrainees ||
+    concernedTrainees.includes(trainee._id);
 
   return {
     // Data
@@ -273,6 +277,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
     openTraineeAttendanceAdditionModal,
     updateSlotCheckbox,
     goToLearnerProfile,
+    isTraineeConcerned,
     // Validations
     attendanceValidations: v$,
   };

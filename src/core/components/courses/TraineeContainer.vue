@@ -76,9 +76,9 @@
       @submit="addCompany" :validations="companyValidation.selectedCompany" :loading="companyModalLoading"
       @hide="resetCompanyAdditionModal" :company-options="selectCompanyOptions" />
 
-    <certifications-update-modal v-model="certificationsUpdateModal" @hide="resetCertificationUpdateModal"
-      v-model:certified-trainees="editedCertifications" :trainee-options="traineeOptions"
-      :loading="certificationUpdateLoading" @submit="updateCertifications" />
+    <trainees-update-modal v-model="certificationsUpdateModal" @hide="resetCertificationUpdateModal"
+      v-model:trainees="editedCertifications" :trainee-options="traineeOptions" :loading="certificationUpdateLoading"
+      @submit="updateCertifications" />
 
     <upload-csv-modal v-model="csvUploadModal" @hide="resetCsvUploadModal" @submit="uploadTraineesCsv" v-model:csv="csv"
       :loading="csvLoading" :validations="csvValidations.csv" :constraints="constraints" />
@@ -112,7 +112,7 @@ import TraineeTable from '@components/courses/TraineeTable';
 import ExpandingTable from '@components/table/ExpandingTable';
 import CompanyAdditionModal from '@components/courses/CompanyAdditionModal';
 import UploadCsvModal from '@components/courses/UploadCsvModal';
-import CertificationsUpdateModal from '@components/courses/CertificationsUpdateModal';
+import TraineesUpdateModal from '@components/courses/TraineesUpdateModal';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import { useLearnersCreation } from '@composables/learnersCreation';
 import { useCourses } from '@composables/courses';
@@ -134,7 +134,7 @@ export default {
     'learner-creation-modal': LearnerCreationModal,
     'ni-expanding-table': ExpandingTable,
     'company-addition-modal': CompanyAdditionModal,
-    'certifications-update-modal': CertificationsUpdateModal,
+    'trainees-update-modal': TraineesUpdateModal,
     'upload-csv-modal': UploadCsvModal,
   },
   emits: ['refresh', 'update', 'update:maxTrainees'],

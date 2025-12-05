@@ -54,15 +54,15 @@
                   <q-icon name="supervisor_account" />
                   {{ traineesCount(col.slot) }}
                 </div>
-                <template v-if="slotCheckboxValue(col.slot, MISSING)">
+                <template v-if="slotCheckboxValue(col.slot, col.trainees, MISSING)">
                   <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="true" dense size="sm"
-                    @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox"
+                    @update:model-value="updateSlotCheckbox(col.slot, col.trainees)" :disable="disableCheckbox"
                     checked-icon="mdi-alert-box" color="orange-500" />
                 </template>
                 <template v-else>
                   <q-checkbox v-if="canUpdate && course.trainees.length" :disable="disableCheckbox"
-                    :model-value="slotCheckboxValue(col.slot, PRESENT)" dense size="sm"
-                    @update:model-value="updateSlotCheckbox(col.slot)" />
+                    :model-value="slotCheckboxValue(col.slot, col.trainees, PRESENT)" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot, col.trainees)" />
                 </template>
               </div>
             </q-th>
@@ -85,11 +85,11 @@
               </q-item>
               <q-checkbox v-else-if="attendanceCheckboxValue(col.value, col.slot, MISSING)" :model-value="true" dense
                 size="sm" @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
-                :disable="disableCheckbox" checked-icon="mdi-alert-box"
-                color="orange-500" />
+                :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)"
+                checked-icon="mdi-alert-box" color="orange-500" />
               <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot, PRESENT)" dense size="sm"
                 @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
-                :disable="disableCheckbox" />
+                :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)" />
             </q-td>
           </q-tr>
         </template>
@@ -285,6 +285,7 @@ export default {
       openTraineeAttendanceAdditionModal,
       updateSlotCheckbox,
       goToLearnerProfile,
+      isTraineeConcerned,
       // Validations
       attendanceValidations,
     } = useAttendances(course, isClientInterface, canUpdate, loggedUser, modalLoading);
@@ -467,6 +468,7 @@ export default {
       formatSingleAttendanceSheetName,
       areSignaturesMissing,
       getMissingSignatures,
+      isTraineeConcerned,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,

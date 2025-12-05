@@ -4,6 +4,8 @@
       Editer un <span class="text-weight-bold">créneau</span>
     </template>
     <div class="modal-icon">
+      <ni-button v-if="canUpdateConcernedTrainees" class="bg-copper-grey-100 q-mr-md" color="copper-grey-800"
+        label="Éditer les apprenants concernés" @click="openConcernedTraineesModal" />
       <ni-button v-if="canCreateSlot && !isPlannedSlot" icon="delete"
         @click="validateDeletion(editedCourseSlot._id)" :disable="isOnlySlot" />
       <ni-button class="bg-copper-grey-100" color="copper-grey-800" v-if="isPlannedSlot" label="Supprimer la date"
@@ -20,24 +22,37 @@
     <ni-input v-if="getType(editedCourseSlot.step) === REMOTE" :model-value="editedCourseSlot.meetingLink"
       @update:model-value="update($event, 'meetingLink')" caption="Lien vers la visio" in-modal
       :error-message="linkErrorMessage" :error="validations.meetingLink.$error" />
+    <div v-if="editedCourseSlot.trainees" class="text-italic text-12 q-mb-md">
+      Apprenants concernés par le créneau :
+      {{ traineeOptions.filter(t => editedCourseSlot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
+    </div>
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Editer un créneau" icon-right="add" color="white"
         :loading="loading" @click="submit" />
     </template>
   </ni-modal>
+
+  <trainees-update-modal v-model="concernedTraineesModal" @hide="resetConcernedTraineesModal"
+    v-model:trainees="concernedTrainees" :trainee-options="traineeOptions" :loading="concernedTraineesLoading"
+    @submit="updateConcernedTrainees" title="les apprenants concernés"
+    message="les personnes sélectionnées participent au créneau" :validations="traineesValidations" />
 </template>
 
 <script>
 import { toRefs, ref, computed, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import get from 'lodash/get';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
+import CourseSlots from '@api/CourseSlots';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
 import DateTimeRange from '@components/form/DatetimeRange';
 import SearchAddress from '@components/form/SearchAddress';
 import ButtonToggle from '@components/ButtonToggle';
-import { NotifyPositive } from '@components/popup/notify';
+import TraineesUpdateModal from '@components/courses/TraineesUpdateModal';
+import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
 import { ON_SITE, REMOTE, DD_MM_YYYY, MINUTE, HH_MM } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatIntervalHourly } from '@helpers/dates/utils';
@@ -53,6 +68,8 @@ export default {
     isOnlySlot: { type: Boolean, default: false },
     isPlannedSlot: { type: Boolean, default: false },
     canCreateSlot: { type: Boolean, default: false },
+    canUpdateConcernedTrainees: { type: Boolean, default: false },
+    traineeOptions: { type: Array, default: () => [] },
   },
   components: {
     'ni-button': Button,
@@ -61,10 +78,11 @@ export default {
     'ni-modal': Modal,
     'ni-input': Input,
     'ni-btn-toggle': ButtonToggle,
+    'trainees-update-modal': TraineesUpdateModal,
   },
   emits: ['hide', 'update:model-value', 'submit', 'delete', 'update', 'unplan-slot'],
   setup (props, { emit }) {
-    const { stepTypes, editedCourseSlot } = toRefs(props);
+    const { stepTypes, editedCourseSlot, traineeOptions } = toRefs(props);
     const $q = useQuasar();
 
     const linkErrorMessage = 'Le lien doit commencer par http:// ou https://';
@@ -72,6 +90,10 @@ export default {
       ? CompaniDate(editedCourseSlot.value.dates.endHour, HH_MM)
         .diff(CompaniDate(editedCourseSlot.value.dates.startHour, HH_MM), MINUTE)
       : 'PT0M');
+    const concernedTraineesModal = ref(false);
+    const concernedTrainees = ref([]);
+    const concernedTraineesLoading = ref(false);
+    const shouldRefresh = ref(false);
 
     const durationOptions = computed(() => ([
       { label: '0H30', value: 'PT30M' },
@@ -122,7 +144,10 @@ export default {
         .onCancel(() => NotifyPositive('Suppression annulée.'));
     };
 
-    const hide = () => emit('hide');
+    const hide = () => {
+      emit('hide', shouldRefresh.value);
+      shouldRefresh.value = false;
+    };
 
     const input = event => emit('update:model-value', event);
 
@@ -138,14 +163,53 @@ export default {
 
     const updateDuration = (value) => { selectedDuration.value = value; };
 
+    const openConcernedTraineesModal = () => {
+      concernedTrainees.value = editedCourseSlot.value.trainees || traineeOptions.value.map(t => t.value);
+      concernedTraineesModal.value = true;
+    };
+
+    const resetConcernedTraineesModal = () => { concernedTrainees.value = []; };
+
+    const rules = computed(() => ({ required }));
+    const traineesValidations = useVuelidate(rules, concernedTrainees);
+
+    const updateConcernedTrainees = async () => {
+      try {
+        traineesValidations.value.$touch();
+        if (traineesValidations.value.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        concernedTraineesLoading.value = true;
+        const tempValue = concernedTrainees.value.length !== traineeOptions.value.length ? concernedTrainees.value : [];
+        const dbTrainees = editedCourseSlot.value.trainees || [];
+        const isSameList = dbTrainees.length === tempValue.length && dbTrainees.every(item => tempValue.includes(item));
+        if (!isSameList) {
+          await CourseSlots.update(editedCourseSlot.value._id, { trainees: concernedTrainees.value });
+          await update(tempValue, 'trainees');
+          shouldRefresh.value = true;
+          NotifyPositive('Apprenants concernés modifiés.');
+        }
+        concernedTraineesModal.value = false;
+      } catch (e) {
+        console.error(e);
+        if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
+        else NotifyNegative('Erreur lors de la modification des apprenants concernés.');
+      } finally {
+        concernedTraineesLoading.value = false;
+      }
+    };
+
     return {
       // Data
       linkErrorMessage,
       ON_SITE,
       REMOTE,
       selectedDuration,
+      concernedTraineesModal,
+      concernedTrainees,
+      concernedTraineesLoading,
       // Computed
       durationOptions,
+      traineesValidations,
       // Methods
       validateDatesDeletion,
       validateDeletion,
@@ -157,6 +221,9 @@ export default {
       getType,
       unplanSlot,
       updateDuration,
+      openConcernedTraineesModal,
+      resetConcernedTraineesModal,
+      updateConcernedTrainees,
     };
   },
 };
