@@ -211,7 +211,14 @@ export default {
 
     const getRestartTitle = () => ({ type: 'Reprise', post: 'de la formation' });
 
-    const getSlotRestrictionTitle = () => ({ pre: 'Édition de la liste des', type: 'apprenants concernés' });
+    const getSlotRestrictionTitle = () => {
+      const date = CompaniDate(courseHistory.value.slot.startDate).format(DD_MM_YYYY);
+      const startHour = CompaniDate(courseHistory.value.slot.startDate).format(HHhMM);
+      const endHour = CompaniDate(courseHistory.value.slot.endDate).format(HHhMM);
+      const infos = `${date} de ${startHour} à ${endHour}`;
+
+      return { pre: 'Édition de la liste des', type: 'apprenants concernés', post: ' pour le créneau du', infos };
+    };
 
     const formatedHistory = computed(() => {
       switch (courseHistory.value.action) {
