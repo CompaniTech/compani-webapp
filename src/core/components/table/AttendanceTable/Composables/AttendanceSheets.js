@@ -209,21 +209,31 @@ export const useAttendanceSheets = (
   };
 
   const validateAttendanceSheetGeneration = (attendanceSheet) => {
-    const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
-    const isLastSlotSigned = !!attendanceSheet.slots.find(s => s._id === lastSlot._id);
+    if (course.value.type === INTER_B2B) {
+      const lastSlot = course.value.slots
+        .filter((s) => {
+          const isTraineeConcerned = !s.trainees || s.trainees.includes(attendanceSheet.trainee._id);
+          const isTraineePresent = !s.missingAttendances ||
+            !s.missingAttendances.some(a => a.trainee === attendanceSheet.trainee._id);
+          return isTraineeConcerned && isTraineePresent;
+        })
+        .sort(descendingSortBy('endDate'))[0];
+      const isLastSlotSigned = !!attendanceSheet.slots.find(s => s._id === lastSlot._id);
 
-    if (!isLastSlotSigned && course.value.type === INTER_B2B) {
-      const message = 'Vous n\'avez pas émargé tous les créneaux. <br />'
+      if (!isLastSlotSigned) {
+        const message = 'Vous n\'avez pas émargé tous les créneaux. <br />'
         + 'Êtes-vous sûr(e) de vouloir générer cette feuille d\'émargement&nbsp;?';
-      $q.dialog({
-        title: 'Confirmation',
-        message,
-        html: true,
-        ok: true,
-        cancel: 'Annuler',
-      }).onOk(() => generateAttendanceSheet(attendanceSheet._id))
-        .onCancel(() => NotifyPositive('Génération annulée.'));
-    } else return generateAttendanceSheet(attendanceSheet._id);
+        return $q.dialog({
+          title: 'Confirmation',
+          message,
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+        }).onOk(() => generateAttendanceSheet(attendanceSheet._id))
+          .onCancel(() => NotifyPositive('Génération annulée.'));
+      }
+    }
+    return generateAttendanceSheet(attendanceSheet._id);
   };
 
   const validateAttendanceSheetDeletion = (attendanceSheet) => {

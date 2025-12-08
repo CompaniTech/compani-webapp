@@ -259,6 +259,8 @@ export default {
     });
 
     const canUpdateConcernedTrainees = computed(() => {
+      if (!course.value.trainees.length) return false;
+
       const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
 
       return ability.can('update', subject('Course', course.value), 'concerned_trainees');
