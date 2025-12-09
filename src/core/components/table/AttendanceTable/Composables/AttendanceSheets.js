@@ -243,7 +243,8 @@ export const useAttendanceSheets = (
       ? 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
       + 'également supprimées.'
       : 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;?';
-
+    const attendancesMessage = `Supprimer les émargements ${!attendanceSheet.trainee ? '(absences comprises) ' : ''}`
+    + 'associés à cette feuille d\'émargement';
     $q.dialog({
       title: 'Confirmation',
       message,
@@ -254,7 +255,7 @@ export const useAttendanceSheets = (
           type: 'checkbox',
           model: [],
           items: [{
-            label: 'Supprimer les émargements associés à cette feuille d\'émargement',
+            label: attendancesMessage,
             value: true,
           }],
           size: '32px',
