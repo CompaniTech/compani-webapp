@@ -24,7 +24,7 @@
     "bignumber.js": "~9.3.1",
     "chart.js": "~4.5.1",
     "connect-history-api-fallback": "~2.0.0",
-    "date-holidays": "~3.26.1",
+    "date-holidays": "~3.26.5",
     "dotenv": "~17.2.3",
     "express": "~5.1.0",
     "heroku-ssl-redirect": "~0.1.1",
