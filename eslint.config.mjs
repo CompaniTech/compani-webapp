@@ -92,7 +92,11 @@ export default defineConfig([
         __statics: true,
       },
     },
-    rules: { ...vue.configs['strongly-recommended'].rules, ...rules },
+    rules: {
+      ...vue.configs['strongly-recommended'].rules,
+      ...rules,
+      'vue/no-duplicate-class-names': 2,
+    },
   },
   { // Configuration pour les fichiers de tests e2e
     files: ['test/cypress/**/*.{js,ts}', '**/*.spec.{js,ts}'],
