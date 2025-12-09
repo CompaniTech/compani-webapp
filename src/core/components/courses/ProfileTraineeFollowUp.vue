@@ -389,7 +389,13 @@ export default {
         downloadZip(zip, zipName);
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors du téléchargement du document.');
+        let message = 'Erreur lors du téléchargement du document.';
+        if (e.status === 403 && e.data) {
+          const text = new TextDecoder().decode(e.data);
+          const json = JSON.parse(text);
+          message = json.message || message;
+          NotifyNegative(message);
+        } else NotifyNegative(message);
       } finally {
         pdfLoading.value = false;
       }
