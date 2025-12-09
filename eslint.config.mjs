@@ -85,7 +85,7 @@ export default defineConfig([
       parserOptions: {
         parser: babelParser,
         ecmaVersion: 2022,
-        babelOptions: { configFile: './babel.config.js' },
+        babelOptions: { configFile: path.resolve(__dirname, 'babel.config.js') },
       },
       globals: {
         ...globals.browser,
