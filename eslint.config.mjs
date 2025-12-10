@@ -62,11 +62,6 @@ const rules = {
   'operator-linebreak': ['error', 'before', { overrides: { '&&': 'after', '||': 'after', '=': 'after' } }],
   'prefer-destructuring': ['error', { VariableDeclarator: { object: true, array: false } }],
   'space-before-function-paren': 0,
-  'vue/max-attributes-per-line': 0,
-  'vue/singleline-html-element-content-newline': 0,
-  'vue/html-indent': 0,
-  'vue/html-closing-bracket-newline': 0,
-  'vue/first-attribute-linebreak': 0,
 };
 
 export default defineConfig([
@@ -95,6 +90,11 @@ export default defineConfig([
     rules: {
       ...vue.configs['strongly-recommended'].rules,
       ...rules,
+      'vue/max-attributes-per-line': 0,
+      'vue/singleline-html-element-content-newline': 0,
+      'vue/html-indent': 0,
+      'vue/html-closing-bracket-newline': 0,
+      'vue/first-attribute-linebreak': 0,
       'vue/no-duplicate-class-names': 2,
     },
   },
@@ -118,7 +118,7 @@ export default defineConfig([
       sourceType: 'module',
       parserOptions: {
         ecmaVersion: 2022,
-        babelOptions: { configFile: './babel.config.js' },
+        babelOptions: { configFile: path.resolve(__dirname, 'babel.config.js') },
       },
       globals: {
         ...globals.browser,
