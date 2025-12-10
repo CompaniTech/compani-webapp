@@ -8,7 +8,6 @@ import { required, requiredIf } from '@vuelidate/validators';
 import AttendanceSheets from '@api/AttendanceSheets';
 import { INTER_B2B, SINGLE, DD_MM_YYYY, GENERATION } from '@data/constants';
 import { formatIdentity, sortStrings } from '@helpers/utils';
-import { descendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
 
@@ -210,28 +209,18 @@ export const useAttendanceSheets = (
 
   const validateAttendanceSheetGeneration = (attendanceSheet) => {
     if (course.value.type === INTER_B2B) {
-      const lastSlot = course.value.slots
+      const courseSlots = course.value.slots
         .filter((s) => {
           const isTraineeConcerned = !s.trainees || s.trainees.includes(attendanceSheet.trainee._id);
           const isTraineePresent = !s.missingAttendances ||
             !s.missingAttendances.some(a => a.trainee === attendanceSheet.trainee._id);
           return isTraineeConcerned && isTraineePresent;
-        })
-        .sort(descendingSortBy('endDate'))[0];
-      const isLastSlotSigned = !!attendanceSheet.slots.find(s => s._id === lastSlot._id);
+        });
 
-      if (!isLastSlotSigned) {
-        const message = 'Vous n\'avez pas émargé tous les créneaux. <br />'
-        + 'Êtes-vous sûr(e) de vouloir générer cette feuille d\'émargement&nbsp;?';
-        return $q.dialog({
-          title: 'Confirmation',
-          message,
-          html: true,
-          ok: true,
-          cancel: 'Annuler',
-        }).onOk(() => generateAttendanceSheet(attendanceSheet._id))
-          .onCancel(() => NotifyPositive('Génération annulée.'));
-      }
+      const noneEmptySlot = courseSlots.every(slot => attendanceSheet.slots.find(s => s._id === slot._id));
+      if (noneEmptySlot) return generateAttendanceSheet(attendanceSheet._id);
+      return NotifyNegative('Vous ne pouvez pas générer cette feuille d\'émargement car tous les créneaux '
+      + 'n\'ont pas été émargés.');
     }
     return generateAttendanceSheet(attendanceSheet._id);
   };

@@ -327,8 +327,8 @@ export default {
       if (course.value.type !== INTER_B2B) return false;
       const lastSlot = course.value.slots
         .filter(s => !s.trainees || s.trainees.includes(attendanceSheet.trainee._id))
-        .sort(descendingSortBy('endDate'))[0];
-      return CompaniDate().isBefore(lastSlot.endDate);
+        .sort(descendingSortBy('startDate'))[0];
+      return CompaniDate().isBefore(lastSlot.startDate);
     };
 
     const {
