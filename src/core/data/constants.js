@@ -343,11 +343,13 @@ export const EXPORT_HISTORY_TYPES = [
   { label: 'Transports', value: TRANSPORT },
 ];
 export const COURSE = 'course';
+export const SINGLE_COURSE = 'single_course';
 export const COURSE_SLOT = 'course_slot';
 export const COURSE_BILL = 'course_bill';
 export const COURSE_PAYMENT = 'course_payment';
 export const VENDOR_EXPORT_HISTORY_TYPES = [
-  { label: 'Formations', value: COURSE },
+  { label: 'Formations de groupe', value: COURSE },
+  { label: 'Formations individuelles', value: SINGLE_COURSE },
   { label: 'Créneaux', value: COURSE_SLOT },
   { label: 'Questionnaires de satisfaction', value: END_OF_COURSE },
   { label: 'Factures et avoirs', value: COURSE_BILL },
