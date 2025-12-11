@@ -57,6 +57,7 @@
     "@quasar/quasar-app-extension-testing-e2e-cypress": "~6.2.1",
     "@vue/cli-service": "~5.0.9",
     "airbnb-style": "github:CompaniTech/eslint-config-airbnb-base",
+    "baseline-browser-mapping": "~2.9.6",
     "cypress": "~14.5.0",
     "eslint": "~9.39.1",
     "eslint-plugin-cypress": "~5.2.0",
