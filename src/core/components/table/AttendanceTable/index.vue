@@ -125,7 +125,9 @@
                     {{ getMissingSignatures(props.row.slots) }}
                   </q-tooltip>
                 </div>
-                <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
+                <div v-else-if="isInterCourseInProgress(props.row)" class="text-italic text-primary">
+                  Formation en cours
+                </div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
                   @click="validateAttendanceSheetGeneration(props.row)" />
                 <ni-button v-if="canUpdate" icon="delete" color="primary"
@@ -321,10 +323,13 @@ export default {
       return lastPassedSlot ? lastPassedSlot._id : null;
     });
 
-    const isInterCourseInProgress = computed(() => {
-      const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
-      return course.value.type === INTER_B2B && CompaniDate().isBefore(lastSlot.endDate);
-    });
+    const isInterCourseInProgress = (attendanceSheet) => {
+      if (course.value.type !== INTER_B2B) return false;
+      const lastSlot = course.value.slots
+        .filter(s => !s.trainees || s.trainees.includes(attendanceSheet.trainee._id))
+        .sort(descendingSortBy('startDate'))[0];
+      return CompaniDate().isBefore(lastSlot.startDate);
+    };
 
     const {
       // Data
@@ -441,7 +446,6 @@ export default {
       notLinkedSlotOptions,
       editionSlotsGroupedByStep,
       isSingleCourse,
-      isInterCourseInProgress,
       // Methods
       get,
       attendanceCheckboxValue,
@@ -469,6 +473,7 @@ export default {
       areSignaturesMissing,
       getMissingSignatures,
       isTraineeConcerned,
+      isInterCourseInProgress,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,

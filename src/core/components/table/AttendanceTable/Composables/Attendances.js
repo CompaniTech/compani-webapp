@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import { useQuasar } from 'quasar';
+import { useStore } from 'vuex';
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 import useVuelidate from '@vuelidate/core';
@@ -24,6 +25,7 @@ import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup
 
 export const useAttendances = (course, isClientInterface, canUpdate, loggedUser, modalLoading) => {
   const $q = useQuasar();
+  const $store = useStore();
 
   const attendances = ref([]);
   const traineeAdditionModal = ref(false);
@@ -173,6 +175,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
       }
 
       await refreshAttendances({ courseSlot: slotId });
+      await $store.dispatch('course/fetchCourse', { courseId: course.value._id });
       return true;
     } catch (e) {
       console.error(e);
@@ -233,6 +236,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
       else await Attendances.create({ courseSlot: slotId });
 
       await refreshAttendances({ courseSlot: slotId });
+      await $store.dispatch('course/fetchCourse', { courseId: course.value._id });
     } catch (e) {
       console.error(e);
       if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
