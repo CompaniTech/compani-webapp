@@ -74,7 +74,7 @@ export default defineConfig([
       parserOptions: {
         parser: babelParser,
         ecmaVersion: 2022,
-        babelOptions: { configFile: path.resolve(__dirname, 'babel.config.js') },
+        babelOptions: { configFile: './babel.config.js' },
       },
       globals: {
         ...globals.browser,
@@ -90,11 +90,6 @@ export default defineConfig([
       'vue/singleline-html-element-content-newline': 0,
       'vue/html-indent': 0,
       'vue/html-closing-bracket-newline': 0,
-      'vue/max-attributes-per-line': 0,
-      'vue/singleline-html-element-content-newline': 0,
-      'vue/html-indent': 0,
-      'vue/html-closing-bracket-newline': 0,
-      'vue/first-attribute-linebreak': 0,
       'vue/no-duplicate-class-names': 2,
     },
   },
@@ -118,7 +113,7 @@ export default defineConfig([
       sourceType: 'module',
       parserOptions: {
         ecmaVersion: 2022,
-        babelOptions: { configFile: path.resolve(__dirname, 'babel.config.js') },
+        babelOptions: { configFile: './babel.config.js' },
       },
       globals: {
         ...globals.browser,
