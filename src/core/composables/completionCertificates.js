@@ -29,7 +29,8 @@ export const useCompletionCertificates = () => {
       NotifyPositive('Certificat de réalisation généré.');
     } catch (e) {
       console.error(e);
-      NotifyNegative('Erreur lors de la génération du certificat.');
+      if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
+      else NotifyNegative('Erreur lors de la génération du certificat.');
     } finally {
       disableButton.value = false;
     }

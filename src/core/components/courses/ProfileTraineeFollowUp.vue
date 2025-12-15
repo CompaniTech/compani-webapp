@@ -160,6 +160,7 @@ import {
   formatDownloadName,
   sortStrings,
   formatAndSortIdentityOptions,
+  readAPIResponseWithTypeArrayBuffer,
 } from '@helpers/utils';
 import { composeCourseName, formatSlotSchedule } from '@helpers/courses';
 import { downloadZip } from '@helpers/file';
@@ -389,6 +390,8 @@ export default {
         downloadZip(zip, zipName);
       } catch (e) {
         console.error(e);
+        const decodedRep = readAPIResponseWithTypeArrayBuffer(e);
+        if (decodedRep.statusCode === 403 && decodedRep.message) return NotifyNegative(decodedRep.message);
         NotifyNegative('Erreur lors du téléchargement du document.');
       } finally {
         pdfLoading.value = false;
