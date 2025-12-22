@@ -193,7 +193,7 @@ import {
   formatQuantity,
   formatIdentity,
 } from '@helpers/utils';
-import { positiveNumber, validEmailsArray } from '@helpers/vuelidateCustomVal';
+import { positiveNumber, validEmailsArray, minDate } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesFor } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
@@ -240,7 +240,13 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
     const expandedRows = ref({ 0: [], 1: [], 2: [] });
-    const billListInfos = ref({ selectedBills: [], recipientEmails: [], type: '', text: '' });
+    const billListInfos = ref({
+      selectedBills: [],
+      recipientEmails: [],
+      type: '',
+      text: '',
+      sendingDate: CompaniDate().toISO(),
+    });
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
     const adminUserOptions = ref([]);
@@ -260,7 +266,12 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
-      billListInfos: { recipientEmails: { required, validEmailsArray }, type: { required }, text: { required } },
+      billListInfos: {
+        recipientEmails: { required, validEmailsArray },
+        type: { required },
+        text: { required },
+        sendingDate: { required, minDate: minDate(CompaniDate().subtract('P1D').toISO()) },
+      },
     };
 
     const { isVendorInterface } = useCourses();
@@ -622,8 +633,8 @@ export default {
         validations.value.billListInfos.$touch();
         if (validations.value.billListInfos.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const { selectedBills: courseBills, recipientEmails, type, text: content } = billListInfos.value;
-        await Email.sendBillList({ bills: courseBills.map(b => b._id), recipientEmails, type, content });
+        const { selectedBills: courseBills, recipientEmails, type, text: content, sendingDate } = billListInfos.value;
+        await Email.sendBillList({ bills: courseBills.map(b => b._id), recipientEmails, type, content, sendingDate });
 
         sendBillModal.value = false;
         selectedBills.value = [];
@@ -657,7 +668,13 @@ export default {
     };
 
     const resetBillListInfos = async () => {
-      billListInfos.value = { selectedBills: [], recipientEmails: [], type: '', text: '' };
+      billListInfos.value = {
+        selectedBills: [],
+        recipientEmails: [],
+        type: '',
+        text: '',
+        sendingDate: CompaniDate().toISO(),
+      };
       validations.value.billListInfos.$reset();
     };
 
