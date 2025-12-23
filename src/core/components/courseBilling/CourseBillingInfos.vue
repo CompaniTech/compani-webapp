@@ -57,9 +57,13 @@
               <template v-else-if="col.name === 'expand'">
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
-              <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)">
+              <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)
+                && !props.row.pendingCourseBill.length">
                 <q-checkbox v-model="selectedBills" :val="props.row._id" />
               </template>
+              <div v-else-if="col.name === 'sendingDates' && props.row.pendingCourseBill.length">
+                Programmé le {{ CompaniDate(props.row.pendingCourseBill[0].sendingDate).format(DD_MM_YYYY) }}
+              </div>
               <template v-else>{{ col.value }}</template>
             </q-td>
           </template>
