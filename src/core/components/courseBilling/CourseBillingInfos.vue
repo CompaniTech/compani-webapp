@@ -15,6 +15,14 @@
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns(index)"
           v-model:pagination="paginations[index]" :hide-bottom="false" :loading="loading"
           v-model:expanded="expandedRows[index]">
+          <template #header="{ props }">
+            <q-tr :props="props">
+              <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+                <q-icon v-if="col.name === 'sendingDates'" name="mail" size="18px" color="copper-grey-700" />
+                <template v-else>{{ col.label }}</template>
+              </q-th>
+            </q-tr>
+          </template>
           <template #row="{ props }">
             <q-td v-for="col in props.cols" :key="col.name" :props="props">
               <template v-if="col.name === 'number'">
@@ -58,11 +66,14 @@
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
               <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)
-                && !props.row.pendingCourseBill.length">
+                && !get(props, 'row.pendingCourseBill.length')">
                 <q-checkbox v-model="selectedBills" :val="props.row._id" />
               </template>
-              <div v-else-if="col.name === 'sendingDates' && props.row.pendingCourseBill.length">
-                Programmé le {{ CompaniDate(props.row.pendingCourseBill[0].sendingDate).format(DD_MM_YYYY) }}
+              <div v-else-if="col.name === 'sendingDates'">
+                <template v-if="col.value">Envoyée le {{ col.value }}</template>
+                <div v-if="get(props, 'row.pendingCourseBill.length')" class="text-copper-grey-600">
+                  Programmé le {{ CompaniDate(props.row.pendingCourseBill[0].sendingDate).format(DD_MM_YYYY) }}
+                </div>
               </div>
               <template v-else>{{ col.value }}</template>
             </q-td>
