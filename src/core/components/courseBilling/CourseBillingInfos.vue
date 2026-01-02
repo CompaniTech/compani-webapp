@@ -285,7 +285,7 @@ export default {
         recipientEmails: { required, validEmailsArray },
         type: { required },
         text: { required },
-        sendingDate: { required, minDate: minDate(CompaniDate().subtract('P1D').toISO()) },
+        sendingDate: { required, minDate: minDate(CompaniDate().toISO()) },
       },
     };
 

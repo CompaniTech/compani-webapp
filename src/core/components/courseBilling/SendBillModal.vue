@@ -13,7 +13,7 @@
         </div>
       </template>
     </ni-banner>
-    <ni-date-input caption="Date d'envoi des factures" v-model="billListInfos.sendingDate" :min="YESTERDAY"
+    <ni-date-input caption="Date d'envoi des factures" v-model="billListInfos.sendingDate" :min="TODAY"
       class="date-item" :error="validations.sendingDate.$error" :error-message="dateError" />
     <ni-select caption="Destinataires" :model-value="billListInfos.recipientEmails" :options="recipientOptions"
       multiple in-modal @update:model-value="updateBillListInfos($event, 'recipientEmails')" required-field
@@ -50,7 +50,16 @@ import Button from '@components/Button';
 import OptionGroup from '@components/form/OptionGroup';
 import Banner from '@components/Banner';
 import DateInput from '@components/form/DateInput';
-import { REQUIRED_LABEL, EMAIL_OPTIONS, END_COURSE, MIDDLE_COURSE, START_COURSE, VAEI, RESEND } from '@data/constants';
+import {
+  REQUIRED_LABEL,
+  EMAIL_OPTIONS,
+  END_COURSE,
+  MIDDLE_COURSE,
+  START_COURSE,
+  VAEI,
+  RESEND,
+  DAY,
+} from '@data/constants';
 import { composeCourseName } from '@helpers/courses';
 import { formatPrice, formatQuantity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -78,7 +87,7 @@ export default {
   setup (props, { emit }) {
     const { emailOptions, validations, billListInfos } = toRefs(props);
     const recipientOptions = ref([]);
-    const YESTERDAY = CompaniDate().subtract('P1D').toISO();
+    const TODAY = CompaniDate().startOf(DAY).toISO();
 
     const emailError = computed(() => (
       get(validations.value, 'recipientEmails.required.$response') === false ? REQUIRED_LABEL : 'Email non valide'
@@ -216,7 +225,7 @@ export default {
     return {
       // Data
       recipientOptions,
-      YESTERDAY,
+      TODAY,
       // Computed
       emailError,
       dateError,
