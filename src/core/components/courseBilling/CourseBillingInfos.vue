@@ -15,6 +15,14 @@
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns(index)"
           v-model:pagination="paginations[index]" :hide-bottom="false" :loading="loading"
           v-model:expanded="expandedRows[index]">
+          <template #header="{ props }">
+            <q-tr :props="props">
+              <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+                <q-icon v-if="col.name === 'sendingDates'" name="mail" size="18px" color="copper-grey-700" />
+                <template v-else>{{ col.label }}</template>
+              </q-th>
+            </q-tr>
+          </template>
           <template #row="{ props }">
             <q-td v-for="col in props.cols" :key="col.name" :props="props">
               <template v-if="col.name === 'number'">
@@ -57,9 +65,16 @@
               <template v-else-if="col.name === 'expand'">
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
-              <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)">
+              <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)
+                && !get(props, 'row.pendingCourseBill.length')">
                 <q-checkbox v-model="selectedBills" :val="props.row._id" />
               </template>
+              <div v-else-if="col.name === 'sendingDates'">
+                <template v-if="col.value">Envoyée le {{ col.value }}</template>
+                <div v-if="get(props, 'row.pendingCourseBill.length')" class="text-copper-grey-600">
+                  Programmé le {{ CompaniDate(props.row.pendingCourseBill[0].sendingDate).format(DD_MM_YYYY) }}
+                </div>
+              </div>
               <template v-else>{{ col.value }}</template>
             </q-td>
           </template>
@@ -193,7 +208,7 @@ import {
   formatQuantity,
   formatIdentity,
 } from '@helpers/utils';
-import { positiveNumber, validEmailsArray } from '@helpers/vuelidateCustomVal';
+import { positiveNumber, validEmailsArray, minDate } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesFor } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
@@ -240,7 +255,13 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
     const expandedRows = ref({ 0: [], 1: [], 2: [] });
-    const billListInfos = ref({ selectedBills: [], recipientEmails: [], type: '', text: '' });
+    const billListInfos = ref({
+      selectedBills: [],
+      recipientEmails: [],
+      type: '',
+      text: '',
+      sendingDate: CompaniDate().toISO(),
+    });
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
     const adminUserOptions = ref([]);
@@ -260,7 +281,12 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
-      billListInfos: { recipientEmails: { required, validEmailsArray }, type: { required }, text: { required } },
+      billListInfos: {
+        recipientEmails: { required, validEmailsArray },
+        type: { required },
+        text: { required },
+        sendingDate: { required, minDate: minDate(CompaniDate().toISO()) },
+      },
     };
 
     const { isVendorInterface } = useCourses();
@@ -622,8 +648,8 @@ export default {
         validations.value.billListInfos.$touch();
         if (validations.value.billListInfos.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const { selectedBills: courseBills, recipientEmails, type, text: content } = billListInfos.value;
-        await Email.sendBillList({ bills: courseBills.map(b => b._id), recipientEmails, type, content });
+        const { selectedBills: courseBills, recipientEmails, type, text: content, sendingDate } = billListInfos.value;
+        await Email.sendBillList({ bills: courseBills.map(b => b._id), recipientEmails, type, content, sendingDate });
 
         sendBillModal.value = false;
         selectedBills.value = [];
@@ -657,7 +683,13 @@ export default {
     };
 
     const resetBillListInfos = async () => {
-      billListInfos.value = { selectedBills: [], recipientEmails: [], type: '', text: '' };
+      billListInfos.value = {
+        selectedBills: [],
+        recipientEmails: [],
+        type: '',
+        text: '',
+        sendingDate: CompaniDate().toISO(),
+      };
       validations.value.billListInfos.$reset();
     };
 

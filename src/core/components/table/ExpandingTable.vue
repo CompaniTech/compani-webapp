@@ -5,9 +5,11 @@
       :expanded="expanded" @update:pagination="$emit('update:pagination', $event)" :separator="separator" :rows="data"
       @update:expanded="$emit('update:expanded', $event)">
       <template #header="props">
-        <q-tr :props="props">
-          <q-th v-for="col in props.cols" :key="col.name" :props="props"> {{ col.label }} </q-th>
-        </q-tr>
+        <slot name="header" :props="props">
+          <q-tr :props="props">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props"> {{ col.label }} </q-th>
+          </q-tr>
+        </slot>
       </template>
       <template #body="props">
         <q-tr :props="props" @click="props.expand = !props.expand" class="cursor-pointer">
