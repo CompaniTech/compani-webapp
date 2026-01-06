@@ -99,7 +99,7 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
 
   const disableCheckbox = computed(() => loading.value || !canUpdate.value || !!course.value.archivedAt);
 
-  const traineesCount = slotId => attendances.value.filter(a => a.courseSlot === slotId).length;
+  const traineesCount = slotId => attendances.value.filter(a => a.courseSlot === slotId && a.status === PRESENT).length;
 
   const getPotentialTrainees = async () => {
     try {
