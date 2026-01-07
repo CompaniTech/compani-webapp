@@ -333,6 +333,7 @@ export default {
         meetingLink: get(slot, 'meetingLink') || '',
         step: slot.step,
         ...slot.trainees && { trainees: slot.trainees },
+        hasDates: has(slot, 'startDate'),
       };
 
       if (slot.address) editedCourseSlot.value.address = { ...slot.address };

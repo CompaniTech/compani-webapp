@@ -4,8 +4,8 @@
       Editer un <span class="text-weight-bold">créneau</span>
     </template>
     <div class="modal-icon">
-      <ni-button v-if="canUpdateConcernedTrainees" class="bg-copper-grey-100 q-mr-md" color="copper-grey-800"
-        label="Éditer les apprenants concernés" @click="openConcernedTraineesModal" />
+      <ni-button v-if="canUpdateConcernedTrainees && editedCourseSlot.hasDates" class="bg-copper-grey-100 q-mr-md"
+        color="copper-grey-800" label="Éditer les apprenants concernés" @click="openConcernedTraineesModal" />
       <ni-button v-if="canCreateSlot && !isPlannedSlot" icon="delete"
         @click="validateDeletion(editedCourseSlot._id)" :disable="isOnlySlot" />
       <ni-button class="bg-copper-grey-100" color="copper-grey-800" v-if="isPlannedSlot" label="Supprimer la date"
