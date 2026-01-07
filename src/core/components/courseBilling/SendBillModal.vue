@@ -13,6 +13,8 @@
         </div>
       </template>
     </ni-banner>
+    <ni-date-input caption="Date d'envoi des factures" v-model="billListInfos.sendingDate" :min="TODAY"
+      class="date-item" :error="validations.sendingDate.$error" :error-message="dateError" />
     <ni-select caption="Destinataires" :model-value="billListInfos.recipientEmails" :options="recipientOptions"
       multiple in-modal @update:model-value="updateBillListInfos($event, 'recipientEmails')" required-field
       @add-new-value="addNewValue" :error="validations.recipientEmails.$error" :error-message="emailError"
@@ -47,7 +49,17 @@ import Input from '@components/form/Input';
 import Button from '@components/Button';
 import OptionGroup from '@components/form/OptionGroup';
 import Banner from '@components/Banner';
-import { REQUIRED_LABEL, EMAIL_OPTIONS, END_COURSE, MIDDLE_COURSE, START_COURSE, VAEI, RESEND } from '@data/constants';
+import DateInput from '@components/form/DateInput';
+import {
+  REQUIRED_LABEL,
+  EMAIL_OPTIONS,
+  END_COURSE,
+  MIDDLE_COURSE,
+  START_COURSE,
+  VAEI,
+  RESEND,
+  DAY,
+} from '@data/constants';
 import { composeCourseName } from '@helpers/courses';
 import { formatPrice, formatQuantity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -69,14 +81,20 @@ export default {
     'ni-option-group': OptionGroup,
     'ni-input': Input,
     'ni-banner': Banner,
+    'ni-date-input': DateInput,
   },
   emits: ['hide', 'update:model-value', 'update:bill-list-infos', 'submit'],
   setup (props, { emit }) {
     const { emailOptions, validations, billListInfos } = toRefs(props);
     const recipientOptions = ref([]);
+    const TODAY = CompaniDate().startOf(DAY).toISO();
 
     const emailError = computed(() => (
       get(validations.value, 'recipientEmails.required.$response') === false ? REQUIRED_LABEL : 'Email non valide'
+    ));
+
+    const dateError = computed(() => (
+      get(validations.value, 'sendingdate.required.$response') === false ? REQUIRED_LABEL : 'Date non valide'
     ));
 
     const severalSelectedBills = computed(() => billListInfos.value.selectedBills.length > 1);
@@ -207,8 +225,10 @@ export default {
     return {
       // Data
       recipientOptions,
+      TODAY,
       // Computed
       emailError,
+      dateError,
       formattedEmailOptions,
       // Methods
       hide,

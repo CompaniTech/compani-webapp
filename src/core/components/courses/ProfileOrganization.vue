@@ -109,6 +109,14 @@
         <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
           :disable="disableAttendanceSheetDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
       </div>
+      <div v-if="isVendorInterface">
+        <div v-if="isRofOrVendorAdmin">
+          <ni-bi-color-button v-if="course.folderId" icon="folder" label="Dossier apprenant" size="16px"
+            @click="openExternalUrl(`https://drive.google.com/drive/u/0/folders/${course.folderId}`)" />
+        </div>
+        <ni-bi-color-button v-if="course.gSheetId" icon="mdi-file-excel-box" label="Fichier de suivi apprenant"
+          size="16px" @click="openExternalUrl(`https://docs.google.com/spreadsheets/d/${course.gSheetId}`)" />
+      </div>
     </div>
     <training-contract-container v-if="canGetTrainingContracts" :course="course" :has-holding-role="hasHoldingRole"
       :is-rof-or-vendor-admin="isRofOrVendorAdmin" :training-contracts="trainingContracts"
@@ -1066,6 +1074,8 @@ export default {
 
     const goToContactProfile = () => $router.push({ name: 'ni courses contacts' });
 
+    const openExternalUrl = (url) => { window.open(url, '_blank'); };
+
     watch(tutorModal, () => {
       if (tutorModal.value && newTutorRegistration.value.user) {
         tmpInterlocutorId.value = newTutorRegistration.value.user;
@@ -1203,6 +1213,7 @@ export default {
       nextStepLearnerCreationModal,
       submitLearnerCreationModal,
       validateTutorAddition,
+      openExternalUrl,
     };
   },
 };

@@ -264,6 +264,7 @@ export const TRAINER_ADDITION = 'trainer_addition';
 export const TRAINER_DELETION = 'trainer_deletion';
 export const COURSE_INTERRUPTION = 'course_interruption';
 export const COURSE_RESTART = 'course_restart';
+export const SLOT_RESTRICTION = 'slot_restriction';
 
 // MEDIA UPLOAD
 export const UPLOAD_IMAGE = 'image';
@@ -342,12 +343,16 @@ export const EXPORT_HISTORY_TYPES = [
   { label: 'Transports', value: TRANSPORT },
 ];
 export const COURSE = 'course';
+export const SINGLE_COURSE = 'single_course';
 export const COURSE_SLOT = 'course_slot';
+export const SINGLE_COURSE_SLOT = 'single_course_slot';
 export const COURSE_BILL = 'course_bill';
 export const COURSE_PAYMENT = 'course_payment';
 export const VENDOR_EXPORT_HISTORY_TYPES = [
-  { label: 'Formations', value: COURSE },
-  { label: 'Créneaux', value: COURSE_SLOT },
+  { label: 'Formations de groupe', value: COURSE },
+  { label: 'Formations individuelles', value: SINGLE_COURSE },
+  { label: 'Créneaux de formation de groupe', value: COURSE_SLOT },
+  { label: 'Créneaux de formation individuelle', value: SINGLE_COURSE_SLOT },
   { label: 'Questionnaires de satisfaction', value: END_OF_COURSE },
   { label: 'Factures et avoirs', value: COURSE_BILL },
   { label: 'Paiements et remboursements', value: COURSE_PAYMENT },

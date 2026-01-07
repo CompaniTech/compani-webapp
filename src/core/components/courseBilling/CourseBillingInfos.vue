@@ -9,11 +9,20 @@
       </div>
     </div>
     <template v-if="Object.keys(groupedCourseBills).length">
-      <div v-for="index of Object.keys(groupedCourseBills)" :key="index" class="q-mb-xl">
+      <div v-for="index of Object.keys(groupedCourseBills)" :key="index"
+        :class="[{ 'client-layout': !isVendorInterface }, 'q-mb-xl']">
         <p class="text-weight-bold">{{ getTableName(index) }}</p>
         <ni-expanding-table :data="groupedCourseBills[index]" :columns="columns(index)"
           v-model:pagination="paginations[index]" :hide-bottom="false" :loading="loading"
           v-model:expanded="expandedRows[index]">
+          <template #header="{ props }">
+            <q-tr :props="props">
+              <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+                <q-icon v-if="col.name === 'sendingDates'" name="mail" size="18px" color="copper-grey-700" />
+                <template v-else>{{ col.label }}</template>
+              </q-th>
+            </q-tr>
+          </template>
           <template #row="{ props }">
             <q-td v-for="col in props.cols" :key="col.name" :props="props">
               <template v-if="col.name === 'number'">
@@ -56,9 +65,16 @@
               <template v-else-if="col.name === 'expand'">
                 <q-icon :name="props.expand ? 'expand_less' : 'expand_more'" />
               </template>
-              <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)">
+              <template v-else-if="col.name === 'actions' && !isEqualTo(props.row.total, 0)
+                && !get(props, 'row.pendingCourseBill.length')">
                 <q-checkbox v-model="selectedBills" :val="props.row._id" />
               </template>
+              <div v-else-if="col.name === 'sendingDates'">
+                <template v-if="col.value">Envoyée le {{ col.value }}</template>
+                <div v-if="get(props, 'row.pendingCourseBill.length')" class="text-copper-grey-600">
+                  Programmé le {{ CompaniDate(props.row.pendingCourseBill[0].sendingDate).format(DD_MM_YYYY) }}
+                </div>
+              </div>
               <template v-else>{{ col.value }}</template>
             </q-td>
           </template>
@@ -85,16 +101,23 @@
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
-                <div class="formatted-price" />
-                <div v-if="item.status && isVendorInterface" class="status">
-                  <div class="chip-container q-my-md">
-                    <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
+                <template v-if="isVendorInterface">
+                  <div class="formatted-price" />
+                  <div v-if="item.status" class="status">
+                    <div class="chip-container q-my-md">
+                      <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
+                    </div>
                   </div>
-                </div>
-                <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
-                  <q-icon size="20px" name="edit" color="copper-grey-500"
-                    @click="openCoursePaymentEditionModal(props.row, item)" />
-                </div>
+                  <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
+                    <q-icon size="20px" name="edit" color="copper-grey-500"
+                      @click="openCoursePaymentEditionModal(props.row, item)" />
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="formatted-price" />
+                  <div class="sending-dates" />
+                  <div class="expand" />
+                </template>
               </div>
             </q-td>
           </template>
@@ -185,7 +208,7 @@ import {
   formatQuantity,
   formatIdentity,
 } from '@helpers/utils';
-import { positiveNumber, validEmailsArray } from '@helpers/vuelidateCustomVal';
+import { positiveNumber, validEmailsArray, minDate } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesFor } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
 import { hasUserAccessToCompany } from '@helpers/userCompanies';
@@ -232,7 +255,13 @@ export default {
     const billingRepresentativeModalLabel = ref({ action: '', interlocutor: '' });
     const tmpBillingRepresentativeId = ref('');
     const expandedRows = ref({ 0: [], 1: [], 2: [] });
-    const billListInfos = ref({ selectedBills: [], recipientEmails: [], type: '', text: '' });
+    const billListInfos = ref({
+      selectedBills: [],
+      recipientEmails: [],
+      type: '',
+      text: '',
+      sendingDate: CompaniDate().toISO(),
+    });
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
     const adminUserOptions = ref([]);
@@ -252,7 +281,12 @@ export default {
         status: { required },
       },
       tmpBillingRepresentativeId: { required },
-      billListInfos: { recipientEmails: { required, validEmailsArray }, type: { required }, text: { required } },
+      billListInfos: {
+        recipientEmails: { required, validEmailsArray },
+        type: { required },
+        text: { required },
+        sendingDate: { required, minDate: minDate(CompaniDate().toISO()) },
+      },
     };
 
     const { isVendorInterface } = useCourses();
@@ -351,7 +385,9 @@ export default {
         align: 'center',
         classes: 'sending-dates',
       },
-      { name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' },
+      ...(isVendorInterface
+        ? [{ name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' }]
+        : []),
       { name: 'expand', classes: 'expand' },
     ];
 
@@ -612,8 +648,8 @@ export default {
         validations.value.billListInfos.$touch();
         if (validations.value.billListInfos.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        const { selectedBills: courseBills, recipientEmails, type, text: content } = billListInfos.value;
-        await Email.sendBillList({ bills: courseBills.map(b => b._id), recipientEmails, type, content });
+        const { selectedBills: courseBills, recipientEmails, type, text: content, sendingDate } = billListInfos.value;
+        await Email.sendBillList({ bills: courseBills.map(b => b._id), recipientEmails, type, content, sendingDate });
 
         sendBillModal.value = false;
         selectedBills.value = [];
@@ -647,7 +683,13 @@ export default {
     };
 
     const resetBillListInfos = async () => {
-      billListInfos.value = { selectedBills: [], recipientEmails: [], type: '', text: '' };
+      billListInfos.value = {
+        selectedBills: [],
+        recipientEmails: [],
+        type: '',
+        text: '',
+        sendingDate: CompaniDate().toISO(),
+      };
       validations.value.billListInfos.$reset();
     };
 
@@ -800,4 +842,11 @@ export default {
   width: 10%
   padding: 4px
   color: $copper-500
+.client-layout
+  .payment-without-checkbox
+    width: 24%
+  .formatted-price
+    width: 12%
+  .sending-dates
+    width: 15%
 </style>

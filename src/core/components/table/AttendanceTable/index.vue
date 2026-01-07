@@ -54,15 +54,15 @@
                   <q-icon name="supervisor_account" />
                   {{ traineesCount(col.slot) }}
                 </div>
-                <template v-if="slotCheckboxValue(col.slot, MISSING)">
+                <template v-if="slotCheckboxValue(col.slot, col.trainees, MISSING)">
                   <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="true" dense size="sm"
-                    @update:model-value="updateSlotCheckbox(col.slot)" :disable="disableCheckbox"
+                    @update:model-value="updateSlotCheckbox(col.slot, col.trainees)" :disable="disableCheckbox"
                     checked-icon="mdi-alert-box" color="orange-500" />
                 </template>
                 <template v-else>
                   <q-checkbox v-if="canUpdate && course.trainees.length" :disable="disableCheckbox"
-                    :model-value="slotCheckboxValue(col.slot, PRESENT)" dense size="sm"
-                    @update:model-value="updateSlotCheckbox(col.slot)" />
+                    :model-value="slotCheckboxValue(col.slot, col.trainees, PRESENT)" dense size="sm"
+                    @update:model-value="updateSlotCheckbox(col.slot, col.trainees)" />
                 </template>
               </div>
             </q-th>
@@ -85,11 +85,11 @@
               </q-item>
               <q-checkbox v-else-if="attendanceCheckboxValue(col.value, col.slot, MISSING)" :model-value="true" dense
                 size="sm" @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
-                :disable="disableCheckbox" checked-icon="mdi-alert-box"
-                color="orange-500" />
+                :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)"
+                checked-icon="mdi-alert-box" color="orange-500" />
               <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot, PRESENT)" dense size="sm"
                 @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
-                :disable="disableCheckbox" />
+                :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)" />
             </q-td>
           </q-tr>
         </template>
@@ -125,7 +125,9 @@
                     {{ getMissingSignatures(props.row.slots) }}
                   </q-tooltip>
                 </div>
-                <div v-else-if="isInterCourseInProgress" class="text-italic text-primary">Formation en cours</div>
+                <div v-else-if="isInterCourseInProgress(props.row)" class="text-italic text-primary">
+                  Formation en cours
+                </div>
                 <ni-primary-button v-else label="Générer" icon="add" :disabled="modalLoading"
                   @click="validateAttendanceSheetGeneration(props.row)" />
                 <ni-button v-if="canUpdate" icon="delete" color="primary"
@@ -285,6 +287,7 @@ export default {
       openTraineeAttendanceAdditionModal,
       updateSlotCheckbox,
       goToLearnerProfile,
+      isTraineeConcerned,
       // Validations
       attendanceValidations,
     } = useAttendances(course, isClientInterface, canUpdate, loggedUser, modalLoading);
@@ -320,10 +323,13 @@ export default {
       return lastPassedSlot ? lastPassedSlot._id : null;
     });
 
-    const isInterCourseInProgress = computed(() => {
-      const lastSlot = [...course.value.slots].sort(descendingSortBy('endDate'))[0];
-      return course.value.type === INTER_B2B && CompaniDate().isBefore(lastSlot.endDate);
-    });
+    const isInterCourseInProgress = (attendanceSheet) => {
+      if (course.value.type !== INTER_B2B) return false;
+      const lastSlot = course.value.slots
+        .filter(s => !s.trainees || s.trainees.includes(attendanceSheet.trainee._id))
+        .sort(descendingSortBy('startDate'))[0];
+      return CompaniDate().isBefore(lastSlot.startDate);
+    };
 
     const {
       // Data
@@ -440,7 +446,6 @@ export default {
       notLinkedSlotOptions,
       editionSlotsGroupedByStep,
       isSingleCourse,
-      isInterCourseInProgress,
       // Methods
       get,
       attendanceCheckboxValue,
@@ -467,6 +472,8 @@ export default {
       formatSingleAttendanceSheetName,
       areSignaturesMissing,
       getMissingSignatures,
+      isTraineeConcerned,
+      isInterCourseInProgress,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,
