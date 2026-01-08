@@ -23,7 +23,7 @@
       @update:model-value="update($event, 'meetingLink')" caption="Lien vers la visio" in-modal
       :error-message="linkErrorMessage" :error="validations.meetingLink.$error" />
     <div v-if="editedCourseSlot.trainees" class="text-italic text-12 q-mb-md">
-      Apprenants concernés par le créneau :
+      {{ formatQuantity('Apprenant concerné', editedCourseSlot.trainees.length, 's', false) }} par le créneau :
       {{ traineeOptions.filter(t => editedCourseSlot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
     </div>
     <template #footer>
@@ -55,6 +55,7 @@ import TraineesUpdateModal from '@components/courses/TraineesUpdateModal';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
 import { ON_SITE, REMOTE, DD_MM_YYYY, MINUTE, HH_MM } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
+import { formatQuantity } from '@helpers/utils';
 import { formatIntervalHourly } from '@helpers/dates/utils';
 
 export default {
@@ -224,6 +225,7 @@ export default {
       openConcernedTraineesModal,
       resetConcernedTraineesModal,
       updateConcernedTrainees,
+      formatQuantity,
     };
   },
 };

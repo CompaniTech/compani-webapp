@@ -49,7 +49,7 @@
                         <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
                       </div>
                       <div v-if="slot.trainees" class="text-italic text-12 q-mb-md">
-                        Apprenants concernés par le créneau :
+                        {{ formatQuantity('Apprenant concerné', slot.trainees.length, 's', false) }} par le créneau :
                         {{ traineeOptions.filter(t => slot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
                       </div>
                     </div>
@@ -557,6 +557,7 @@ export default {
       openMultipleSlotCreationModal,
       resetCreationModal,
       createCourseSlots,
+      formatQuantity,
     };
   },
 };
