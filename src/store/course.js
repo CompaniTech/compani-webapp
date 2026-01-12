@@ -62,6 +62,13 @@ export default {
         if (userClientRole && !/\/ad\//.test(router.currentRoute.value.path)) {
           const loggedUser = store.getters['main/getLoggedUser'];
           course.trainees = course.trainees.filter(t => hasUserAccessToCompany(loggedUser, t.registrationCompany));
+          const traineesIds = course.trainees.map(t => t._id);
+          const slots = course.format === BLENDED
+            ? course.slots
+              .filter(s => !s.trainees || s.trainees.some(t => traineesIds.includes(t)))
+              .map(s => (!s.trainees ? s : { ...s, trainees: s.trainees.filter(t => traineesIds.includes(t)) }))
+            : [];
+          if (course.format === BLENDED) course.slots = slots;
           if (course.companies) {
             course.companies = course.companies.filter(company => hasUserAccessToCompany(loggedUser, company._id));
           }
