@@ -32,6 +32,9 @@
                 </div>
               </div>
               <div v-if="!isElearningStep(step)" class="slots-container">
+                <span v-if="!(courseSlotsByStepAndDate[step.key] || isVendorInterface)" class="text-italic q-mx-lg">
+                  Aucun apprenant de la structure n'est concerné par cette étape de formation
+                </span>
                 <div v-for="day in Object.entries(omit(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY))"
                   :key="day" class="row q-ml-xl q-my-sm">
                   <div class="text-weight-bold q-mr-md">{{ day[0] }}</div>
