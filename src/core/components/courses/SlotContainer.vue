@@ -23,7 +23,7 @@
         <div v-if="showStepList" class="bg-copper-grey-50 q-px-md">
           <q-item-section v-for="(step, index) in stepList" :key="step.key" class="q-pb-sm flex">
             <div :class="getStepClass(step)">
-              <div v-if="isStepToPlan(step)" class="to-plan-header">Créneaux à programmer</div>
+              <div v-if="isStepToPlan(step) && !isEmptyStep(step)" class="to-plan-header">Créneaux à programmer</div>
               <div class="row q-pa-md">
                 <div class="index">{{ index + 1 }}</div>
                 <div class="q-mx-md">
@@ -32,7 +32,7 @@
                 </div>
               </div>
               <div v-if="!isElearningStep(step)" class="slots-container">
-                <span v-if="!(courseSlotsByStepAndDate[step.key] || isVendorInterface)" class="text-italic q-mx-lg">
+                <span v-if="isEmptyStep(step)" class="text-italic q-mx-lg">
                   Aucun apprenant de la structure n'est concerné par cette étape de formation
                 </span>
                 <div v-for="day in Object.entries(omit(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY))"
@@ -442,9 +442,11 @@ export default {
 
     const isStepToPlan = step => !(isElearningStep(step) || isPlannedStep(step));
 
+    const isEmptyStep = step => !(courseSlotsByStepAndDate.value[step.key] || isVendorInterface.value);
+
     const getStepClass = (step) => {
       if (isElearningStep(step)) return '';
-      if (isPlannedStep(step)) return 'planned';
+      if (isPlannedStep(step) || isEmptyStep(step)) return 'planned';
 
       return 'to-plan';
     };
@@ -552,6 +554,7 @@ export default {
       inputTmpEstimatedStartDate,
       isElearningStep,
       isStepToPlan,
+      isEmptyStep,
       getStepClass,
       getSlotClass,
       formatSlotSchedule,
