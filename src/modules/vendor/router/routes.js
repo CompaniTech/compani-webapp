@@ -410,6 +410,15 @@ const routes = [
           parent: 'configuration',
         },
       },
+      {
+        path: 'ni/billing/dashboard',
+        name: 'ni billing coach dashboard',
+        component: () => import('src/modules/vendor/pages/ni/billing/CoachBillDashboard'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'configuration',
+        },
+      },
     ],
   },
 ];

@@ -67,6 +67,7 @@ const trainingOrganisationManagerRoutes = [
   { name: 'trainers questionnaire answers' },
   { name: 'ni billing dashboard' },
   { name: 'ni billing directory' },
+  { name: 'ni billing coach dashboard' },
   { name: 'ni billing payments' },
 ];
 const vendorAdminRoutes = [...trainingOrganisationManagerRoutes];
