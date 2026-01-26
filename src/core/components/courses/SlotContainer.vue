@@ -364,6 +364,7 @@ export default {
         endDate: CompaniDate(courseSlot.dates.endDate).set(endHour.getUnits(['hour', 'minute'])).toISO(),
         ...(stepType === ON_SITE && get(courseSlot, 'address.fullAddress') && { address: courseSlot.address }),
         ...(stepType === REMOTE && courseSlot.meetingLink && { meetingLink: courseSlot.meetingLink }),
+        ...courseSlot.wholeDay && { wholeDay: true },
       };
     };
 
