@@ -13,6 +13,14 @@
     </div>
     <ni-btn-toggle in-modal :model-value="selectedDuration" :options="durationOptions"
       @update:model-value="updateDuration" />
+      <div class="toggle-container">
+        <ni-btn-toggle in-modal :model-value="selectedRange" :options="rangeOptions"
+          @update:model-value="updateRange" />
+        <span :class="{ verbatim: !editedCourseSlot.wholeDay }" class="text-12 text-italic">
+          Un nouveau créneau le {{ CompaniDate(editedCourseSlot.dates.startDate).format(DD_MM_YYYY) }} de 14h00 à 17h30
+          sera créé
+        </span>
+      </div>
     <ni-datetime-range caption="Dates et heures" :model-value="editedCourseSlot.dates" disable-end-date
       :error="validations.dates.$error" @blur="validations.dates.$touch" @update:model-value="update($event, 'dates')"
       required-field :shifted-duration="selectedDuration" />
@@ -53,7 +61,7 @@ import SearchAddress from '@components/form/SearchAddress';
 import ButtonToggle from '@components/ButtonToggle';
 import TraineesUpdateModal from '@components/courses/TraineesUpdateModal';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
-import { ON_SITE, REMOTE, DD_MM_YYYY, MINUTE, HH_MM } from '@data/constants';
+import { ON_SITE, REMOTE, DD_MM_YYYY, MINUTE, HH_MM, MORNING, AFTERNOON, WHOLE_DAY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatQuantity } from '@helpers/utils';
 import { formatIntervalHourly } from '@helpers/dates/utils';
@@ -85,6 +93,12 @@ export default {
   setup (props, { emit }) {
     const { stepTypes, editedCourseSlot, traineeOptions } = toRefs(props);
     const $q = useQuasar();
+    const selectedRange = ref('');
+    const rangeOptions = [
+      { label: 'matin', value: MORNING },
+      { label: 'après-midi', value: AFTERNOON },
+      { label: 'journée entière', value: WHOLE_DAY },
+    ];
 
     const linkErrorMessage = 'Le lien doit commencer par http:// ou https://';
     const selectedDuration = ref(editedCourseSlot.value.dates
@@ -106,6 +120,27 @@ export default {
       { label: '3H30', value: 'PT210M' },
     ]));
 
+    const rangeData = computed(() => (
+      {
+        morning: {
+          startDate: CompaniDate(editedCourseSlot.value.dates.startDate)
+            .set({ hour: 9, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+          endDate: CompaniDate(editedCourseSlot.value.dates.endDate)
+            .set({ hour: 12, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
+          startHour: '09:00',
+          endHour: '12:30',
+        },
+        afternoon: {
+          startDate: CompaniDate(editedCourseSlot.value.dates.startDate)
+            .set({ hour: 14, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+          endDate: CompaniDate(editedCourseSlot.value.dates.endDate)
+            .set({ hour: 17, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
+          startHour: '14:00',
+          endHour: '17:30',
+        },
+      }
+    ));
+
     watch(() => selectedDuration.value, (newDuration) => {
       if (get(editedCourseSlot.value, 'dates.startHour') && newDuration) {
         editedCourseSlot.value.dates.endHour = CompaniDate(editedCourseSlot.value.dates.startHour, HH_MM)
@@ -118,6 +153,15 @@ export default {
       const endHour = get(editedCourseSlot.value, 'dates.endHour');
       if (startHour && endHour) {
         selectedDuration.value = CompaniDate(endHour, HH_MM).diff(CompaniDate(startHour, HH_MM), MINUTE);
+        if (CompaniDate(startHour).isSame(rangeData.value.morning.startHour) &&
+        CompaniDate(endHour).isSame(rangeData.value.morning.endHour)) {
+          if (selectedRange.value !== WHOLE_DAY) selectedRange.value = MORNING;
+        } else if (startHour && endHour && CompaniDate(startHour).isSame(rangeData.value.afternoon.startHour) &&
+        CompaniDate(endHour).isSame(rangeData.value.afternoon.endHour)) {
+          selectedRange.value = AFTERNOON;
+        } else {
+          selectedRange.value = '';
+        }
       }
     });
 
@@ -148,6 +192,7 @@ export default {
     const hide = () => {
       emit('hide', shouldRefresh.value);
       shouldRefresh.value = false;
+      selectedRange.value = '';
     };
 
     const input = event => emit('update:model-value', event);
@@ -199,12 +244,22 @@ export default {
       }
     };
 
+    const updateRange = (value) => {
+      selectedRange.value = value;
+      const isWholeDay = value === WHOLE_DAY;
+      editedCourseSlot.value.dates = isWholeDay ? rangeData.value.morning : rangeData.value[value];
+      update(isWholeDay, 'wholeDay');
+    };
+
     return {
       // Data
       linkErrorMessage,
       ON_SITE,
       REMOTE,
+      DD_MM_YYYY,
+      rangeOptions,
       selectedDuration,
+      selectedRange,
       concernedTraineesModal,
       concernedTrainees,
       concernedTraineesLoading,
@@ -225,7 +280,9 @@ export default {
       openConcernedTraineesModal,
       resetConcernedTraineesModal,
       updateConcernedTrainees,
+      updateRange,
       formatQuantity,
+      CompaniDate,
     };
   },
 };
@@ -236,4 +293,10 @@ export default {
     display: flex
     justify-content: flex-end
     margin-bottom: 16px
+  .toggle-container
+    margin-bottom: 10px
+    .verbatim
+      visibility: hidden
+    .q-btn-toggle
+      margin-bottom: 0px
 </style>

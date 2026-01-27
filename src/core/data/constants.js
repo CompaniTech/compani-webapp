@@ -385,6 +385,9 @@ export const HOUR = 'hour';
 export const MINUTE = 'minute';
 export const SECOND = 'second';
 export const MILLISECOND = 'millisecond';
+export const MORNING = 'morning';
+export const AFTERNOON = 'afternoon';
+export const WHOLE_DAY = 'whole_day';
 
 // COMPANIDURATION
 export const PT0S = 'PT0S';
