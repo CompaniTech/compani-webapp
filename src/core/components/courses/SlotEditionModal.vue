@@ -61,7 +61,7 @@ import SearchAddress from '@components/form/SearchAddress';
 import ButtonToggle from '@components/ButtonToggle';
 import TraineesUpdateModal from '@components/courses/TraineesUpdateModal';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
-import { ON_SITE, REMOTE, DD_MM_YYYY, MINUTE, HH_MM } from '@data/constants';
+import { ON_SITE, REMOTE, DD_MM_YYYY, MINUTE, HH_MM, MORNING, AFTERNOON, WHOLE_DAY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatQuantity } from '@helpers/utils';
 import { formatIntervalHourly } from '@helpers/dates/utils';
@@ -95,9 +95,9 @@ export default {
     const $q = useQuasar();
     const selectedRange = ref('');
     const rangeOptions = [
-      { label: 'matin', value: 'morning' },
-      { label: 'après-midi', value: 'afternoon' },
-      { label: 'journée entière', value: 'whole_day' },
+      { label: 'matin', value: MORNING },
+      { label: 'après-midi', value: AFTERNOON },
+      { label: 'journée entière', value: WHOLE_DAY },
     ];
 
     const linkErrorMessage = 'Le lien doit commencer par http:// ou https://';
@@ -155,10 +155,10 @@ export default {
         selectedDuration.value = CompaniDate(endHour, HH_MM).diff(CompaniDate(startHour, HH_MM), MINUTE);
         if (CompaniDate(startHour).isSame(rangeData.value.morning.startHour) &&
         CompaniDate(endHour).isSame(rangeData.value.morning.endHour)) {
-          if (selectedRange.value !== 'whole_day') selectedRange.value = 'morning';
+          if (selectedRange.value !== WHOLE_DAY) selectedRange.value = MORNING;
         } else if (startHour && endHour && CompaniDate(startHour).isSame(rangeData.value.afternoon.startHour) &&
         CompaniDate(endHour).isSame(rangeData.value.afternoon.endHour)) {
-          selectedRange.value = 'afternoon';
+          selectedRange.value = AFTERNOON;
         } else {
           selectedRange.value = '';
         }
@@ -246,8 +246,9 @@ export default {
 
     const updateRange = (value) => {
       selectedRange.value = value;
-      editedCourseSlot.value.dates = value === 'whole_day' ? rangeData.value.morning : rangeData.value[value];
-      update(value === 'whole_day', 'wholeDay');
+      const isWholeDay = value === WHOLE_DAY;
+      editedCourseSlot.value.dates = isWholeDay ? rangeData.value.morning : rangeData.value[value];
+      update(isWholeDay, 'wholeDay');
     };
 
     return {
