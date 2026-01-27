@@ -7,6 +7,10 @@
           <q-icon size="12px" name="edit" />
           Brouillon
         </div>
+        <div v-else-if="questionnaire.status === ARCHIVED" class="info-archived draft">
+          <q-icon size="12px" name="circle" />
+          Archivé
+        </div>
         <div v-else class="published info-active">
           <q-icon size="12px" name="check_circle" />
           Publié
@@ -22,7 +26,7 @@
 </template>
 
 <script>
-import { DRAFT } from '@data/constants';
+import { DRAFT, ARCHIVED } from '@data/constants';
 import { formatQuantity } from '@helpers/utils';
 
 export default {
@@ -36,6 +40,7 @@ export default {
     return {
       // Data
       DRAFT,
+      ARCHIVED,
       // Methods
       formatQuantity,
     };
