@@ -8,11 +8,11 @@
       <div class="row body">
         <ni-input v-model.trim="questionnaire.name" required-field caption="Nom" @blur="updateQuestionnaire"
           @focus="saveTmpName" :error="v$.questionnaire.name.$error" :disable="nameLock" />
-        <ni-button v-if="isQuestionnairePublished" color="copper-grey-500" :icon="lockIcon"
+        <ni-button v-if="isQuestionnairePublishedOrArchived" color="copper-grey-500" :icon="lockIcon"
           @click="nameLock = !nameLock" />
       </div>
       <div class="publish-button">
-        <ni-button v-if="!isQuestionnairePublished" color="primary" label="Publier" icon="vertical_align_top"
+        <ni-button v-if="!isQuestionnairePublishedOrArchived" color="primary" label="Publier" icon="vertical_align_top"
           @click="validateQuestionnairePublication" :flat="false" />
       </div>
     </div>
@@ -39,7 +39,7 @@ import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup
 import Input from '@components/form/Input';
 import Button from '@components/Button';
 import { useCards } from '@composables/cards';
-import { PUBLISHED } from '@data/constants';
+import { PUBLISHED, DRAFT } from '@data/constants';
 import CardContainer from 'src/modules/vendor/components/programs/cards/CardContainer';
 import CardEdition from 'src/modules/vendor/components/programs/cards/CardEdition';
 import CardCreationModal from 'src/modules/vendor/components/programs/cards/CardCreationModal';
@@ -48,6 +48,7 @@ export default {
   name: 'ProfileEdition',
   props: {
     profileId: { type: String, required: true },
+    otherPublishedQuestionnaire: { type: String, default: '' },
   },
   components: {
     'ni-input': Input,
@@ -57,7 +58,7 @@ export default {
     'ni-button': Button,
   },
   setup (props) {
-    const { profileId } = toRefs(props);
+    const { profileId, otherPublishedQuestionnaire } = toRefs(props);
 
     const $store = useStore();
     const $q = useQuasar();
@@ -76,7 +77,7 @@ export default {
 
     const v$ = useVuelidate(rules, { questionnaire });
 
-    const isQuestionnairePublished = computed(() => questionnaire.value.status === PUBLISHED);
+    const isQuestionnairePublishedOrArchived = computed(() => questionnaire.value.status !== DRAFT);
 
     const isQuestionnaireValid = computed(() => questionnaire.value.areCardsValid &&
       !!questionnaire.value.cards.length);
@@ -116,7 +117,8 @@ export default {
     };
 
     const validateUnlockEdition = () => {
-      const message = 'Ce questionnaire est publié, vous ne pourrez pas ajouter, supprimer ou changer l\'ordre des '
+      const status = questionnaire.value.status === PUBLISHED ? 'publié' : 'archivé';
+      const message = `Ce questionnaire est ${status}, vous ne pourrez pas ajouter, supprimer ou changer l'ordre des `
         + 'cartes.<br /><br /> Êtes-vous sûr(e) de vouloir déverrouiller ce questionnaire&nbsp;?';
 
       $q.dialog({
@@ -179,9 +181,12 @@ export default {
       if (!questionnaire.value.cards.length) return NotifyWarning('Il n\'y a aucune carte dans ce questionnaire.');
       if (!questionnaire.value.areCardsValid) return NotifyWarning('Carte(s) invalide(s).');
 
+      const warningMessage = otherPublishedQuestionnaire.value
+        ? `</br>Un questionnaire "${otherPublishedQuestionnaire.value}" existe déjà pour ce type. Il sera archivé.`
+        : '';
       $q.dialog({
         title: 'Confirmation',
-        message: 'Êtes-vous sûr(e) de vouloir publier ce questionnaire&nbsp;?',
+        message: `Êtes-vous sûr(e) de vouloir publier ce questionnaire&nbsp;?${warningMessage}`,
         html: true,
         ok: true,
         cancel: 'Annuler',
@@ -208,8 +213,8 @@ export default {
 
     const created = async () => {
       await refreshQuestionnaire();
-      nameLock.value = isQuestionnairePublished.value;
-      isEditionLocked.value = isQuestionnairePublished.value;
+      nameLock.value = isQuestionnairePublishedOrArchived.value;
+      isEditionLocked.value = isQuestionnairePublishedOrArchived.value;
     };
 
     created();
@@ -225,7 +230,7 @@ export default {
       isEditionLocked,
       // Computed
       questionnaire,
-      isQuestionnairePublished,
+      isQuestionnairePublishedOrArchived,
       lockIcon,
       // Methods
       refreshCard,
