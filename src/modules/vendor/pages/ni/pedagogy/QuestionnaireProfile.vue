@@ -7,7 +7,7 @@
         </template>
       </ni-profile-header>
       <profile-edition :profile-id="questionnaireId" class="edition"
-      :other-published-questionnaire="otherPublishedQuestionnaire" />
+        :other-published-questionnaire="otherPublishedQuestionnaire" />
     </template>
   </q-page>
 </template>

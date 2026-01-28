@@ -7,7 +7,7 @@
         <template #item="{element: draggableCard, index: index}">
           <div :class="getCardStyle(draggableCard)">
             <div class="card-actions">
-              <ni-button v-if="isSelected(draggableCard) && !isParentPublished" icon="delete"
+              <ni-button v-if="isSelected(draggableCard) && !isParentPublishedOrArchived" icon="delete"
                 @click="deleteCard(draggableCard)" :disable="disableEdition" />
             </div>
             <div class="card-cell cursor-pointer" @click="selectCard(draggableCard)">
@@ -23,8 +23,8 @@
         </template>
       </draggable>
     </q-scroll-area>
-    <ni-button v-if="!isParentPublished && !disableEdition" label="Ajouter une carte" color="primary" icon="add"
-      @click="openCreationModal" />
+    <ni-button v-if="!isParentPublishedOrArchived && !disableEdition" label="Ajouter une carte" color="primary"
+      icon="add" @click="openCreationModal" />
   </div>
 </template>
 
@@ -46,7 +46,7 @@ import {
   SURVEY,
   QUESTION_ANSWER,
   FILL_THE_GAPS,
-  PUBLISHED,
+  DRAFT,
 } from '@data/constants';
 import Button from '@components/Button';
 
@@ -72,11 +72,11 @@ export default {
     cards () {
       return this.cardParent.cards;
     },
-    isParentPublished () {
-      return this.cardParent.status === PUBLISHED;
+    isParentPublishedOrArchived () {
+      return this.cardParent.status !== DRAFT;
     },
     isDraggableDisabled () {
-      return this.$q.platform.is.mobile || this.disableEdition || this.isParentPublished;
+      return this.$q.platform.is.mobile || this.disableEdition || this.isParentPublishedOrArchived;
     },
   },
   watch: {
