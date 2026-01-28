@@ -17,7 +17,7 @@
         <ni-btn-toggle in-modal :model-value="selectedRange" :options="rangeOptions"
           @update:model-value="updateRange" />
         <span :class="{ verbatim: !editedCourseSlot.wholeDay }" class="text-12 text-italic">
-          Un nouveau créneau le {{ CompaniDate(editedCourseSlot.dates.startDate).format(DD_MM_YYYY) }} de 14h00 à 17h30
+          Un nouveau créneau le {{ CompaniDate(editedCourseSlot.dates.startDate).format(DD_MM_YYYY) }} de 13h30 à 17h00
           sera créé
         </span>
       </div>
@@ -132,11 +132,11 @@ export default {
         },
         afternoon: {
           startDate: CompaniDate(editedCourseSlot.value.dates.startDate)
-            .set({ hour: 14, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+            .set({ hour: 13, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
           endDate: CompaniDate(editedCourseSlot.value.dates.endDate)
-            .set({ hour: 17, minute: 30, seconds: 0, milliseconds: 0 }).toISO(),
-          startHour: '14:00',
-          endHour: '17:30',
+            .set({ hour: 17, minute: 0, seconds: 0, milliseconds: 0 }).toISO(),
+          startHour: '13:30',
+          endHour: '17:00',
         },
       }
     ));
