@@ -161,6 +161,7 @@ export default {
           selectedRange.value = AFTERNOON;
         } else {
           selectedRange.value = '';
+          update(false, 'wholeDay');
         }
       }
     });
