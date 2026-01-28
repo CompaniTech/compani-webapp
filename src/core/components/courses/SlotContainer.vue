@@ -100,7 +100,8 @@
       :validations="v$.editedCourseSlot" @hide="resetEditionModal" :loading="modalLoading" @delete="deleteCourseSlot"
       @submit="updateCourseSlot" @update="setCourseSlot" :is-only-slot="isOnlySlot" :is-planned-slot="isPlannedSlot"
       @unplan-slot="unplanSlot" :can-create-slot="canCreateSlot" :trainee-options="traineeOptions"
-      :can-update-concerned-trainees="canUpdateConcernedTrainees" />
+      :can-update-concerned-trainees="canUpdateConcernedTrainees" :trainer-options="trainerOptions"
+      :can-update-slot-trainers="canUpdateSlotTrainers" />
 
     <multiple-slot-creation-modal v-model="multipleSlotCreationModal" v-model:slots-to-add="slotsToAdd"
       @hide="resetCreationModal" @submit="createCourseSlots" :validations="v$.slotsToAdd"
@@ -294,11 +295,21 @@ export default {
             }),
           },
         },
+        trainers: { required },
       },
       slotsToAdd: { quantity: { required, strictPositiveNumber, integerNumber } },
     }));
 
     const v$ = useVuelidate(rules, { editedCourseSlot, slotsToAdd });
+
+    const trainerOptions = computed(() => formatAndSortIdentityOptions(course.value.trainers));
+
+    const canUpdateSlotTrainers = computed(() => {
+      if (!course.value.trainers.length) return false;
+
+      const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
+      return ability.can('update', subject('Course', course.value), 'slot_trainers');
+    });
 
     const getSlotAddress = slot => get(slot, 'address.fullAddress') || 'Adresse non renseignée';
 
@@ -339,6 +350,12 @@ export default {
         hasDates: has(slot, 'startDate'),
       };
 
+      if (slot.trainers) editedCourseSlot.value.trainers = slot.trainers.map(t => t._id);
+      else if (course.value.trainers.length === 1) editedCourseSlot.value.trainers = [course.value.trainers[0]._id];
+      else if (isVendorInterface && course.value.trainers.map(t => t._id).includes(loggedUser.value._id)) {
+        editedCourseSlot.value.trainers = [loggedUser.value._id];
+      }
+
       if (slot.address) editedCourseSlot.value.address = { ...slot.address };
       isOnlySlot.value = setIsOnlySlot(slot.step);
       isPlannedSlot.value = has(slot, 'startDate');
@@ -365,6 +382,7 @@ export default {
         ...(stepType === ON_SITE && get(courseSlot, 'address.fullAddress') && { address: courseSlot.address }),
         ...(stepType === REMOTE && courseSlot.meetingLink && { meetingLink: courseSlot.meetingLink }),
         ...courseSlot.wholeDay && { wholeDay: true },
+        ...courseSlot.trainers && { trainers: courseSlot.trainers },
       };
     };
 
@@ -540,6 +558,8 @@ export default {
       canCreateSlot,
       canUpdateConcernedTrainees,
       traineeOptions,
+      trainerOptions,
+      canUpdateSlotTrainers,
       // Methods
       get,
       omit,
