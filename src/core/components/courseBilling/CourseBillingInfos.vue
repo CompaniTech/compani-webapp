@@ -330,7 +330,7 @@ export default {
       };
     });
 
-    const displayCheckbox = computed(() => Object.values(groupedCourseBills.value)
+    const displayCheckbox = computed(() => [0, 1, 2].map(value => groupedCourseBills.value[value] || [])
       .map(bills => isVendorInterface && bills.some(cb => !isEqualTo(cb.total, 0))));
 
     const columns = index => [
