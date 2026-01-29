@@ -34,8 +34,9 @@
       {{ formatQuantity('Apprenant concerné', editedCourseSlot.trainees.length, 's', false) }} par le créneau :
       {{ traineeOptions.filter(t => editedCourseSlot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
     </div>
-    <ni-select caption="Intervenants concernés" :options="trainerOptions" :disables="!canUpdateSlotTrainers"
-      v-model="editedCourseSlot.trainers" multiple :error="validations.trainers.$error" required-field />
+    <ni-select v-if="editedCourseSlot.trainers || canUpdateSlotTrainers" caption="Intervenants concernés"
+      :options="trainerOptions" :disable="!canUpdateSlotTrainers" v-model="editedCourseSlot.trainers" multiple
+      :error="validations.trainers?.$error" required-field />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Editer un créneau" icon-right="add" color="white"
         :loading="loading" @click="submit" />
