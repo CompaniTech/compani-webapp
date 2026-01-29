@@ -41,7 +41,13 @@
                   <div>
                     <div v-for="slot in day[1]" :key="slot._id" @click="openEditionModal(slot)">
                       <div :class="getSlotClass(step)">
-                        <div class="q-mr-md">{{ formatSlotSchedule(slot) }}</div>
+                        <div class="column">
+                          <div class="q-mr-md">{{ formatSlotSchedule(slot) }}</div>
+                            <span class="text-italic text-12 align-center">
+                              <q-icon name="emoji_people" />
+                              {{ getSlotTrainersName(slot) }}
+                            </span>
+                        </div>
                         <div v-if="step.type === ON_SITE" class="q-mr-md">{{ getSlotAddress(slot) }}</div>
                         <div v-else class="q-mr-md ellipsis link-container">
                           <a class="link" :href="slot.meetingLink" target="_blank" @click="$event.stopPropagation()">
@@ -49,7 +55,9 @@
                           </a>
                           {{ !slot.meetingLink ? 'Lien vers la visio non renseigné' : '' }}
                         </div>
-                        <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
+                        <div class="items-center">
+                          <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
+                        </div>
                       </div>
                       <div v-if="slot.trainees" class="text-italic text-12 q-mb-md">
                         {{ formatQuantity('Apprenant concerné', slot.trainees.length, 's', false) }} par le créneau :
@@ -141,7 +149,7 @@ import {
   SINGLE,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
-import { formatQuantity, formatAndSortIdentityOptions } from '@helpers/utils';
+import { formatQuantity, formatAndSortIdentityOptions, formatIdentity } from '@helpers/utils';
 import { getStepTypeLabel, formatSlotSchedule } from '@helpers/courses';
 import { ascendingSort, getISOTotalDuration } from '@helpers/dates/utils';
 import {
@@ -334,6 +342,10 @@ export default {
         return NotifyWarning('Vous ne pouvez pas éditer un créneau d\'une formation archivée.');
       }
 
+      if (!course.value.trainers.length || !course.value.trainers[0]._id) {
+        return NotifyWarning('Vous ne pouvez pas planifier un créneau pour une formation sans intervenant.');
+      }
+
       const defaultDate = getDefaultDate(slot);
 
       editedCourseSlot.value = {
@@ -351,8 +363,9 @@ export default {
       };
 
       if (slot.trainers) editedCourseSlot.value.trainers = slot.trainers.map(t => t._id);
-      else if (course.value.trainers.length === 1) editedCourseSlot.value.trainers = [course.value.trainers[0]._id];
-      else if (isVendorInterface && course.value.trainers.map(t => t._id).includes(loggedUser.value._id)) {
+      else if (course.value.trainers.length === 1 && !!course.value.trainers[0]._id) {
+        editedCourseSlot.value.trainers = [course.value.trainers[0]._id];
+      } else if (isVendorInterface && course.value.trainers.map(t => t._id).includes(loggedUser.value._id)) {
         editedCourseSlot.value.trainers = [loggedUser.value._id];
       }
 
@@ -477,7 +490,7 @@ export default {
     };
 
     const getSlotClass = step => [
-      'row items-center',
+      'row',
       canEdit.value && `cursor-pointer hover-${isPlannedStep(step) ? 'blue' : 'orange'}`,
     ];
 
@@ -533,6 +546,10 @@ export default {
 
     created();
 
+    const getSlotTrainersName = slot => (slot.trainers || [])
+      .map(trainer => formatIdentity(trainer.identity, 'L'))
+      .join(', ');
+
     return {
       // Data
       isVendorInterface,
@@ -585,6 +602,7 @@ export default {
       resetCreationModal,
       createCourseSlots,
       formatQuantity,
+      getSlotTrainersName,
     };
   },
 };
