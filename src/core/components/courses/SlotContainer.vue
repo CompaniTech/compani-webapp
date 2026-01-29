@@ -43,7 +43,7 @@
                       <div :class="getSlotClass(step)">
                         <div class="column">
                           <div class="q-mr-md">{{ formatSlotSchedule(slot) }}</div>
-                            <span class="text-italic text-12 align-center">
+                            <span class="text-italic text-12 align-center" v-if="slot.trainers">
                               <q-icon name="emoji_people" />
                               {{ getSlotTrainersName(slot) }}
                             </span>
@@ -147,6 +147,7 @@ import {
   DD_MM_YYYY,
   SHORT_DURATION_H_MM,
   SINGLE,
+  TRAINER,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { formatQuantity, formatAndSortIdentityOptions, formatIdentity } from '@helpers/utils';
@@ -303,7 +304,7 @@ export default {
             }),
           },
         },
-        trainers: { required },
+        ...(isVendorInterface && { trainers: { required } }),
       },
       slotsToAdd: { quantity: { required, strictPositiveNumber, integerNumber } },
     }));
@@ -318,6 +319,9 @@ export default {
       const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
       return ability.can('update', subject('Course', course.value), 'slot_trainers');
     });
+
+    const loggedUserIsCourseTrainer = computed(() => get(loggedUser.value, 'role.vendor.name') === TRAINER &&
+      course.value.trainers.map(t => t._id).includes(loggedUser.value._id));
 
     const getSlotAddress = slot => get(slot, 'address.fullAddress') || 'Adresse non renseignée';
 
@@ -346,6 +350,10 @@ export default {
         return NotifyWarning('Vous ne pouvez pas planifier un créneau pour une formation sans intervenant.');
       }
 
+      if (loggedUserIsCourseTrainer.value && !(slot.trainers || []).map(t => t._id).includes(loggedUser.value._id)) {
+        return NotifyWarning('Vous ne pouvez pas éditer un créneau auquel vous n\'êtes pas rattaché.');
+      }
+
       const defaultDate = getDefaultDate(slot);
 
       editedCourseSlot.value = {
@@ -363,9 +371,9 @@ export default {
       };
 
       if (slot.trainers) editedCourseSlot.value.trainers = slot.trainers.map(t => t._id);
-      else if (course.value.trainers.length === 1 && !!course.value.trainers[0]._id) {
+      else if (isVendorInterface && course.value.trainers.length === 1 && !!course.value.trainers[0]._id) {
         editedCourseSlot.value.trainers = [course.value.trainers[0]._id];
-      } else if (isVendorInterface && course.value.trainers.map(t => t._id).includes(loggedUser.value._id)) {
+      } else if (isVendorInterface && loggedUserIsCourseTrainer.value) {
         editedCourseSlot.value.trainers = [loggedUser.value._id];
       }
 
@@ -395,7 +403,7 @@ export default {
         ...(stepType === ON_SITE && get(courseSlot, 'address.fullAddress') && { address: courseSlot.address }),
         ...(stepType === REMOTE && courseSlot.meetingLink && { meetingLink: courseSlot.meetingLink }),
         ...courseSlot.wholeDay && { wholeDay: true },
-        ...courseSlot.trainers && { trainers: courseSlot.trainers },
+        ...(courseSlot.trainers && isVendorInterface && { trainers: courseSlot.trainers }),
       };
     };
 
@@ -474,7 +482,7 @@ export default {
 
     const isStepToPlan = step => !(isElearningStep(step) || isPlannedStep(step));
 
-    const isEmptyStep = step => !(courseSlotsByStepAndDate.value[step.key] || isVendorInterface.value);
+    const isEmptyStep = step => !(courseSlotsByStepAndDate.value[step.key] || isVendorInterface);
 
     const getStepClass = (step) => {
       if (isElearningStep(step)) return '';
