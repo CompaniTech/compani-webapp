@@ -16,6 +16,7 @@ import ProfileTabs from '@components/ProfileTabs';
 import QuestionnaireContainer from '@components/questionnaires/QuestionnaireContainer';
 import ProfileInfo from 'src/modules/vendor/components/programs/ProfileInfo';
 import ProfileContent from 'src/modules/vendor/components/programs/ProfileContent';
+import { VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER } from '@data/constants';
 
 export default {
   name: 'ProgramProfile',
@@ -31,21 +32,27 @@ export default {
     const metaInfo = { title: 'Fiche programme' };
     useMeta(metaInfo);
     const { defaultTab, programId } = toRefs(props);
+    const $store = useStore();
 
+    const isAdmin = computed(() => {
+      const vendorRole = $store.getters['main/getVendorRole'];
+      return [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole);
+    });
     const programName = ref('');
     const tabsContent = [
       { label: 'Infos', name: 'infos', default: defaultTab.value === 'infos', component: ProfileInfo },
       { label: 'Sous-programmes', name: 'content', default: defaultTab.value === 'content', component: ProfileContent },
-      {
-        label: 'Questionnaires',
-        name: 'questionnaire',
-        default: defaultTab.value === 'questionnaire',
-        component: QuestionnaireContainer,
-      },
+      ...isAdmin.value
+        ? [{
+          label: 'Questionnaires',
+          name: 'questionnaire',
+          default: defaultTab.value === 'questionnaire',
+          component: QuestionnaireContainer,
+        }]
+        : [],
     ];
 
     const $route = useRoute();
-    const $store = useStore();
     const program = computed(() => $store.state.program.program);
 
     watch(program, () => { refreshProgramName(); });

@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 
-export const useMenuItems = (isAdmin, isTrainer) => {
+export const useMenuItems = (isAdmin, isTrainer, isProgramEditor) => {
   const adminActiveRoutes = ref({
     management: { open: true },
     users: { open: false },
@@ -12,6 +12,7 @@ export const useMenuItems = (isAdmin, isTrainer) => {
   const trainerActiveRoutes = ref({
     administrative: { open: false },
     management: { open: true },
+    pedagogy: { open: false },
   });
 
   const adminRoutes = computed(() => [
@@ -88,6 +89,13 @@ export const useMenuItems = (isAdmin, isTrainer) => {
         { name: 'trainers contracts', icon: 'description', label: 'Ordres de mission' },
       ],
     },
+    ...isProgramEditor.value
+      ? [{
+        ref: 'pedagogy',
+        label: 'Pédagogie',
+        children: [{ name: 'ni pedagogy programs', icon: 'view_headline', label: 'Catalogue' }],
+      }]
+      : [],
   ]);
 
   const routes = computed(() => {
