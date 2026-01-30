@@ -2,11 +2,12 @@
   <q-page padding class="vendor-background column no-wrap">
     <template v-if="questionnaire">
       <ni-profile-header :title="questionnaireName" :header-info="headerInfo">
-        <template #title v-if="questionnaire.status === PUBLISHED">
+        <template #title v-if="questionnaire.status !== DRAFT">
           <ni-primary-button label="Voir les réponses" @click="goToQuestionnaireProfileAnswers" />
         </template>
       </ni-profile-header>
-      <profile-edition :profile-id="questionnaireId" class="edition" />
+      <profile-edition :profile-id="questionnaireId" class="edition"
+        :other-published-questionnaire="otherPublishedQuestionnaire" />
     </template>
   </q-page>
 </template>
@@ -17,7 +18,7 @@ import { ref, computed, watch, onBeforeUnmount, toRefs } from 'vue';
 import { useStore } from 'vuex';
 import get from 'lodash/get';
 import ProfileHeader from '@components/ProfileHeader';
-import { DRAFT, QUESTIONNAIRE_TYPES, SELF_POSITIONNING, PUBLISHED } from '@data/constants';
+import { DRAFT, QUESTIONNAIRE_TYPES, SELF_POSITIONNING, ARCHIVED } from '@data/constants';
 import PrimaryButton from '@components/PrimaryButton';
 import ProfileEdition from 'src/modules/vendor/components/questionnaires/ProfileEdition';
 import { useRouter } from 'vue-router';
@@ -28,6 +29,7 @@ export default {
   name: 'QuestionnaireProfile',
   props: {
     questionnaireId: { type: String, required: true },
+    otherPublishedQuestionnaire: { type: String, default: '' },
   },
   components: {
     'ni-profile-header': ProfileHeader,
@@ -48,7 +50,9 @@ export default {
       const infos = [{ icon: 'bookmark_border', label: QUESTIONNAIRE_TYPES[questionnaire.value.type] }];
 
       if (questionnaire.value.status === DRAFT) infos.push({ icon: 'edit', label: 'Brouillon', class: 'info-warning' });
-      else infos.push({ icon: 'check_circle', label: 'Publié', class: 'info-active' });
+      else if (questionnaire.value.status === ARCHIVED) {
+        infos.push({ icon: 'circle', label: 'Archivé', class: 'info-archived' });
+      } else infos.push({ icon: 'check_circle', label: 'Publié', class: 'info-active' });
 
       return infos;
     });
@@ -81,7 +85,7 @@ export default {
     return {
       // Data
       questionnaireName,
-      PUBLISHED,
+      DRAFT,
       // Computed
       questionnaire,
       headerInfo,

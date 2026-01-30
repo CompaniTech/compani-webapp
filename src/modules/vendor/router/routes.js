@@ -366,7 +366,7 @@ const routes = [
       {
         path: 'ni/pedagogy/questionnaires/:questionnaireId',
         name: 'ni pedagogy questionnaire profile',
-        props: true,
+        props: route => ({ ...route.query, ...route.params }),
         component: () => import('src/modules/vendor/pages/ni/pedagogy/QuestionnaireProfile'),
         meta: {
           cookies: ['alenvi_token', 'refresh_token'],

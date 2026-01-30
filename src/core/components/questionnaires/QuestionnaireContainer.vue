@@ -3,7 +3,7 @@
     <div class="text-weight-bold">{{ QUESTIONNAIRE_TYPES[group.type] }}</div>
     <div v-if="group.list" class="row">
       <router-link v-for="(questionnaire, index) in group.list" :key="questionnaire._id"
-        :to="goToQuestionnaireProfile(questionnaire._id)">
+        :to="goToQuestionnaireProfile(questionnaire._id, group.list)">
         <questionnaire-cell :index="group.list.length - index" :questionnaire="questionnaire"
           class="q-my-md q-mr-md" />
       </router-link>
@@ -27,7 +27,7 @@ import Questionnaires from '@api/Questionnaires';
 import QuestionnaireCell from '@components/courses/QuestionnaireCell';
 import QuestionnaireCreationModal from 'src/modules/vendor/components/programs/QuestionnaireCreationModal';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { QUESTIONNAIRE_TYPES, SELF_POSITIONNING } from '@data/constants';
+import { QUESTIONNAIRE_TYPES, SELF_POSITIONNING, PUBLISHED } from '@data/constants';
 import { descendingSortBy } from '@helpers/dates/utils';
 
 export default {
@@ -52,9 +52,16 @@ export default {
     const rules = computed(() => ({ newQuestionnaire: { name: { required }, type: { required } } }));
     const v$ = useVuelidate(rules, { newQuestionnaire });
 
-    const goToQuestionnaireProfile = questionnaireId => (
-      { name: 'ni pedagogy questionnaire profile', params: { questionnaireId } }
-    );
+    const goToQuestionnaireProfile = (questionnaireId, questionnaireList) => {
+      const otherPublishedQuestionnaire = questionnaireList
+        .find(q => q._id !== questionnaireId && q.status === PUBLISHED);
+
+      return {
+        name: 'ni pedagogy questionnaire profile',
+        params: { questionnaireId },
+        query: { otherPublishedQuestionnaire: otherPublishedQuestionnaire?.name || '' },
+      };
+    };
 
     const refreshQuestionnaires = async () => {
       try {
