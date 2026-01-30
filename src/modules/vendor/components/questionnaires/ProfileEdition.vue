@@ -182,7 +182,8 @@ export default {
       if (!questionnaire.value.areCardsValid) return NotifyWarning('Carte(s) invalide(s).');
 
       const warningMessage = otherPublishedQuestionnaire.value
-        ? `</br>Un questionnaire "${otherPublishedQuestionnaire.value}" existe déjà pour ce type. Il sera archivé.`
+        ? `</br></br>Un questionnaire "${otherPublishedQuestionnaire.value}" existe déjà pour ce type de questionnaire `
+        + 'et sera archivé.'
         : '';
       $q.dialog({
         title: 'Confirmation',
