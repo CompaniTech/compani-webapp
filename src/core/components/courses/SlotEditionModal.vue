@@ -35,7 +35,7 @@
       {{ traineeOptions.filter(t => editedCourseSlot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
     </div>
     <ni-select v-if="editedCourseSlot.trainers || canUpdateSlotTrainers" caption="Intervenants concernés"
-      :options="trainerOptions" :disable="!canUpdateSlotTrainers || trainerOptions.length === 1"
+      :options="allTrainerOptions" :disable="!canUpdateSlotTrainers || trainerOptions.length === 1"
       v-model="editedCourseSlot.trainers" multiple :error="validations.trainers?.$error" required-field />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Editer un créneau" icon-right="add" color="white"
@@ -98,7 +98,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'delete', 'update', 'unplan-slot'],
   setup (props, { emit }) {
-    const { stepTypes, editedCourseSlot, traineeOptions } = toRefs(props);
+    const { stepTypes, editedCourseSlot, traineeOptions, trainerOptions } = toRefs(props);
     const $q = useQuasar();
     const selectedRange = ref('');
     const rangeOptions = [
@@ -147,6 +147,20 @@ export default {
         },
       }
     ));
+
+    const allTrainerOptions = computed(() => {
+      const tOptions = [...trainerOptions.value];
+
+      if (editedCourseSlot.value?.trainers) {
+        editedCourseSlot.value.trainers.forEach((tId) => {
+          const isTrainerInOptions = tOptions.some(opt => opt.value === tId);
+
+          if (!isTrainerInOptions) tOptions.push({ label: 'Intervenant·e supprimé·e', value: tId });
+        });
+      }
+
+      return tOptions;
+    });
 
     watch(() => selectedDuration.value, (newDuration) => {
       if (get(editedCourseSlot.value, 'dates.startHour') && newDuration) {
@@ -274,6 +288,7 @@ export default {
       // Computed
       durationOptions,
       traineesValidations,
+      allTrainerOptions,
       // Methods
       validateDatesDeletion,
       validateDeletion,
