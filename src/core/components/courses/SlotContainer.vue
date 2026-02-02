@@ -147,7 +147,8 @@ import {
   DD_MM_YYYY,
   SHORT_DURATION_H_MM,
   SINGLE,
-  TRAINER,
+  VENDOR_ADMIN,
+  TRAINING_ORGANISATION_MANAGER,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { formatQuantity, formatAndSortIdentityOptions, formatIdentity } from '@helpers/utils';
@@ -320,8 +321,8 @@ export default {
       return ability.can('update', subject('Course', course.value), 'slot_trainers');
     });
 
-    const loggedUserIsCourseTrainer = computed(() => get(loggedUser.value, 'role.vendor.name') === TRAINER &&
-      course.value.trainers.map(t => t._id).includes(loggedUser.value._id));
+    const loggedUserIsCourseTrainer = computed(() => course.value.trainers
+      .map(t => t._id).includes(loggedUser.value._id));
 
     const getSlotAddress = slot => get(slot, 'address.fullAddress') || 'Adresse non renseignée';
 
@@ -349,8 +350,12 @@ export default {
       if (!course.value.trainers.length || !course.value.trainers[0]._id) {
         return NotifyWarning('Vous ne pouvez pas planifier un créneau pour une formation sans intervenant.');
       }
+      const isROFOrAdmin = [TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN]
+        .includes(get(loggedUser.value, 'role.vendor.name'));
+      const isCourseTrainerAuthorized = (loggedUserIsCourseTrainer.value &&
+        (!slot.trainers || slot.trainers.map(t => t._id).includes(loggedUser.value._id)));
 
-      if (loggedUserIsCourseTrainer.value && !(slot.trainers || []).map(t => t._id).includes(loggedUser.value._id)) {
+      if (!(isROFOrAdmin || isCourseTrainerAuthorized)) {
         return NotifyWarning('Vous ne pouvez pas éditer un créneau auquel vous n\'êtes pas rattaché.');
       }
 
