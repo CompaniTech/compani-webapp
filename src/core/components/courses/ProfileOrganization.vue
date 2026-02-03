@@ -932,7 +932,7 @@ export default {
       let message = `Êtes-vous sûr(e) de vouloir détacher ${interlocutorIdentity} de la formation&nbsp;?`;
       if (interlocutorType === TRAINER) {
         const slotsLinkToInterlocutorId = course.value.slots
-          .filter(s => s.trainers.map(t => t._id).includes(interlocutorId));
+          .filter(s => (s.trainers || []).map(t => t._id).includes(interlocutorId));
         if (slotsLinkToInterlocutorId.length) {
           message += `<br/> <br/>${interlocutorIdentity} est rattaché·e à ${slotsLinkToInterlocutorId.length}`
             + ' créneaux de la formation.';
