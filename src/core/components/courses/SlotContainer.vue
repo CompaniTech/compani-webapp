@@ -355,7 +355,7 @@ export default {
       const isCourseTrainerAuthorized = (loggedUserIsCourseTrainer.value &&
         (!slot.trainers || slot.trainers.map(t => t._id).includes(loggedUser.value._id)));
 
-      if (!(isROFOrAdmin || isCourseTrainerAuthorized || get(loggedUser.value, 'role.client.name'))) {
+      if (isVendorInterface && !(isROFOrAdmin || isCourseTrainerAuthorized)) {
         return NotifyWarning('Vous ne pouvez pas éditer un créneau auquel vous n\'êtes pas rattaché.');
       }
 
