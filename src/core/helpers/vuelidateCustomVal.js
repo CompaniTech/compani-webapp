@@ -46,7 +46,7 @@ export const frAddress = async (value) => {
 
   // interceptor avoids having an infinite loop for API calls although we don't understand how it works
   axios.interceptors.request.use();
-  const res = await axios.get('https://api-adresse.data.gouv.fr/search', { params: { q: value, limit: 1 } });
+  const res = await axios.get('https://data.geopf.fr/geocodage/search', { params: { q: value, limit: 1 } });
 
   return (res.data.features.length === 1 && res.data.features[0].properties.score > 0.9);
 };

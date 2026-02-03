@@ -47,7 +47,7 @@ export default {
       try {
         if (!terms) return;
 
-        const res = await axios.get('https://api-adresse.data.gouv.fr/search', { params: { q: terms } });
+        const res = await axios.get('https://data.geopf.fr/geocodage/search', { params: { q: terms } });
         this.options = res.data.features.sort((a, b) => b.properties.score - a.properties.score).map(result => ({
           label: result.properties.label,
           fullAddress: result.properties.label,
