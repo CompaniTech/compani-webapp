@@ -934,8 +934,8 @@ export default {
         const slotsLinkToInterlocutorId = course.value.slots
           .filter(s => (s.trainers || []).map(t => t._id).includes(interlocutorId));
         if (slotsLinkToInterlocutorId.length) {
-          message += `<br/> <br/>${interlocutorIdentity} est rattaché·e à ${slotsLinkToInterlocutorId.length}`
-            + ' créneaux de la formation.';
+          message += `<br/> <br/>${interlocutorIdentity} est rattaché·e à`
+            + ` ${formatQuantity('créneau', slotsLinkToInterlocutorId.length, 'x', false)} de la formation.`;
         }
       }
       $q.dialog({

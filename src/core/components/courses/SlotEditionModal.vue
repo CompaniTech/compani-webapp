@@ -151,13 +151,11 @@ export default {
     const allTrainerOptions = computed(() => {
       const tOptions = [...trainerOptions.value];
 
-      if (editedCourseSlot.value?.trainers) {
-        editedCourseSlot.value.trainers.forEach((tId) => {
-          const isTrainerInOptions = tOptions.some(opt => opt.value === tId);
+      (editedCourseSlot.value.trainers || []).forEach((tId) => {
+        const isTrainerInOptions = tOptions.some(opt => opt.value === tId);
 
-          if (!isTrainerInOptions) tOptions.push({ label: 'Intervenant·e supprimé·e', value: tId });
-        });
-      }
+        if (!isTrainerInOptions) tOptions.push({ label: 'Intervenant·e supprimé·e', value: tId });
+      });
 
       return tOptions;
     });
