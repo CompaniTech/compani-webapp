@@ -116,6 +116,7 @@ export default {
     const concernedTrainees = ref([]);
     const concernedTraineesLoading = ref(false);
     const shouldRefresh = ref(false);
+    const detachedTrainerIds = ref([]);
 
     const durationOptions = computed(() => ([
       { label: '0H30', value: 'PT30M' },
@@ -148,17 +149,20 @@ export default {
       }
     ));
 
-    const allTrainerOptions = computed(() => {
-      const tOptions = [...trainerOptions.value];
+    watch(
+      () => editedCourseSlot.value,
+      (slot) => {
+        if (!slot) return;
 
-      (editedCourseSlot.value.trainers || []).forEach((tId) => {
-        const isTrainerInOptions = tOptions.some(opt => opt.value === tId);
+        detachedTrainerIds.value = (slot.trainers || [])
+          .filter(tId => !trainerOptions.value.some(t => t.value === tId));
+      }
+    );
 
-        if (!isTrainerInOptions) tOptions.push({ label: 'Intervenant·e supprimé·e', value: tId });
-      });
-
-      return tOptions;
-    });
+    const allTrainerOptions = computed(() => [
+      ...trainerOptions.value,
+      ...detachedTrainerIds.value.map(tId => ({ label: 'Intervenant·e supprimé·e', value: tId })),
+    ]);
 
     watch(() => selectedDuration.value, (newDuration) => {
       if (get(editedCourseSlot.value, 'dates.startHour') && newDuration) {

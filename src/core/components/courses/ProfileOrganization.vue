@@ -935,7 +935,7 @@ export default {
           .filter(s => (s.trainers || []).map(t => t._id).includes(interlocutorId));
         if (slotsLinkToInterlocutorId.length) {
           message += `<br/> <br/>${interlocutorIdentity} est rattaché·e à`
-            + ` ${formatQuantity('créneau', slotsLinkToInterlocutorId.length, 'x', false)} de la formation.`;
+            + ` ${formatQuantity('créneau', slotsLinkToInterlocutorId.length, 'x')} de la formation.`;
         }
       }
       $q.dialog({
