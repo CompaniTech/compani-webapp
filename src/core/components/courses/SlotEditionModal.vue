@@ -35,7 +35,7 @@
       {{ traineeOptions.filter(t => editedCourseSlot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
     </div>
     <ni-select v-if="editedCourseSlot.trainers || canUpdateSlotTrainers" caption="Intervenants concernés"
-      :options="allTrainerOptions" :disable="!canUpdateSlotTrainers || trainerOptions.length === 1"
+      :options="allTrainerOptions" :disable="!canUpdateSlotTrainers || allTrainerOptions.length === 1"
       v-model="editedCourseSlot.trainers" multiple :error="validations.trainers?.$error" required-field />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Editer un créneau" icon-right="add" color="white"
