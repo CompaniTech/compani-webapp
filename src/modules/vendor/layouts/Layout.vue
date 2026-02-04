@@ -52,13 +52,16 @@ export default {
     const interfaceType = ref(VENDOR);
     const expansionRefs = ref({});
 
+    const loggedUser = computed(() => $store.state.main.loggedUser);
     const vendorRole = computed(() => $store.getters['main/getVendorRole']);
 
     const isAdmin = computed(() => [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
 
     const isTrainer = computed(() => vendorRole.value === TRAINER);
 
-    const { routes, activeRoutes } = useMenuItems(isAdmin, isTrainer);
+    const isProgramEditor = computed(() => loggedUser.value.isProgramEditor || false);
+
+    const { routes, activeRoutes } = useMenuItems(isAdmin, isTrainer, isProgramEditor);
 
     const {
       userFirstname,
@@ -69,7 +72,6 @@ export default {
 
     const {
       isMini,
-      loggedUser,
       drawer,
       menuIcon,
       chevronClasses,

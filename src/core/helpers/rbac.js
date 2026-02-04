@@ -78,6 +78,9 @@ const trainerRoutes = [
   { name: 'account vendor' },
   { name: 'trainers questionnaire answers' },
   { name: 'ni pedagogy questionnaire answers' },
+  { name: 'ni pedagogy programs' },
+  { name: 'ni pedagogy programs info' },
+  { name: 'ni pedagogy activity info' },
 ];
 
 export const roleBasedAccessControl = {

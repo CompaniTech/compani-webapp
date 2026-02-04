@@ -265,7 +265,7 @@ const routes = [
             ].includes(from.name)) {
               to.query.defaultTab = 'traineeFollowUp';
             }
-            await store.dispatch('course/fetchCourse', { courseId: to.params.courseId });
+            await store.dispatch('course/fetchCourse', { courseId: to.params.courseId, path: to.path });
             const { course } = store.state.course;
             const { loggedUser } = store.state.main;
 
