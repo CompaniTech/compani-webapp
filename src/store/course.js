@@ -59,7 +59,8 @@ export default {
 
         // Coachs and client admins with vendor role only see trainees from their companies on client interface
         const userClientRole = store.getters['main/getClientRole'];
-        if (userClientRole && !/\/ad\//.test(router.currentRoute.value.path)) {
+        const currentPath = params.path || router.currentRoute.value.path;
+        if (userClientRole && !/\/ad\//.test(currentPath)) {
           const loggedUser = store.getters['main/getLoggedUser'];
           course.trainees = course.trainees.filter(t => hasUserAccessToCompany(loggedUser, t.registrationCompany));
           if (course.format === BLENDED) {
