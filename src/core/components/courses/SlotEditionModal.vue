@@ -34,6 +34,9 @@
       {{ formatQuantity('Apprenant concerné', editedCourseSlot.trainees.length, 's', false) }} par le créneau :
       {{ traineeOptions.filter(t => editedCourseSlot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
     </div>
+    <ni-select v-if="editedCourseSlot.trainers || canUpdateSlotTrainers" caption="Intervenants concernés"
+      :options="trainerOptions" :disable="!canUpdateSlotTrainers || trainerOptions.length === 1"
+      v-model="editedCourseSlot.trainers" multiple :error="validations.trainers?.$error" required-field />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Editer un créneau" icon-right="add" color="white"
         :loading="loading" @click="submit" />
@@ -58,6 +61,7 @@ import Button from '@components/Button';
 import Input from '@components/form/Input';
 import DateTimeRange from '@components/form/DatetimeRange';
 import SearchAddress from '@components/form/SearchAddress';
+import Select from '@components/form/Select';
 import ButtonToggle from '@components/ButtonToggle';
 import TraineesUpdateModal from '@components/courses/TraineesUpdateModal';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
@@ -79,6 +83,8 @@ export default {
     canCreateSlot: { type: Boolean, default: false },
     canUpdateConcernedTrainees: { type: Boolean, default: false },
     traineeOptions: { type: Array, default: () => [] },
+    trainerOptions: { type: Array, default: () => [] },
+    canUpdateSlotTrainers: { type: Boolean, default: false },
   },
   components: {
     'ni-button': Button,
@@ -88,6 +94,7 @@ export default {
     'ni-input': Input,
     'ni-btn-toggle': ButtonToggle,
     'trainees-update-modal': TraineesUpdateModal,
+    'ni-select': Select,
   },
   emits: ['hide', 'update:model-value', 'submit', 'delete', 'update', 'unplan-slot'],
   setup (props, { emit }) {
