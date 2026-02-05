@@ -928,7 +928,16 @@ export default {
     };
 
     const openInterlocutorDeletionValidationModal = (identity, interlocutorType, interlocutorId = '') => {
-      const message = `Êtes-vous sûr(e) de vouloir détacher ${formatIdentity(identity, 'FL')} de la formation&nbsp;?`;
+      const interlocutorIdentity = formatIdentity(identity, 'FL');
+      let message = `Êtes-vous sûr(e) de vouloir détacher ${interlocutorIdentity} de la formation&nbsp;?`;
+      if (interlocutorType === TRAINER) {
+        const slotsLinkToInterlocutorId = course.value.slots
+          .filter(s => (s.trainers || []).map(t => t._id).includes(interlocutorId));
+        if (slotsLinkToInterlocutorId.length) {
+          message += `<br/> <br/>${interlocutorIdentity} est rattaché·e à`
+            + ` ${formatQuantity('créneau', slotsLinkToInterlocutorId.length, 'x')} de la formation.`;
+        }
+      }
       $q.dialog({
         title: 'Confirmation',
         message,

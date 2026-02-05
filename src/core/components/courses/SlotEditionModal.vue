@@ -35,7 +35,7 @@
       {{ traineeOptions.filter(t => editedCourseSlot.trainees.includes(t.value)).map(t => t.label).join(', ') }}
     </div>
     <ni-select v-if="editedCourseSlot.trainers || canUpdateSlotTrainers" caption="Intervenants concernés"
-      :options="trainerOptions" :disable="!canUpdateSlotTrainers || trainerOptions.length === 1"
+      :options="allTrainerOptions" :disable="!canUpdateSlotTrainers || allTrainerOptions.length === 1"
       v-model="editedCourseSlot.trainers" multiple :error="validations.trainers?.$error" required-field />
     <template #footer>
       <ni-button class="bg-primary full-width modal-btn" label="Editer un créneau" icon-right="add" color="white"
@@ -98,7 +98,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'delete', 'update', 'unplan-slot'],
   setup (props, { emit }) {
-    const { stepTypes, editedCourseSlot, traineeOptions } = toRefs(props);
+    const { stepTypes, editedCourseSlot, traineeOptions, trainerOptions } = toRefs(props);
     const $q = useQuasar();
     const selectedRange = ref('');
     const rangeOptions = [
@@ -116,6 +116,7 @@ export default {
     const concernedTrainees = ref([]);
     const concernedTraineesLoading = ref(false);
     const shouldRefresh = ref(false);
+    const detachedTrainerIds = ref([]);
 
     const durationOptions = computed(() => ([
       { label: '0H30', value: 'PT30M' },
@@ -147,6 +148,21 @@ export default {
         },
       }
     ));
+
+    watch(
+      () => editedCourseSlot.value,
+      (slot) => {
+        if (!slot) return;
+
+        detachedTrainerIds.value = (slot.trainers || [])
+          .filter(tId => !trainerOptions.value.some(t => t.value === tId));
+      }
+    );
+
+    const allTrainerOptions = computed(() => [
+      ...trainerOptions.value,
+      ...detachedTrainerIds.value.map(tId => ({ label: 'Intervenant·e supprimé·e', value: tId })),
+    ]);
 
     watch(() => selectedDuration.value, (newDuration) => {
       if (get(editedCourseSlot.value, 'dates.startHour') && newDuration) {
@@ -274,6 +290,7 @@ export default {
       // Computed
       durationOptions,
       traineesValidations,
+      allTrainerOptions,
       // Methods
       validateDatesDeletion,
       validateDeletion,
