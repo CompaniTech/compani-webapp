@@ -81,7 +81,7 @@ export default {
       })
       .map(type => ({ label: QUESTIONNAIRE_TYPES[type], value: type })));
 
-    const courseQuestionnairesQuery = q => !get(course.value, 'questionnaires.length') ||
+    const isInCourseQuestionnaires = q => !get(course.value, 'questionnaires.length') ||
       course.value.questionnaires.includes(q._id);
 
     const selectedQuestionnaireId = computed(() => {
@@ -91,8 +91,8 @@ export default {
       ];
 
       const selectedQuestionnaire = selectedQuestionnaireType.value === SELF_POSITIONNING
-        ? questionnairesList.find(q => get(q, 'program._id') === selectedProgram.value && courseQuestionnairesQuery(q))
-        : questionnairesList.find(q => q.type === selectedQuestionnaireType.value && courseQuestionnairesQuery(q));
+        ? questionnairesList.find(q => get(q, 'program._id') === selectedProgram.value && isInCourseQuestionnaires(q))
+        : questionnairesList.find(q => q.type === selectedQuestionnaireType.value && isInCourseQuestionnaires(q));
 
       return get(selectedQuestionnaire, '_id');
     });
