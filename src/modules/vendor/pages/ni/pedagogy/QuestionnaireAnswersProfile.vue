@@ -87,7 +87,7 @@ export default {
     const selectedQuestionnaireId = computed(() => {
       const questionnairesList = [
         ...publishedQuestionnaires.value,
-        ...get(course.value, 'questionnaires.length') ? [...archivedQuestionnaires.value] : [],
+        ...get(course.value, 'questionnaires.length') ? archivedQuestionnaires.value : [],
       ];
 
       const selectedQuestionnaire = selectedQuestionnaireType.value === SELF_POSITIONNING
