@@ -31,12 +31,14 @@ import ProfileAnswers from 'src/modules/vendor/components/questionnaires/Profile
 import { composeCourseName } from '@helpers/courses';
 import Questionnaires from '@api/Questionnaires';
 import { formatAndSortOptions } from '@helpers/utils';
+import { ascendingSortBy } from '@helpers/dates/utils';
 import {
   QUESTIONNAIRE_TYPES,
   SELF_POSITIONNING,
   PUBLISHED,
   TRAINING_ORGANISATION_MANAGER,
   VENDOR_ADMIN,
+  ARCHIVED,
 } from '@data/constants';
 
 export default {
@@ -55,13 +57,14 @@ export default {
     const { courseId, questionnaireType, programId } = toRefs(props);
     const selectedQuestionnaireType = ref(questionnaireType.value || '');
     const publishedQuestionnaires = ref([]);
+    const archivedQuestionnaires = ref([]);
     const selectedProgram = ref('');
 
     const $store = useStore();
 
     const course = computed(() => pick(
       $store.state.course.course,
-      ['_id', 'companies', 'subProgram.program', 'trainers', 'type', 'holding', 'misc']
+      ['_id', 'companies', 'subProgram.program', 'trainers', 'type', 'holding', 'misc', 'questionnaires']
     ));
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
@@ -78,10 +81,18 @@ export default {
       })
       .map(type => ({ label: QUESTIONNAIRE_TYPES[type], value: type })));
 
+    const isInCourseQuestionnaires = q => !get(course.value, 'questionnaires.length') ||
+      course.value.questionnaires.includes(q._id);
+
     const selectedQuestionnaireId = computed(() => {
+      const questionnairesList = [
+        ...publishedQuestionnaires.value,
+        ...get(course.value, 'questionnaires.length') ? archivedQuestionnaires.value : [],
+      ];
+
       const selectedQuestionnaire = selectedQuestionnaireType.value === SELF_POSITIONNING
-        ? publishedQuestionnaires.value.find(q => get(q, 'program._id') === selectedProgram.value)
-        : publishedQuestionnaires.value.find(q => q.type === selectedQuestionnaireType.value);
+        ? questionnairesList.find(q => get(q, 'program._id') === selectedProgram.value && isInCourseQuestionnaires(q))
+        : questionnairesList.find(q => q.type === selectedQuestionnaireType.value && isInCourseQuestionnaires(q));
 
       return get(selectedQuestionnaire, '_id');
     });
@@ -107,6 +118,9 @@ export default {
       const questionnaires = await Questionnaires.list();
 
       publishedQuestionnaires.value = questionnaires.filter(q => q.status === PUBLISHED);
+      archivedQuestionnaires.value = questionnaires
+        .filter(q => q.status === ARCHIVED)
+        .sort(ascendingSortBy('archivedAt'));
     };
 
     const refreshCourse = async () => {
