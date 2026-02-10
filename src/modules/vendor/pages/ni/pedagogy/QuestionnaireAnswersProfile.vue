@@ -56,9 +56,10 @@ export default {
     questionnaireType: { type: String, enum: QUESTIONNAIRE_TYPES, default: '' },
     courseId: { type: String, default: '' },
     programId: { type: String, default: '' },
+    questionnaireId: { type: String, default: '' },
   },
   setup (props) {
-    const { courseId, questionnaireType, programId } = toRefs(props);
+    const { courseId, questionnaireType, programId, questionnaireId } = toRefs(props);
     const selectedQuestionnaireType = ref(questionnaireType.value || '');
     const publishedQuestionnaires = ref([]);
     const archivedQuestionnaires = ref([]);
@@ -87,9 +88,6 @@ export default {
       })
       .map(type => ({ label: QUESTIONNAIRE_TYPES[type], value: type })));
 
-    const isInCourseQuestionnaires = q => !get(course.value, 'questionnaires.length') ||
-      course.value.questionnaires.includes(q._id);
-
     const versionOptions = computed(() => {
       const filteredQuestionnaires = selectedQuestionnaireType.value === SELF_POSITIONNING
         ? allQuestionnaires.value
@@ -111,10 +109,7 @@ export default {
 
     const defaultVersionId = computed(() => {
       if (!versionOptions.value.length) return '';
-
-      const versionInCourse = get(versionOptions.value.find(v => isInCourseQuestionnaires({ _id: v.value })), 'value');
-
-      return versionInCourse || versionOptions.value[0].value;
+      return questionnaireId.value || versionOptions.value[0].value;
     });
 
     const selectedQuestionnaireId = computed(() => selectedVersionId.value || defaultVersionId.value);
