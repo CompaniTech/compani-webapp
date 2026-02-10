@@ -9,7 +9,7 @@
             @update:model-value="updateSelectedProgram" caption="Programme" :options="programOptions" clearable
             :disable="!isRofOrVendorAdmin" />
           <ni-select v-if="versionOptions.length > 1" :options="versionOptions" caption="Version"
-            :model-value="manualSelectedVersionId" @update:model-value="updateSelectedVersion" />
+            :model-value="selectedVersionId" @update:model-value="updateSelectedVersion" />
         </div>
       </template>
     </ni-profile-header>
@@ -64,7 +64,7 @@ export default {
     const archivedQuestionnaires = ref([]);
     const selectedProgram = ref('');
     const allQuestionnaires = ref([]);
-    const manualSelectedVersionId = ref('');
+    const selectedVersionId = ref('');
 
     const $store = useStore();
 
@@ -117,7 +117,7 @@ export default {
       return versionInCourse || versionOptions.value[0].value;
     });
 
-    const selectedQuestionnaireId = computed(() => manualSelectedVersionId.value || defaultVersionId.value);
+    const selectedQuestionnaireId = computed(() => selectedVersionId.value || defaultVersionId.value);
 
     const programOptions = computed(() => formatAndSortOptions(
       publishedQuestionnaires.value.filter(q => q.program).map(q => q.program),
@@ -136,18 +136,18 @@ export default {
 
     const updateSelectedProgram = (value) => {
       selectedProgram.value = value;
-      manualSelectedVersionId.value = defaultVersionId.value;
+      selectedVersionId.value = defaultVersionId.value;
     };
 
-    const updateSelectedVersion = (value) => { manualSelectedVersionId.value = value; };
+    const updateSelectedVersion = (value) => { selectedVersionId.value = value; };
 
     const getPublishedQuestionnaires = async () => {
       const questionnaires = await Questionnaires.list();
-      allQuestionnaires.value = questionnaires;
       publishedQuestionnaires.value = questionnaires.filter(q => q.status === PUBLISHED);
       archivedQuestionnaires.value = questionnaires
         .filter(q => q.status === ARCHIVED)
         .sort(ascendingSortBy('archivedAt'));
+      allQuestionnaires.value = [...publishedQuestionnaires.value, ...archivedQuestionnaires.value];
     };
 
     const refreshCourse = async () => {
@@ -167,7 +167,7 @@ export default {
       }
 
       if (programId.value) selectedProgram.value = programId.value;
-      manualSelectedVersionId.value = defaultVersionId.value;
+      selectedVersionId.value = defaultVersionId.value;
     };
 
     created();
@@ -177,7 +177,7 @@ export default {
         ? get(programId, 'value') || get(course, 'value.subProgram.program._id') || ''
         : '';
 
-      manualSelectedVersionId.value = defaultVersionId.value;
+      selectedVersionId.value = defaultVersionId.value;
     });
 
     onBeforeUnmount(() => { $store.dispatch('course/resetCourse'); });
@@ -185,7 +185,7 @@ export default {
     return {
       // Data
       selectedQuestionnaireType,
-      manualSelectedVersionId,
+      selectedVersionId,
       questionnaireOptions,
       publishedQuestionnaires,
       selectedProgram,
