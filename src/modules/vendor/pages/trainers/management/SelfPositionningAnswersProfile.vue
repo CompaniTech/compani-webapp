@@ -127,14 +127,11 @@ export default {
       for (const history of formattedTraineeQuestionnaireHistories) {
         for (const card of history.questionnaireAnswersList) {
           historiesByQuestion[card.cardId] = {
-            ...historiesByQuestion[card.cardId]
-              ? historiesByQuestion[card.cardId]
-              : {
-                question: card.question,
-                labels: card.labels,
-                card: card.cardId,
-                ...(card.trainerAnswer && { trainerAnswer: card.trainerAnswer }),
-              },
+            ...historiesByQuestion[card.cardId],
+            question: card.question,
+            labels: card.labels,
+            card: card.cardId,
+            ...(history.timeline === END_COURSE && card.trainerAnswer ? { trainerAnswer: card.trainerAnswer } : {}),
             answers: {
               ...get(historiesByQuestion[card.cardId], 'answers'),
               ...(history.timeline === START_COURSE ? { startCourse: card.answer } : { endCourse: card.answer }),
