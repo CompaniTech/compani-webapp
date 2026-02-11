@@ -109,7 +109,8 @@ export default {
 
     const defaultVersionId = computed(() => {
       if (!versionOptions.value.length) return '';
-      return questionnaireId.value || versionOptions.value[0].value;
+      const versionIdExists = versionOptions.value.some(option => option.value === questionnaireId.value);
+      return versionIdExists ? questionnaireId.value : versionOptions.value[0].value;
     });
 
     const selectedQuestionnaireId = computed(() => selectedVersionId.value || defaultVersionId.value);
