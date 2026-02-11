@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
+import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { subject } from '@casl/ability';
 import get from 'lodash/get';
@@ -19,6 +20,7 @@ import { defineAbilitiesForCourse } from '@helpers/ability';
 export const useCourses = (course) => {
   const $store = useStore();
   const $router = useRouter();
+  const $q = useQuasar();
 
   const pdfLoading = ref(false);
 
@@ -86,12 +88,28 @@ export const useCourses = (course) => {
     ),
   ]);
 
-  const downloadAttendanceSheet = async () => {
+  const validateAttendanceSheetDownload = async () => {
+    if (isIntraCourse.value || isIntraHoldingCourse.value) {
+      $q.dialog({
+        title: 'Pré-remplir les feuilles d\'émargement',
+        message: 'Voulez-vous que les feuilles d\'émargement soient pré-remplies avec l\'identité des stagiaires ?',
+        ok: 'Oui',
+        cancel: 'Non',
+        persistent: true,
+      })
+        .onOk(() => downloadAttendanceSheet(true))
+        .onCancel(() => downloadAttendanceSheet(false));
+    } else {
+      await downloadAttendanceSheet(true);
+    }
+  };
+
+  const downloadAttendanceSheet = async (isPreFilled = false) => {
     if (disableAttendanceSheetDownload.value) return;
 
     try {
       pdfLoading.value = true;
-      const pdf = await Courses.downloadAttendanceSheet(course.value._id);
+      const pdf = await Courses.downloadAttendanceSheet(course.value._id, { isPreFilled });
       const formattedName = formatDownloadName(`feuilles d'emargement ${composeCourseName(course.value, true)}`);
       const pdfName = `${formattedName}.pdf`;
       downloadFile(pdf, pdfName, 'application/octet-stream');
@@ -122,6 +140,6 @@ export const useCourses = (course) => {
     pdfLoading,
     followUpMissingInfo,
     // Methods
-    downloadAttendanceSheet,
+    validateAttendanceSheetDownload,
   };
 };
