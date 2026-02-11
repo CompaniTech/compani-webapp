@@ -8,6 +8,8 @@
           <ni-select v-if="selectedQuestionnaireType === SELF_POSITIONNING" :model-value="selectedProgram"
             @update:model-value="updateSelectedProgram" caption="Programme" :options="programOptions" clearable
             :disable="!isRofOrVendorAdmin" />
+          <ni-select v-if="versionOptions.length > 1" :options="versionOptions" caption="Version"
+            :model-value="selectedVersionId" @update:model-value="updateSelectedVersion" />
         </div>
       </template>
     </ni-profile-header>
@@ -31,7 +33,8 @@ import ProfileAnswers from 'src/modules/vendor/components/questionnaires/Profile
 import { composeCourseName } from '@helpers/courses';
 import Questionnaires from '@api/Questionnaires';
 import { formatAndSortOptions } from '@helpers/utils';
-import { ascendingSortBy } from '@helpers/dates/utils';
+import { ascendingSortBy, descendingSortBy } from '@helpers/dates/utils';
+import CompaniDate from '@helpers/dates/companiDates';
 import {
   QUESTIONNAIRE_TYPES,
   SELF_POSITIONNING,
@@ -39,6 +42,7 @@ import {
   TRAINING_ORGANISATION_MANAGER,
   VENDOR_ADMIN,
   ARCHIVED,
+  DD_MM_YYYY,
 } from '@data/constants';
 
 export default {
@@ -52,13 +56,16 @@ export default {
     questionnaireType: { type: String, enum: QUESTIONNAIRE_TYPES, default: '' },
     courseId: { type: String, default: '' },
     programId: { type: String, default: '' },
+    questionnaireId: { type: String, default: '' },
   },
   setup (props) {
-    const { courseId, questionnaireType, programId } = toRefs(props);
+    const { courseId, questionnaireType, programId, questionnaireId } = toRefs(props);
     const selectedQuestionnaireType = ref(questionnaireType.value || '');
     const publishedQuestionnaires = ref([]);
     const archivedQuestionnaires = ref([]);
     const selectedProgram = ref('');
+    const allQuestionnaires = ref([]);
+    const selectedVersionId = ref('');
 
     const $store = useStore();
 
@@ -81,21 +88,32 @@ export default {
       })
       .map(type => ({ label: QUESTIONNAIRE_TYPES[type], value: type })));
 
-    const isInCourseQuestionnaires = q => !get(course.value, 'questionnaires.length') ||
-      course.value.questionnaires.includes(q._id);
+    const versionOptions = computed(() => {
+      const filteredQuestionnaires = selectedQuestionnaireType.value === SELF_POSITIONNING
+        ? allQuestionnaires.value
+          .filter(q => get(q, 'program._id') === selectedProgram.value)
+          .sort(descendingSortBy('publishedAt'))
+        : allQuestionnaires.value
+          .filter(q => q.type === selectedQuestionnaireType.value)
+          .sort(descendingSortBy('publishedAt'));
 
-    const selectedQuestionnaireId = computed(() => {
-      const questionnairesList = [
-        ...publishedQuestionnaires.value,
-        ...get(course.value, 'questionnaires.length') ? archivedQuestionnaires.value : [],
-      ];
-
-      const selectedQuestionnaire = selectedQuestionnaireType.value === SELF_POSITIONNING
-        ? questionnairesList.find(q => get(q, 'program._id') === selectedProgram.value && isInCourseQuestionnaires(q))
-        : questionnairesList.find(q => q.type === selectedQuestionnaireType.value && isInCourseQuestionnaires(q));
-
-      return get(selectedQuestionnaire, '_id');
+      return filteredQuestionnaires
+        .map((q, i) => ({
+          value: q._id,
+          label: i
+            ? `Version ${filteredQuestionnaires.length - i} (${CompaniDate(q.publishedAt).format(DD_MM_YYYY)} - `
+            + `${CompaniDate(q.archivedAt).format(DD_MM_YYYY)})`
+            : 'Version actuelle',
+        }));
     });
+
+    const defaultVersionId = computed(() => {
+      if (!versionOptions.value.length) return '';
+      const versionIdExists = versionOptions.value.some(option => option.value === questionnaireId.value);
+      return versionIdExists ? questionnaireId.value : versionOptions.value[0].value;
+    });
+
+    const selectedQuestionnaireId = computed(() => selectedVersionId.value || defaultVersionId.value);
 
     const programOptions = computed(() => formatAndSortOptions(
       publishedQuestionnaires.value.filter(q => q.program).map(q => q.program),
@@ -112,15 +130,20 @@ export default {
 
     const updateSelectedQuestionnaireType = (value) => { selectedQuestionnaireType.value = value; };
 
-    const updateSelectedProgram = (value) => { selectedProgram.value = value; };
+    const updateSelectedProgram = (value) => {
+      selectedProgram.value = value;
+      selectedVersionId.value = defaultVersionId.value;
+    };
+
+    const updateSelectedVersion = (value) => { selectedVersionId.value = value; };
 
     const getPublishedQuestionnaires = async () => {
       const questionnaires = await Questionnaires.list();
-
       publishedQuestionnaires.value = questionnaires.filter(q => q.status === PUBLISHED);
       archivedQuestionnaires.value = questionnaires
         .filter(q => q.status === ARCHIVED)
         .sort(ascendingSortBy('archivedAt'));
+      allQuestionnaires.value = [...publishedQuestionnaires.value, ...archivedQuestionnaires.value];
     };
 
     const refreshCourse = async () => {
@@ -140,6 +163,7 @@ export default {
       }
 
       if (programId.value) selectedProgram.value = programId.value;
+      selectedVersionId.value = defaultVersionId.value;
     };
 
     created();
@@ -148,6 +172,8 @@ export default {
       selectedProgram.value = selectedQuestionnaireType.value === SELF_POSITIONNING
         ? get(programId, 'value') || get(course, 'value.subProgram.program._id') || ''
         : '';
+
+      selectedVersionId.value = defaultVersionId.value;
     });
 
     onBeforeUnmount(() => { $store.dispatch('course/resetCourse'); });
@@ -155,6 +181,7 @@ export default {
     return {
       // Data
       selectedQuestionnaireType,
+      selectedVersionId,
       questionnaireOptions,
       publishedQuestionnaires,
       selectedProgram,
@@ -165,9 +192,11 @@ export default {
       course,
       isRofOrVendorAdmin,
       headerInfo,
+      versionOptions,
       // Methods
       updateSelectedQuestionnaireType,
       updateSelectedProgram,
+      updateSelectedVersion,
     };
   },
 };

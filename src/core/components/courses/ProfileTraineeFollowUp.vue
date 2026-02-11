@@ -41,7 +41,7 @@
       </div>
       <div v-if="areQuestionnaireAnswersVisible" class="questionnaires-container">
         <router-link v-for="questionnaire in filteredQuestionnaires" :key="questionnaire._id"
-          :to="goToQuestionnaireAnswers(questionnaire.type)">
+          :to="goToQuestionnaireAnswers(questionnaire)">
           <questionnaire-answers-cell :questionnaire="questionnaire" />
         </router-link>
       </div>
@@ -342,9 +342,9 @@ export default {
       }
     };
 
-    const goToQuestionnaireAnswers = questionnaireType => ({
+    const goToQuestionnaireAnswers = questionnaire => ({
       name: 'ni pedagogy questionnaire answers',
-      query: { courseId: course.value._id, questionnaireType },
+      query: { courseId: course.value._id, questionnaireType: questionnaire.type, questionnaireId: questionnaire._id },
     });
 
     const formatTraineeAttendances = (attendancesGroupedByTrainee, traineeId) => ({

@@ -67,8 +67,12 @@ export default {
 
     const goToQuestionnaireProfileAnswers = () => {
       const query = questionnaire.value.type === SELF_POSITIONNING
-        ? { questionnaireType: questionnaire.value.type, programId: questionnaire.value.program }
-        : { questionnaireType: questionnaire.value.type };
+        ? {
+          questionnaireType: questionnaire.value.type,
+          programId: questionnaire.value.program,
+          questionnaireId: questionnaireId.value,
+        }
+        : { questionnaireType: questionnaire.value.type, questionnaireId: questionnaireId.value };
 
       $router.push({ name: 'ni pedagogy questionnaire answers', query });
     };
