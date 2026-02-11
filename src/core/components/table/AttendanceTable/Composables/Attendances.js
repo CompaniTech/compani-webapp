@@ -40,6 +40,12 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
 
   const v$ = useVuelidate(attendanceRules, { newTraineeAttendance });
 
+  const loggedUserIsCourseTrainer = computed(() => {
+    const courseTrainerIds = course.value.trainers.map(t => t._id);
+
+    return courseTrainerIds.includes(loggedUser.value._id) && get(loggedUser.value, 'role.vendor.name') === TRAINER;
+  });
+
   const attendanceColumns = computed(() => {
     const columns = [{
       name: 'trainee',
@@ -103,12 +109,6 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
   });
 
   const disableCheckbox = computed(() => loading.value || !canUpdate.value || !!course.value.archivedAt);
-
-  const loggedUserIsCourseTrainer = computed(() => {
-    const courseTrainerIds = course.value.trainers.map(t => t._id);
-
-    return courseTrainerIds.includes(loggedUser.value._id) && get(loggedUser.value, 'role.vendor.name') === TRAINER;
-  });
 
   const traineesCount = slotId => attendances.value.filter(a => a.courseSlot === slotId && a.status === PRESENT).length;
 
