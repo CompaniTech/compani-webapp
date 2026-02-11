@@ -17,6 +17,7 @@ import {
   INTRA_HOLDING,
   PRESENT,
   MISSING,
+  TRAINER,
 } from '@data/constants';
 import { upperCaseFirstLetter, formatIdentity, sortStrings, formatAndSortIdentityOptions } from '@helpers/utils';
 import { minArrayLength } from '@helpers/vuelidateCustomVal';
@@ -39,6 +40,12 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
 
   const v$ = useVuelidate(attendanceRules, { newTraineeAttendance });
 
+  const loggedUserIsCourseTrainer = computed(() => {
+    const courseTrainerIds = course.value.trainers.map(t => t._id);
+
+    return courseTrainerIds.includes(loggedUser.value._id) && get(loggedUser.value, 'role.vendor.name') === TRAINER;
+  });
+
   const attendanceColumns = computed(() => {
     const columns = [{
       name: 'trainee',
@@ -48,9 +55,13 @@ export const useAttendances = (course, isClientInterface, canUpdate, loggedUser,
     }];
     if (!course.value.slots) return columns;
 
+    const slots = loggedUserIsCourseTrainer.value
+      ? course.value.slots.filter(s => (s.trainers || []).map(t => t._id).includes(loggedUser.value._id))
+      : course.value.slots;
+
     return [
       ...columns,
-      ...course.value.slots.map(s => ({
+      ...slots.map(s => ({
         name: `slot-${s._id}`,
         slot: s._id,
         field: '_id',
