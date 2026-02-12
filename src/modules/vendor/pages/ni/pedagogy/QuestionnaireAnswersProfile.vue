@@ -107,10 +107,16 @@ export default {
         }));
     });
 
+    const isInCourseQuestionnaires = q => !get(course.value, 'questionnaires.length') ||
+      course.value.questionnaires.includes(q._id);
+
     const defaultVersionId = computed(() => {
       if (!versionOptions.value.length) return '';
       const versionIdExists = versionOptions.value.some(option => option.value === questionnaireId.value);
-      return versionIdExists ? questionnaireId.value : versionOptions.value[0].value;
+      if (versionIdExists) return questionnaireId.value;
+
+      const versionInCourse = get(versionOptions.value.find(v => isInCourseQuestionnaires({ _id: v.value })), 'value');
+      return versionInCourse || versionOptions.value[0].value;
     });
 
     const selectedQuestionnaireId = computed(() => selectedVersionId.value || defaultVersionId.value);
