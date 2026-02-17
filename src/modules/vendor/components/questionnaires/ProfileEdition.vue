@@ -48,7 +48,7 @@ export default {
   name: 'ProfileEdition',
   props: {
     profileId: { type: String, required: true },
-    otherPublishedQuestionnaire: { type: String, default: '' },
+    publishedQuestionnaire: { type: String, default: '' },
   },
   components: {
     'ni-input': Input,
@@ -58,7 +58,7 @@ export default {
     'ni-button': Button,
   },
   setup (props) {
-    const { profileId, otherPublishedQuestionnaire } = toRefs(props);
+    const { profileId, publishedQuestionnaire } = toRefs(props);
 
     const $store = useStore();
     const $q = useQuasar();
@@ -181,8 +181,8 @@ export default {
       if (!questionnaire.value.cards.length) return NotifyWarning('Il n\'y a aucune carte dans ce questionnaire.');
       if (!questionnaire.value.areCardsValid) return NotifyWarning('Carte(s) invalide(s).');
 
-      const warningMessage = otherPublishedQuestionnaire.value
-        ? `</br></br>Un questionnaire "${otherPublishedQuestionnaire.value}" existe déjà pour ce type de questionnaire `
+      const warningMessage = publishedQuestionnaire.value
+        ? `</br></br>Un questionnaire "${publishedQuestionnaire.value}" existe déjà pour ce type de questionnaire `
         + 'et sera archivé.'
         : '';
       $q.dialog({
