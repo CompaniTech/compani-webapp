@@ -27,7 +27,7 @@ import Questionnaires from '@api/Questionnaires';
 import QuestionnaireCell from '@components/courses/QuestionnaireCell';
 import QuestionnaireCreationModal from 'src/modules/vendor/components/programs/QuestionnaireCreationModal';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { QUESTIONNAIRE_TYPES, SELF_POSITIONNING, PUBLISHED } from '@data/constants';
+import { QUESTIONNAIRE_TYPES, SELF_POSITIONNING, PUBLISHED, DRAFT } from '@data/constants';
 import { descendingSortBy } from '@helpers/dates/utils';
 
 export default {
@@ -53,13 +53,15 @@ export default {
     const v$ = useVuelidate(rules, { newQuestionnaire });
 
     const goToQuestionnaireProfile = (questionnaireId, questionnaireList) => {
-      const otherPublishedQuestionnaire = questionnaireList
-        .find(q => q._id !== questionnaireId && q.status === PUBLISHED);
+      const isQuestionnaireDraft = questionnaireList.find(q => q._id === questionnaireId && q.status === DRAFT);
+      const publishedQuestionnaire = isQuestionnaireDraft
+        ? questionnaireList.find(q => q._id !== questionnaireId && q.status === PUBLISHED)
+        : null;
 
       return {
         name: 'ni pedagogy questionnaire profile',
         params: { questionnaireId },
-        query: { otherPublishedQuestionnaire: otherPublishedQuestionnaire?.name || '' },
+        ...publishedQuestionnaire && { query: { publishedQuestionnaire: publishedQuestionnaire.name } },
       };
     };
 

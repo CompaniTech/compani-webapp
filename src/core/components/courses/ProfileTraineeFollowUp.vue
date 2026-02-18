@@ -9,8 +9,8 @@
             pour assurer le suivi de la formation : {{ followUpMissingInfo.join(', ') }}.
           </template>
         </ni-banner>
-        <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
-          :disable="disableAttendanceSheetDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
+        <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges" size="16px"
+          :disable="disableAttendanceSheetDownload || isArchived" @click="validateAttendanceSheetDownload" />
       </div>
       <attendance-table :course="course" />
     </div>
@@ -239,7 +239,7 @@ export default {
       disableAttendanceSheetDownload,
       followUpDisabled,
       followUpMissingInfo,
-      downloadAttendanceSheet,
+      validateAttendanceSheetDownload,
       vendorRole,
       isVendorInterface,
       isSingleCourse,
@@ -646,7 +646,7 @@ export default {
       formatQuantity,
       goToQuestionnaireAnswers,
       downloadCompletionCertificates,
-      downloadAttendanceSheet,
+      validateAttendanceSheetDownload,
       goToQuestionnaireProfile,
       goToSelfPositionningAnswers,
       filterQuestionnaireTypes,

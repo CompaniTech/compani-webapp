@@ -7,7 +7,7 @@
         </template>
       </ni-profile-header>
       <profile-edition :profile-id="questionnaireId" class="edition"
-        :other-published-questionnaire="otherPublishedQuestionnaire" />
+        :published-questionnaire="publishedQuestionnaire" />
     </template>
   </q-page>
 </template>
@@ -29,7 +29,7 @@ export default {
   name: 'QuestionnaireProfile',
   props: {
     questionnaireId: { type: String, required: true },
-    otherPublishedQuestionnaire: { type: String, default: '' },
+    publishedQuestionnaire: { type: String, default: '' },
   },
   components: {
     'ni-profile-header': ProfileHeader,

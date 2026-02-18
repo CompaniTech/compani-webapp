@@ -48,10 +48,10 @@ export default {
   async deleteTrainee (courseId, traineeId) {
     await alenviAxios.delete(`${process.env.API_HOSTNAME}/courses/${courseId}/trainees/${traineeId}`);
   },
-  downloadAttendanceSheet (courseId) {
+  downloadAttendanceSheet (courseId, params) {
     return alenviAxios.get(
       `${process.env.API_HOSTNAME}/courses/${courseId}/attendance-sheets`,
-      { responseType: 'arraybuffer', headers: { Accept: 'application/pdf' } }
+      { params, responseType: 'arraybuffer', headers: { Accept: 'application/pdf' } }
     );
   },
   downloadCompletionCertificates (courseId, params) {

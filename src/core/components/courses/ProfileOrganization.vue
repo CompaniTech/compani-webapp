@@ -106,8 +106,8 @@
           @download="downloadConvocation" />
       </div>
       <div v-if="isIntraOrIntraHoldingOrVendor">
-        <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
-          :disable="disableAttendanceSheetDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
+        <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges" size="16px"
+          :disable="disableAttendanceSheetDownload || isArchived" @click="validateAttendanceSheetDownload" />
       </div>
       <div v-if="isVendorInterface">
         <div v-if="isRofOrVendorAdmin">
@@ -326,7 +326,7 @@ export default {
       isVendorInterface,
       isIntraOrIntraHoldingOrVendor,
       isArchived,
-      downloadAttendanceSheet,
+      validateAttendanceSheetDownload,
       disableAttendanceSheetDownload,
       isIntraCourse,
       isSingleCourse,
@@ -1211,7 +1211,7 @@ export default {
       openSalesRepresentativeModal,
       copy,
       updateCourse,
-      downloadAttendanceSheet,
+      validateAttendanceSheetDownload,
       refreshTraineeTable,
       refreshTrainingContracts,
       goToContactProfile,
