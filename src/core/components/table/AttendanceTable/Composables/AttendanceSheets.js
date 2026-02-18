@@ -6,7 +6,7 @@ import groupBy from 'lodash/groupBy';
 import useVuelidate from '@vuelidate/core';
 import { required, requiredIf } from '@vuelidate/validators';
 import AttendanceSheets from '@api/AttendanceSheets';
-import { INTER_B2B, SINGLE, DD_MM_YYYY, GENERATION } from '@data/constants';
+import { INTER_B2B, SINGLE, DD_MM_YYYY, GENERATION, TRAINER } from '@data/constants';
 import { formatIdentity, sortStrings } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
@@ -145,6 +145,8 @@ export const useAttendanceSheets = (
       newAttendanceSheet.value.trainee = course.value.trainees[0]._id;
     }
     if (course.value.trainers.length === 1) newAttendanceSheet.value.trainer = course.value.trainers[0]._id;
+    const isTrainer = get(loggedUser.value, 'role.vendor.name') === TRAINER;
+    if (isTrainer) newAttendanceSheet.value.trainer = loggedUser.value._id;
 
     attendanceSheetAdditionModal.value = true;
   };
@@ -185,6 +187,7 @@ export const useAttendanceSheets = (
     } catch (e) {
       console.error(e);
       if (e.status === 413) NotifyNegative('Fichier trop volumineux (5Mo maximum).');
+      else if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
       else NotifyNegative('Erreur lors de l\'ajout de la feuille d\'émargement.');
     } finally {
       modalLoading.value = false;
@@ -274,6 +277,11 @@ export const useAttendanceSheets = (
   };
 
   const openAttendanceSheetEditionModal = (attendanceSheet) => {
+    const isTrainer = get(loggedUser.value, 'role.vendor.name') === TRAINER;
+    if (isTrainer && attendanceSheet.trainer !== loggedUser.value._id) {
+      const message = 'Vous ne pouvez pas éditer cette feuille d\'émargement car vous n\'êtes pas l\'intervenant lié.';
+      return NotifyWarning(message);
+    }
     const linkedSlots = attendanceSheet.slots || [];
     if (![...linkedSlots, ...notLinkedSlotOptions.value].length) {
       return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
