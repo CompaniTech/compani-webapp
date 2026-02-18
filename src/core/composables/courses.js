@@ -100,7 +100,7 @@ export const useCourses = (course) => {
         .onOk(() => downloadAttendanceSheet(true))
         .onCancel(() => downloadAttendanceSheet(false));
     } else {
-      await downloadAttendanceSheet(true);
+      await downloadAttendanceSheet();
     }
   };
 
@@ -109,7 +109,7 @@ export const useCourses = (course) => {
 
     try {
       pdfLoading.value = true;
-      const pdf = await Courses.downloadAttendanceSheet(course.value._id, { isPreFilled });
+      const pdf = await Courses.downloadAttendanceSheet(course.value._id, isPreFilled && { isPreFilled });
       const formattedName = formatDownloadName(`feuilles d'emargement ${composeCourseName(course.value, true)}`);
       const pdfName = `${formattedName}.pdf`;
       downloadFile(pdf, pdfName, 'application/octet-stream');
