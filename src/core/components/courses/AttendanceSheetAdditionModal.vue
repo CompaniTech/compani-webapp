@@ -75,7 +75,7 @@ export default {
     const dateOptions = computed(() => {
       const dateOptionsSet = new Set(
         course.value.slots
-          .filter(s => !isTrainer.value || !s.trainers || s.trainers.map(t => t._id).includes(loggedUser.value._id))
+          .filter(s => !isTrainer.value || (s.trainers || []).map(t => t._id).includes(loggedUser.value._id))
           .map(date => CompaniDate(date.startDate).startOf('day').toISO())
       );
 
@@ -100,7 +100,7 @@ export default {
               - ${CompaniDate(s.endDate).format(HH_MM)}`,
             value: s._id,
             disable: !!s.missingAttendances.length ||
-              (isTrainer.value && s.trainers && !s.trainers.map(t => t._id).includes(loggedUser.value._id)),
+              (isTrainer.value && !(s.trainers || []).map(t => t._id).includes(loggedUser.value._id)),
           })))
     ));
 

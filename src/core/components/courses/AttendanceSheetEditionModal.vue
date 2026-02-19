@@ -58,7 +58,7 @@ export default {
             label: `${CompaniDate(s.startDate).format(`${DD_MM_YYYY} ${HH_MM}`)}
               - ${CompaniDate(s.endDate).format(HH_MM)}`,
             value: s._id,
-            disable: s.trainers && !s.trainers.map(t => t._id).includes(editedAttendanceSheet.value.trainer),
+            disable: !(s.trainers || []).map(t => t._id).includes(editedAttendanceSheet.value.trainer),
           })))
     ));
 
