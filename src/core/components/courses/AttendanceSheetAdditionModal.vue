@@ -30,12 +30,13 @@
 <script>
 import { toRefs, computed } from 'vue';
 import groupBy from 'lodash/groupBy';
+import get from 'lodash/get';
 import Modal from '@components/modal/Modal';
 import Select from '@components/form/Select';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
 import MultipleOptionGroup from '@components/form/MultipleOptionGroup';
-import { INTER_B2B, SINGLE, DOC_EXTENSIONS, IMAGE_EXTENSIONS, DD_MM_YYYY, HH_MM } from '@data/constants';
+import { INTER_B2B, SINGLE, DOC_EXTENSIONS, IMAGE_EXTENSIONS, DD_MM_YYYY, HH_MM, TRAINER } from '@data/constants';
 import { formatAndSortIdentityOptions } from '@helpers/utils';
 import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -57,18 +58,25 @@ export default {
     loading: { type: Boolean, default: false },
     slots: { type: Array, default: () => [] },
     stepsById: { type: Object, default: () => ({}) },
+    loggedUser: { type: Object, default: () => ({}) },
   },
   emits: ['hide', 'update:model-value', 'update:new-attendance-sheet', 'submit'],
   setup (props, { emit }) {
-    const { newAttendanceSheet, course, slots, stepsById } = toRefs(props);
+    const { newAttendanceSheet, course, slots, stepsById, loggedUser } = toRefs(props);
 
     const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
 
-    const trainerOptions = computed(() => formatAndSortIdentityOptions(course.value.trainers));
+    const isTrainer = computed(() => get(loggedUser.value, 'role.vendor.name') === TRAINER);
+
+    const trainerOptions = computed(() => formatAndSortIdentityOptions(
+      course.value.trainers.filter(trainer => !isTrainer.value || trainer._id === loggedUser.value._id)
+    ));
 
     const dateOptions = computed(() => {
       const dateOptionsSet = new Set(
-        course.value.slots.map(date => CompaniDate(date.startDate).startOf('day').toISO())
+        course.value.slots
+          .filter(s => !isTrainer.value || (s.trainers || []).map(t => t._id).includes(loggedUser.value._id))
+          .map(date => CompaniDate(date.startDate).startOf('day').toISO())
       );
 
       return [...dateOptionsSet].map(date => ({ value: date, label: CompaniDate(date).format(DD_MM_YYYY) }));
@@ -91,7 +99,8 @@ export default {
             label: `${CompaniDate(s.startDate).format(`${DD_MM_YYYY} ${HH_MM}`)}
               - ${CompaniDate(s.endDate).format(HH_MM)}`,
             value: s._id,
-            disable: !!s.missingAttendances.length,
+            disable: !!s.missingAttendances.length ||
+              (isTrainer.value && !(s.trainers || []).map(t => t._id).includes(loggedUser.value._id)),
           })))
     ));
 
