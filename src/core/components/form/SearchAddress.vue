@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, toRefs } from 'vue';
 import axios from 'axios';
 import pick from 'lodash/pick';
 import { REQUIRED_LABEL } from '@data/constants';
@@ -33,17 +33,23 @@ export default {
     requiredField: { type: Boolean, default: false },
     disable: { type: Boolean, default: false },
     color: { type: String, default: 'white' },
+    defaultOptions: { type: Array, default: () => [] },
   },
   emits: ['blur', 'focus', 'update:model-value'],
   components: {
     'ni-button': Button,
   },
-  setup (_, { emit }) {
-    const options = ref([]);
+  setup (props, { emit }) {
+    const { defaultOptions } = toRefs(props);
+    const options = ref(defaultOptions.value);
 
     const searchAddress = async (terms, done) => {
       try {
-        if (!terms) return;
+        if (!terms) {
+          options.value = defaultOptions.value;
+          done(options.value);
+          return;
+        }
 
         const res = await axios.get('https://data.geopf.fr/geocodage/search', { params: { q: terms } });
         options.value = res.data.features.sort((a, b) => b.properties.score - a.properties.score).map(result => ({

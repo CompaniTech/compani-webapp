@@ -26,7 +26,8 @@
       required-field :shifted-duration="selectedDuration" />
     <ni-search-address v-if="getType(editedCourseSlot.step) === ON_SITE" :model-value="editedCourseSlot.address"
       error-message="Adresse non valide" in-modal last @blur="validations.address.$touch"
-      :error="validations.address.$error" @update:model-value="update($event, 'address')" />
+      :error="validations.address.$error" @update:model-value="update($event, 'address')"
+      :default-options="addressOptions" />
     <ni-input v-if="getType(editedCourseSlot.step) === REMOTE" :model-value="editedCourseSlot.meetingLink"
       @update:model-value="update($event, 'meetingLink')" caption="Lien vers la visio" in-modal
       :error-message="linkErrorMessage" :error="validations.meetingLink.$error" />
@@ -85,6 +86,7 @@ export default {
     traineeOptions: { type: Array, default: () => [] },
     trainerOptions: { type: Array, default: () => [] },
     canUpdateSlotTrainers: { type: Boolean, default: false },
+    addressOptions: { type: Array, default: () => [] },
   },
   components: {
     'ni-button': Button,
