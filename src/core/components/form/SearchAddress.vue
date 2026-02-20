@@ -41,7 +41,7 @@ export default {
   },
   setup (props, { emit }) {
     const { defaultOptions } = toRefs(props);
-    const options = ref(defaultOptions.value);
+    const options = ref([]);
 
     const searchAddress = async (terms, done) => {
       try {

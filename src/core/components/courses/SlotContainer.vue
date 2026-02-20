@@ -326,7 +326,7 @@ export default {
       .map(t => t._id).includes(loggedUser.value._id));
 
     const addressOptions = computed(() => {
-      const addresses = uniqBy(course.value.slots.map(slot => slot.address).filter(a => !!a), 'fullAddress');
+      const addresses = uniqBy(course.value.slots.filter(s => !!s.address).map(slot => slot.address), 'fullAddress');
       return addresses.map(a => ({
         label: a.fullAddress,
         fullAddress: a.fullAddress,
