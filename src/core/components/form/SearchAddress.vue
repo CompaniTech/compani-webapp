@@ -16,6 +16,7 @@
 </template>
 
 <script>
+import { ref, toRefs } from 'vue';
 import axios from 'axios';
 import pick from 'lodash/pick';
 import { REQUIRED_LABEL } from '@data/constants';
@@ -32,23 +33,26 @@ export default {
     requiredField: { type: Boolean, default: false },
     disable: { type: Boolean, default: false },
     color: { type: String, default: 'white' },
+    defaultOptions: { type: Array, default: () => [] },
   },
   emits: ['blur', 'focus', 'update:model-value'],
   components: {
     'ni-button': Button,
   },
-  data () {
-    return {
-      options: [],
-    };
-  },
-  methods: {
-    async searchAddress (terms, done) {
+  setup (props, { emit }) {
+    const { defaultOptions } = toRefs(props);
+    const options = ref([]);
+
+    const searchAddress = async (terms, done) => {
       try {
-        if (!terms) return;
+        if (!terms) {
+          options.value = defaultOptions.value;
+          done(options.value);
+          return;
+        }
 
         const res = await axios.get('https://data.geopf.fr/geocodage/search', { params: { q: terms } });
-        this.options = res.data.features.sort((a, b) => b.properties.score - a.properties.score).map(result => ({
+        options.value = res.data.features.sort((a, b) => b.properties.score - a.properties.score).map(result => ({
           label: result.properties.label,
           fullAddress: result.properties.label,
           value: result.properties.label,
@@ -57,24 +61,30 @@ export default {
           city: result.properties.city,
           location: result.geometry,
         }));
-        done(this.options);
+        done(options.value);
       } catch (e) {
         console.error(e);
         done([]);
       }
-    },
-    blurEvent () {
-      this.$emit('blur');
-    },
-    focusEvent () {
-      this.$emit('focus');
-    },
-    update (value) {
-      this.$emit('update:model-value', pick(value, ['fullAddress', 'street', 'city', 'zipCode', 'location']));
-    },
-    resetValue () {
-      this.$emit('update:model-value', { street: '', zipCode: '', city: '', location: {}, fullAddress: '' });
-    },
+    };
+
+    const blurEvent = () => { emit('blur'); };
+    const focusEvent = () => { emit('focus'); };
+    const update = (value) => {
+      emit('update:model-value', pick(value, ['fullAddress', 'street', 'city', 'zipCode', 'location']));
+    };
+    const resetValue = () => {
+      emit('update:model-value', { street: '', zipCode: '', city: '', location: {}, fullAddress: '' });
+    };
+
+    return {
+      options,
+      searchAddress,
+      blurEvent,
+      focusEvent,
+      update,
+      resetValue,
+    };
   },
 };
 </script>
