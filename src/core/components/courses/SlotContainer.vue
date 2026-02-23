@@ -109,7 +109,7 @@
       @submit="updateCourseSlot" @update="setCourseSlot" :is-only-slot="isOnlySlot" :is-planned-slot="isPlannedSlot"
       @unplan-slot="unplanSlot" :can-create-slot="canCreateSlot" :trainee-options="traineeOptions"
       :can-update-concerned-trainees="canUpdateConcernedTrainees" :trainer-options="trainerOptions"
-      :can-update-slot-trainers="canUpdateSlotTrainers" />
+      :can-update-slot-trainers="canUpdateSlotTrainers" :address-options="addressOptions" />
 
     <multiple-slot-creation-modal v-model="multipleSlotCreationModal" v-model:slots-to-add="slotsToAdd"
       @hide="resetCreationModal" @submit="createCourseSlots" :validations="v$.slotsToAdd"
@@ -127,6 +127,7 @@ import omit from 'lodash/omit';
 import tail from 'lodash/tail';
 import unset from 'lodash/unset';
 import groupBy from 'lodash/groupBy';
+import uniqBy from 'lodash/uniqBy';
 import { subject } from '@casl/ability';
 import useVuelidate from '@vuelidate/core';
 import { required, requiredIf } from '@vuelidate/validators';
@@ -324,6 +325,19 @@ export default {
     const loggedUserIsCourseTrainer = computed(() => course.value.trainers
       .map(t => t._id).includes(loggedUser.value._id));
 
+    const addressOptions = computed(() => {
+      const addresses = uniqBy(course.value.slots.filter(s => !!s.address).map(slot => slot.address), 'fullAddress');
+      return addresses.map(a => ({
+        label: a.fullAddress,
+        fullAddress: a.fullAddress,
+        value: a.fullAddress,
+        street: a.street,
+        zipCode: a.zipCode,
+        city: a.city,
+        location: a.location,
+      }));
+    });
+
     const getSlotAddress = slot => get(slot, 'address.fullAddress') || 'Adresse non renseignée';
 
     const getDefaultDate = (slot) => {
@@ -383,6 +397,12 @@ export default {
       }
 
       if (slot.address) editedCourseSlot.value.address = { ...slot.address };
+      else if (addressOptions.value.length === 1) {
+        editedCourseSlot.value.address = pick(
+          addressOptions.value[0],
+          ['fullAddress', 'street', 'city', 'zipCode', 'location']
+        );
+      }
       isOnlySlot.value = setIsOnlySlot(slot.step);
       isPlannedSlot.value = has(slot, 'startDate');
       editionModal.value = true;
@@ -590,6 +610,7 @@ export default {
       traineeOptions,
       trainerOptions,
       canUpdateSlotTrainers,
+      addressOptions,
       // Methods
       get,
       omit,
