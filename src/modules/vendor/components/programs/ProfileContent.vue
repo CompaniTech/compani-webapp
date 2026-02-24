@@ -1,9 +1,13 @@
 <template>
   <div v-if="program">
     <div v-for="(subProgram, index) of program.subPrograms" class="q-mb-xl sub-program-container" :key="index">
-      <div>
-        <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
-        <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
+      <div class="flex align-center justify-between">
+        <div class="align-items-center">
+          <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
+          <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
+        </div>
+        <ni-secondary-button class="mr-2" label="Editer les tarifs"
+          @click="openPriceVersionCreationModal(subProgram)" />
       </div>
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
         @blur="updateSubProgramName(index)" :error="getSubProgramError(index)"
@@ -111,6 +115,9 @@
     <validate-unlocking-step-modal :model-value="validateUnlockingEditionModal" @cancel="cancelUnlocking"
       :sub-programs-grouped-by-program="subProgramsReusingStepToBeUnlocked" @hide="resetValidateUnlockingEditionModal"
       @confirm="confirmUnlocking" :is-step-published="stepToBeUnlocked.status === PUBLISHED" />
+
+    <sub-program-price-version-modal v-model="subProgramPriceVersionCreationModal"
+      v-model:new-sub-program-price-version="newSubProgramPriceVersion" />
   </div>
 </template>
 
@@ -127,6 +134,8 @@ import SubPrograms from '@api/SubPrograms';
 import Steps from '@api/Steps';
 import Input from '@components/form/Input';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
+import Button from '@components/Button';
+import SecondaryButton from '@components/SecondaryButton';
 import {
   ACTIVITY_TYPES,
   PUBLISHED,
@@ -139,8 +148,9 @@ import {
 import { getStepTypeLabel, getStepTypeIcon } from '@helpers/courses';
 import { formatQuantity } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import Button from '@components/Button';
 import SubProgramCreationModal from 'src/modules/vendor/components/programs/SubProgramCreationModal';
+import SubProgramPriceVersionCreationModal from
+  'src/modules/vendor/components/programs/SubProgramPriceVersionCreationModal';
 import StepAdditionModal from 'src/modules/vendor/components/programs/StepAdditionModal';
 import StepEditionModal from 'src/modules/vendor/components/programs/StepEditionModal';
 import ActivityCreationModal from 'src/modules/vendor/components/programs/ActivityCreationModal';
@@ -173,6 +183,8 @@ export default {
     'validate-unlocking-step-modal': ValidateUnlockingStepModal,
     draggable,
     'published-dot': PublishedDot,
+    'ni-secondary-button': SecondaryButton,
+    'sub-program-price-version-modal': SubProgramPriceVersionCreationModal,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -185,6 +197,8 @@ export default {
     const modalLoading = ref(false);
     const areStepsLocked = ref({});
     const currentStepId = ref('');
+    const newSubProgramPriceVersion = ref({ prices: [], effectiveDate: '', steps: [] });
+    const subProgramPriceVersionCreationModal = ref(false);
 
     // SubProgram Creation
     const refreshProgram = async () => {
@@ -213,6 +227,12 @@ export default {
       checkPublicationAndOpenModal,
       resetPublication,
     } = useSubProgramPublicationModal(program, refreshProgram);
+
+    // SubProgam price version creation
+    const openPriceVersionCreationModal = (subProgram) => {
+      newSubProgramPriceVersion.value.steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
+      subProgramPriceVersionCreationModal.value = true;
+    };
 
     // Unlocking step validation
     const isLocked = step => areStepsLocked.value[step._id];
@@ -504,6 +524,8 @@ export default {
       validateUnlockingEditionModal,
       subProgramsReusingStepToBeUnlocked,
       stepToBeUnlocked,
+      subProgramPriceVersionCreationModal,
+      newSubProgramPriceVersion,
       // Computed
       v$,
       newStepValidations,
@@ -554,6 +576,7 @@ export default {
       getStepTypeIcon,
       CompaniDuration,
       getStepSubTitle,
+      openPriceVersionCreationModal,
     };
   },
 };
