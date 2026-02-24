@@ -3,7 +3,8 @@
     <div v-if="isIntraCourse || isSingleCourse" class="row gutter-profile">
       <ni-input v-model="course.expectedBillsCount" required-field @focus="saveTmp('expectedBillsCount')"
         @blur="updateCourse('expectedBillsCount')" caption="Nombre de factures" type="number"
-        :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage" />
+        :error="v$.course.expectedBillsCount.$error" :error-message="expectedBillsCountErrorMessage"
+        :disable="!!course.archivedAt" />
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
       <template #message>
