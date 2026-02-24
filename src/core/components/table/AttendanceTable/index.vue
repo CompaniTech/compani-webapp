@@ -167,7 +167,7 @@
     <attendance-sheet-addition-modal v-model="attendanceSheetAdditionModal" @hide="resetAttendanceSheetAdditionModal"
       @submit="addAttendanceSheet" v-model:new-attendance-sheet="newAttendanceSheet" :loading="modalLoading"
       :steps-by-id="stepsById" :validations="attendanceSheetValidations.newAttendanceSheet" :course="course"
-      :slots="notLinkedSlotOptions" />
+      :slots="notLinkedSlotOptions" :logged-user="loggedUser" />
     <attendance-sheet-edition-modal v-model="attendanceSheetEditionModal" @hide="resetAttendanceSheetEditionModal"
       @submit="updateAttendanceSheet" v-model:edited-attendance-sheet="editedAttendanceSheet" :loading="modalLoading"
       :validations="attendanceSheetValidations.editedAttendanceSheet" :steps-by-id="stepsById"
@@ -446,6 +446,7 @@ export default {
       notLinkedSlotOptions,
       editionSlotsGroupedByStep,
       isSingleCourse,
+      loggedUser,
       // Methods
       get,
       attendanceCheckboxValue,

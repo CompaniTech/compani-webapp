@@ -408,9 +408,9 @@ export default {
           for (const a of fu.answers) {
             answersRowsToExport.push({
               Question: formatStringForExport(fu.question),
+              'Réponse de l\'apprenant': getTraineeAnswer(fu, a.answer),
               'Question à choix multiples': fu.isQuestionAnswerMultipleChoiced ? YES : NO,
               'Date de réponse': CompaniDate(a.createdAt).format(DD_MM_YYYY),
-              'Réponse de l\'apprenant': getTraineeAnswer(fu, a.answer),
               'Id de la formation': get(a, 'course._id'),
               ...(isSelfPositionningAnswers.value && { 'Période de la formation': formatAnswerTimeline(a.timeline) }),
             });

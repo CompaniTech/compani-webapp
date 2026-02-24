@@ -307,6 +307,7 @@ export const EXPECTATIONS = 'expectations';
 export const END_OF_COURSE = 'end_of_course';
 export const SELF_POSITIONNING = 'self_positionning';
 export const DRAFT = 'draft';
+export const ARCHIVED = 'archived';
 export const QUESTIONNAIRE_TYPES = {
   [EXPECTATIONS]: 'Recueil des attentes',
   [END_OF_COURSE]: 'Fin de formation',

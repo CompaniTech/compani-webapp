@@ -9,8 +9,8 @@
             pour assurer le suivi de la formation : {{ followUpMissingInfo.join(', ') }}.
           </template>
         </ni-banner>
-        <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges"
-          :disable="disableAttendanceSheetDownload || isArchived" @click="downloadAttendanceSheet" size="16px" />
+        <ni-bi-color-button icon="file_download" label="Feuilles d'émargement vierges" size="16px"
+          :disable="disableAttendanceSheetDownload || isArchived" @click="validateAttendanceSheetDownload" />
       </div>
       <attendance-table :course="course" />
     </div>
@@ -41,7 +41,7 @@
       </div>
       <div v-if="areQuestionnaireAnswersVisible" class="questionnaires-container">
         <router-link v-for="questionnaire in filteredQuestionnaires" :key="questionnaire._id"
-          :to="goToQuestionnaireAnswers(questionnaire.type)">
+          :to="goToQuestionnaireAnswers(questionnaire)">
           <questionnaire-answers-cell :questionnaire="questionnaire" />
         </router-link>
       </div>
@@ -239,7 +239,7 @@ export default {
       disableAttendanceSheetDownload,
       followUpDisabled,
       followUpMissingInfo,
-      downloadAttendanceSheet,
+      validateAttendanceSheetDownload,
       vendorRole,
       isVendorInterface,
       isSingleCourse,
@@ -342,9 +342,9 @@ export default {
       }
     };
 
-    const goToQuestionnaireAnswers = questionnaireType => ({
+    const goToQuestionnaireAnswers = questionnaire => ({
       name: 'ni pedagogy questionnaire answers',
-      query: { courseId: course.value._id, questionnaireType },
+      query: { courseId: course.value._id, questionnaireType: questionnaire.type, questionnaireId: questionnaire._id },
     });
 
     const formatTraineeAttendances = (attendancesGroupedByTrainee, traineeId) => ({
@@ -646,7 +646,7 @@ export default {
       formatQuantity,
       goToQuestionnaireAnswers,
       downloadCompletionCertificates,
-      downloadAttendanceSheet,
+      validateAttendanceSheetDownload,
       goToQuestionnaireProfile,
       goToSelfPositionningAnswers,
       filterQuestionnaireTypes,
