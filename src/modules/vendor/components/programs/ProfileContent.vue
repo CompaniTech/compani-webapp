@@ -200,7 +200,7 @@ export default {
     const modalLoading = ref(false);
     const areStepsLocked = ref({});
     const currentStepId = ref('');
-    const newSubProgramPriceVersion = ref({ prices: [], subProgram: {} });
+    const newSubProgramPriceVersion = ref({ prices: [], subProgram: {}, effectiveDate: '' });
     const subProgramPriceVersionCreationModal = ref(false);
 
     // SubProgram Creation
@@ -235,6 +235,7 @@ export default {
       program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
       newSubProgramPriceVersion: {
         prices: { $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }) },
+        effectiveDate: { required },
       },
     }));
 
@@ -245,6 +246,7 @@ export default {
       const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
 
       newSubProgramPriceVersion.value = {
+        ...newSubProgramPriceVersion.value,
         subProgram: { _id: subProgram._id, steps },
         prices: steps.map(s => ({ step: s._id, hourlyAmount: null })),
       };
@@ -252,7 +254,7 @@ export default {
     };
 
     const resetSubProgramPriceVersionCreationModal = () => {
-      newSubProgramPriceVersion.value = { prices: [], subProgram: {} };
+      newSubProgramPriceVersion.value = { prices: [], subProgram: {}, effectiveDate: '' };
       v$.value.newSubProgramPriceVersion.$reset();
     };
 
@@ -263,6 +265,7 @@ export default {
         if (v$.value.newSubProgramPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         await SubPrograms.update(subProgramId, { ...omit(newSubProgramPriceVersion.value, ['subProgram']) });
+        subProgramPriceVersionCreationModal.value = false;
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de l\'édition des tarifs horaires du sous-programme.');

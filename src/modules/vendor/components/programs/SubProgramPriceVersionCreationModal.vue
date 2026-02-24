@@ -8,6 +8,8 @@
       :caption="`Tarif horaire pour ${getStepName(price.step)}`"
       :error="validations.prices.$each.$response.$data[index].hourlyAmount.$error"
       :error-message="getAmountError(index)" @update:model-value="updateHourlyAmount($event, index)" />
+    <ni-date-input caption="Date d'effet" v-model="newSubProgramPriceVersion.effectiveDate"
+      class="date-item" :error="validations.effectiveDate.$error" />
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Créer la nouvelle version de tarifs" color="primary"
         icon-right="add" @click="submit" :loading="loading" />
@@ -19,6 +21,7 @@
 import { toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
+import DateInput from '@components/form/DateInput';
 import { REQUIRED_LABEL } from '@data/constants';
 
 export default {
@@ -32,6 +35,7 @@ export default {
   components: {
     'ni-input': Input,
     'ni-modal': Modal,
+    'ni-date-input': DateInput,
   },
   emits: ['hide', 'update:model-value', 'update:new-sub-program-price-version', 'submit'],
   setup (props, { emit }) {
