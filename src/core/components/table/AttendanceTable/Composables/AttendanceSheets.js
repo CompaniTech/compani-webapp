@@ -94,7 +94,8 @@ export const useAttendanceSheets = (
     if (!isSingleCourse.value) return [];
 
     return course.value.slots
-      .filter(s => attendanceSheets.value.every(as => !get(as, 'slots', []).map(slot => slot._id).includes(s._id)));
+      .filter(s => attendanceSheets.value.every(as => !get(as, 'slots', []).map(slot => slot._id).includes(s._id)))
+      .map(s => ({ ...s, trainers: (s.trainers || []).map(t => t._id) }));
   });
 
   const disableSheetDeletion = attendanceSheet => !get(attendanceSheet, 'file.link') || !!course.value.archivedAt;
@@ -291,6 +292,7 @@ export const useAttendanceSheets = (
       _id: attendanceSheet._id,
       slots: linkedSlots.map(slot => slot._id),
       trainee: attendanceSheet.trainee,
+      trainer: attendanceSheet.trainer,
     };
 
     const groupedSlots = groupBy([...linkedSlots, ...notLinkedSlotOptions.value], 'step');
