@@ -3,10 +3,11 @@
     <template #title>
       Créer une nouvelle <span class="text-weight-bold">version des tarifs</span>
     </template>
-    <ni-input v-for="step of localPriceVersion.steps" :key="step._id" in-modal type="number"
-      :model-value="getHourlyAmount(step._id)"
-      :caption="`Tarif horaire pour ${step.name}`"
-      required-field @update:model-value="updateHourlyAmount($event, step._id)" />
+    <ni-input v-for="(price, index) in newSubProgramPriceVersion.prices" :key="price.step" in-modal
+      type="number" :model-value="price.hourlyAmount" :suffix="'€ / h'" required-field
+      :caption="`Tarif horaire pour ${getStepName(price.step)}`"
+      :error="validations.prices.$each.$response.$data[index].hourlyAmount.$error"
+      :error-message="getAmountError(index)" @update:model-value="updateHourlyAmount($event, index)" />
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Créer la nouvelle version de tarifs" color="primary"
         icon-right="add" @click="submit" :loading="loading" />
@@ -15,9 +16,10 @@
 </template>
 
 <script>
-import { toRefs, ref, watch } from 'vue';
+import { toRefs } from 'vue';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
+import { REQUIRED_LABEL } from '@data/constants';
 
 export default {
   name: 'SubProgramPriceVersionCreationModal',
@@ -33,23 +35,30 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'update:new-sub-program-price-version', 'submit'],
   setup (props, { emit }) {
-    const { newSubProgramPriceVersion } = toRefs(props);
-    const localPriceVersion = ref({ prices: [], effectiveDate: '', steps: [] });
+    const { newSubProgramPriceVersion, validations } = toRefs(props);
 
-    watch(
-      () => props.newSubProgramPriceVersion,
-      (val) => {
-        localPriceVersion.value = {
-          prices: val.prices || [],
-          effectiveDate: val.effectiveDate || '',
-          steps: val.steps ? [...val.steps] : [],
-        };
-      },
-      { immediate: true, deep: true }
-    );
     const hide = () => { emit('hide'); };
     const input = (event) => { emit('update:model-value', event); };
-    const submit = () => { emit('submit'); };
+    const submit = () => { emit('submit', newSubProgramPriceVersion.value.subProgram._id); };
+
+    const getStepName = (stepId) => {
+      const step = newSubProgramPriceVersion.value.subProgram.steps.find(s => s._id === stepId);
+      return step ? step.name : '';
+    };
+
+    const updateHourlyAmount = (value, index) => {
+      const prices = newSubProgramPriceVersion.value.prices
+        .map((p, i) => (i === index ? { ...p, hourlyAmount: Number(value) } : p));
+      emit('update:new-sub-program-price-version', { ...newSubProgramPriceVersion.value, prices });
+    };
+
+    const getAmountError = (index) => {
+      const validation = validations.value.prices.$each.$response.$data[index].hourlyAmount;
+      if (!validation) return '';
+      if (validation.required === false) return REQUIRED_LABEL;
+      if (validation.strictPositiveNumber === false) return 'Nombre non valide, doit être strictement positif';
+      return '';
+    };
 
     const getHourlyAmount = (stepId) => {
       const price = newSubProgramPriceVersion.value.prices.find(p => p.step === stepId);
@@ -57,28 +66,15 @@ export default {
       return price ? price.hourlyAmount : null;
     };
 
-    const updateHourlyAmount = (value, stepId) => {
-      const { prices } = newSubProgramPriceVersion.value;
-
-      const existingPrice = prices.find(p => p.step === stepId);
-
-      if (existingPrice) existingPrice.hourlyAmount = Number(value);
-      else {
-        prices.push({ step: stepId, hourlyAmount: Number(value) });
-      }
-
-      emit('update:new-sub-program-price-version', { ...newSubProgramPriceVersion.value, prices });
-    };
-
     return {
-      // data
-      localPriceVersion,
       // methods
       hide,
       input,
       submit,
       updateHourlyAmount,
       getHourlyAmount,
+      getStepName,
+      getAmountError,
     };
   },
 };

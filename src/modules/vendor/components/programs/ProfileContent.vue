@@ -117,7 +117,8 @@
       @confirm="confirmUnlocking" :is-step-published="stepToBeUnlocked.status === PUBLISHED" />
 
     <sub-program-price-version-modal v-model="subProgramPriceVersionCreationModal"
-      v-model:new-sub-program-price-version="newSubProgramPriceVersion" />
+      :validations="v$.newSubProgramPriceVersion" v-model:new-sub-program-price-version="newSubProgramPriceVersion"
+      @submit="addSubProgramPriceVersion" @hide="resetSubProgramPriceVersionCreationModal" :loading="modalLoading" />
   </div>
 </template>
 
@@ -129,7 +130,9 @@ import { useQuasar } from 'quasar';
 import draggable from 'vuedraggable';
 import useVuelidate from '@vuelidate/core';
 import { required, helpers } from '@vuelidate/validators';
+import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import get from 'lodash/get';
+import omit from 'lodash/omit';
 import SubPrograms from '@api/SubPrograms';
 import Steps from '@api/Steps';
 import Input from '@components/form/Input';
@@ -197,7 +200,7 @@ export default {
     const modalLoading = ref(false);
     const areStepsLocked = ref({});
     const currentStepId = ref('');
-    const newSubProgramPriceVersion = ref({ prices: [], effectiveDate: '', steps: [] });
+    const newSubProgramPriceVersion = ref({ prices: [], subProgram: {} });
     const subProgramPriceVersionCreationModal = ref(false);
 
     // SubProgram Creation
@@ -228,10 +231,44 @@ export default {
       resetPublication,
     } = useSubProgramPublicationModal(program, refreshProgram);
 
-    // SubProgam price version creation
+    const rules = computed(() => ({
+      program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
+      newSubProgramPriceVersion: {
+        prices: { $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }) },
+      },
+    }));
+
+    const v$ = useVuelidate(rules, { program, newSubProgramPriceVersion });
+
+    // SubProgram price version creation
     const openPriceVersionCreationModal = (subProgram) => {
-      newSubProgramPriceVersion.value.steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
+      const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
+
+      newSubProgramPriceVersion.value = {
+        subProgram: { _id: subProgram._id, steps },
+        prices: steps.map(s => ({ step: s._id, hourlyAmount: null })),
+      };
       subProgramPriceVersionCreationModal.value = true;
+    };
+
+    const resetSubProgramPriceVersionCreationModal = () => {
+      newSubProgramPriceVersion.value = { prices: [], subProgram: {} };
+      v$.value.newSubProgramPriceVersion.$reset();
+    };
+
+    const addSubProgramPriceVersion = async (subProgramId) => {
+      try {
+        modalLoading.value = true;
+        v$.value.newSubProgramPriceVersion.$touch();
+        if (v$.value.newSubProgramPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        await SubPrograms.update(subProgramId, { ...omit(newSubProgramPriceVersion.value, ['subProgram']) });
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de l\'édition des tarifs horaires du sous-programme.');
+      } finally {
+        modalLoading.value = false;
+      }
     };
 
     // Unlocking step validation
@@ -305,12 +342,6 @@ export default {
       duplicateActivity,
       resetActivityReuseModal,
     } = useActivityReuseModal(modalLoading, refreshProgram, currentStepId);
-
-    const rules = computed(() => ({
-      program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
-    }));
-
-    const v$ = useVuelidate(rules, { program });
 
     const openedStep = computed(() => $store.state.program.openedStep);
 
@@ -577,6 +608,8 @@ export default {
       CompaniDuration,
       getStepSubTitle,
       openPriceVersionCreationModal,
+      resetSubProgramPriceVersionCreationModal,
+      addSubProgramPriceVersion,
     };
   },
 };
