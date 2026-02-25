@@ -40,17 +40,17 @@ export default {
     'ni-button': Button,
   },
   setup () {
-    const metaInfo = { title: 'A facturer' };
+    const metaInfo = { title: 'Suivi de la facturation des intervenant·es' };
     useMeta(metaInfo);
 
     const slotsLoading = ref(false);
     const trainerBillingInfos = ref({});
     const dateRange = ref({
-      startDate: CompaniDate().startOf(MONTH).toISO(),
+      startDate: CompaniDate().subtract('P2M').startOf(MONTH).toISO(),
       endDate: CompaniDate().endOf(MONTH).toISO(),
     });
-    const min = ref(CompaniDate().endOf(MONTH).subtract('P1M').toISO());
-    const max = ref(CompaniDate().startOf(MONTH).add('P1M').toISO());
+    const min = ref(CompaniDate().endOf(MONTH).subtract('P3M').toISO());
+    const max = ref(CompaniDate().startOf(MONTH).add('P3M').toISO());
     const selectedTrainer = ref('');
 
     const rules = computed(() => ({
@@ -99,16 +99,16 @@ export default {
       if (CompaniDate(dateRange.value.endDate).isBefore(dateRange.value.startDate)) {
         return 'La date de fin doit être postérieure à la date de début';
       }
-      if (CompaniDate(dateRange.value.startDate).add('P1M').isBefore(dateRange.value.endDate)) {
-        return 'Date(s) invalide(s) : la période maximale est 1 mois';
+      if (CompaniDate(dateRange.value.startDate).add('P3M').isBefore(dateRange.value.endDate)) {
+        return 'Date(s) invalide(s) : la période maximale est 3 mois';
       }
 
       return '';
     });
 
     const input = (date) => {
-      min.value = CompaniDate(date.endDate).subtract('P1M').add('P1D').toISO();
-      max.value = CompaniDate(date.startDate).add('P1M').subtract('P1D').toISO();
+      min.value = CompaniDate(date.endDate).subtract('P3M').add('P1D').toISO();
+      max.value = CompaniDate(date.startDate).add('P3M').subtract('P1D').toISO();
     };
 
     const updateSelectedTrainer = (value) => { selectedTrainer.value = value; };
@@ -118,14 +118,14 @@ export default {
     };
 
     const goToPreviousMonth = () => {
-      const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).subtract('P1M');
-      dateRange.value = { startDate: date.toISO(), endDate: date.endOf(MONTH).toISO() };
+      const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).subtract('P3M');
+      dateRange.value = { startDate: date.toISO(), endDate: date.add('P2M').endOf(MONTH).toISO() };
       input(dateRange.value);
     };
 
     const goToNextMonth = () => {
-      const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).add('P1M');
-      dateRange.value = { startDate: date.toISO(), endDate: date.endOf(MONTH).toISO() };
+      const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).add('P3M');
+      dateRange.value = { startDate: date.toISO(), endDate: date.add('P2M').endOf(MONTH).toISO() };
       input(dateRange.value);
     };
 
