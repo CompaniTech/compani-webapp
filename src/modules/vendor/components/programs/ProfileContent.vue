@@ -6,7 +6,7 @@
           <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
           <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
         </div>
-        <div class="row">
+        <div v-if="subProgram.status === PUBLISHED" class="row">
           <ni-secondary-button class="q-mr-md" label="Editer les tarifs"
             @click="openPriceVersionCreationModal(subProgram)" />
           <ni-bi-color-button class="button-history" icon="history" label="Historique"
