@@ -22,8 +22,10 @@
         </slot>
       </template>
       <template #bottom="props">
-        <ni-pagination :props="props" :pagination="pagination" :data="data" :options="paginationOptions"
-          @update:pagination="update($event)" />
+        <div class="q-pa-sm row justify-between full-width">
+          <ni-pagination :props="props" :pagination="pagination" :data="data" :options="paginationOptions"
+            @update:pagination="update($event)" />
+        </div>
       </template>
       <template #no-data>
         <div class="full-width row text-copper-grey-800 justify-center">
