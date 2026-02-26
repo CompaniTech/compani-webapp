@@ -6,7 +6,7 @@
           <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
           <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
         </div>
-        <div v-if="subProgram.status === PUBLISHED" class="row">
+        <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning" class="row">
           <ni-secondary-button class="q-mr-md" label="Editer les tarifs"
             @click="openPriceVersionCreationModal(subProgram)" />
           <ni-bi-color-button class="button-history" icon="history" label="Historique"
@@ -155,6 +155,7 @@ import {
   E_LEARNING,
   LONG_DURATION_H_MM,
   PT0S,
+  DAY,
 } from '@data/constants';
 import { getStepTypeLabel, getStepTypeIcon } from '@helpers/courses';
 import { formatQuantity } from '@helpers/utils';
@@ -263,7 +264,7 @@ export default {
       newSubProgramPriceVersion.value = {
         subProgram: { _id: subProgram._id, steps },
         prices: steps.map(s => ({ step: s._id, hourlyAmount: null })),
-        effectiveDate: CompaniDate().toISO(),
+        effectiveDate: CompaniDate().startOf(DAY).toISO(),
       };
       subProgramPriceVersionCreationModal.value = true;
     };
