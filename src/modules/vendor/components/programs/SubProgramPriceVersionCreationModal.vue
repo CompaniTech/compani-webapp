@@ -9,7 +9,7 @@
       :error="validations.prices.$each.$response.$data[index].hourlyAmount.$error"
       :error-message="getAmountError(index)" @update:model-value="updateHourlyAmount($event, index)" />
     <ni-date-input caption="Date d'effet" v-model="newSubProgramPriceVersion.effectiveDate"
-      class="date-item" :error="validations.effectiveDate.$error" />
+      class="date-item" :error="validations.effectiveDate.$error" :min="newSubProgramPriceVersion.minEffectiveDate" />
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Créer la nouvelle version de tarifs" color="primary"
         icon-right="add" @click="submit" :loading="loading" />

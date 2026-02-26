@@ -158,7 +158,7 @@ import {
   DAY,
 } from '@data/constants';
 import { getStepTypeLabel, getStepTypeIcon } from '@helpers/courses';
-import { formatQuantity } from '@helpers/utils';
+import { formatQuantity, getLastVersion } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
 import SubProgramCreationModal from 'src/modules/vendor/components/programs/SubProgramCreationModal';
@@ -260,11 +260,17 @@ export default {
     // SubProgram price version creation
     const openPriceVersionCreationModal = (subProgram) => {
       const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
+      const lastSubProgramPriceVersion = getLastVersion(subProgram.priceVersions || [], 'effectiveDate');
 
       newSubProgramPriceVersion.value = {
         subProgram: { _id: subProgram._id, steps },
-        prices: steps.map(s => ({ step: s._id, hourlyAmount: null })),
+        prices: lastSubProgramPriceVersion
+          ? lastSubProgramPriceVersion.prices
+          : steps.map(s => ({ step: s._id, hourlyAmount: '' })),
         effectiveDate: CompaniDate().startOf(DAY).toISO(),
+        minEffectiveDate: lastSubProgramPriceVersion
+          ? CompaniDate(lastSubProgramPriceVersion.effectiveDate).add('P1D').toISO()
+          : '',
       };
       subProgramPriceVersionCreationModal.value = true;
     };
@@ -280,7 +286,10 @@ export default {
         v$.value.newSubProgramPriceVersion.$touch();
         if (v$.value.newSubProgramPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        await SubPrograms.update(subProgramId, { ...omit(newSubProgramPriceVersion.value, ['subProgram']) });
+        await SubPrograms.update(
+          subProgramId,
+          { ...omit(newSubProgramPriceVersion.value, ['subProgram', 'minEffectiveDate']) }
+        );
         subProgramPriceVersionCreationModal.value = false;
       } catch (e) {
         console.error(e);
