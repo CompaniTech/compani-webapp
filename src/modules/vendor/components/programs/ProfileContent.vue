@@ -159,6 +159,7 @@ import {
 import { getStepTypeLabel, getStepTypeIcon } from '@helpers/courses';
 import { formatQuantity } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
+import CompaniDate from '@helpers/dates/companiDates';
 import SubProgramCreationModal from 'src/modules/vendor/components/programs/SubProgramCreationModal';
 import SubProgramPriceVersionCreationModal from
   'src/modules/vendor/components/programs/SubProgramPriceVersionCreationModal';
@@ -260,9 +261,9 @@ export default {
       const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
 
       newSubProgramPriceVersion.value = {
-        ...newSubProgramPriceVersion.value,
         subProgram: { _id: subProgram._id, steps },
         prices: steps.map(s => ({ step: s._id, hourlyAmount: null })),
+        effectiveDate: CompaniDate().toISO(),
       };
       subProgramPriceVersionCreationModal.value = true;
     };
