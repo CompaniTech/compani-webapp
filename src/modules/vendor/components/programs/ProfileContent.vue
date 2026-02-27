@@ -1,9 +1,17 @@
 <template>
   <div v-if="program">
     <div v-for="(subProgram, index) of program.subPrograms" class="q-mb-xl sub-program-container" :key="index">
-      <div>
-        <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
-        <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
+      <div class="flex align-center justify-between">
+        <div class="align-items-center">
+          <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
+          <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
+        </div>
+        <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning" class="row">
+          <ni-secondary-button class="q-mr-md" label="Editer les tarifs"
+            @click="openPriceVersionCreationModal(subProgram)" />
+          <ni-bi-color-button class="button-history" icon="history" label="Historique"
+            @click="openHistoryModal(subProgram)" />
+        </div>
       </div>
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
         @blur="updateSubProgramName(index)" :error="getSubProgramError(index)"
@@ -111,6 +119,13 @@
     <validate-unlocking-step-modal :model-value="validateUnlockingEditionModal" @cancel="cancelUnlocking"
       :sub-programs-grouped-by-program="subProgramsReusingStepToBeUnlocked" @hide="resetValidateUnlockingEditionModal"
       @confirm="confirmUnlocking" :is-step-published="stepToBeUnlocked.status === PUBLISHED" />
+
+    <sub-program-price-version-creation-modal v-model="subProgramPriceVersionCreationModal"
+      :validations="v$.newSubProgramPriceVersion" v-model:new-sub-program-price-version="newSubProgramPriceVersion"
+      @submit="addSubProgramPriceVersion" @hide="resetSubProgramPriceVersionCreationModal" :loading="modalLoading" />
+
+    <sub-program-price-version-history-modal v-model="subProgramPriceVersionHistoryModal"
+      :sub-program="selectedSubProgram" />
   </div>
 </template>
 
@@ -122,11 +137,16 @@ import { useQuasar } from 'quasar';
 import draggable from 'vuedraggable';
 import useVuelidate from '@vuelidate/core';
 import { required, helpers } from '@vuelidate/validators';
+import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import get from 'lodash/get';
+import omit from 'lodash/omit';
 import SubPrograms from '@api/SubPrograms';
 import Steps from '@api/Steps';
 import Input from '@components/form/Input';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
+import Button from '@components/Button';
+import SecondaryButton from '@components/SecondaryButton';
+import BiColorButton from '@components/BiColorButton';
 import {
   ACTIVITY_TYPES,
   PUBLISHED,
@@ -135,12 +155,17 @@ import {
   E_LEARNING,
   LONG_DURATION_H_MM,
   PT0S,
+  DAY,
 } from '@data/constants';
 import { getStepTypeLabel, getStepTypeIcon } from '@helpers/courses';
-import { formatQuantity } from '@helpers/utils';
+import { formatQuantity, getLastVersion } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import Button from '@components/Button';
+import CompaniDate from '@helpers/dates/companiDates';
 import SubProgramCreationModal from 'src/modules/vendor/components/programs/SubProgramCreationModal';
+import SubProgramPriceVersionCreationModal from
+  'src/modules/vendor/components/programs/SubProgramPriceVersionCreationModal';
+import SubProgramPriceVersionHistoryModal from
+  'src/modules/vendor/components/programs/SubProgramPriceVersionHistoryModal';
 import StepAdditionModal from 'src/modules/vendor/components/programs/StepAdditionModal';
 import StepEditionModal from 'src/modules/vendor/components/programs/StepEditionModal';
 import ActivityCreationModal from 'src/modules/vendor/components/programs/ActivityCreationModal';
@@ -173,6 +198,10 @@ export default {
     'validate-unlocking-step-modal': ValidateUnlockingStepModal,
     draggable,
     'published-dot': PublishedDot,
+    'ni-secondary-button': SecondaryButton,
+    'ni-bi-color-button': BiColorButton,
+    'sub-program-price-version-creation-modal': SubProgramPriceVersionCreationModal,
+    'sub-program-price-version-history-modal': SubProgramPriceVersionHistoryModal,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -185,6 +214,10 @@ export default {
     const modalLoading = ref(false);
     const areStepsLocked = ref({});
     const currentStepId = ref('');
+    const newSubProgramPriceVersion = ref({ prices: [], subProgram: {}, effectiveDate: '' });
+    const subProgramPriceVersionCreationModal = ref(false);
+    const subProgramPriceVersionHistoryModal = ref(false);
+    const selectedSubProgram = ref({});
 
     // SubProgram Creation
     const refreshProgram = async () => {
@@ -213,6 +246,66 @@ export default {
       checkPublicationAndOpenModal,
       resetPublication,
     } = useSubProgramPublicationModal(program, refreshProgram);
+
+    const rules = computed(() => ({
+      program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
+      newSubProgramPriceVersion: {
+        prices: { $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }) },
+        effectiveDate: { required },
+      },
+    }));
+
+    const v$ = useVuelidate(rules, { program, newSubProgramPriceVersion });
+
+    // SubProgram price version creation
+    const openPriceVersionCreationModal = (subProgram) => {
+      const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
+      const lastSubProgramPriceVersion = getLastVersion(subProgram.priceVersions || [], 'effectiveDate');
+
+      newSubProgramPriceVersion.value = {
+        subProgram: { _id: subProgram._id, steps },
+        prices: lastSubProgramPriceVersion
+          ? lastSubProgramPriceVersion.prices
+          : steps.map(s => ({ step: s._id, hourlyAmount: 100 })),
+        effectiveDate: CompaniDate().startOf(DAY).toISO(),
+        minEffectiveDate: lastSubProgramPriceVersion
+          ? CompaniDate(lastSubProgramPriceVersion.effectiveDate).add('P1D').toISO()
+          : '',
+      };
+      subProgramPriceVersionCreationModal.value = true;
+    };
+
+    const resetSubProgramPriceVersionCreationModal = () => {
+      newSubProgramPriceVersion.value = { prices: [], subProgram: {}, effectiveDate: '' };
+      v$.value.newSubProgramPriceVersion.$reset();
+    };
+
+    const addSubProgramPriceVersion = async (subProgramId) => {
+      try {
+        modalLoading.value = true;
+        v$.value.newSubProgramPriceVersion.$touch();
+        if (v$.value.newSubProgramPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        await SubPrograms.update(
+          subProgramId,
+          { ...omit(newSubProgramPriceVersion.value, ['subProgram', 'minEffectiveDate']) }
+        );
+        subProgramPriceVersionCreationModal.value = false;
+      } catch (e) {
+        console.error(e);
+        if (e.data.statusCode === 403 && e.data.message) return NotifyWarning(e.data.message);
+        NotifyNegative('Erreur lors de l\'édition des tarifs horaires du sous-programme.');
+      } finally {
+        await refreshProgram();
+        modalLoading.value = false;
+      }
+    };
+
+    // SubProgram price version history
+    const openHistoryModal = (subProgram) => {
+      selectedSubProgram.value = subProgram;
+      subProgramPriceVersionHistoryModal.value = true;
+    };
 
     // Unlocking step validation
     const isLocked = step => areStepsLocked.value[step._id];
@@ -285,12 +378,6 @@ export default {
       duplicateActivity,
       resetActivityReuseModal,
     } = useActivityReuseModal(modalLoading, refreshProgram, currentStepId);
-
-    const rules = computed(() => ({
-      program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
-    }));
-
-    const v$ = useVuelidate(rules, { program });
 
     const openedStep = computed(() => $store.state.program.openedStep);
 
@@ -504,6 +591,10 @@ export default {
       validateUnlockingEditionModal,
       subProgramsReusingStepToBeUnlocked,
       stepToBeUnlocked,
+      subProgramPriceVersionCreationModal,
+      newSubProgramPriceVersion,
+      subProgramPriceVersionHistoryModal,
+      selectedSubProgram,
       // Computed
       v$,
       newStepValidations,
@@ -554,6 +645,10 @@ export default {
       getStepTypeIcon,
       CompaniDuration,
       getStepSubTitle,
+      openPriceVersionCreationModal,
+      resetSubProgramPriceVersionCreationModal,
+      addSubProgramPriceVersion,
+      openHistoryModal,
     };
   },
 };
