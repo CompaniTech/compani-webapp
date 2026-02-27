@@ -266,7 +266,7 @@ export default {
         subProgram: { _id: subProgram._id, steps },
         prices: lastSubProgramPriceVersion
           ? lastSubProgramPriceVersion.prices
-          : steps.map(s => ({ step: s._id, hourlyAmount: '' })),
+          : steps.map(s => ({ step: s._id, hourlyAmount: 100 })),
         effectiveDate: CompaniDate().startOf(DAY).toISO(),
         minEffectiveDate: lastSubProgramPriceVersion
           ? CompaniDate(lastSubProgramPriceVersion.effectiveDate).add('P1D').toISO()
