@@ -12,7 +12,6 @@
     <div class="filters-container">
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
     </div>
-    <!-- <div>{{ data }}</div> -->
     <trainer-billing-infos-card v-for="trainerInfos of Object.values(data)" :key="trainerInfos._id"
       :trainer-infos="trainerInfos" />
   </q-page>
