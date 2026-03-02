@@ -14,7 +14,7 @@
     </div>
     <!-- <div>{{ data }}</div> -->
     <trainer-billing-infos-card v-for="trainerInfos of Object.values(data)" :key="trainerInfos._id"
-      :trainer-identity="trainerInfos.identity" :courses="trainerInfos.courses" />
+      :trainer-infos="trainerInfos" />
   </q-page>
 </template>
 <script>

@@ -1,15 +1,62 @@
 <template>
   <q-card class="container clickable cursor-pointer" flat>
-    <q-expansion-item @click="showDetails()" class="header" :label="formatIdentity(trainerIdentity, 'FL')">
+    <q-expansion-item @click="showDetails()" class="header">
+      <template #header>
+        <div class="row items-center full-width">
+          <span class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+          <span class="text-weight-bold text-orange-400">
+            &nbsp;- à régler : {{ formattedTrainerDurations.notPaid }} (dont
+            &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
+          </span>
+          &nbsp;/&nbsp;
+          <span class="text-copper-500">
+            réglé : {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }}
+            &nbsp;d'absence)
+          </span>
+        </div>
+      </template>
       <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
-        <q-expansion-item v-for="course of coursesWithComputedData" :key="course._id" :label="course.name"
-          @click="showCourseDetails(course._id)" class=" q-ma-sm bg-white">
+        <q-expansion-item v-for="course of coursesWithComputedData" :key="course._id" class="q-ma-sm bg-white"
+          @click="showCourseDetails(course._id)">
+          <template #header>
+            <div class="full-width">
+              <span class="text-weight-bold text-copper-600">{{ course.name }}</span>
+            </div>
+          </template>
           <div class="q-pt-sm" v-if="areCourseDetailsVisible[course._id]">
             <div v-for="stepName of Object.keys(course.singleTraineeSlots)" :key="stepName" class="q-pa-sm q-pl-md">
-              <span class="text-italic">{{ stepName }}</span> : {{ course.totalsByStep[stepName].toPay }} à régler,
+              <span class="text-italic">{{ stepName }}</span>
+              &nbsp;:&nbsp;
+              <span class="text-orange-400">{{ course.totalsByStep[stepName].toPay }} à régler</span>,
               {{ course.totalsByStep[stepName].paid }} réglées.
             </div>
             <ni-expanding-table :data="course.rows" :columns="singleSlotColumns" />
+          </div>
+        </q-expansion-item>
+        <q-expansion-item class="q-ma-sm bg-white" v-if="Object.keys(trainerInfos.collectiveSlots).length">
+          <template #header>
+            <div class="full-width">
+              <span class="text-weight-bold text-copper-600"> Sessions collectives</span>
+            </div>
+          </template>
+          <ni-banner class="bg-copper-grey-100 q-pa-lg" icon="info_outline">
+              <template #message>
+                <span>Attention, les créneaux qui n'ont pas les mêmes horaires de début et de fin sont comptés
+                    séparément.</span>
+                <span class="text-weight-bold text-orange-400 q-ma-md">
+                  <br> À régler : {{ formattedCollectiveSlotsDurations.notPaid }} (dont
+                  &nbsp;{{ formattedCollectiveSlotsDurations.notPaidAbsence }} d'absence)
+                </span>
+                &nbsp;/&nbsp;
+                <span class="text-copper-500">
+                  réglé : {{ formattedCollectiveSlotsDurations.paid }} (dont
+                  &nbsp;{{ formattedCollectiveSlotsDurations.notPaid }} d'absence)
+                </span>
+              </template>
+            </ni-banner>
+          <div v-for="day of Object.keys(trainerInfos.collectiveSlots.slots)" :key="day">
+            <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">Session du {{ day }}</q-item-label>
+            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day]" :columns="collectiveSlotsColumns" />
           </div>
         </q-expansion-item>
       </div>
@@ -20,27 +67,29 @@
 <script>
 
 import { ref, toRefs, computed } from 'vue';
-import { LONG_DURATION_H_MM, PAID, NOT_PAID, DD_MM_YYYY, HHhMM } from '@data/constants';
+import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, PAID, NOT_PAID } from '@data/constants';
 import { formatIdentity } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
 import ExpandingTable from '@components/table/ExpandingTable';
+import Banner from '@components/Banner';
 import { SLOT_STATUS } from '../../../../core/data/constants';
 
 export default {
   name: 'TrainerBillingInfosCard',
   props: {
-    trainerIdentity: { type: Object, default: () => ({}) },
-    courses: { type: Array, default: () => ([]) },
-    collectiveSlots: { type: Object, default: () => ({}) },
+    trainerInfos: { type: Object, default: () => ({}) },
   },
   components: {
     'ni-expanding-table': ExpandingTable,
+    'ni-banner': Banner,
   },
   setup (props) {
-    const { courses } = toRefs(props);
+    const { trainerInfos } = toRefs(props);
     const displayDetails = ref(false);
-    const areCourseDetailsVisible = ref(Object.fromEntries(courses.value.map(course => [course._id, false])));
+    const areCourseDetailsVisible = ref(
+      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
+    );
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -69,17 +118,58 @@ export default {
         name: 'isAbsence',
         label: 'Absence',
         field: 'isAbsence',
+        align: 'center',
         format: value => (value ? 'Oui' : 'Non'),
       },
       {
         name: 'status',
         label: 'Statut',
         field: 'status',
+        align: 'center',
         format: value => SLOT_STATUS[value],
       },
     ]);
 
-    const coursesWithComputedData = computed(() => courses.value.map((course) => {
+    const collectiveSlotsColumns = computed(() => [
+      { name: 'traineeName', label: 'Apprenant', field: 'traineeName', align: 'left' },
+      {
+        name: 'startDate',
+        label: 'Début',
+        field: 'startDate',
+        align: 'center',
+        format: value => CompaniDate(value).format(`${DD_MM_YYYY} ${HHhMM}`),
+      },
+      {
+        name: 'endDate',
+        label: 'Fin',
+        field: 'endDate',
+        align: 'center',
+        format: value => CompaniDate(value).format(`${DD_MM_YYYY} ${HHhMM}`),
+      },
+      {
+        name: 'duration',
+        label: 'Durée (h)',
+        field: 'duration',
+        align: 'center',
+        format: value => CompaniDuration(value).format(LONG_DURATION_H_MM),
+      },
+      {
+        name: 'isAbsence',
+        label: 'Absence',
+        field: 'isAbsence',
+        align: 'center',
+        format: value => (value ? 'Oui' : 'Non'),
+      },
+      {
+        name: 'status',
+        label: 'Statut',
+        field: 'status',
+        align: 'center',
+        format: value => SLOT_STATUS[value],
+      },
+    ]);
+
+    const coursesWithComputedData = computed(() => trainerInfos.value.courses.map((course) => {
       const singleSlots = Object.entries(course.singleTraineeSlots || {});
 
       const rows = singleSlots.flatMap(([stepName, slots]) => slots.map(slot => ({ stepName, ...slot })));
@@ -101,8 +191,47 @@ export default {
         };
       });
 
-      return { ...course, rows, totalsByStep };
+      const {
+        paidSingleSlotsDuration,
+        paidSingleSlotsAbsenceDuration,
+        notPaidSingleSlotsDuration,
+        notPaidSingleSlotsAbsenceDuration,
+      } = course;
+
+      return {
+        ...course,
+        paidSingleSlotsDuration: CompaniDuration(paidSingleSlotsDuration).format(LONG_DURATION_H_MM),
+        paidSingleSlotsAbsenceDuration: CompaniDuration(paidSingleSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+        notPaidSingleSlotsDuration: CompaniDuration(notPaidSingleSlotsDuration).format(LONG_DURATION_H_MM),
+        notPaidSingleSlotsAbsenceDuration: CompaniDuration(notPaidSingleSlotsAbsenceDuration)
+          .format(LONG_DURATION_H_MM),
+        rows,
+        totalsByStep,
+      };
     }));
+
+    const formattedTrainerDurations = computed(() => ({
+      notPaid: CompaniDuration(trainerInfos.value.totalNotPaidSlotsDuration).format(LONG_DURATION_H_MM),
+      notPaidAbsence: CompaniDuration(trainerInfos.value.totalNotPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+      paid: CompaniDuration(trainerInfos.value.totalPaidSlotsDuration).format(LONG_DURATION_H_MM),
+      paidAbsence: CompaniDuration(trainerInfos.value.totalPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+    }));
+
+    const formattedCollectiveSlotsDurations = computed(() => {
+      const {
+        notPaidCollectiveSlotsDuration,
+        notPaidCollectiveSlotsAbsenceDuration,
+        paidCollectiveSlotsDuration,
+        paidCollectiveSlotsAbsenceDuration,
+      } = trainerInfos.value.collectiveSlots.globalInfos;
+
+      return {
+        notPaid: CompaniDuration(notPaidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
+        notPaidAbsence: CompaniDuration(notPaidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+        paid: CompaniDuration(paidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
+        paidAbsence: CompaniDuration(paidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+      };
+    });
 
     const showDetails = () => { displayDetails.value = !displayDetails.value; };
 
@@ -117,6 +246,9 @@ export default {
       // Computed
       singleSlotColumns,
       coursesWithComputedData,
+      collectiveSlotsColumns,
+      formattedTrainerDurations,
+      formattedCollectiveSlotsDurations,
       // Methods
       formatIdentity,
       showDetails,
