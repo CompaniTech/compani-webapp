@@ -48,7 +48,8 @@
                 <div v-else class="company-name">{{ col.value }}</div>
               </template>
               <template v-else-if="col.name === 'actions'">
-                <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense />
+                <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense
+                  :disable="disablePaymentSelection(props.row.courseBill.payer)" />
               </template>
               <template v-else>{{ col.value }}</template>
           </q-td>
@@ -84,7 +85,7 @@ import Button from '@components/Button';
 import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED } from '@data/constants';
 import CoursePayments from '@api/CoursePayments';
 import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
-import { formatPrice, sortStrings, formatQuantity } from '@helpers/utils';
+import { formatPrice, sortStrings, formatQuantity, getLastVersion } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
@@ -284,6 +285,12 @@ export default {
       selectedPayments.value = value ? paymentList.value.map(p => p._id) : [];
     };
 
+    const disablePaymentSelection = (payer) => {
+      if (!(payer.iban && payer.bic)) return true;
+      const lastMandate = getLastVersion(payer.debitMandates, 'createdAt');
+      return !(get(lastMandate, 'signedAt') && get(lastMandate, 'file.link'));
+    };
+
     let timeout;
     watch(selectedStatus, () => {
       clearTimeout(timeout);
@@ -364,6 +371,7 @@ export default {
       editPaymentList,
       resetMultiplePaymentEditionModal,
       onSort,
+      disablePaymentSelection,
     };
   },
 };
