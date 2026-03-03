@@ -53,14 +53,14 @@
           <template #header>
             <div class="full-width align-center">
               <span class="text-weight-bold text-copper-600"> Sessions collectives</span>
-              <span v-if="displayDuration(formattedCollectiveSlotsDurations.notPaid)"
+              <span v-if="displayDuration(formattedCollectiveSlots.notPaid)"
                 class="text-weight-bold text-orange-400 q-ma-md">
-                <br> À régler : {{ formattedCollectiveSlotsDurations.notPaid }} (dont
-                &nbsp;{{ formattedCollectiveSlotsDurations.notPaidAbsence }} d'absence)
+                <br> À régler : {{ formattedCollectiveSlots.notPaid }} (dont
+                &nbsp;{{ formattedCollectiveSlots.notPaidAbsence }} d'absence)
               </span>
-              <span class="text-copper-500" v-if="displayDuration(formattedCollectiveSlotsDurations.paid)">
-                &nbsp;/ réglé : {{ formattedCollectiveSlotsDurations.paid }} (dont
-                &nbsp;{{ formattedCollectiveSlotsDurations.paidAbsence }} d'absence)
+              <span class="text-copper-500" v-if="displayDuration(formattedCollectiveSlots.paid)">
+                &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} (dont
+                &nbsp;{{ formattedCollectiveSlots.paidAbsence }} d'absence)
               </span>
             </div>
           </template>
@@ -70,9 +70,21 @@
                     séparément.</span>
               </template>
             </ni-banner>
-          <div v-for="day of Object.keys(trainerInfos.collectiveSlots.slots)" :key="day">
-            <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">Session du {{ day }}</q-item-label>
-            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day]" :columns="collectiveSlotsColumns"
+          <div v-for="day of Object.keys(formattedCollectiveSlots.slots)" :key="day">
+            <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">
+              Session du {{ day }}
+              <span v-if="displayDuration(formattedCollectiveSlots.slots[day].toPayDuration)"
+                class="text-weight-bold text-orange-400 q-ma-md">
+                &nbsp;À régler : {{ formattedCollectiveSlots.slots[day].toPayDuration }}
+                ({{ formattedCollectiveSlots.slots[day].toPayAmount }})
+              </span>
+              <span class="text-copper-500"
+                v-if="displayDuration(formattedCollectiveSlots.slots[day].paidDuration)">
+                &nbsp;/ réglé : {{ formattedCollectiveSlots.slots[day].paidDuration }}
+                &nbsp;({{ formattedCollectiveSlots.slots[day].paidAmount }})
+              </span>
+            </q-item-label>
+            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns"
               v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]" />
           </div>
         </q-expansion-item>
@@ -252,19 +264,28 @@ export default {
       paidAbsence: CompaniDuration(trainerInfos.value.totalPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
     }));
 
-    const formattedCollectiveSlotsDurations = computed(() => {
-      const {
-        notPaidCollectiveSlotsDuration,
-        notPaidCollectiveSlotsAbsenceDuration,
-        paidCollectiveSlotsDuration,
-        paidCollectiveSlotsAbsenceDuration,
-      } = trainerInfos.value.collectiveSlots.globalInfos;
+    const formattedCollectiveSlots = computed(() => {
+      const { slots, totals } = trainerInfos.value.collectiveSlots;
+
+      const formattedSlots = Object.fromEntries(
+        Object.entries(slots).map(([day, slotGroup]) => [
+          day,
+          {
+            ...slotGroup,
+            toPayDuration: CompaniDuration(slotGroup.toPayDuration).format(LONG_DURATION_H_MM),
+            paidDuration: CompaniDuration(slotGroup.paidDuration).format(LONG_DURATION_H_MM),
+            toPayAmount: formatStringToPrice(slotGroup.toPayAmount),
+            paidAmount: formatStringToPrice(slotGroup.paidAmount),
+          },
+        ])
+      );
 
       return {
-        notPaid: CompaniDuration(notPaidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
-        notPaidAbsence: CompaniDuration(notPaidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
-        paid: CompaniDuration(paidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
-        paidAbsence: CompaniDuration(paidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+        slots: formattedSlots,
+        notPaid: CompaniDuration(totals.notPaidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
+        notPaidAbsence: CompaniDuration(totals.notPaidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+        paid: CompaniDuration(totals.paidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
+        paidAbsence: CompaniDuration(totals.paidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
       };
     });
 
@@ -287,7 +308,7 @@ export default {
       coursesWithFormattedData,
       collectiveSlotsColumns,
       formattedTrainerDurations,
-      formattedCollectiveSlotsDurations,
+      formattedCollectiveSlots,
       // Methods
       formatIdentity,
       showDetails,
