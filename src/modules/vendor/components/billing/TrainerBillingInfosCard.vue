@@ -45,7 +45,8 @@
                 &nbsp;({{ course.singleTraineeSlots[stepName].paidAmount }})
               </span>
             </div>
-            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns" />
+            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns"
+              v-model:pagination="coursePaginations[course._id]" :rows-per-page="[10, 20]" />
           </div>
         </q-expansion-item>
         <q-expansion-item class="q-ma-sm bg-white" v-if="Object.keys(trainerInfos.collectiveSlots.slots).length">
@@ -71,7 +72,8 @@
             </ni-banner>
           <div v-for="day of Object.keys(trainerInfos.collectiveSlots.slots)" :key="day">
             <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">Session du {{ day }}</q-item-label>
-            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day]" :columns="collectiveSlotsColumns" />
+            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day]" :columns="collectiveSlotsColumns"
+              v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]" />
           </div>
         </q-expansion-item>
       </div>
@@ -104,6 +106,14 @@ export default {
     const displayDetails = ref(false);
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
+    );
+    const coursePaginations = ref(
+      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, { page: 1, rowsPerPage: 10 }]))
+    );
+    const collectiveSlotsPaginations = ref(
+      Object.fromEntries(
+        Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, { page: 1, rowsPerPage: 10 }])
+      )
     );
 
     const singleSlotColumns = computed(() => [
@@ -270,6 +280,8 @@ export default {
       // Data
       displayDetails,
       areCourseDetailsVisible,
+      coursePaginations,
+      collectiveSlotsPaginations,
       // Computed
       singleSlotColumns,
       coursesWithFormattedData,
