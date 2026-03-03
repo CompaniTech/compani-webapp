@@ -19,7 +19,9 @@
           @click="showCourseDetails(course._id)">
           <template #header>
             <div class="full-width">
-              <span class="text-weight-bold text-copper-600">{{ course.name }}</span>
+              <router-link :to="goToCourse(course._id)" @click.stop>
+                <span class="text-weight-bold text-copper-600 clickable-name">{{ course.name }}</span>
+              </router-link>
               <span v-if="displayDuration(course.notPaidSingleSlotsDuration)"
                 class="text-weight-bold text-orange-400">
                   <br> À régler : {{ course.notPaidSingleSlotsDuration }} (dont
@@ -87,7 +89,18 @@
               </span>
             </q-item-label>
             <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns"
-              v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]" />
+              v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]">
+              <template #row="{ props }">
+                <q-td v-for="col in props.cols" :key="col.name" :props="props" :class="[col.class, 'company']">
+                  <template v-if="col.name === 'traineeName'">
+                    <router-link :to="goToCourse(props.row.courseId)" @click.stop>
+                      <span class="text-weight-bold text-copper-600 clickable-name">{{ col.value }}</span>
+                    </router-link>
+                  </template>
+                  <template v-else>{{ col.value }}</template>
+                </q-td>
+              </template>
+            </ni-expanding-table>
           </div>
         </q-expansion-item>
       </div>
@@ -178,6 +191,7 @@ export default {
 
     const collectiveSlotsColumns = computed(() => [
       { name: 'traineeName', label: 'Apprenant', field: 'traineeName', align: 'left' },
+      { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
       {
         name: 'startDate',
         label: 'Début',
@@ -299,6 +313,12 @@ export default {
 
     const displayDuration = value => value !== '0min';
 
+    const goToCourse = courseId => ({
+      name: 'ni management blended courses info',
+      params: { courseId },
+      query: { defaultTab: 'traineeFollowUp' },
+    });
+
     return {
       // Data
       displayDetails,
@@ -316,6 +336,7 @@ export default {
       showDetails,
       showCourseDetails,
       displayDuration,
+      goToCourse,
     };
   },
 };
