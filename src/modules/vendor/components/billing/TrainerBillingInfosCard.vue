@@ -66,8 +66,10 @@
           </template>
           <ni-banner class="bg-copper-grey-100 q-pa-lg" icon="info_outline">
               <template #message>
-                <span>Attention, les créneaux qui n'ont pas les mêmes horaires de début et de fin sont comptés
-                    séparément.</span>
+                <span>
+                  Attention, les créneaux qui n'ont pas les mêmes horaires de début et de fin sont comptés séparément.
+                  <br> Un créneau est comptabilisé dans les heures d'absence si tous les apprenants sont absents.
+                  </span>
               </template>
             </ni-banner>
           <div v-for="day of Object.keys(formattedCollectiveSlots.slots)" :key="day">
