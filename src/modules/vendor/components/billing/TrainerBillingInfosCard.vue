@@ -15,7 +15,7 @@
             </span>
           </div>
           <ni-primary-button class="q-ma-md" label="Régler les créneaux sélectionnés"
-            :disabled="selectedCourseSlots.length === 0" />
+            @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
       <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
@@ -56,7 +56,8 @@
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense />
+                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                      :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
                   </q-td>
@@ -111,7 +112,8 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions'">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense />
+                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                      :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
                 </q-td>
@@ -122,19 +124,27 @@
       </div>
     </q-expansion-item>
   </q-card>
+
+  <course-slot-list-validation-modal v-model="courseSlotListValidationModal" :course-slots-to-pay="courseSlotsToPay"
+    :validations="v$.courseSlotsToPay" @hide="resetSlotListValidationInfos()" @submit="updateSlotList()"
+    @cancel="resetSlotListValidationInfos(true)" />
 </template>
 
 <script>
 
-import { ref, toRefs, computed } from 'vue';
-import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM } from '@data/constants';
+import { ref, toRefs, computed, watch } from 'vue';
+import { required } from '@vuelidate/validators';
+import useVuelidate from '@vuelidate/core';
+import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID } from '@data/constants';
 import { formatIdentity, formatStringToPrice } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
 import ExpandingTable from '@components/table/ExpandingTable';
 import Banner from '@components/Banner';
 import Button from '@components/PrimaryButton';
-import { SLOT_STATUS } from '../../../../core/data/constants';
+import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
+import CourseSlotListValidationModal from 'src/modules/vendor/components/billing/CourseSlotListValidationModal';
+import CourseSlots from '@api/CourseSlots';
 
 export default {
   name: 'TrainerBillingInfosCard',
@@ -145,8 +155,10 @@ export default {
     'ni-expanding-table': ExpandingTable,
     'ni-banner': Banner,
     'ni-primary-button': Button,
+    'course-slot-list-validation-modal': CourseSlotListValidationModal,
   },
-  setup (props) {
+  emits: ['refresh'],
+  setup (props, { emit }) {
     const { trainerInfos } = toRefs(props);
     const displayDetails = ref(false);
     const areCourseDetailsVisible = ref(
@@ -161,6 +173,8 @@ export default {
       )
     );
     const selectedCourseSlots = ref([]);
+    const courseSlotsToPay = ref({ _ids: [], trainerBillNumber: '' });
+    const courseSlotListValidationModal = ref(false);
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -326,6 +340,12 @@ export default {
       };
     });
 
+    const rules = computed(() => ({
+      courseSlotsToPay: { trainerBillNumber: { required } },
+    }));
+
+    const v$ = useVuelidate(rules, { courseSlotsToPay });
+
     const showDetails = () => { displayDetails.value = !displayDetails.value; };
 
     const showCourseDetails = (courseId) => {
@@ -340,6 +360,37 @@ export default {
       query: { defaultTab: 'traineeFollowUp' },
     });
 
+    const openCourseSlotListValidationModal = () => {
+      courseSlotsToPay.value._ids = selectedCourseSlots.value;
+      courseSlotListValidationModal.value = true;
+    };
+
+    const resetSlotListValidationInfos = (displayMessage = false) => {
+      courseSlotListValidationModal.value = false;
+      if (displayMessage) NotifyPositive('Modification des créneaux annulées.');
+
+      courseSlotsToPay.value = { _ids: [], trainerBillNumber: '' };
+      v$.value.courseSlotsToPay.$reset();
+    };
+
+    const updateSlotList = async () => {
+      try {
+        v$.value.courseSlotsToPay.$touch();
+        if (v$.value.courseSlotsToPay.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        await CourseSlots.updateSlotList(courseSlotsToPay.value);
+        emit('refresh');
+        courseSlotListValidationModal.value = false;
+        selectedCourseSlots.value = [];
+        NotifyPositive('Créneaux modifiés.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification des créneaux.');
+      }
+    };
+
+    watch(trainerInfos, () => { selectedCourseSlots.value = []; });
+
     return {
       // Data
       displayDetails,
@@ -347,6 +398,11 @@ export default {
       coursePaginations,
       collectiveSlotsPaginations,
       selectedCourseSlots,
+      courseSlotsToPay,
+      courseSlotListValidationModal,
+      PAID,
+      // Validation
+      v$,
       // Computed
       singleSlotColumns,
       coursesWithFormattedData,
@@ -359,6 +415,9 @@ export default {
       showCourseDetails,
       displayDuration,
       goToCourse,
+      openCourseSlotListValidationModal,
+      resetSlotListValidationInfos,
+      updateSlotList,
     };
   },
 };
