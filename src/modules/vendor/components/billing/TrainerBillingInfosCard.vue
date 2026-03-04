@@ -220,6 +220,12 @@ export default {
         align: 'center',
         format: value => SLOT_STATUS[value],
       },
+      {
+        name: 'trainerBillNumber',
+        label: 'Facture',
+        field: 'trainerBillNumber',
+        align: 'center',
+      },
       { name: 'actions', label: '', field: '', align: 'right' },
     ]);
 
@@ -267,6 +273,12 @@ export default {
         field: 'status',
         align: 'center',
         format: value => SLOT_STATUS[value],
+      },
+      {
+        name: 'trainerBillNumber',
+        label: 'Facture',
+        field: 'trainerBillNumber',
+        align: 'center',
       },
       { name: 'actions', label: '', field: '', align: 'right' },
     ]);
