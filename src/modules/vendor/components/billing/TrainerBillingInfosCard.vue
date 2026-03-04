@@ -110,7 +110,7 @@
                       <span class="text-weight-bold text-copper-600 clickable-name">{{ col.value }}</span>
                     </router-link>
                   </template>
-                  <template v-if="col.name === 'actions'">
+                  <template v-else-if="col.name === 'actions'">
                     <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense />
                   </template>
                   <template v-else>{{ col.value }}</template>
