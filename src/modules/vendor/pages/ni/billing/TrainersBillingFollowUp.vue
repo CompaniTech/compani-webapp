@@ -12,7 +12,8 @@
     <div class="filters-container">
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
     </div>
-    <div>{{ data }}</div>
+    <trainer-billing-infos-card v-for="trainerInfos of Object.values(data)" :key="trainerInfos._id"
+      :trainer-infos="trainerInfos" />
   </q-page>
 </template>
 <script>
@@ -30,6 +31,7 @@ import { MONTH } from '@data/constants';
 import { formatAndSortIdentityOptions } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
+import TrainerBillingInfosCard from 'src/modules/vendor/components/billing/TrainerBillingInfosCard';
 
 export default {
   name: 'TrainersBillingFollowUp',
@@ -38,6 +40,7 @@ export default {
     'ni-date-range': DateRange,
     'ni-select': Select,
     'ni-button': Button,
+    'trainer-billing-infos-card': TrainerBillingInfosCard,
   },
   setup () {
     const metaInfo = { title: 'Suivi de la facturation des intervenant·es' };
