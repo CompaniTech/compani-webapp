@@ -150,6 +150,7 @@ export default {
   name: 'TrainerBillingInfosCard',
   props: {
     trainerInfos: { type: Object, default: () => ({}) },
+    trainerId: { type: String, required: true },
   },
   components: {
     'ni-expanding-table': ExpandingTable,
@@ -159,7 +160,7 @@ export default {
   },
   emits: ['refresh'],
   setup (props, { emit }) {
-    const { trainerInfos } = toRefs(props);
+    const { trainerInfos, trainerId } = toRefs(props);
     const displayDetails = ref(false);
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
@@ -173,7 +174,7 @@ export default {
       )
     );
     const selectedCourseSlots = ref([]);
-    const courseSlotsToPay = ref({ _ids: [], trainerBillNumber: '' });
+    const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
     const courseSlotListValidationModal = ref(false);
 
     const singleSlotColumns = computed(() => [
@@ -353,7 +354,7 @@ export default {
     });
 
     const rules = computed(() => ({
-      courseSlotsToPay: { trainerBillNumber: { required } },
+      courseSlotsToPay: { billNumber: { required } },
     }));
 
     const v$ = useVuelidate(rules, { courseSlotsToPay });
@@ -381,7 +382,7 @@ export default {
       courseSlotListValidationModal.value = false;
       if (displayMessage) NotifyPositive('Modification des créneaux annulées.');
 
-      courseSlotsToPay.value = { _ids: [], trainerBillNumber: '' };
+      courseSlotsToPay.value = { _ids: [], billNumber: '' };
       v$.value.courseSlotsToPay.$reset();
     };
 
@@ -390,7 +391,7 @@ export default {
         v$.value.courseSlotsToPay.$touch();
         if (v$.value.courseSlotsToPay.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        await CourseSlots.updateSlotList(courseSlotsToPay.value);
+        await CourseSlots.updateSlotList({ ...courseSlotsToPay.value, trainer: trainerId.value });
         emit('refresh');
         courseSlotListValidationModal.value = false;
         selectedCourseSlots.value = [];

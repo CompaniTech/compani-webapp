@@ -6,8 +6,8 @@
     <ni-banner class="bg-copper-grey-100 q-ma-md" icon="info_outline">
       <template #message>{{ message }}</template>
     </ni-banner>
-    <ni-input caption="Numéro de facture de l'intervenant" in-modal v-model="courseSlotsToPay.trainerBillNumber"
-      :error="validations.trainerBillNumber.$error" last required-field />
+    <ni-input caption="Numéro de facture de l'intervenant" in-modal v-model="courseSlotsToPay.billNumber"
+      :error="validations.billNumber.$error" last required-field />
     <template #footer>
       <div class="q-pl-lg">Cette opération est définitive. Confirmez-vous&nbsp;?</div>
       <div class="row justify-end q-ma-md">
