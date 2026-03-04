@@ -126,7 +126,7 @@
   </q-card>
 
   <course-slot-list-validation-modal v-model="courseSlotListValidationModal" :course-slots-to-pay="courseSlotsToPay"
-    :validations="v$.courseSlotsToPay" @hide="resetSlotListValidationInfos()" @submit="updateSlotList()"
+    :validations="v$.courseSlotsToPay" @hide="resetSlotListValidationInfos" @submit="updateSlotList"
     @cancel="resetSlotListValidationInfos(true)" />
 </template>
 

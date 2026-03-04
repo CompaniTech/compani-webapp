@@ -13,7 +13,7 @@
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
     </div>
     <trainer-billing-infos-card v-for="trainerInfos of Object.values(data)" :key="trainerInfos._id"
-      :trainer-infos="trainerInfos" @refresh="refreshCourseSlots()" />
+      :trainer-infos="trainerInfos" @refresh="refreshCourseSlots" />
   </q-page>
 </template>
 <script>
