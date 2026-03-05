@@ -2,16 +2,20 @@
   <q-card class="container clickable cursor-pointer" flat>
     <q-expansion-item @click="showDetails()" class="q-my-md">
       <template #header>
-        <div class="row items-center full-width">
-          <span class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
-          <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
-            &nbsp;- À régler : {{ formattedTrainerDurations.notPaid }} (dont
-            &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
-          </span>
-          <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
-            &nbsp;/ réglé : {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }}
-            &nbsp;d'absence)
-          </span>
+        <div class="row items-center justify-between full-width">
+          <div>
+            <span class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+            <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
+              &nbsp;- À régler : {{ formattedTrainerDurations.notPaid }} (dont
+              &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
+            </span>
+            <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
+              &nbsp;/ réglé : {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }}
+              &nbsp;d'absence)
+            </span>
+          </div>
+          <ni-primary-button class="q-ma-md" label="Régler les créneaux sélectionnés"
+            @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
       <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
@@ -48,7 +52,17 @@
               </span>
             </div>
             <ni-expanding-table :data="course.rows" :columns="singleSlotColumns"
-              v-model:pagination="coursePaginations[course._id]" :rows-per-page="[10, 20]" />
+              v-model:pagination="coursePaginations[course._id]" :rows-per-page="[10, 20]">
+              <template #row="{ props }">
+                <q-td v-for="col in props.cols" :key="col.name" :props="props">
+                  <template v-if="col.name === 'actions'">
+                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                      :disable="props.row.status === PAID" />
+                  </template>
+                  <template v-else>{{ col.value }}</template>
+                  </q-td>
+              </template>
+            </ni-expanding-table>
           </div>
         </q-expansion-item>
         <q-expansion-item class="q-ma-sm bg-white" v-if="Object.keys(trainerInfos.collectiveSlots.slots).length">
@@ -91,11 +105,15 @@
             <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns"
               v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]">
               <template #row="{ props }">
-                <q-td v-for="col in props.cols" :key="col.name" :props="props" :class="[col.class, 'company']">
+                <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'traineeName'">
                     <router-link :to="goToCourse(props.row.courseId)" @click.stop>
                       <span class="text-weight-bold text-copper-600 clickable-name">{{ col.value }}</span>
                     </router-link>
+                  </template>
+                  <template v-else-if="col.name === 'actions'">
+                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                      :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
                 </q-td>
@@ -104,32 +122,45 @@
           </div>
         </q-expansion-item>
       </div>
-  </q-expansion-item>
-</q-card>
+    </q-expansion-item>
+  </q-card>
+
+  <course-slot-list-validation-modal v-model="courseSlotListValidationModal" :course-slots-to-pay="courseSlotsToPay"
+    :validations="v$.courseSlotsToPay" @hide="resetSlotListValidationInfos" @submit="updateSlotList"
+    @cancel="resetSlotListValidationInfos(true)" />
 </template>
 
 <script>
 
-import { ref, toRefs, computed } from 'vue';
-import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM } from '@data/constants';
+import { ref, toRefs, computed, watch } from 'vue';
+import { required } from '@vuelidate/validators';
+import useVuelidate from '@vuelidate/core';
+import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID } from '@data/constants';
 import { formatIdentity, formatStringToPrice } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
 import ExpandingTable from '@components/table/ExpandingTable';
 import Banner from '@components/Banner';
-import { SLOT_STATUS } from '../../../../core/data/constants';
+import Button from '@components/PrimaryButton';
+import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
+import CourseSlotListValidationModal from 'src/modules/vendor/components/billing/CourseSlotListValidationModal';
+import CourseSlots from '@api/CourseSlots';
 
 export default {
   name: 'TrainerBillingInfosCard',
   props: {
     trainerInfos: { type: Object, default: () => ({}) },
+    trainerId: { type: String, required: true },
   },
   components: {
     'ni-expanding-table': ExpandingTable,
     'ni-banner': Banner,
+    'ni-primary-button': Button,
+    'course-slot-list-validation-modal': CourseSlotListValidationModal,
   },
-  setup (props) {
-    const { trainerInfos } = toRefs(props);
+  emits: ['refresh'],
+  setup (props, { emit }) {
+    const { trainerInfos, trainerId } = toRefs(props);
     const displayDetails = ref(false);
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
@@ -142,6 +173,9 @@ export default {
         Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, { page: 1, rowsPerPage: 10 }])
       )
     );
+    const selectedCourseSlots = ref([]);
+    const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
+    const courseSlotListValidationModal = ref(false);
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -187,6 +221,13 @@ export default {
         align: 'center',
         format: value => SLOT_STATUS[value],
       },
+      {
+        name: 'trainerBillNumber',
+        label: 'Facture',
+        field: 'trainerBillNumber',
+        align: 'center',
+      },
+      { name: 'actions', label: '', field: '', align: 'right' },
     ]);
 
     const collectiveSlotsColumns = computed(() => [
@@ -234,6 +275,13 @@ export default {
         align: 'center',
         format: value => SLOT_STATUS[value],
       },
+      {
+        name: 'trainerBillNumber',
+        label: 'Facture',
+        field: 'trainerBillNumber',
+        align: 'center',
+      },
+      { name: 'actions', label: '', field: '', align: 'right' },
     ]);
 
     const coursesWithFormattedData = computed(() => trainerInfos.value.courses.map((course) => {
@@ -305,6 +353,12 @@ export default {
       };
     });
 
+    const rules = computed(() => ({
+      courseSlotsToPay: { billNumber: { required } },
+    }));
+
+    const v$ = useVuelidate(rules, { courseSlotsToPay });
+
     const showDetails = () => { displayDetails.value = !displayDetails.value; };
 
     const showCourseDetails = (courseId) => {
@@ -319,12 +373,49 @@ export default {
       query: { defaultTab: 'traineeFollowUp' },
     });
 
+    const openCourseSlotListValidationModal = () => {
+      courseSlotsToPay.value._ids = selectedCourseSlots.value;
+      courseSlotListValidationModal.value = true;
+    };
+
+    const resetSlotListValidationInfos = (displayMessage = false) => {
+      courseSlotListValidationModal.value = false;
+      if (displayMessage) NotifyPositive('Modification des créneaux annulées.');
+
+      courseSlotsToPay.value = { _ids: [], billNumber: '' };
+      v$.value.courseSlotsToPay.$reset();
+    };
+
+    const updateSlotList = async () => {
+      try {
+        v$.value.courseSlotsToPay.$touch();
+        if (v$.value.courseSlotsToPay.$error) return NotifyWarning('Champ(s) invalide(s).');
+
+        await CourseSlots.updateSlotList({ ...courseSlotsToPay.value, trainer: trainerId.value });
+        emit('refresh');
+        courseSlotListValidationModal.value = false;
+        selectedCourseSlots.value = [];
+        NotifyPositive('Créneaux modifiés.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification des créneaux.');
+      }
+    };
+
+    watch(trainerInfos, () => { selectedCourseSlots.value = []; });
+
     return {
       // Data
       displayDetails,
       areCourseDetailsVisible,
       coursePaginations,
       collectiveSlotsPaginations,
+      selectedCourseSlots,
+      courseSlotsToPay,
+      courseSlotListValidationModal,
+      PAID,
+      // Validation
+      v$,
       // Computed
       singleSlotColumns,
       coursesWithFormattedData,
@@ -337,6 +428,9 @@ export default {
       showCourseDetails,
       displayDuration,
       goToCourse,
+      openCourseSlotListValidationModal,
+      resetSlotListValidationInfos,
+      updateSlotList,
     };
   },
 };
