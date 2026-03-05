@@ -1,5 +1,6 @@
 <template>
-  <q-card class="container clickable cursor-pointer" flat>
+  <q-card v-if="trainerInfos.courses.length || Object.keys(trainerInfos.collectiveSlots.slots).length"
+    class="container clickable cursor-pointer" flat>
     <q-expansion-item @click="showDetails()" class="q-my-md">
       <template #header>
         <div class="row items-center justify-between full-width">
