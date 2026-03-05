@@ -11,9 +11,10 @@
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
+      <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
     </div>
-    <trainer-billing-infos-card v-for="trainerId of Object.keys(data)" :key="trainerId"
-      :trainer-infos="data[trainerId]" @refresh="refreshCourseSlots" :trainer-id="trainerId" />
+    <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
+      :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" :trainer-id="trainerId" />
   </q-page>
 </template>
 <script>
@@ -27,7 +28,7 @@ import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { MONTH } from '@data/constants';
+import { MONTH, SLOT_STATUS } from '@data/constants';
 import { formatAndSortIdentityOptions } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
@@ -55,6 +56,12 @@ export default {
     const min = ref(CompaniDate().endOf(MONTH).subtract('P3M').toISO());
     const max = ref(CompaniDate().startOf(MONTH).add('P3M').toISO());
     const selectedTrainer = ref('');
+    const selectedStatus = ref('');
+
+    const statusOptions = [
+      ...Object.entries(SLOT_STATUS).map(([value, label]) => ({ label, value })),
+      { label: 'Tous', value: '' },
+    ];
 
     const rules = computed(() => ({
       dateRange: {
@@ -85,10 +92,34 @@ export default {
       }
     };
 
-    const data = computed(() => {
-      if (!selectedTrainer.value) return trainerBillingInfos.value;
+    const filterSlotsByStatus = (slotsObj, status) => Object.fromEntries(
+      Object.entries(slotsObj)
+        .map(([key, val]) => {
+          const filteredSlots = val.slots.filter(slot => slot.status === status);
 
-      return pick(trainerBillingInfos.value, selectedTrainer.value);
+          return [key, { ...val, slots: filteredSlots }];
+        })
+        .filter(([, val]) => val.slots.length)
+    );
+
+    const filteredData = computed(() => {
+      let data = trainerBillingInfos.value;
+      if (selectedTrainer.value) data = pick(data, selectedTrainer.value);
+      if (!selectedStatus.value) return data;
+
+      return Object.fromEntries(Object.entries(data).map(([trainerId, trainerInfos]) => [
+        trainerId,
+        {
+          ...trainerInfos,
+          courses: trainerInfos.courses
+            .map(c => ({ ...c, singleTraineeSlots: filterSlotsByStatus(c.singleTraineeSlots, selectedStatus.value) }))
+            .filter(c => Object.keys(c.singleTraineeSlots).length),
+          collectiveSlots: {
+            ...trainerInfos.collectiveSlots,
+            slots: filterSlotsByStatus(trainerInfos.collectiveSlots.slots, selectedStatus.value),
+          },
+        },
+      ]));
     });
 
     const trainerOptions = computed(() => formatAndSortIdentityOptions(
@@ -149,8 +180,10 @@ export default {
       // Data
       dateRange,
       selectedTrainer,
+      selectedStatus,
+      statusOptions,
       // Computed
-      data,
+      filteredData,
       dateRangeErrorMessage,
       trainerOptions,
       v$,
