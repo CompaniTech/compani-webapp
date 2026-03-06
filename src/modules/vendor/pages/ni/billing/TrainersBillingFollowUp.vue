@@ -305,6 +305,7 @@ export default {
 
     const resetFilters = () => {
       selectedTrainer.value = '';
+      selectedStatus.value = '';
     };
 
     const goToPreviousMonth = () => {
@@ -320,7 +321,7 @@ export default {
     };
 
     watch(dateRange, async () => {
-      selectedTrainer.value = '';
+      resetFilters();
       const promises = [refreshCourseSlots()];
 
       return Promise.all(promises);

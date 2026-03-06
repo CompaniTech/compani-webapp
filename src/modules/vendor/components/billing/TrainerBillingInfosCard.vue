@@ -1,7 +1,7 @@
 <template>
   <q-card v-if="trainerInfos.courses.length || Object.keys(trainerInfos.collectiveSlots.slots).length"
     class="container clickable cursor-pointer" flat>
-    <q-expansion-item @click="showDetails()" class="q-my-md">
+    <q-expansion-item v-model="displayDetails" class="q-my-md">
       <template #header>
         <div class="row items-center justify-between full-width">
           <div>
@@ -21,7 +21,7 @@
       </template>
       <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
         <q-expansion-item v-for="course of coursesWithFormattedData" :key="course._id" class="q-ma-sm bg-white"
-          @click="showCourseDetails(course._id)">
+          v-model="areCourseDetailsVisible[course._id]">
           <template #header>
             <div class="full-width">
               <router-link :to="goToCourse(course._id)" @click.stop>
@@ -360,12 +360,6 @@ export default {
 
     const v$ = useVuelidate(rules, { courseSlotsToPay });
 
-    const showDetails = () => { displayDetails.value = !displayDetails.value; };
-
-    const showCourseDetails = (courseId) => {
-      areCourseDetailsVisible.value[courseId] = !areCourseDetailsVisible.value[courseId];
-    };
-
     const displayDuration = value => value !== '0min';
 
     const goToCourse = courseId => ({
@@ -403,7 +397,12 @@ export default {
       }
     };
 
-    watch(trainerInfos, () => { selectedCourseSlots.value = []; });
+    watch(trainerInfos, () => {
+      selectedCourseSlots.value = [];
+      displayDetails.value = false;
+
+      areCourseDetailsVisible.value = Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]));
+    });
 
     return {
       // Data
@@ -425,8 +424,6 @@ export default {
       formattedCollectiveSlots,
       // Methods
       formatIdentity,
-      showDetails,
-      showCourseDetails,
       displayDuration,
       goToCourse,
       openCourseSlotListValidationModal,
