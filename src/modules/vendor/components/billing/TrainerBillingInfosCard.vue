@@ -399,7 +399,6 @@ export default {
 
     watch(trainerInfos, () => {
       selectedCourseSlots.value = [];
-      displayDetails.value = false;
 
       areCourseDetailsVisible.value = Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]));
     });

@@ -116,37 +116,34 @@ export default {
                   let toPayAmount = 0;
                   let paidAmount = 0;
 
-                  const stepSlots = step.slots
-                    .filter(s => s.status === selectedStatus.value)
-                    .map((slot) => {
-                      const duration = CompaniDate(slot.endDate).diff(slot.startDate, MINUTE);
-                      const durObj = CompaniDuration(duration);
+                  const filteredStepSlots = step.slots.filter(s => s.status === selectedStatus.value);
+                  filteredStepSlots.forEach((slot) => {
+                    const duration = CompaniDate(slot.endDate).diff(slot.startDate, MINUTE);
+                    const durObj = CompaniDuration(duration);
 
-                      if (slot.status === NOT_PAID) {
-                        toPayDuration = toPayDuration.add(durObj);
-                        toPayAmount = add(toPayAmount, slot.amount);
+                    if (slot.status === NOT_PAID) {
+                      toPayDuration = toPayDuration.add(durObj);
+                      toPayAmount = add(toPayAmount, slot.amount);
 
-                        notPaidSingleSlotsDuration = notPaidSingleSlotsDuration.add(durObj);
-                        if (slot.isAbsence) {
-                          notPaidSingleSlotsAbsenceDuration = notPaidSingleSlotsAbsenceDuration.add(durObj);
-                        }
-                      } else {
-                        paidDuration = paidDuration.add(durObj);
-                        paidAmount = add(paidAmount, slot.amount);
-
-                        paidSingleSlotsDuration = paidSingleSlotsDuration.add(durObj);
-                        if (slot.isAbsence) {
-                          paidSingleSlotsAbsenceDuration = paidSingleSlotsAbsenceDuration.add(durObj);
-                        }
+                      notPaidSingleSlotsDuration = notPaidSingleSlotsDuration.add(durObj);
+                      if (slot.isAbsence) {
+                        notPaidSingleSlotsAbsenceDuration = notPaidSingleSlotsAbsenceDuration.add(durObj);
                       }
+                    } else {
+                      paidDuration = paidDuration.add(durObj);
+                      paidAmount = add(paidAmount, slot.amount);
 
-                      return slot;
-                    });
+                      paidSingleSlotsDuration = paidSingleSlotsDuration.add(durObj);
+                      if (slot.isAbsence) {
+                        paidSingleSlotsAbsenceDuration = paidSingleSlotsAbsenceDuration.add(durObj);
+                      }
+                    }
+                  });
 
                   return [
                     stepName,
                     {
-                      slots: stepSlots,
+                      slots: filteredStepSlots,
                       toPayDuration: toPayDuration.toISO(),
                       paidDuration: paidDuration.toISO(),
                       toPayAmount,
