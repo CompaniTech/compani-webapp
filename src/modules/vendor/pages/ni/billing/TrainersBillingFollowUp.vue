@@ -318,10 +318,8 @@ export default {
     };
 
     watch(dateRange, async () => {
+      await refreshCourseSlots();
       resetFilters();
-      const promises = [refreshCourseSlots()];
-
-      return Promise.all(promises);
     });
 
     const created = async () => {
