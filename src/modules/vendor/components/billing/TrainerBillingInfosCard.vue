@@ -400,7 +400,9 @@ export default {
     watch(trainerInfos, () => {
       selectedCourseSlots.value = [];
 
-      areCourseDetailsVisible.value = Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]));
+      areCourseDetailsVisible.value = Object.fromEntries(
+        trainerInfos.value.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
+      );
     });
 
     return {
