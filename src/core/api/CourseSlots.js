@@ -10,4 +10,11 @@ export default {
   async delete (slotId) {
     await alenviAxios.delete(`${process.env.API_HOSTNAME}/courseslots/${slotId}`);
   },
+  async list (params) {
+    const courseSlots = await alenviAxios.get(`${process.env.API_HOSTNAME}/courseslots/trainers-billing`, { params });
+    return courseSlots.data.data.courseSlots;
+  },
+  async updateSlotList (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/courseslots/list-edition`, payload);
+  },
 };

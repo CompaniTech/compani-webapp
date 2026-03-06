@@ -442,3 +442,6 @@ export const NO_DATA = 'Aucune donnée';
 // COURSE SLOT STATUS
 export const PRESENT = 'present';
 export const MISSING = 'missing';
+export const PAID = 'paid';
+export const NOT_PAID = 'not_paid';
+export const SLOT_STATUS = { [PAID]: 'Réglé', [NOT_PAID]: 'Non réglé' };

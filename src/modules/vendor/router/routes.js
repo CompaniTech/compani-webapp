@@ -410,6 +410,15 @@ const routes = [
           parent: 'configuration',
         },
       },
+      {
+        path: 'ni/billing/trainers-follow-up',
+        name: 'ni billing trainers follow up',
+        component: () => import('src/modules/vendor/pages/ni/billing/TrainersBillingFollowUp'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'configuration',
+        },
+      },
     ],
   },
 ];
