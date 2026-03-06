@@ -1,6 +1,7 @@
 <template>
-  <q-card class="container clickable cursor-pointer" flat>
-    <q-expansion-item @click="showDetails()" class="q-my-md">
+  <q-card v-if="trainerInfos.courses.length || Object.keys(trainerInfos.collectiveSlots.slots).length"
+    class="container clickable cursor-pointer" flat>
+    <q-expansion-item class="q-my-md">
       <template #header>
         <div class="row items-center justify-between full-width">
           <div>
@@ -18,9 +19,9 @@
             @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
-      <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
+      <div class="q-pa-sm bg-peach-200">
         <q-expansion-item v-for="course of coursesWithFormattedData" :key="course._id" class="q-ma-sm bg-white"
-          @click="showCourseDetails(course._id)">
+          v-model="areCourseDetailsVisible[course._id]">
           <template #header>
             <div class="full-width">
               <router-link :to="goToCourse(course._id)" @click.stop>
@@ -161,7 +162,6 @@ export default {
   emits: ['refresh'],
   setup (props, { emit }) {
     const { trainerInfos, trainerId } = toRefs(props);
-    const displayDetails = ref(false);
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
     );
@@ -359,12 +359,6 @@ export default {
 
     const v$ = useVuelidate(rules, { courseSlotsToPay });
 
-    const showDetails = () => { displayDetails.value = !displayDetails.value; };
-
-    const showCourseDetails = (courseId) => {
-      areCourseDetailsVisible.value[courseId] = !areCourseDetailsVisible.value[courseId];
-    };
-
     const displayDuration = value => value !== '0min';
 
     const goToCourse = courseId => ({
@@ -402,11 +396,16 @@ export default {
       }
     };
 
-    watch(trainerInfos, () => { selectedCourseSlots.value = []; });
+    watch(trainerInfos, () => {
+      selectedCourseSlots.value = [];
+
+      areCourseDetailsVisible.value = Object.fromEntries(
+        trainerInfos.value.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
+      );
+    });
 
     return {
       // Data
-      displayDetails,
       areCourseDetailsVisible,
       coursePaginations,
       collectiveSlotsPaginations,
@@ -424,8 +423,6 @@ export default {
       formattedCollectiveSlots,
       // Methods
       formatIdentity,
-      showDetails,
-      showCourseDetails,
       displayDuration,
       goToCourse,
       openCourseSlotListValidationModal,
