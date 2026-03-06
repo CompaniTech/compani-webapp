@@ -1,7 +1,7 @@
 <template>
   <q-card v-if="trainerInfos.courses.length || Object.keys(trainerInfos.collectiveSlots.slots).length"
     class="container clickable cursor-pointer" flat>
-    <q-expansion-item v-model="displayDetails" class="q-my-md">
+    <q-expansion-item class="q-my-md">
       <template #header>
         <div class="row items-center justify-between full-width">
           <div>
@@ -19,7 +19,7 @@
             @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
-      <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
+      <div class="q-pa-sm bg-peach-200">
         <q-expansion-item v-for="course of coursesWithFormattedData" :key="course._id" class="q-ma-sm bg-white"
           v-model="areCourseDetailsVisible[course._id]">
           <template #header>
@@ -162,7 +162,6 @@ export default {
   emits: ['refresh'],
   setup (props, { emit }) {
     const { trainerInfos, trainerId } = toRefs(props);
-    const displayDetails = ref(false);
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
     );
@@ -407,7 +406,6 @@ export default {
 
     return {
       // Data
-      displayDetails,
       areCourseDetailsVisible,
       coursePaginations,
       collectiveSlotsPaginations,
