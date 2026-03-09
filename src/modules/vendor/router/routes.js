@@ -311,6 +311,15 @@ const routes = [
         },
       },
       {
+        path: 'trainers/billing',
+        name: 'trainers billing',
+        component: () => import('src/modules/vendor/pages/trainers/administrative/Billing'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'administrative',
+        },
+      },
+      {
         path: 'account',
         name: 'account vendor',
         component: () => import('src/core/pages/AccountInfo'),
