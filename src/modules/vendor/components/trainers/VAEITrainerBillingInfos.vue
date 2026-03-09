@@ -1,35 +1,40 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
-     <ni-profile-header title="Suivi de la facturation des intervenant·es">
-      <template #title>
-        <ni-button icon="chevron_left" class="no-shadow" @click="goToPreviousMonth" />
-        <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange" :error="v$.dateRange.$error"
-          @update:model-value="input" :error-message="dateRangeErrorMessage" @blur="v$.dateRange.$touch" />
-        <ni-button icon="chevron_right" class="no-shadow" @click="goToNextMonth" />
+    <div class="row justify-end">
+      <ni-button icon="chevron_left" class="no-shadow" @click="goToPreviousMonth" />
+      <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange" :error="v$.dateRange.$error"
+        @update:model-value="input" :error-message="dateRangeErrorMessage" @blur="v$.dateRange.$touch" />
+      <ni-button icon="chevron_right" class="no-shadow" @click="goToNextMonth" />
+    </div>
+    <ni-banner icon="info_outline" class="q-mb-xl bg-peach-200">
+      <template #message>
+        Veuillez sélectionner la période sur laquelle vous souhaitez afficher les créneaux de formation.
+        Seuls les créneaux émargés sont affichés sur cette page.
       </template>
-    </ni-profile-header>
+    </ni-banner>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
-      <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
     </div>
-    <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
-      :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" :trainer-id="trainerId" />
+    <trainer-billing-infos-card v-if="filteredData[trainer._id]" :trainer-infos="filteredData[trainer._id]"
+      @refresh="refreshCourseSlots" :trainer-id="trainer._id" :is-trainer="isTrainer" />
+    <div v-else class="text-italic">Pas de créneaux sur la période</div>
   </q-page>
 </template>
+
 <script>
 import { useMeta } from 'quasar';
+import { useStore } from 'vuex';
 import useVuelidate from '@vuelidate/core';
-import pick from 'lodash/pick';
 import { ref, computed, watch } from 'vue';
 import CourseSlots from '@api/CourseSlots';
 import ProfileHeader from '@components/ProfileHeader';
 import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
+import Banner from '@components/Banner';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { MONTH, SLOT_STATUS, MINUTE, NOT_PAID } from '@data/constants';
-import { formatAndSortIdentityOptions } from '@helpers/utils';
+import { MONTH, SLOT_STATUS, MINUTE, NOT_PAID, TRAINER } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
@@ -37,27 +42,29 @@ import { add } from '@helpers/numbers';
 import TrainerBillingInfosCard from 'src/modules/vendor/components/billing/TrainerBillingInfosCard';
 
 export default {
-  name: 'TrainersBillingFollowUp',
+  name: 'VAEITrainerBillingInfos',
   components: {
     'ni-profile-header': ProfileHeader,
     'ni-date-range': DateRange,
     'ni-select': Select,
     'ni-button': Button,
+    'ni-banner': Banner,
     'trainer-billing-infos-card': TrainerBillingInfosCard,
   },
   setup () {
-    const metaInfo = { title: 'Suivi de la facturation des intervenant·es' };
+    const metaInfo = { title: 'Suivi de la facturation' };
     useMeta(metaInfo);
 
+    const $store = useStore();
+
     const slotsLoading = ref(false);
-    const trainerBillingInfos = ref({});
+    const trainerSlotsInfos = ref({});
     const dateRange = ref({
       startDate: CompaniDate().subtract('P2M').startOf(MONTH).toISO(),
       endDate: CompaniDate().endOf(MONTH).toISO(),
     });
     const min = ref(CompaniDate().endOf(MONTH).subtract('P3M').toISO());
     const max = ref(CompaniDate().startOf(MONTH).add('P3M').toISO());
-    const selectedTrainer = ref('');
     const selectedStatus = ref('');
 
     const statusOptions = [
@@ -74,6 +81,17 @@ export default {
 
     const v$ = useVuelidate(rules, { dateRange });
 
+    const loggedUser = computed(() => $store.state.main.loggedUser);
+
+    const isTrainer = computed(() => loggedUser.value.role.vendor.name === TRAINER);
+
+    const userProfile = computed(() => $store.state.userProfile.userProfile);
+
+    const trainer = computed(() => {
+      if (isTrainer.value) return loggedUser.value;
+      return userProfile.value;
+    });
+
     const refreshCourseSlots = async () => {
       try {
         await v$.value.dateRange.$touch();
@@ -83,8 +101,9 @@ export default {
         const slots = await CourseSlots.list({
           startDate: dateRange.value.startDate,
           endDate: dateRange.value.endDate,
+          trainerId: trainer.value._id,
         });
-        trainerBillingInfos.value = slots;
+        trainerSlotsInfos.value = slots;
         NotifyPositive('Créneaux de l\'intervenant·es récupérés.');
       } catch (e) {
         console.error(e);
@@ -95,12 +114,10 @@ export default {
     };
 
     const filteredData = computed(() => {
-      let data = trainerBillingInfos.value;
-      if (selectedTrainer.value) data = pick(data, selectedTrainer.value);
-      if (!selectedStatus.value) return data;
+      if (!selectedStatus.value) return trainerSlotsInfos.value;
 
       return Object.fromEntries(
-        Object.entries(data).map(([trainerId, trainerInfos]) => {
+        Object.entries(trainerSlotsInfos.value).map(([trainerId, trainerInfos]) => {
           // Single slots
           const courses = trainerInfos.courses
             .map((course) => {
@@ -275,13 +292,6 @@ export default {
       );
     });
 
-    const trainerOptions = computed(() => formatAndSortIdentityOptions(
-      Object.entries(trainerBillingInfos.value).map(([trainerId, trainer]) => ({
-        _id: trainerId,
-        identity: trainer.identity,
-      }))
-    ));
-
     const dateRangeErrorMessage = computed(() => {
       if (CompaniDate(dateRange.value.endDate).isBefore(dateRange.value.startDate)) {
         return 'La date de fin doit être postérieure à la date de début';
@@ -298,10 +308,7 @@ export default {
       max.value = CompaniDate(date.startDate).add('P3M').subtract('P1D').toISO();
     };
 
-    const updateSelectedTrainer = (value) => { selectedTrainer.value = value; };
-
     const resetFilters = () => {
-      selectedTrainer.value = '';
       selectedStatus.value = '';
     };
 
@@ -331,17 +338,16 @@ export default {
     return {
       // Data
       dateRange,
-      selectedTrainer,
       selectedStatus,
       statusOptions,
       // Computed
       filteredData,
       dateRangeErrorMessage,
-      trainerOptions,
       v$,
+      trainer,
+      isTrainer,
       // Methods
       input,
-      updateSelectedTrainer,
       resetFilters,
       goToPreviousMonth,
       goToNextMonth,

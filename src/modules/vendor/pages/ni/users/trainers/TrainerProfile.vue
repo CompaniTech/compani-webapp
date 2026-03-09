@@ -16,6 +16,7 @@ import ProfileHeader from '@components/ProfileHeader';
 import ProfileTabs from '@components/ProfileTabs';
 import ProfileInfo from 'src/modules/vendor/components/trainers/ProfileInfo';
 import ProfileContract from 'src/modules/vendor/components/trainers/ProfileContract';
+import VAEITrainerBillingInfos from 'src/modules/vendor/components/trainers/VAEITrainerBillingInfos';
 import { formatIdentity } from '@helpers/utils';
 import { TRAINER } from '@data/constants';
 
@@ -35,21 +36,32 @@ export default {
     const { defaultTab, trainerId } = toRefs(props);
 
     const userIdentity = ref('');
-    const tabsContent = [
-      {
-        label: 'Infos personnelles',
-        name: 'info',
-        default: defaultTab.value === 'info',
-        component: ProfileInfo,
-        notification: 'profiles',
-      },
-      {
-        label: 'Contrats',
-        name: 'contracts',
-        default: defaultTab.value === 'contracts',
-        component: ProfileContract,
-      },
-    ];
+    const tabsContent = computed(() => {
+      const { isSingleCourseTrainer } = userProfile.value;
+      return [
+        {
+          label: 'Infos personnelles',
+          name: 'info',
+          default: defaultTab.value === 'info',
+          component: ProfileInfo,
+          notification: 'profiles',
+        },
+        {
+          label: 'Contrats',
+          name: 'contracts',
+          default: defaultTab.value === 'contracts',
+          component: ProfileContract,
+        },
+        ...isSingleCourseTrainer
+          ? [{
+            label: 'Suivi des heures',
+            name: 'vaeiTrainerBillingInfos',
+            default: defaultTab.value === 'vaeiTrainerBillingInfos',
+            component: VAEITrainerBillingInfos,
+          }]
+          : [],
+      ];
+    });
 
     const $store = useStore();
     const userProfile = computed(() => (TRAINER === get($store.state.main.loggedUser, 'role.vendor.name')
