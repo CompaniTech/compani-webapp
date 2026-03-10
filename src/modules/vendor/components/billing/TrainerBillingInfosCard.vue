@@ -7,12 +7,12 @@
           <div>
             <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
             <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
-              &nbsp;- À régler : {{ formattedTrainerDurations.notPaid }} (dont
+              <span v-if="isDashboard">&nbsp;- </span>À régler : {{ formattedTrainerDurations.notPaid }} (dont
               &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
             </span>
             <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
-              &nbsp;/ réglé : {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }}
-              &nbsp;d'absence)
+              <span v-if="isDashboard || displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
+              {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }} &nbsp;d'absence)
             </span>
           </div>
           <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"

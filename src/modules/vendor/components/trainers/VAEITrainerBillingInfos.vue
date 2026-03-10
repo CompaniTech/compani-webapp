@@ -1,17 +1,17 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
+    <ni-banner icon="info_outline" class="bg-peach-200">
+      <template #message>
+        Veuillez sélectionner la période sur laquelle vous souhaitez afficher les créneaux de formation.
+        Seuls les créneaux émargés sont affichés sur cette page.
+      </template>
+    </ni-banner>
     <div class="row justify-end">
       <ni-button icon="chevron_left" class="no-shadow" @click="goToPreviousMonth" />
       <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange" :error="v$.dateRange.$error"
         @update:model-value="input" :error-message="dateRangeErrorMessage" @blur="v$.dateRange.$touch" />
       <ni-button icon="chevron_right" class="no-shadow" @click="goToNextMonth" />
     </div>
-    <ni-banner icon="info_outline" class="q-mb-xl bg-peach-200">
-      <template #message>
-        Veuillez sélectionner la période sur laquelle vous souhaitez afficher les créneaux de formation.
-        Seuls les créneaux émargés sont affichés sur cette page.
-      </template>
-    </ni-banner>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
