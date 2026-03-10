@@ -13,7 +13,7 @@ import TitleHeader from '@components/TitleHeader';
 import ProfileBilling from 'src/modules/vendor/components/trainers/VAEITrainerBillingInfos';
 
 export default {
-  name: 'Contracts',
+  name: 'Billing',
   components: {
     'ni-title-header': TitleHeader,
     'profile-billing': ProfileBilling,
