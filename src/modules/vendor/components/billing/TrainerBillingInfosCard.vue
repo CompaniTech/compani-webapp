@@ -163,7 +163,7 @@ export default {
   },
   emits: ['refresh'],
   setup (props, { emit }) {
-    const { trainerInfos, trainerId } = toRefs(props);
+    const { trainerInfos, trainerId, isTrainer } = toRefs(props);
     const $route = useRoute();
     const isDashboard = /\/trainers-follow-up/.test($route.path);
 
@@ -367,7 +367,7 @@ export default {
     const displayDuration = value => value !== '0min';
 
     const goToCourse = courseId => ({
-      name: 'ni management blended courses info',
+      name: isTrainer.value ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId },
       query: { defaultTab: 'traineeFollowUp' },
     });
