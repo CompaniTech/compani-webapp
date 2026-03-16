@@ -49,7 +49,7 @@
               </template>
               <template v-else-if="col.name === 'actions'">
                 <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense
-                  :disable="disablePaymentSelection(props.row.courseBill.payer)" />
+                  :disable="!isPayerSelectable(props.row.courseBill.payer)" />
               </template>
               <template v-else>{{ col.value }}</template>
           </q-td>
@@ -203,8 +203,18 @@ export default {
       }
     });
 
-    const multipleSelection = computed(() => sortedPayments.value.length &&
-      selectedPayments.value.length === sortedPayments.value.length);
+    const isPayerSelectable = (payer) => {
+      if (!(payer.iban && payer.bic)) return false;
+      const lastMandate = getLastVersion(payer.debitMandates, 'createdAt');
+      return get(lastMandate, 'signedAt') && get(lastMandate, 'file.link');
+    };
+
+    const multipleSelection = computed(() => {
+      if (!sortedPayments.value.length) return false;
+
+      const selectablePayments = sortedPayments.value.filter(p => isPayerSelectable(p.courseBill.payer));
+      return selectedPayments.value.length === selectablePayments.length;
+    });
 
     const onSort = (col) => {
       sortBy.value = col.name;
@@ -282,13 +292,9 @@ export default {
     const selectPaymentList = (value) => {
       multipleSelection.value = value;
 
-      selectedPayments.value = value ? paymentList.value.map(p => p._id) : [];
-    };
-
-    const disablePaymentSelection = (payer) => {
-      if (!(payer.iban && payer.bic)) return true;
-      const lastMandate = getLastVersion(payer.debitMandates, 'createdAt');
-      return !(get(lastMandate, 'signedAt') && get(lastMandate, 'file.link'));
+      selectedPayments.value = value
+        ? paymentList.value.filter(p => isPayerSelectable(p.courseBill.payer)).map(p => p._id)
+        : [];
     };
 
     let timeout;
@@ -371,7 +377,7 @@ export default {
       editPaymentList,
       resetMultiplePaymentEditionModal,
       onSort,
-      disablePaymentSelection,
+      isPayerSelectable,
     };
   },
 };
