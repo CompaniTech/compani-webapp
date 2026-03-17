@@ -105,7 +105,7 @@ export default {
       const refHtml = qListRef.value?.$el;
       if (!refHtml) return;
 
-      const item = refHtml.querySelector('[data-time="07:00"]');
+      const item = refHtml.querySelector(`[data-time="${displayValue.value}"]`);
       if (item) item.scrollIntoView({ block: 'start' });
     };
 
