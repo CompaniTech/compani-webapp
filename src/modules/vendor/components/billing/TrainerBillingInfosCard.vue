@@ -19,7 +19,7 @@
             @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
-      <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
+      <div class="q-pa-sm bg-peach-200">
         <q-expansion-item v-for="course of coursesWithFormattedData" :key="course._id" class="q-ma-sm bg-white"
           v-model="areCourseDetailsVisible[course._id]">
           <template #header>
