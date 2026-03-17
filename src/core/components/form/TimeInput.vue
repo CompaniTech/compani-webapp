@@ -5,8 +5,8 @@
       <p :class="['input-caption', { required: requiredField }]">{{ caption }}</p>
       <q-icon v-if="error" name="error_outline" color="secondary" />
     </div>
-    <q-input dense bg-color="white" borderless :model-value="modelValue" @update:model-value="update"
-      :error-message="errorMessage" :error="error" @blur="onBlur" :rules="['time']" mask="time" data-cy="time-input"
+    <q-input dense bg-color="white" borderless :model-value="displayValue" @update:model-value="input"
+      :error-message="errorMessage" :error="error" @blur="onBlur" :rules="['time']" data-cy="time-input"
       :disable="disable && !locked" :class="{ borders: inModal }" :readonly="locked" debounce="500">
       <template #append>
         <q-icon v-if="!locked" name="far fa-clock" class="cursor-pointer" color="copper-grey-500">
@@ -46,7 +46,7 @@ export default {
     locked: { type: Boolean, default: false },
   },
   setup (props, { emit }) {
-    const { min } = toRefs(props);
+    const { min, modelValue } = toRefs(props);
     const qTimeMenu = useTemplateRef('qTimeMenu');
     const qListRef = ref(null);
 
@@ -66,6 +66,11 @@ export default {
         }));
     });
 
+    const displayValue = computed(() => {
+      if (!modelValue.value) return '';
+      return CompaniDate(modelValue.value).format(HH_MM);
+    });
+
     const select = (value) => {
       update(value);
       qTimeMenu.value.hide();
@@ -73,6 +78,18 @@ export default {
 
     const update = (value) => {
       emit('update:model-value', value);
+    };
+
+    const input = (value) => {
+      try {
+        if (!value) return '';
+        const date = CompaniDate(value, HH_MM);
+        update(date.format(HH_MM));
+      } catch (e) {
+        if (e.message.startsWith('Invalid DateTime: unparsable') ||
+          e.message.startsWith('Invalid DateTime: unit out of range')) return '';
+        console.error(e);
+      }
     };
 
     const onBlur = () => {
@@ -98,9 +115,11 @@ export default {
       qTimeMenu,
       // computed
       hoursOptions,
+      displayValue,
       // Methods
       select,
       update,
+      input,
       onBlur,
       click,
       scrollOnOpening,
