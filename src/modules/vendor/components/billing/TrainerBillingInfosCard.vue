@@ -1,7 +1,7 @@
 <template>
   <q-card v-if="trainerInfos.courses.length || Object.keys(trainerInfos.collectiveSlots.slots).length"
     class="container clickable cursor-pointer" flat>
-    <q-expansion-item class="q-my-md">
+    <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
         <div class="row items-center justify-between full-width">
           <div>
@@ -19,7 +19,7 @@
             @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
-      <div class="q-pa-sm bg-peach-200">
+      <div v-if="displayDetails" class="q-pa-sm bg-peach-200">
         <q-expansion-item v-for="course of coursesWithFormattedData" :key="course._id" class="q-ma-sm bg-white"
           v-model="areCourseDetailsVisible[course._id]">
           <template #header>
@@ -166,6 +166,7 @@ export default {
     const { trainerInfos, trainerId, isTrainer } = toRefs(props);
     const $route = useRoute();
     const isDashboard = /\/trainers-follow-up/.test($route.path);
+    const displayDetails = ref(!isDashboard.value);
 
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
@@ -419,6 +420,7 @@ export default {
       courseSlotsToPay,
       courseSlotListValidationModal,
       PAID,
+      displayDetails,
       // Validation
       v$,
       // Computed
