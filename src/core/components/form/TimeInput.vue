@@ -9,12 +9,11 @@
       :error-message="errorMessage" :error="error" @blur="onBlur" :rules="['time']" mask="time" data-cy="time-input"
       :disable="disable && !locked" :class="{ borders: inModal }" :readonly="locked" debounce="500">
       <template #append>
-        <q-icon v-if="!locked" name="far fa-clock" class="cursor-pointer" @click="selectTime = !selectTime"
-          color="copper-grey-500">
-          <q-menu ref="qTimeMenu" anchor="bottom right" self="top right">
-            <q-list dense padding>
+        <q-icon v-if="!locked" name="far fa-clock" class="cursor-pointer" color="copper-grey-500">
+          <q-menu ref="qTimeMenu" anchor="bottom right" self="top right" @show="scrollOnOpening">
+            <q-list ref="qListRef" dense padding>
               <q-item v-for="(hour, index) in hoursOptions" :key="index" clickable @click="select(hour.value)"
-                :disable="hour.disable">
+                :disable="hour.disable" :data-time="hour.value">
                 <q-item-section>{{ hour.label }}</q-item-section>
               </q-item>
             </q-list>
@@ -27,7 +26,7 @@
 </template>
 
 <script>
-import { computed, ref, toRefs, useTemplateRef } from 'vue';
+import { computed, ref, toRefs, nextTick, useTemplateRef } from 'vue';
 import { PLANNING_VIEW_START_HOUR, PLANNING_VIEW_END_HOUR, HH_MM } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniInterval from '@helpers/dates/companiIntervals';
@@ -49,13 +48,13 @@ export default {
   setup (props, { emit }) {
     const { min } = toRefs(props);
     const qTimeMenu = useTemplateRef('qTimeMenu');
-    const selectTime = ref(false);
+    const qListRef = ref(null);
 
     const hoursOptions = computed(() => {
       const startISO = CompaniDate()
         .set({ hour: PLANNING_VIEW_START_HOUR, minute: 0, second: 0, millisecond: 0 })
         .toISO();
-      const endISO = CompaniDate().set({ hour: PLANNING_VIEW_END_HOUR, minute: 0, second: 0, millisecond: 0 }).toISO();
+      const endISO = CompaniDate().set({ hour: PLANNING_VIEW_END_HOUR, minute: 30, second: 0, millisecond: 0 }).toISO();
       const interval = CompaniInterval(startISO, endISO);
 
       return interval
@@ -84,9 +83,18 @@ export default {
       emit('lock-click');
     };
 
+    const scrollOnOpening = async () => {
+      await nextTick();
+      const refHtml = qListRef.value?.$el;
+      if (!refHtml) return;
+
+      const item = refHtml.querySelector('[data-time="07:00"]');
+      if (item) item.scrollIntoView({ block: 'start' });
+    };
+
     return {
       // Data
-      selectTime,
+      qListRef,
       qTimeMenu,
       // computed
       hoursOptions,
@@ -95,6 +103,7 @@ export default {
       update,
       onBlur,
       click,
+      scrollOnOpening,
     };
   },
 };
