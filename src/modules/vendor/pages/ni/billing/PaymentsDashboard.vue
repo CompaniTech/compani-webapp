@@ -20,7 +20,7 @@
           <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
             <div v-if="col.name === 'actions'">
               <q-checkbox class="q-mr-md" :model-value="multipleSelection" @update:model-value="selectPaymentList"
-                dense />
+                dense :disable="!selectablePayments.length" />
             </div>
             <div v-else-if="sortableColumns.includes(col.name)" @click="onSort(col)" class="align-center">
               {{ col.label }}
@@ -153,6 +153,7 @@ export default {
       type: false,
       xmlSEPAFileInfosName: false,
     });
+    const multipleSelection = ref(false);
 
     const TRANSACTION_NAME_MAX_LENGTH = 140;
     const rules = computed(() => ({
@@ -209,12 +210,9 @@ export default {
       return get(lastMandate, 'signedAt') && get(lastMandate, 'file.link');
     };
 
-    const multipleSelection = computed(() => {
-      if (!sortedPayments.value.length) return false;
-
-      const selectablePayments = sortedPayments.value.filter(p => isPayerSelectable(p.courseBill.payer));
-      return selectedPayments.value.length === selectablePayments.length;
-    });
+    const selectablePayments = computed(() => paymentList.value
+      .filter(p => isPayerSelectable(p.courseBill.payer))
+      .map(p => p._id));
 
     const onSort = (col) => {
       sortBy.value = col.name;
@@ -290,11 +288,7 @@ export default {
     };
 
     const selectPaymentList = (value) => {
-      multipleSelection.value = value;
-
-      selectedPayments.value = value
-        ? paymentList.value.filter(p => isPayerSelectable(p.courseBill.payer)).map(p => p._id)
-        : [];
+      selectedPayments.value = value ? selectablePayments.value : [];
     };
 
     let timeout;
@@ -305,6 +299,12 @@ export default {
         else paymentList.value = [];
       }, 1000);
       selectedPayments.value = [];
+    });
+
+    watch(selectedPayments, () => {
+      multipleSelection.value = selectablePayments.value.length
+        ? selectedPayments.value.length === selectablePayments.value.length
+        : false;
     });
 
     const openCoursePaymentEditionModal = async () => {
@@ -364,6 +364,7 @@ export default {
       // Computed
       sortedPayments,
       multipleSelection,
+      selectablePayments,
       // Methods
       updateSelectedStatus,
       getItemStatus,
