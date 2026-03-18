@@ -11,7 +11,7 @@ import CompaniDuration from '@helpers/dates/companiDurations';
 import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
 import { add } from '@helpers/numbers';
 
-export const useTrainerBillingInfos = (trainer) => {
+export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: false }) => {
   const slotsLoading = ref(false);
   const trainerBillingInfos = ref({});
   const dateRange = ref({
@@ -250,16 +250,19 @@ export const useTrainerBillingInfos = (trainer) => {
     if (CompaniDate(dateRange.value.endDate).isBefore(dateRange.value.startDate)) {
       return 'La date de fin doit être postérieure à la date de début';
     }
-    if (CompaniDate(dateRange.value.startDate).add('P3M').isBefore(dateRange.value.endDate)) {
-      return 'Date(s) invalide(s) : la période maximale est 3 mois';
+
+    const maxMonthsPeriod = loggedUserIsTrainer.value ? 3 : 4;
+    if (CompaniDate(dateRange.value.startDate).add(`P${maxMonthsPeriod}M`).isBefore(dateRange.value.endDate)) {
+      return `Date(s) invalide(s) : la période maximale est ${maxMonthsPeriod} mois`;
     }
 
     return '';
   });
 
   const input = (date) => {
-    min.value = CompaniDate(date.endDate).subtract('P3M').add('P1D').toISO();
-    max.value = CompaniDate(date.startDate).add('P3M').subtract('P1D').toISO();
+    const shiftValue = loggedUserIsTrainer.value ? 'P3M' : 'P4M';
+    min.value = CompaniDate(date.endDate).subtract(shiftValue).add('P1D').toISO();
+    max.value = CompaniDate(date.startDate).add(shiftValue).subtract('P1D').toISO();
   };
 
   const goToPreviousMonth = () => {

@@ -17,7 +17,7 @@
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
     </div>
     <trainer-billing-infos-card v-if="filteredData[trainer._id]" :trainer-infos="filteredData[trainer._id]"
-      @refresh="refreshCourseSlots" :trainer-id="trainer._id" :is-trainer="isTrainer" />
+      @refresh="refreshCourseSlots" :trainer-id="trainer._id" :is-trainer="loggedUserIsTrainer" />
     <div v-else class="text-italic">Pas de créneaux sur la période</div>
   </q-page>
 </template>
@@ -53,12 +53,12 @@ export default {
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
 
-    const isTrainer = computed(() => loggedUser.value.role.vendor.name === TRAINER);
+    const loggedUserIsTrainer = computed(() => loggedUser.value.role.vendor.name === TRAINER);
 
     const userProfile = computed(() => $store.state.userProfile.userProfile);
 
     const trainer = computed(() => {
-      if (isTrainer.value) return loggedUser.value;
+      if (loggedUserIsTrainer.value) return loggedUser.value;
       return userProfile.value;
     });
 
@@ -73,7 +73,7 @@ export default {
       goToPreviousMonth,
       goToNextMonth,
       refreshCourseSlots,
-    } = useTrainerBillingInfos(trainer);
+    } = useTrainerBillingInfos(trainer, loggedUserIsTrainer);
 
     const resetFilters = () => {
       selectedStatus.value = '';
@@ -100,7 +100,7 @@ export default {
       dateRangeErrorMessage,
       v$,
       trainer,
-      isTrainer,
+      loggedUserIsTrainer,
       // Methods
       input,
       resetFilters,
