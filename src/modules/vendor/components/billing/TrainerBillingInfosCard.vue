@@ -166,7 +166,7 @@ export default {
     const { trainerInfos, trainerId, isTrainer } = toRefs(props);
     const $route = useRoute();
     const isDashboard = /\/trainers-follow-up/.test($route.path);
-    const displayDetails = ref(!isDashboard.value);
+    const displayDetails = ref(!isDashboard);
 
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
