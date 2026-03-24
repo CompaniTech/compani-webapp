@@ -58,7 +58,7 @@
     "@vue/cli-service": "~5.0.9",
     "airbnb-style": "github:CompaniTech/eslint-config-airbnb-base",
     "baseline-browser-mapping": "~2.9.6",
-    "cypress": "~14.5.0",
+    "cypress": "~15.12.0",
     "eslint": "~9.39.1",
     "eslint-plugin-cypress": "~5.2.0",
     "eslint-plugin-import": "~2.32.0",
