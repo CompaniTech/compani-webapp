@@ -60,7 +60,7 @@
     "baseline-browser-mapping": "~2.9.6",
     "cypress": "~15.12.0",
     "eslint": "~9.39.1",
-    "eslint-plugin-cypress": "~5.2.0",
+    "eslint-plugin-cypress": "~6.2.0",
     "eslint-plugin-import": "~2.32.0",
     "eslint-plugin-n": "~17.23.1",
     "eslint-plugin-promise": "~7.2.1",
