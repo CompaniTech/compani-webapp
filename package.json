@@ -50,7 +50,7 @@
   "devDependencies": {
     "@babel/eslint-parser": "~7.28.6",
     "@babel/preset-env": "~7.29.2",
-    "@eslint/eslintrc": "~3.3.3",
+    "@eslint/eslintrc": "~3.3.5",
     "@eslint/js": "~9.39.1",
     "@quasar/app-webpack": "~4.4.4",
     "@quasar/cli": "~3.0.0",
