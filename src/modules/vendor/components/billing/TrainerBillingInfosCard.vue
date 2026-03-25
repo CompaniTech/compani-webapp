@@ -1,21 +1,21 @@
 <template>
   <q-card v-if="trainerInfos.courses.length || Object.keys(trainerInfos.collectiveSlots.slots).length"
     class="container clickable cursor-pointer" flat>
-    <q-expansion-item class="q-my-md">
+    <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
         <div class="row items-center justify-between full-width">
           <div>
-            <span class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+            <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
             <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
-              &nbsp;- À régler : {{ formattedTrainerDurations.notPaid }} (dont
+              <span v-if="isDashboard">&nbsp;- </span>À régler : {{ formattedTrainerDurations.notPaid }} (dont
               &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
             </span>
             <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
-              &nbsp;/ réglé : {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }}
-              &nbsp;d'absence)
+              <span v-if="isDashboard || displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
+              {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }} &nbsp;d'absence)
             </span>
           </div>
-          <ni-primary-button class="q-ma-md" label="Régler les créneaux sélectionnés"
+          <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
             @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
@@ -56,7 +56,7 @@
               v-model:pagination="coursePaginations[course._id]" :rows-per-page="[10, 20]">
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
-                  <template v-if="col.name === 'actions'">
+                  <template v-if="col.name === 'actions' && !isTrainer">
                     <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
                       :disable="props.row.status === PAID" />
                   </template>
@@ -112,7 +112,7 @@
                       <span class="text-weight-bold text-copper-600 clickable-name">{{ col.value }}</span>
                     </router-link>
                   </template>
-                  <template v-else-if="col.name === 'actions'">
+                  <template v-else-if="col.name === 'actions' && !isTrainer">
                     <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
                       :disable="props.row.status === PAID" />
                   </template>
@@ -134,6 +134,7 @@
 <script>
 
 import { ref, toRefs, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
 import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID } from '@data/constants';
@@ -152,6 +153,7 @@ export default {
   props: {
     trainerInfos: { type: Object, default: () => ({}) },
     trainerId: { type: String, required: true },
+    isTrainer: { type: Boolean, default: false },
   },
   components: {
     'ni-expanding-table': ExpandingTable,
@@ -161,7 +163,11 @@ export default {
   },
   emits: ['refresh'],
   setup (props, { emit }) {
-    const { trainerInfos, trainerId } = toRefs(props);
+    const { trainerInfos, trainerId, isTrainer } = toRefs(props);
+    const $route = useRoute();
+    const isDashboard = /\/trainers-follow-up/.test($route.path);
+    const displayDetails = ref(!isDashboard);
+
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
     );
@@ -362,7 +368,7 @@ export default {
     const displayDuration = value => value !== '0min';
 
     const goToCourse = courseId => ({
-      name: 'ni management blended courses info',
+      name: isTrainer.value ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId },
       query: { defaultTab: 'traineeFollowUp' },
     });
@@ -406,6 +412,7 @@ export default {
 
     return {
       // Data
+      isDashboard,
       areCourseDetailsVisible,
       coursePaginations,
       collectiveSlotsPaginations,
@@ -413,6 +420,7 @@ export default {
       courseSlotsToPay,
       courseSlotListValidationModal,
       PAID,
+      displayDetails,
       // Validation
       v$,
       // Computed

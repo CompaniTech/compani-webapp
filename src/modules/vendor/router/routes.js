@@ -88,7 +88,14 @@ const routes = [
         component: () => import('src/modules/vendor/pages/ni/users/trainers/TrainerProfile'),
         beforeEnter: async (to, from, next) => {
           try {
-            if (['ni management blended courses', 'ni management blended courses info'].includes(from.name)) {
+            const blendedOrSingleCourses = [
+              'ni management blended courses',
+              'ni management blended courses info',
+              'ni management single courses',
+            ];
+            if (from.name === 'ni management blended courses info' && from.query.defaultTab === 'traineeFollowUp') {
+              to.query.defaultTab = 'vaeiTrainerBillingInfos';
+            } else if (blendedOrSingleCourses.includes(from.name)) {
               to.query.defaultTab = 'contracts';
             }
 
@@ -305,6 +312,15 @@ const routes = [
         path: 'trainers/contracts',
         name: 'trainers contracts',
         component: () => import('src/modules/vendor/pages/trainers/administrative/Contracts'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'administrative',
+        },
+      },
+      {
+        path: 'trainers/billing',
+        name: 'trainers billing',
+        component: () => import('src/modules/vendor/pages/trainers/administrative/Billing'),
         meta: {
           cookies: ['alenvi_token', 'refresh_token'],
           parent: 'administrative',

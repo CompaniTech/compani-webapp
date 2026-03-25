@@ -5,16 +5,15 @@
       <p :class="['input-caption', { required: requiredField }]">{{ caption }}</p>
       <q-icon v-if="error" name="error_outline" color="secondary" />
     </div>
-    <q-input dense bg-color="white" borderless :model-value="modelValue" @update:model-value="update"
-      :error-message="errorMessage" :error="error" @blur="onBlur" :rules="['time']" mask="time" data-cy="time-input"
+    <q-input dense bg-color="white" borderless :model-value="displayValue" @update:model-value="input"
+      :error-message="errorMessage" :error="error" @blur="onBlur" :rules="['time']" data-cy="time-input"
       :disable="disable && !locked" :class="{ borders: inModal }" :readonly="locked" debounce="500">
       <template #append>
-        <q-icon v-if="!locked" name="far fa-clock" class="cursor-pointer" @click="selectTime = !selectTime"
-          color="copper-grey-500">
-          <q-menu ref="qTimeMenu" anchor="bottom right" self="top right">
-            <q-list dense padding>
+        <q-icon v-if="!locked" name="far fa-clock" class="cursor-pointer" color="copper-grey-500">
+          <q-menu ref="qTimeMenu" anchor="bottom right" self="top right" @show="scrollOnOpening">
+            <q-list ref="qListRef" dense padding>
               <q-item v-for="(hour, index) in hoursOptions" :key="index" clickable @click="select(hour.value)"
-                :disable="hour.disable">
+                :disable="hour.disable" :data-time="hour.value">
                 <q-item-section>{{ hour.label }}</q-item-section>
               </q-item>
             </q-list>
@@ -27,7 +26,7 @@
 </template>
 
 <script>
-import { computed, ref, toRefs, useTemplateRef } from 'vue';
+import { computed, ref, toRefs, nextTick, useTemplateRef } from 'vue';
 import { PLANNING_VIEW_START_HOUR, PLANNING_VIEW_END_HOUR, HH_MM } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniInterval from '@helpers/dates/companiIntervals';
@@ -47,15 +46,15 @@ export default {
     locked: { type: Boolean, default: false },
   },
   setup (props, { emit }) {
-    const { min } = toRefs(props);
+    const { min, modelValue } = toRefs(props);
     const qTimeMenu = useTemplateRef('qTimeMenu');
-    const selectTime = ref(false);
+    const qListRef = ref(null);
 
     const hoursOptions = computed(() => {
       const startISO = CompaniDate()
         .set({ hour: PLANNING_VIEW_START_HOUR, minute: 0, second: 0, millisecond: 0 })
         .toISO();
-      const endISO = CompaniDate().set({ hour: PLANNING_VIEW_END_HOUR, minute: 0, second: 0, millisecond: 0 }).toISO();
+      const endISO = CompaniDate().set({ hour: PLANNING_VIEW_END_HOUR, minute: 30, second: 0, millisecond: 0 }).toISO();
       const interval = CompaniInterval(startISO, endISO);
 
       return interval
@@ -67,6 +66,11 @@ export default {
         }));
     });
 
+    const displayValue = computed(() => {
+      if (!modelValue.value) return '';
+      return CompaniDate(modelValue.value).format(HH_MM);
+    });
+
     const select = (value) => {
       update(value);
       qTimeMenu.value.hide();
@@ -74,6 +78,18 @@ export default {
 
     const update = (value) => {
       emit('update:model-value', value);
+    };
+
+    const input = (value) => {
+      try {
+        if (!value) return '';
+        const date = CompaniDate(value, HH_MM);
+        update(date.format(HH_MM));
+      } catch (e) {
+        if (e.message.startsWith('Invalid DateTime: unparsable') ||
+          e.message.startsWith('Invalid DateTime: unit out of range')) return '';
+        console.error(e);
+      }
     };
 
     const onBlur = () => {
@@ -84,17 +100,30 @@ export default {
       emit('lock-click');
     };
 
+    const scrollOnOpening = async () => {
+      await nextTick();
+      const refHtml = qListRef.value?.$el;
+      if (!refHtml) return;
+
+      const value = hoursOptions.value.find(opt => opt.value === displayValue.value)?.value || '07:00';
+      const item = refHtml.querySelector(`[data-time="${value}"]`);
+      if (item) item.scrollIntoView({ block: 'start' });
+    };
+
     return {
       // Data
-      selectTime,
+      qListRef,
       qTimeMenu,
       // computed
       hoursOptions,
+      displayValue,
       // Methods
       select,
       update,
+      input,
       onBlur,
       click,
+      scrollOnOpening,
     };
   },
 };

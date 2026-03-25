@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 
-export const useMenuItems = (isAdmin, isTrainer, isProgramEditor) => {
+export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourseTrainer) => {
   const adminActiveRoutes = ref({
     management: { open: true },
     users: { open: false },
@@ -92,6 +92,9 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor) => {
       children: [
         { name: 'trainers info', icon: 'person', label: 'Infos personnelles' },
         { name: 'trainers contracts', icon: 'description', label: 'Ordres de mission' },
+        ...isSingleCourseTrainer.value
+          ? [{ name: 'trainers billing', icon: 'mdi-account-arrow-right-outline', label: 'Suivi des heures' }]
+          : [],
       ],
     },
     ...isProgramEditor.value

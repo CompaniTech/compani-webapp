@@ -93,8 +93,8 @@ export const ROLES_TRANSLATION = {
 export const ERP = 'erp';
 
 // PLANNING
-export const PLANNING_VIEW_START_HOUR = 7;
-export const PLANNING_VIEW_END_HOUR = 22;
+export const PLANNING_VIEW_START_HOUR = 0;
+export const PLANNING_VIEW_END_HOUR = 23;
 export const SECTOR = 'sector';
 
 export const REQUIRED_LABEL = 'Champ requis';
