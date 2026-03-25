@@ -16,7 +16,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@casl/ability": "~6.7.3",
+    "@casl/ability": "~6.8.0",
     "@quasar/extras": "~1.17.0",
     "@vuelidate/core": "~2.0.3",
     "@vuelidate/validators": "~2.0.4",
