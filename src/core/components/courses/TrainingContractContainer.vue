@@ -106,7 +106,7 @@ export default {
 
     const newGeneratedTrainingContractInfos = ref({
       price: isIntraCourse.value && get(course.value, 'prices[0].global')
-        ? get(course.value, 'prices[0].global', 0) + get(course.value, 'prices[0].trainerFees', 0)
+        ? Number(add(get(course.value, 'prices[0].global') || 0, get(course.value, 'prices[0].trainerFees') || 0))
         : 0,
       company: isIntraCourse.value ? course.value.companies[0]._id : '',
     });
@@ -199,7 +199,7 @@ export default {
     const companyPrice = computed(() => {
       if (newGeneratedTrainingContractInfos.value.company) {
         const price = course.value.prices.find(p => p.company === newGeneratedTrainingContractInfos.value.company);
-        return Number(add(get(price, 'global', 0), get(price, 'trainerFees', 0)));
+        return Number(add(get(price, 'global') || 0, get(price, 'trainerFees') || 0));
       }
       return 0;
     });
@@ -208,7 +208,7 @@ export default {
       if (!trainingContractInfosModal.value) {
         newGeneratedTrainingContractInfos.value = {
           price: isIntraCourse.value && get(course.value, 'prices[0].global')
-            ? get(course.value, 'prices[0].global', 0) + get(course.value, 'prices[0].trainerFees', 0)
+            ? Number(add(get(course.value, 'prices[0].global') || 0, get(course.value, 'prices[0].trainerFees') || 0))
             : 0,
           company: isIntraCourse.value ? course.value.companies[0]._id : '',
         };
