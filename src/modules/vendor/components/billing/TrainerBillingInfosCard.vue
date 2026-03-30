@@ -462,7 +462,7 @@ export default {
     };
 
     const isFirstCollectiveSlotOfDate = (slots, row) => {
-      const slot = slots.find(s => s.startDate === row.startDate);
+      const slot = slots.find(s => s.startDate === row.startDate && s.endDate === row.endDate);
       return slot?._id === row._id;
     };
 
