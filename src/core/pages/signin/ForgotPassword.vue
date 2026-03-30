@@ -45,10 +45,10 @@ export default {
   validations: {
     email: { email, required },
   },
-  async beforeRouteEnter (to, from, next) {
+  async beforeRouteEnter () {
     const isLogged = await isUserLogged();
-    if (isLogged) next({ path: '/' });
-    else next();
+    if (isLogged) return { path: '/' };
+    return true;
   },
   methods: {
     async submit () {

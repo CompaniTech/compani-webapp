@@ -15,7 +15,7 @@ const Router = createRouter({
   history: createWebHistory(process.env.VUE_ROUTER_BASE),
 });
 
-Router.beforeEach(async (to, from, next) => {
+Router.beforeEach(async (to) => {
   if (to.meta.cookies) {
     let loggedUser = store.getters['main/getLoggedUser'];
     if (!loggedUser) {
@@ -26,9 +26,9 @@ Router.beforeEach(async (to, from, next) => {
     }
 
     const ability = defineAbilitiesFor(pick(loggedUser, ['role', 'company']));
-    if (!ability.can('read', to.name)) next('/404');
-    else next();
-  } else next();
+    if (!ability.can('read', to.name)) return '/404';
+    return true;
+  } return true;
 });
 
 export default Router;

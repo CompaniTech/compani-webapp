@@ -8,17 +8,17 @@ const routes = [
   {
     path: '/ad',
     components: { default: () => import('src/modules/vendor/layouts/Layout') },
-    beforeEnter: async (to, from, next) => {
+    beforeEnter: async (to) => {
       try {
-        if (!['/ad', '/ad/'].includes(to.path)) return next();
+        if (!['/ad', '/ad/'].includes(to.path)) return true;
 
         if (!(await canNavigate())) return logOutAndRedirectToLogin();
 
         const userVendorRole = store.getters['main/getVendorRole'];
-        if (!userVendorRole) return next({ path: '/' });
+        if (!userVendorRole) return { path: '/' };
 
-        if (userVendorRole === TRAINER) return next({ name: 'trainers courses' });
-        return next({ name: 'ni management blended courses' });
+        if (userVendorRole === TRAINER) return { name: 'trainers courses' };
+        return { name: 'ni management blended courses' };
       } catch (e) {
         console.error(e);
       }
@@ -47,13 +47,13 @@ const routes = [
         name: 'ni users companies info',
         component: () => import('src/modules/vendor/pages/ni/users/companies/CompanyProfile'),
         props: route => ({ ...route.query, ...route.params }),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if (!to.query.defaultTab && from.name === 'ni management blended courses info') {
               to.query.defaultTab = 'bills';
             }
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }
@@ -86,7 +86,7 @@ const routes = [
         path: 'ni/users/trainers/:trainerId',
         name: 'ni users trainers info',
         component: () => import('src/modules/vendor/pages/ni/users/trainers/TrainerProfile'),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             const blendedOrSingleCourses = [
               'ni management blended courses',
@@ -99,7 +99,7 @@ const routes = [
               to.query.defaultTab = 'contracts';
             }
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }
@@ -124,12 +124,12 @@ const routes = [
         name: 'ni users learners info',
         component: () => import('src/modules/vendor/pages/ni/users/learners/LearnerProfile'),
         props: route => ({ ...route.query, ...route.params }),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if (from.name === 'ni management blended courses info' ||
               from.name === 'ni management elearning courses info') to.query.defaultTab = 'courses';
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }
@@ -152,12 +152,12 @@ const routes = [
         path: 'ni/pedagogy/programs/:programId',
         name: 'ni pedagogy programs info',
         component: () => import('src/modules/vendor/pages/ni/pedagogy/ProgramProfile'),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if (from.name === 'ni pedagogy activity info') to.query.defaultTab = 'content';
             else if (from.name === 'ni pedagogy questionnaire profile') to.query.defaultTab = 'questionnaire';
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }
@@ -200,7 +200,7 @@ const routes = [
         path: 'ni/management/blended-courses/:courseId',
         name: 'ni management blended courses info',
         component: () => import('src/modules/vendor/pages/ni/management/BlendedCourseProfile'),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if ([
               'ni users learners info',
@@ -211,7 +211,7 @@ const routes = [
               to.query.defaultTab = 'billing';
             }
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }
@@ -235,11 +235,11 @@ const routes = [
         path: 'ni/management/elearning-courses/:courseId',
         name: 'ni management elearning courses info',
         component: () => import('src/modules/vendor/pages/ni/management/ELearningCourseProfile'),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if (from.name === 'ni users learners info') to.query.defaultTab = 'followUp';
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }
@@ -264,7 +264,7 @@ const routes = [
         path: 'trainers/management/courses/:courseId',
         name: 'trainers courses info',
         component: () => import('src/modules/vendor/pages/ni/management/BlendedCourseProfile'),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if ([
               'trainers questionnaire answers',
@@ -278,7 +278,7 @@ const routes = [
 
             const trainerIds = get(course, 'trainers', []).map(t => t._id);
 
-            return trainerIds.includes(loggedUser._id) ? next() : next('/404');
+            return trainerIds.includes(loggedUser._id) ? true : '/404';
           } catch (e) {
             console.error(e);
           }

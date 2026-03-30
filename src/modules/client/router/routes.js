@@ -7,22 +7,22 @@ const routes = [
   {
     path: '/',
     components: { default: () => import('src/modules/client/layouts/Layout') },
-    beforeEnter: async (to, from, next) => {
+    beforeEnter: async (to) => {
       try {
-        if (to.path !== '/') return next();
+        if (to.path !== '/') return true;
 
         const canNav = await canNavigate();
         if (!canNav) return logOutAndRedirectToLogin();
 
         const userVendorRole = store.getters['main/getVendorRole'];
         const userClientRole = store.getters['main/getClientRole'];
-        if (!userClientRole && !userVendorRole) return next({ name: 'account client' });
-        if (userVendorRole) return next({ path: '/ad' });
+        if (!userClientRole && !userVendorRole) return { name: 'account client' };
+        if (userVendorRole) return { path: '/ad' };
 
-        if ([...AUXILIARY_ROLES, HELPER].includes(userClientRole)) return next({ name: 'account client' });
-        if (COACH_ROLES.includes(userClientRole)) return next({ name: 'ni courses' });
+        if ([...AUXILIARY_ROLES, HELPER].includes(userClientRole)) return { name: 'account client' };
+        if (COACH_ROLES.includes(userClientRole)) return { name: 'ni courses' };
 
-        return next({ name: '404' });
+        return { name: '404' };
       } catch (e) {
         console.error(e);
       }
@@ -132,12 +132,12 @@ const routes = [
         path: 'ni/users/learners/:learnerId',
         name: 'ni courses learners info',
         component: () => import('src/modules/client/pages/ni/courses/LearnerProfile'),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if (from.name === 'ni courses info') to.query.defaultTab = 'courses';
             if (from.name === 'ni elearning courses info') to.query.defaultTab = 'courses';
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }
@@ -152,13 +152,13 @@ const routes = [
         path: 'ni/courses/:courseId',
         name: 'ni courses info',
         component: () => import('src/modules/client/pages/ni/courses/BlendedCourseProfile'),
-        beforeEnter: async (to, from, next) => {
+        beforeEnter: async (to, from) => {
           try {
             if (from.name === 'ni courses learners info' && !to.query.defaultTab) {
               to.query.defaultTab = 'traineeFollowUp';
             }
 
-            return next();
+            return true;
           } catch (e) {
             console.error(e);
           }

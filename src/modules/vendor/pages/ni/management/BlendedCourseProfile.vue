@@ -127,9 +127,8 @@ export default {
 
     onBeforeUnmount(() => {
       $store.dispatch('course/resetCourse');
-      if (!['ni management blended courses', 'trainers courses'].includes($route.name)) {
-        $store.dispatch('course/resetFilters');
-      }
+      const routes = ['ni management blended courses', 'trainers courses', 'ni management single courses'];
+      if (!routes.includes($route.name)) $store.dispatch('course/resetFilters');
     });
 
     return {

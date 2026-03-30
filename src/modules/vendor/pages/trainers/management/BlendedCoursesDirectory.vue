@@ -164,12 +164,12 @@ export default {
       resetFilters,
     };
   },
-  beforeRouteEnter (_, from, next) {
+  beforeRouteEnter (_, from) {
     if (from.name !== 'trainers courses info') {
       store.dispatch('course/resetFilters', { isClientInterfaceOrTrainer: true });
     }
 
-    next();
+    return true;
   },
 };
 </script>
