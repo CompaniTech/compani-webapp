@@ -134,8 +134,13 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions' && !isTrainer">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots[day]" :val="props.row._id" dense
-                      :disable="props.row.status === PAID" />
+                    <q-checkbox class="q-mr-md"
+                      :model-value="(Array.isArray(selectedCourseSlots[day]) ? selectedCourseSlots[day] : []).includes(props.row._id)"
+                      @update:model-value="val =>
+                        selectSlotGroupByDate(val, props.row, day, trainerInfos.collectiveSlots.slots[day].slots)"
+                      :disable="props.row.status === PAID
+                        || !isFirstCollectiveSlotOfDate(trainerInfos.collectiveSlots.slots[day].slots, props.row)"
+                        dense />
                   </template>
                   <template v-else>{{ col.value }}</template>
                 </q-td>
@@ -192,20 +197,10 @@ export default {
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
     );
-    const coursePaginations = ref(
-      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, { page: 1, rowsPerPage: 10 }]))
-    );
-    const collectiveSlotsPaginations = ref(
-      Object.fromEntries(
-        Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, { page: 1, rowsPerPage: 10 }])
-      )
-    );
-    const selectedCourseSlots = ref(
-      Object.fromEntries([
-        ...trainerInfos.value.courses.map(course => [course._id, []]),
-        ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, []]),
-      ])
-    );
+    const selectedCourseSlots = ref(Object.fromEntries([
+      ...trainerInfos.value.courses.map(course => [course._id, []]),
+      ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, []]),
+    ]));
     const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
     const courseSlotListValidationModal = ref(false);
     const multipleSlotSelection = ref(
@@ -455,7 +450,27 @@ export default {
       }
     };
 
-    watch(trainerInfos, () => {
+    const selectSlotGroupByDate = (event, row, day, slots) => {
+      const sameDate = slots
+        .filter(s => CompaniDate(s.startDate).isSame(row.startDate) &&
+          CompaniDate(s.endDate).isSame(row.endDate) && s.status !== PAID)
+        .map(s => s._id);
+
+      const currentSelectedCourseSlots = Array.isArray(selectedCourseSlots.value[day])
+        ? selectedCourseSlots.value[day]
+        : [];
+
+      selectedCourseSlots.value[day] = event
+        ? [...new Set([...currentSelectedCourseSlots, ...sameDate])]
+        : currentSelectedCourseSlots.filter(id => !sameDate.includes(id));
+    };
+
+    const isFirstCollectiveSlotOfDate = (slots, row) => {
+      const slot = slots.find(s => s.startDate === row.startDate);
+      return slot?._id === row._id;
+    };
+
+    watch(trainerInfos.value, () => {
       selectedCourseSlots.value = Object.fromEntries([
         ...trainerInfos.value.courses.map(course => [course._id, []]),
         ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, []]),
@@ -499,6 +514,8 @@ export default {
       resetSlotListValidationInfos,
       updateSlotList,
       selectSlotList,
+      selectSlotGroupByDate,
+      isFirstCollectiveSlotOfDate,
     };
   },
 };
