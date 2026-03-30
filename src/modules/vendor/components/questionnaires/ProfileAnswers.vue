@@ -1,10 +1,10 @@
 <template>
   <div v-if="!isLoading">
+    <div class="flex justify-end">
+      <ni-primary-button class="q-mb-md" label="Exporter les réponses" unelevated icon="import_export"
+        @click="exportAnswers" />
+    </div>
     <template v-if="isRofOrVendorAdmin">
-      <div class="flex justify-end">
-        <ni-primary-button class="q-mb-md" label="Exporter les réponses" unelevated icon="import_export"
-          @click="exportAnswers" />
-      </div>
       <div class="filters-container">
         <ni-select :options="trainerOptions" :model-value="selectedTrainer" @update:model-value="updateSelectedTrainer"
           clearable />
