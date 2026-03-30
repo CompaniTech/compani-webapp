@@ -52,8 +52,7 @@
                 &nbsp;({{ course.singleTraineeSlots[stepName].paidAmount }})
               </span>
             </div>
-            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns"
-              v-model:pagination="coursePaginations[course._id]" :rows-per-page="[10, 20]">
+            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns">
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
@@ -113,8 +112,7 @@
                 &nbsp;({{ formattedCollectiveSlots.slots[day].paidAmount }})
               </span>
             </q-item-label>
-            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns"
-              v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]">
+            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns">
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
@@ -490,8 +488,6 @@ export default {
       // Data
       isDashboard,
       areCourseDetailsVisible,
-      coursePaginations,
-      collectiveSlotsPaginations,
       selectedCourseSlots,
       courseSlotsToPay,
       courseSlotListValidationModal,
