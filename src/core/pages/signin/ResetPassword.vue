@@ -19,7 +19,8 @@
 </template>
 
 <script>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue';
+import { useRoute } from 'vue-router'; // Add this import
 import { sameAs, required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
 import CompaniHeader from '@components/CompaniHeader';
@@ -37,6 +38,7 @@ export default {
     'ni-input': Input,
   },
   setup () {
+    const route = useRoute(); // Get the route object
     const password = ref('');
     const passwordConfirm = ref('');
     const userId = ref(null);
@@ -83,6 +85,13 @@ export default {
       }
     };
 
+    onMounted(() => {
+      const { checkTokenData } = route.meta;
+      if (checkTokenData) {
+        setData(checkTokenData);
+      }
+    });
+
     onBeforeUnmount(() => {
       clearTimeout(timeout.value);
     });
@@ -99,17 +108,17 @@ export default {
       v$,
     };
   },
-  async beforeRouteEnter (to, from, next) {
+  async beforeRouteEnter (to) {
     try {
       const isLogged = await isUserLogged();
-      if (isLogged) return next({ path: '/' });
+      if (isLogged) return { path: '/' };
 
       if (to.params.token) {
         const checkToken = await Authentication.checkPasswordToken(to.params.token);
-        next(vm => vm.setData(checkToken));
-      } else {
-        logOutAndRedirectToLogin();
+        to.meta.checkTokenData = checkToken;
+        return true;
       }
+      logOutAndRedirectToLogin();
     } catch (e) {
       if (e.response) console.error(e.response);
       else console.error(e);

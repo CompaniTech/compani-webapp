@@ -20,12 +20,12 @@ export const useLayouts = (collapsibleClosing) => {
 
   const toggleMenu = (value) => { $store.dispatch('main/setDrawer', value); };
 
-  onBeforeRouteUpdate((to, from, next) => {
+  onBeforeRouteUpdate((to, from) => {
     if (drawer.value && !isMini.value) {
       collapsibleClosing(to, from);
     }
 
-    next();
+    return true;
   });
 
   return {

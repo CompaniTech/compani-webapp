@@ -334,12 +334,12 @@ export default {
       updateSelectedSalesRepresentative,
     };
   },
-  beforeRouteEnter (_, from, next) {
+  beforeRouteEnter (_, from) {
     if (!['ni management blended courses info', 'ni users trainers info'].includes(from.name)) {
       store.dispatch('course/resetFilters', { isClientInterfaceOrTrainer: false });
     }
 
-    next();
+    return true;
   },
 };
 </script>
