@@ -132,13 +132,11 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions' && !isTrainer">
-                    <q-checkbox class="q-mr-md"
-                      :model-value="(Array.isArray(selectedCourseSlots[day]) ? selectedCourseSlots[day] : []).includes(props.row._id)"
+                    <q-checkbox class="q-mr-md" :model-value="selectedCourseSlots[day]?.includes(props.row._id)" dense
                       @update:model-value="val =>
                         selectSlotGroupByDate(val, props.row, day, trainerInfos.collectiveSlots.slots[day].slots)"
                       :disable="props.row.status === PAID
-                        || !isFirstCollectiveSlotOfDate(trainerInfos.collectiveSlots.slots[day].slots, props.row)"
-                        dense />
+                        || !isFirstCollectiveSlotOfDate(trainerInfos.collectiveSlots.slots[day].slots, props.row)" />
                   </template>
                   <template v-else>{{ col.value }}</template>
                 </q-td>
