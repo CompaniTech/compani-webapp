@@ -482,6 +482,16 @@ export default {
       );
     });
 
+    watch(selectedCourseSlots.value, (newVal) => {
+      Object.keys(newVal).forEach((val) => {
+        const slots = trainerInfos.value.collectiveSlots.slots[val]?.slots ||
+          coursesWithFormattedData.value.find(course => course._id === val).rows || [];
+        const selectableSlots = slots.filter(s => s.status !== PAID).map(s => s._id);
+
+        multipleSlotSelection.value[val] = selectableSlots.length === newVal[val].length;
+      });
+    });
+
     return {
       // Data
       isDashboard,
