@@ -1,6 +1,7 @@
 import useVuelidate from '@vuelidate/core';
 import pick from 'lodash/pick';
 import get from 'lodash/get';
+import uniqBy from 'lodash/uniqBy';
 import { ref, computed } from 'vue';
 import CourseSlots from '@api/CourseSlots';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
@@ -23,6 +24,7 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   const max = ref(CompaniDate().add(`P${maxMonthsPeriod}M`).endOf(MONTH).toISO());
   const selectedTrainer = ref('');
   const selectedStatus = ref('');
+  const selectedProgram = ref('');
 
   const statusOptions = [
     ...Object.entries(SLOT_STATUS).map(([value, label]) => ({ label, value })),
@@ -62,6 +64,12 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   const filteredData = computed(() => {
     let data = trainerBillingInfos.value;
     if (selectedTrainer.value) data = pick(data, selectedTrainer.value);
+    if (selectedProgram.value) {
+      data = Object.fromEntries(Object.entries(data).map(([trainerId, t]) => ([
+        trainerId,
+        { ...t, courses: t.courses.filter(c => c.program._id === selectedProgram.value) },
+      ])));
+    }
     if (!selectedStatus.value) return data;
 
     return Object.fromEntries(
@@ -247,6 +255,22 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     }))
   ));
 
+  const programOptions = computed(() => {
+    const programs = Object.values(filteredData.value).flatMap(t => [
+      ...t.courses.map(c => c.program),
+      ...(t.collectiveSlots
+        ? Object.values(t.collectiveSlots.slots).flatMap(slotGroup => slotGroup.slots.map(s => s.program))
+        : []),
+    ]);
+
+    const uniqPrograms = uniqBy(programs, '_id');
+
+    return [
+      { label: 'Tous les programmes', value: '' },
+      ...uniqPrograms.map(p => ({ label: p.name, value: p._id })).sort((a, b) => a.label.localeCompare(b.label)),
+    ];
+  });
+
   const dateRangeErrorMessage = computed(() => {
     if (CompaniDate(dateRange.value.endDate).isBefore(dateRange.value.startDate)) {
       return 'La date de fin doit être postérieure à la date de début';
@@ -282,11 +306,13 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     selectedStatus,
     selectedTrainer,
     statusOptions,
+    selectedProgram,
     // Computed
     v$,
     filteredData,
     trainerOptions,
     dateRangeErrorMessage,
+    programOptions,
     // Methods
     refreshCourseSlots,
     input,

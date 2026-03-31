@@ -12,6 +12,7 @@
     <div class="filters-container">
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
+      <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
     </div>
     <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
       :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" :trainer-id="trainerId" />
@@ -44,9 +45,11 @@ export default {
       dateRange,
       selectedTrainer,
       selectedStatus,
+      selectedProgram,
       filteredData,
       statusOptions,
       trainerOptions,
+      programOptions,
       dateRangeErrorMessage,
       v$,
       input,
@@ -60,6 +63,7 @@ export default {
     const resetFilters = () => {
       selectedTrainer.value = '';
       selectedStatus.value = '';
+      selectedProgram.value = '';
     };
 
     watch(dateRange, async () => {
@@ -79,10 +83,12 @@ export default {
       selectedTrainer,
       selectedStatus,
       statusOptions,
+      selectedProgram,
       // Computed
       filteredData,
       dateRangeErrorMessage,
       trainerOptions,
+      programOptions,
       v$,
       // Methods
       input,
