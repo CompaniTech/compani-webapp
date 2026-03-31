@@ -15,6 +15,7 @@
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
+      <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
     </div>
     <trainer-billing-infos-card v-if="filteredData[trainer._id]" :trainer-infos="filteredData[trainer._id]"
       @refresh="refreshCourseSlots" :trainer-id="trainer._id" :is-trainer="loggedUserIsTrainer" />
@@ -65,8 +66,10 @@ export default {
     const {
       dateRange,
       selectedStatus,
+      selectedProgram,
       filteredData,
       statusOptions,
+      programOptions,
       dateRangeErrorMessage,
       v$,
       input,
@@ -77,6 +80,7 @@ export default {
 
     const resetFilters = () => {
       selectedStatus.value = '';
+      selectedProgram.value = '';
     };
 
     watch(dateRange, async () => {
@@ -95,12 +99,14 @@ export default {
       dateRange,
       selectedStatus,
       statusOptions,
+      selectedProgram,
       // Computed
       filteredData,
       dateRangeErrorMessage,
       v$,
       trainer,
       loggedUserIsTrainer,
+      programOptions,
       // Methods
       input,
       resetFilters,

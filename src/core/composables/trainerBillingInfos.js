@@ -65,11 +65,30 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     let data = trainerBillingInfos.value;
     if (selectedTrainer.value) data = pick(data, selectedTrainer.value);
     if (selectedProgram.value) {
-      data = Object.fromEntries(Object.entries(data).map(([trainerId, t]) => ([
-        trainerId,
-        { ...t, courses: t.courses.filter(c => c.program._id === selectedProgram.value) },
-      ])));
+      data = Object.fromEntries(
+        Object.entries(data).map(([trainerId, t]) => [
+          trainerId,
+          {
+            ...t,
+            courses: t.courses.filter(c => c.program._id === selectedProgram.value),
+            collectiveSlots: {
+              ...t.collectiveSlots,
+              slots: Object.fromEntries(
+                Object.entries(t.collectiveSlots.slots)
+                  .map(([day, daySlotGroup]) => [
+                    day,
+                    {
+                      ...daySlotGroup,
+                      slots: (daySlotGroup.slots).filter(slot => slot.program._id === selectedProgram.value),
+                    },
+                  ].filter(([, slotGroup]) => (slotGroup.slots).length))
+              ),
+            },
+          },
+        ])
+      );
     }
+
     if (!selectedStatus.value) return data;
 
     return Object.fromEntries(
@@ -249,17 +268,16 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   });
 
   const trainerOptions = computed(() => formatAndSortIdentityOptions(
-    Object.entries(trainerBillingInfos.value).map(([trainerId, t]) => ({
-      _id: trainerId,
-      identity: t.identity,
-    }))
+    Object.entries(filteredData.value)
+      .filter(([, t]) => t.courses.length || Object.keys(t.collectiveSlots.slots).length)
+      .map(([trainerId, t]) => ({ _id: trainerId, identity: t.identity }))
   ));
 
   const programOptions = computed(() => {
     const programs = Object.values(filteredData.value).flatMap(t => [
       ...t.courses.map(c => c.program),
       ...(t.collectiveSlots
-        ? Object.values(t.collectiveSlots.slots).flatMap(slotGroup => slotGroup.slots.map(s => s.program))
+        ? Object.values(t.collectiveSlots.slots).flatMap(slotGroup => (slotGroup.slots || []).map(s => s.program))
         : []),
     ]);
 
