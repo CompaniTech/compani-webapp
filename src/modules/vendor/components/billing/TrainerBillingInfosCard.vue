@@ -116,7 +116,7 @@
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox :model-value="multipleSlotSelection[day]" class="q-mr-sm" size="sm"
+                    <q-checkbox :model-value="multipleSlotSelection[day] || false" class="q-mr-sm" size="sm"
                       @update:model-value="
                         selectSlotList($event, { day, slots: trainerInfos.collectiveSlots.slots[day].slots })"
                       :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => s.status === PAID)" />
@@ -132,7 +132,8 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions' && !isTrainer">
-                    <q-checkbox class="q-mr-md" :model-value="selectedCourseSlots[day]?.includes(props.row._id)" dense
+                    <q-checkbox class="q-mr-md"
+                      :model-value="selectedCourseSlots[day]?.includes(props.row._id) || false" dense
                       @update:model-value="val =>
                         selectSlotGroupByDate(val, props.row, day, trainerInfos.collectiveSlots.slots[day].slots)"
                       :disable="props.row.status === PAID
@@ -157,6 +158,7 @@
 
 import { ref, toRefs, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import get from 'lodash/get';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
 import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID, NOT_PAID } from '@data/constants';
@@ -485,7 +487,7 @@ export default {
     watch(selectedCourseSlots.value, (newVal) => {
       Object.keys(newVal).forEach((val) => {
         const slots = trainerInfos.value.collectiveSlots.slots[val]?.slots ||
-          coursesWithFormattedData.value.find(course => course._id === val).rows || [];
+          get(coursesWithFormattedData.value.find(course => course._id === val), 'rows') || [];
         const selectableSlots = slots.filter(s => s.status !== PAID).map(s => s._id);
 
         multipleSlotSelection.value[val] = selectableSlots.length === newVal[val].length;
