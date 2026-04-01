@@ -191,9 +191,7 @@ export default {
     const isDashboard = /\/trainers-follow-up/.test($route.path);
     const displayDetails = ref(!isDashboard);
 
-    const areCourseDetailsVisible = ref(
-      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
-    );
+    const areCourseDetailsVisible = ref({});
     const selectedCourseSlots = ref({});
     const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
     const courseSlotListValidationModal = ref(false);
@@ -410,14 +408,7 @@ export default {
         await CourseSlots.updateSlotList({ ...courseSlotsToPay.value, trainer: trainerId.value });
         emit('refresh');
         courseSlotListValidationModal.value = false;
-        selectedCourseSlots.value = Object.fromEntries([
-          ...trainerInfos.value.courses.map(course => [course._id, []]),
-          ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, []]),
-        ]);
-        multipleSlotSelection.value = Object.fromEntries([
-          ...trainerInfos.value.courses.map(course => [course._id, false]),
-          ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, false]),
-        ]);
+
         NotifyPositive('Créneaux modifiés.');
       } catch (e) {
         console.error(e);
@@ -480,7 +471,7 @@ export default {
           multipleSlotSelection.value[val] = selectableSlots.length === selectedCourseSlots.value[val].length;
         }
       });
-    }, { immediate: true, deep: true });
+    }, { deep: true });
 
     return {
       // Data
