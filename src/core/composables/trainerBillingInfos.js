@@ -250,11 +250,14 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     return getFilteredData(data, slotFilter);
   });
 
-  const trainerOptions = computed(() => formatAndSortIdentityOptions(
-    Object.entries(filteredData.value)
-      .filter(([, t]) => t.courses.length || Object.keys(t.collectiveSlots.slots).length)
-      .map(([trainerId, t]) => ({ _id: trainerId, identity: t.identity }))
-  ));
+  const trainerOptions = computed(() => [
+    { label: 'Tous les intervenant·es', value: '' },
+    ...formatAndSortIdentityOptions(
+      Object.entries(filteredData.value)
+        .filter(([, t]) => t.courses.length || Object.keys(t.collectiveSlots.slots).length)
+        .map(([trainerId, t]) => ({ _id: trainerId, identity: t.identity }))
+    ),
+  ]);
 
   const programOptions = computed(() => {
     const programs = Object.values(filteredData.value).flatMap((t) => {
