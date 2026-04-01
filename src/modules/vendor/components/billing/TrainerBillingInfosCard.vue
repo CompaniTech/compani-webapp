@@ -16,7 +16,8 @@
             </span>
           </div>
           <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
-            @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
+            @click.stop="openCourseSlotListValidationModal"
+            :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
         </div>
       </template>
       <div class="q-pa-sm bg-peach-200">
