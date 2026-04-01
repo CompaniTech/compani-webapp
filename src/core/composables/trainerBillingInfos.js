@@ -246,21 +246,21 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   const filteredData = computed(() => {
     let data = trainerBillingInfos.value;
     if (selectedTrainer.value) data = pick(data, selectedTrainer.value);
-
+    if (!selectedProgram.value && !selectedStatus.value) return data;
     return getFilteredData(data, slotFilter);
   });
 
   const trainerOptions = computed(() => [
     { label: 'Tous les intervenant·es', value: '' },
     ...formatAndSortIdentityOptions(
-      Object.entries(filteredData.value)
+      Object.entries(trainerBillingInfos.value)
         .filter(([, t]) => t.courses.length || Object.keys(t.collectiveSlots.slots).length)
         .map(([trainerId, t]) => ({ _id: trainerId, identity: t.identity }))
     ),
   ]);
 
   const programOptions = computed(() => {
-    const programs = Object.values(filteredData.value).flatMap((t) => {
+    const programs = Object.values(trainerBillingInfos.value).flatMap((t) => {
       const singleTraineeSlotsPrograms = t.courses
         .flatMap(c => Object.values(c.singleTraineeSlots).flatMap(stepInfos => stepInfos.slots.map(s => s.program)));
       const collectiveSlotsPrograms = Object.values(t.collectiveSlots.slots)
