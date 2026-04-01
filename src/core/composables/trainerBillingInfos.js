@@ -61,7 +61,7 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     }
   };
 
-  const getFilteredData = (data, filter) => Object.fromEntries(
+  const getFilteredData = (data, slotFilter) => Object.fromEntries(
     Object.entries(data).map(([trainerId, trainerInfos]) => {
       // Single slots
       const courses = trainerInfos.courses
@@ -78,9 +78,7 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
               let toPayAmount = 0;
               let paidAmount = 0;
 
-              const filteredStepSlots = filter === 'status'
-                ? step.slots.filter(s => s.status === selectedStatus.value)
-                : step.slots.filter(s => s.program._id === selectedProgram.value);
+              const filteredStepSlots = step.slots.filter(slotFilter);
 
               filteredStepSlots.forEach((slot) => {
                 const duration = CompaniDate(slot.endDate).diff(slot.startDate, MINUTE);
@@ -137,9 +135,7 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
 
       const collectiveSlots = Object.fromEntries(
         Object.entries(trainerInfos.collectiveSlots.slots).map(([day, daySlotGroup]) => {
-          const filteredSlots = filter === 'status'
-            ? daySlotGroup.slots.filter(s => s.status === selectedStatus.value)
-            : daySlotGroup.slots.filter(s => s.program._id === selectedProgram.value);
+          const filteredSlots = daySlotGroup.slots.filter(slotFilter);
 
           let toPayDuration = CompaniDuration('PT0S');
           let paidDuration = CompaniDuration('PT0S');
@@ -241,13 +237,17 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     })
   );
 
+  const slotFilter = (slot) => {
+    if (selectedProgram.value && slot.program._id !== selectedProgram.value) return false;
+    if (selectedStatus.value && slot.status !== selectedStatus.value) return false;
+    return true;
+  };
+
   const filteredData = computed(() => {
     let data = trainerBillingInfos.value;
     if (selectedTrainer.value) data = pick(data, selectedTrainer.value);
-    if (selectedProgram.value) data = getFilteredData(data, 'program');
-    if (!selectedStatus.value) return data;
 
-    return getFilteredData(data, 'status');
+    return getFilteredData(data, slotFilter);
   });
 
   const trainerOptions = computed(() => formatAndSortIdentityOptions(

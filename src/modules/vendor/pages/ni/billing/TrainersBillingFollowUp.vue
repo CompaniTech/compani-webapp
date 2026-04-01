@@ -10,9 +10,9 @@
     </ni-profile-header>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
+      <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
-      <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
     </div>
     <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
       :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" :trainer-id="trainerId" />
