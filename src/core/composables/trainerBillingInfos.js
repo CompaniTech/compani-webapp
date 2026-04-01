@@ -263,9 +263,8 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     const programs = Object.values(filteredData.value).flatMap((t) => {
       const singleTraineeSlotsPrograms = t.courses
         .flatMap(c => Object.values(c.singleTraineeSlots).flatMap(stepInfos => stepInfos.slots.map(s => s.program)));
-      const collectiveSlotsPrograms = t.collectiveSlots
-        ? Object.values(t.collectiveSlots.slots).flatMap(slotGroup => (slotGroup.slots || []).map(s => s.program))
-        : [];
+      const collectiveSlotsPrograms = Object.values(t.collectiveSlots.slots)
+        .flatMap(slotGroup => (slotGroup.slots || []).map(s => s.program));
 
       return [...singleTraineeSlotsPrograms, ...collectiveSlotsPrograms];
     });
