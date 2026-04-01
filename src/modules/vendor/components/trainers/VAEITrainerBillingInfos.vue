@@ -17,9 +17,12 @@
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
       <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
     </div>
-    <trainer-billing-infos-card v-if="filteredData[trainer._id]" :trainer-infos="filteredData[trainer._id]"
+    <q-inner-loading v-if="slotsLoading" :showing="slotsLoading">
+      <q-spinner-facebook size="30px" color="primary" />
+    </q-inner-loading>
+    <trainer-billing-infos-card v-else-if="displaySlots" :trainer-infos="filteredData[trainer._id]"
       @refresh="refreshCourseSlots" :trainer-id="trainer._id" :is-trainer="loggedUserIsTrainer" />
-    <div v-else class="text-italic">Pas de créneaux sur la période</div>
+    <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période.</div>
   </q-page>
 </template>
 
@@ -76,7 +79,21 @@ export default {
       goToPreviousMonth,
       goToNextMonth,
       refreshCourseSlots,
+      slotsLoading,
     } = useTrainerBillingInfos(trainer, loggedUserIsTrainer);
+
+    const displaySlots = computed(() => {
+      const trainerInfos = filteredData.value[trainer.value._id];
+      if (trainerInfos) {
+        const hasSingleSlots = trainerInfos.courses.length;
+        const hasCollectiveSlots = Object.values(trainerInfos.collectiveSlots.slots)
+          .flatMap(slotGroup => slotGroup.slots).length;
+
+        return hasSingleSlots || hasCollectiveSlots;
+      }
+
+      return false;
+    });
 
     const resetFilters = () => {
       selectedStatus.value = '';
@@ -100,6 +117,7 @@ export default {
       selectedStatus,
       statusOptions,
       selectedProgram,
+      slotsLoading,
       // Computed
       filteredData,
       dateRangeErrorMessage,
@@ -107,6 +125,7 @@ export default {
       trainer,
       loggedUserIsTrainer,
       programOptions,
+      displaySlots,
       // Methods
       input,
       resetFilters,

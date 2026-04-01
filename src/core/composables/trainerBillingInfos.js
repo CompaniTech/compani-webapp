@@ -313,6 +313,7 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     selectedTrainer,
     statusOptions,
     selectedProgram,
+    slotsLoading,
     // Computed
     v$,
     filteredData,

@@ -14,13 +14,19 @@
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
       <ni-select caption="Statut des créneaux" clearable :options="statusOptions" v-model="selectedStatus" />
     </div>
-    <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
-      :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" :trainer-id="trainerId" />
+    <q-inner-loading v-if="slotsLoading" :showing="slotsLoading">
+      <q-spinner-facebook size="30px" color="primary" />
+    </q-inner-loading>
+    <div v-else-if="displaySlots">
+      <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
+        :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" :trainer-id="trainerId" />
+    </div>
+    <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période.</div>
   </q-page>
 </template>
 <script>
 import { useMeta } from 'quasar';
-import { watch } from 'vue';
+import { watch, computed } from 'vue';
 import ProfileHeader from '@components/ProfileHeader';
 import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
@@ -56,7 +62,17 @@ export default {
       goToPreviousMonth,
       goToNextMonth,
       refreshCourseSlots,
+      slotsLoading,
     } = useTrainerBillingInfos();
+
+    const displaySlots = computed(() => {
+      if (filteredData.value) {
+        return Object.entries(filteredData.value).some(([, trainerInfos]) => trainerInfos.courses.length ||
+          Object.values(trainerInfos.collectiveSlots.slots).flatMap(slotGroup => slotGroup.slots).length);
+      }
+
+      return false;
+    });
 
     const updateSelectedTrainer = (value) => { selectedTrainer.value = value; };
 
@@ -84,12 +100,14 @@ export default {
       selectedStatus,
       statusOptions,
       selectedProgram,
+      slotsLoading,
       // Computed
       filteredData,
       dateRangeErrorMessage,
       trainerOptions,
       programOptions,
       v$,
+      displaySlots,
       // Methods
       input,
       updateSelectedTrainer,
