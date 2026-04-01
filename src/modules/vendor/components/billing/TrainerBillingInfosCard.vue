@@ -16,7 +16,8 @@
             </span>
           </div>
           <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
-            @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
+            @click.stop="openCourseSlotListValidationModal"
+            :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
         </div>
       </template>
       <div class="q-pa-sm bg-peach-200">
@@ -52,12 +53,21 @@
                 &nbsp;({{ course.singleTraineeSlots[stepName].paidAmount }})
               </span>
             </div>
-            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns"
-              v-model:pagination="coursePaginations[course._id]" :rows-per-page="[10, 20]">
+            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns">
+              <template #header="{ props }">
+                <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+                  <template v-if="col.name === 'actions'">
+                    <q-checkbox :model-value="multipleSlotSelection[course._id]" class="q-mr-sm" size="sm"
+                      @update:model-value="selectSlotList($event, { courseId: course._id, slots: course.rows })"
+                      :disable="course.rows.every(s => s.status === PAID)" />
+                  </template>
+                  <template v-else>{{ col.label }}</template>
+                </q-th>
+              </template>
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'actions' && !isTrainer">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots[course._id]" :val="props.row._id" dense
                       :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
@@ -103,8 +113,18 @@
                 &nbsp;({{ formattedCollectiveSlots.slots[day].paidAmount }})
               </span>
             </q-item-label>
-            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns"
-              v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]">
+            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns">
+              <template #header="{ props }">
+                <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+                  <template v-if="col.name === 'actions'">
+                    <q-checkbox :model-value="multipleSlotSelection[day]" class="q-mr-sm" size="sm"
+                      @update:model-value="
+                        selectSlotList($event, { day, slots: trainerInfos.collectiveSlots.slots[day].slots })"
+                      :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => s.status === PAID)" />
+                  </template>
+                  <template v-else>{{ col.label }}</template>
+                </q-th>
+              </template>
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'traineeName'">
@@ -113,7 +133,10 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions' && !isTrainer">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                    <q-checkbox class="q-mr-md"
+                      :model-value="selectedCourseSlots[day]?.includes(props.row._id)" dense
+                      @update:model-value="val =>
+                        selectSlotGroupByDate(val, props.row, day, trainerInfos.collectiveSlots.slots[day].slots)"
                       :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
@@ -135,9 +158,10 @@
 
 import { ref, toRefs, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import get from 'lodash/get';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
-import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID } from '@data/constants';
+import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID, NOT_PAID } from '@data/constants';
 import { formatIdentity, formatStringToPrice } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -168,20 +192,11 @@ export default {
     const isDashboard = /\/trainers-follow-up/.test($route.path);
     const displayDetails = ref(!isDashboard);
 
-    const areCourseDetailsVisible = ref(
-      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
-    );
-    const coursePaginations = ref(
-      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, { page: 1, rowsPerPage: 10 }]))
-    );
-    const collectiveSlotsPaginations = ref(
-      Object.fromEntries(
-        Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, { page: 1, rowsPerPage: 10 }])
-      )
-    );
-    const selectedCourseSlots = ref([]);
+    const areCourseDetailsVisible = ref({});
+    const selectedCourseSlots = ref({});
     const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
     const courseSlotListValidationModal = ref(false);
+    const multipleSlotSelection = ref({});
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -374,7 +389,7 @@ export default {
     });
 
     const openCourseSlotListValidationModal = () => {
-      courseSlotsToPay.value._ids = selectedCourseSlots.value;
+      courseSlotsToPay.value._ids = Object.values(selectedCourseSlots.value).flat();
       courseSlotListValidationModal.value = true;
     };
 
@@ -394,7 +409,7 @@ export default {
         await CourseSlots.updateSlotList({ ...courseSlotsToPay.value, trainer: trainerId.value });
         emit('refresh');
         courseSlotListValidationModal.value = false;
-        selectedCourseSlots.value = [];
+
         NotifyPositive('Créneaux modifiés.');
       } catch (e) {
         console.error(e);
@@ -402,25 +417,73 @@ export default {
       }
     };
 
-    watch(trainerInfos, () => {
-      selectedCourseSlots.value = [];
+    const selectSlotList = (event, obj) => {
+      const selectableSlots = obj.slots.filter(s => s.status === NOT_PAID).map(s => s._id);
+
+      if (!obj.day) {
+        const { courseId } = obj;
+        multipleSlotSelection.value[courseId] = event;
+        selectedCourseSlots.value[courseId] = event ? selectableSlots : [];
+      } else {
+        const { day } = obj;
+        multipleSlotSelection.value[day] = event;
+        selectedCourseSlots.value[day] = event ? selectableSlots : [];
+      }
+    };
+
+    const selectSlotGroupByDate = (event, row, day, slots) => {
+      const sameDate = slots
+        .filter(s => CompaniDate(s.startDate).isSame(row.startDate) &&
+          CompaniDate(s.endDate).isSame(row.endDate) && s.status !== PAID)
+        .map(s => s._id);
+
+      const currentSelectedCourseSlots = Array.isArray(selectedCourseSlots.value[day])
+        ? selectedCourseSlots.value[day]
+        : [];
+
+      selectedCourseSlots.value[day] = event
+        ? [...new Set([...currentSelectedCourseSlots, ...sameDate])]
+        : currentSelectedCourseSlots.filter(id => !sameDate.includes(id));
+    };
+
+    watch(() => trainerInfos.value, (newVal) => {
+      selectedCourseSlots.value = Object.fromEntries([
+        ...newVal.courses.map(course => [course._id, []]),
+        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, []]),
+      ]);
+
+      multipleSlotSelection.value = Object.fromEntries([
+        ...newVal.courses.map(course => [course._id, false]),
+        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, false]),
+      ]);
 
       areCourseDetailsVisible.value = Object.fromEntries(
-        trainerInfos.value.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
+        newVal.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
       );
-    });
+    }, { immediate: true });
+
+    watch(() => selectedCourseSlots.value, (newVal) => {
+      Object.keys(newVal).forEach((val) => {
+        const slots = trainerInfos.value.collectiveSlots.slots[val]?.slots ||
+          get(coursesWithFormattedData.value.find(course => course._id === val), 'rows') || [];
+        const selectableSlots = slots.filter(s => s.status !== PAID).map(s => s._id);
+
+        if (selectableSlots.length) {
+          multipleSlotSelection.value[val] = selectableSlots.length === selectedCourseSlots.value[val].length;
+        }
+      });
+    }, { deep: true });
 
     return {
       // Data
       isDashboard,
       areCourseDetailsVisible,
-      coursePaginations,
-      collectiveSlotsPaginations,
       selectedCourseSlots,
       courseSlotsToPay,
       courseSlotListValidationModal,
       PAID,
       displayDetails,
+      multipleSlotSelection,
       // Validation
       v$,
       // Computed
@@ -436,6 +499,8 @@ export default {
       openCourseSlotListValidationModal,
       resetSlotListValidationInfos,
       updateSlotList,
+      selectSlotList,
+      selectSlotGroupByDate,
     };
   },
 };
