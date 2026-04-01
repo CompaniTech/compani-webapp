@@ -116,7 +116,7 @@
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox :model-value="multipleSlotSelection[day] || false" class="q-mr-sm" size="sm"
+                    <q-checkbox :model-value="multipleSlotSelection[day]" class="q-mr-sm" size="sm"
                       @update:model-value="
                         selectSlotList($event, { day, slots: trainerInfos.collectiveSlots.slots[day].slots })"
                       :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => s.status === PAID)" />
@@ -133,11 +133,10 @@
                   </template>
                   <template v-else-if="col.name === 'actions' && !isTrainer">
                     <q-checkbox class="q-mr-md"
-                      :model-value="selectedCourseSlots[day]?.includes(props.row._id) || false" dense
+                      :model-value="selectedCourseSlots[day]?.includes(props.row._id)" dense
                       @update:model-value="val =>
                         selectSlotGroupByDate(val, props.row, day, trainerInfos.collectiveSlots.slots[day].slots)"
-                      :disable="props.row.status === PAID
-                        || !isFirstCollectiveSlotOfDate(trainerInfos.collectiveSlots.slots[day].slots, props.row)" />
+                      :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
                 </q-td>
@@ -195,18 +194,10 @@ export default {
     const areCourseDetailsVisible = ref(
       Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
     );
-    const selectedCourseSlots = ref(Object.fromEntries([
-      ...trainerInfos.value.courses.map(course => [course._id, []]),
-      ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, []]),
-    ]));
+    const selectedCourseSlots = ref({});
     const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
     const courseSlotListValidationModal = ref(false);
-    const multipleSlotSelection = ref(
-      Object.fromEntries([
-        ...trainerInfos.value.courses.map(course => [course._id, false]),
-        ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, false]),
-      ])
-    );
+    const multipleSlotSelection = ref({});
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -463,36 +454,33 @@ export default {
         : currentSelectedCourseSlots.filter(id => !sameDate.includes(id));
     };
 
-    const isFirstCollectiveSlotOfDate = (slots, row) => {
-      const slot = slots.find(s => s.startDate === row.startDate && s.endDate === row.endDate);
-      return slot?._id === row._id;
-    };
-
-    watch(trainerInfos.value, () => {
+    watch(() => trainerInfos.value, (newVal) => {
       selectedCourseSlots.value = Object.fromEntries([
-        ...trainerInfos.value.courses.map(course => [course._id, []]),
-        ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, []]),
+        ...newVal.courses.map(course => [course._id, []]),
+        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, []]),
       ]);
 
       multipleSlotSelection.value = Object.fromEntries([
-        ...trainerInfos.value.courses.map(course => [course._id, false]),
-        ...Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, false]),
+        ...newVal.courses.map(course => [course._id, false]),
+        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, false]),
       ]);
 
       areCourseDetailsVisible.value = Object.fromEntries(
-        trainerInfos.value.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
+        newVal.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
       );
-    });
+    }, { immediate: true });
 
-    watch(selectedCourseSlots.value, (newVal) => {
+    watch(() => selectedCourseSlots.value, (newVal) => {
       Object.keys(newVal).forEach((val) => {
         const slots = trainerInfos.value.collectiveSlots.slots[val]?.slots ||
           get(coursesWithFormattedData.value.find(course => course._id === val), 'rows') || [];
         const selectableSlots = slots.filter(s => s.status !== PAID).map(s => s._id);
 
-        multipleSlotSelection.value[val] = selectableSlots.length === newVal[val].length;
+        if (selectableSlots.length) {
+          multipleSlotSelection.value[val] = selectableSlots.length === selectedCourseSlots.value[val].length;
+        }
       });
-    });
+    }, { immediate: true, deep: true });
 
     return {
       // Data
@@ -521,7 +509,6 @@ export default {
       updateSlotList,
       selectSlotList,
       selectSlotGroupByDate,
-      isFirstCollectiveSlotOfDate,
     };
   },
 };
