@@ -22,14 +22,15 @@ export const useCompletionCertificates = () => {
     }
   };
 
-  const generateCompletionCertificateFile = async (completionCertificateId) => {
+  const generateCompletionCertificateFile = async (completionCertificateId, isAutomatic = false) => {
     try {
       disableButton.value = true;
       await CompletionCertificates.update(completionCertificateId, { action: GENERATION });
       NotifyPositive('Certificat de réalisation généré.');
     } catch (e) {
       console.error(e);
-      if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
+      if (isAutomatic) NotifyPositive('Certificat de réalisation créé.');
+      else if (e.status === 403 && e.data.message) NotifyNegative(e.data.message);
       else NotifyNegative('Erreur lors de la génération du certificat.');
     } finally {
       disableButton.value = false;

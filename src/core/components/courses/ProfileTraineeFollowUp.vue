@@ -488,9 +488,9 @@ export default {
       }
     };
 
-    const generateCompletionCertificate = async (completionCertificateId) => {
+    const generateCompletionCertificate = async (completionCertificateId, isAutomatic) => {
       try {
-        await generateCompletionCertificateFile(completionCertificateId);
+        await generateCompletionCertificateFile(completionCertificateId, isAutomatic);
 
         await refreshCompletionCertificates();
       } catch (e) {
@@ -556,7 +556,9 @@ export default {
         if (v$.value.newCompletionCertificate.$error) return NotifyWarning('Champs requis');
 
         modalLoading.value = true;
-        await CompletionCertificates.create({ ...newCompletionCertificate.value, course: course.value._id });
+        const completionCertificate = await CompletionCertificates
+          .create({ ...newCompletionCertificate.value, course: course.value._id });
+        await generateCompletionCertificate(completionCertificate._id, true);
 
         completionCertificateAdditionModal.value = false;
         await refreshCompletionCertificates();
