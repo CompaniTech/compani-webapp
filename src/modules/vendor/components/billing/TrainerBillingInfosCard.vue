@@ -7,12 +7,14 @@
           <div>
             <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
             <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
-              <span v-if="isDashboard">&nbsp;- </span>À régler : {{ formattedTrainerDurations.notPaid }} (dont
-              &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
+              <span v-if="isDashboard">&nbsp;- </span>À régler : {{ formattedTrainerDurations.notPaid }} -
+              &nbsp;{{ formattedTrainerDurations.notPaidAmount }} (dont {{ formattedTrainerDurations.notPaidAbsence }}
+              &nbsp;d'absence)
             </span>
             <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
               <span v-if="isDashboard || displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
-              {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }} &nbsp;d'absence)
+              {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
+              &nbsp;{{ formattedTrainerDurations.paidAbsence }} d'absence)
             </span>
           </div>
           <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
@@ -30,11 +32,11 @@
               </router-link>
               <span v-if="displayDuration(course.notPaidSingleSlotsDuration)"
                 class="text-weight-bold text-orange-400">
-                  <br> À régler : {{ course.notPaidSingleSlotsDuration }} (dont
+                  <br> À régler : {{ course.notPaidSingleSlotsDuration }} - {{ course.notPaidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.notPaidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
                 <span class="text-copper-500" v-if="displayDuration(course.paidSingleSlotsDuration)">
-                  &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} (dont
+                  &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} - {{ course.paidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.paidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
             </div>
@@ -82,11 +84,13 @@
               <span class="text-weight-bold text-copper-600"> Sessions collectives</span>
               <span v-if="displayDuration(formattedCollectiveSlots.notPaid)"
                 class="text-weight-bold text-orange-400 q-ma-md">
-                <br> À régler : {{ formattedCollectiveSlots.notPaid }} (dont
+                <br> À régler : {{ formattedCollectiveSlots.notPaid }} -
+                &nbsp;{{ formattedCollectiveSlots.notPaidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.notPaidAbsence }} d'absence)
               </span>
               <span class="text-copper-500" v-if="displayDuration(formattedCollectiveSlots.paid)">
-                &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} (dont
+                &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} -
+                &nbsp;{{ formattedCollectiveSlots.paidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.paidAbsence }} d'absence)
               </span>
             </div>
@@ -339,6 +343,10 @@ export default {
         notPaidSingleSlotsDuration: CompaniDuration(notPaidSingleSlotsDuration).format(LONG_DURATION_H_MM),
         notPaidSingleSlotsAbsenceDuration: CompaniDuration(notPaidSingleSlotsAbsenceDuration)
           .format(LONG_DURATION_H_MM),
+        ...(course.notPaidSingleSlotsAmount &&
+          { notPaidSingleSlotsAmount: formatStringToPrice(course.notPaidSingleSlotsAmount) }),
+        ...(course.paidSingleSlotsAmount &&
+          { paidSingleSlotsAmount: formatStringToPrice(course.paidSingleSlotsAmount) }),
         rows,
       };
     }));
@@ -348,6 +356,10 @@ export default {
       notPaidAbsence: CompaniDuration(trainerInfos.value.totalNotPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
       paid: CompaniDuration(trainerInfos.value.totalPaidSlotsDuration).format(LONG_DURATION_H_MM),
       paidAbsence: CompaniDuration(trainerInfos.value.totalPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+      ...(trainerInfos.value.totalPaidSlotsAmount &&
+        { paidAmount: formatStringToPrice(trainerInfos.value.totalPaidSlotsAmount) }),
+      ...(trainerInfos.value.totalNotPaidSlotsAmount &&
+        { notPaidAmount: formatStringToPrice(trainerInfos.value.totalNotPaidSlotsAmount) }),
     }));
 
     const formattedCollectiveSlots = computed(() => {
@@ -360,8 +372,8 @@ export default {
             ...slotGroup,
             toPayDuration: CompaniDuration(slotGroup.toPayDuration).format(LONG_DURATION_H_MM),
             paidDuration: CompaniDuration(slotGroup.paidDuration).format(LONG_DURATION_H_MM),
-            toPayAmount: formatStringToPrice(slotGroup.toPayAmount),
-            paidAmount: formatStringToPrice(slotGroup.paidAmount),
+            ...(slotGroup.toPayAmount && { toPayAmount: formatStringToPrice(slotGroup.toPayAmount) }),
+            ...(slotGroup.paidAmount && { paidAmount: formatStringToPrice(slotGroup.paidAmount) }),
           },
         ])
       );
@@ -372,6 +384,10 @@ export default {
         notPaidAbsence: CompaniDuration(totals.notPaidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
         paid: CompaniDuration(totals.paidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
         paidAbsence: CompaniDuration(totals.paidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+        ...(totals.notPaidCollectiveSlotsAmount &&
+          { notPaidCollectiveSlotsAmount: formatStringToPrice(totals.notPaidCollectiveSlotsAmount) }),
+        ...(totals.paidCollectiveSlotsAmount &&
+          { paidCollectiveSlotsAmount: formatStringToPrice(totals.paidCollectiveSlotsAmount) }),
       };
     });
 

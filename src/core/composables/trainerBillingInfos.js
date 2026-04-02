@@ -68,8 +68,10 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
         .map((course) => {
           let paidSingleSlotsDuration = CompaniDuration('PT0S');
           let paidSingleSlotsAbsenceDuration = CompaniDuration('PT0S');
+          let paidSingleSlotsAmount = 0;
           let notPaidSingleSlotsDuration = CompaniDuration('PT0S');
           let notPaidSingleSlotsAbsenceDuration = CompaniDuration('PT0S');
+          let notPaidSingleSlotsAmount = 0;
 
           const singleTraineeSlots = Object.fromEntries(
             Object.entries(course.singleTraineeSlots).map(([stepName, step]) => {
@@ -103,6 +105,8 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
                 }
               });
 
+              paidSingleSlotsAmount = add(paidSingleSlotsAmount, paidAmount);
+              notPaidSingleSlotsAmount = add(notPaidSingleSlotsAmount, toPayAmount);
               return [
                 stepName,
                 {
@@ -121,8 +125,10 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
             singleTraineeSlots,
             paidSingleSlotsDuration: paidSingleSlotsDuration.toISO(),
             paidSingleSlotsAbsenceDuration: paidSingleSlotsAbsenceDuration.toISO(),
+            paidSingleSlotsAmount,
             notPaidSingleSlotsDuration: notPaidSingleSlotsDuration.toISO(),
             notPaidSingleSlotsAbsenceDuration: notPaidSingleSlotsAbsenceDuration.toISO(),
+            notPaidSingleSlotsAmount,
           };
         })
         .filter(c => Object.keys(c.singleTraineeSlots).length);
@@ -130,8 +136,10 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
       // Collective slots
       let totalPaidCollective = CompaniDuration('PT0S');
       let totalPaidCollectiveAbs = CompaniDuration('PT0S');
+      let totalPaidCollectiveAmount = 0;
       let totalNotPaidCollective = CompaniDuration('PT0S');
       let totalNotPaidCollectiveAbs = CompaniDuration('PT0S');
+      let totalNotPaidCollectiveAmount = 0;
 
       const collectiveSlots = Object.fromEntries(
         Object.entries(trainerInfos.collectiveSlots.slots).map(([day, daySlotGroup]) => {
@@ -175,6 +183,8 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
             }
           });
 
+          totalPaidCollectiveAmount = add(totalPaidCollectiveAmount, paidAmount);
+          totalNotPaidCollectiveAmount = add(totalNotPaidCollectiveAmount, toPayAmount);
           return [
             day,
             {
@@ -188,31 +198,40 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
         }).filter(([, val]) => val.slots.length)
       );
 
+      // Single slots
       const {
         totalPaidSingle,
         totalPaidSingleAbsence,
+        totalPaidSingleAmount,
         totalNotPaidSingle,
         totalNotPaidSingleAbsence,
+        totalNotPaidSingleAmount,
       } = courses.reduce((acc, c) => {
         acc.totalPaidSingle = acc.totalPaidSingle.add(CompaniDuration(c.paidSingleSlotsDuration));
         acc.totalPaidSingleAbsence = acc.totalPaidSingleAbsence
           .add(CompaniDuration(c.paidSingleSlotsAbsenceDuration));
+        acc.totalPaidSingleAmount = add(acc.totalPaidSingleAmount, c.paidSingleSlotsAmount);
         acc.totalNotPaidSingle = acc.totalNotPaidSingle.add(CompaniDuration(c.notPaidSingleSlotsDuration));
         acc.totalNotPaidSingleAbsence = acc.totalNotPaidSingleAbsence
           .add(CompaniDuration(c.notPaidSingleSlotsAbsenceDuration));
+        acc.totalNotPaidSingleAmount = add(acc.totalNotPaidSingleAmount, c.notPaidSingleSlotsAmount);
 
         return acc;
       }, {
         totalPaidSingle: CompaniDuration('PT0S'),
         totalPaidSingleAbsence: CompaniDuration('PT0S'),
+        totalPaidSingleAmount: 0,
         totalNotPaidSingle: CompaniDuration('PT0S'),
         totalNotPaidSingleAbsence: CompaniDuration('PT0S'),
+        totalNotPaidSingleAmount: 0,
       });
 
       const totalPaid = totalPaidSingle.add(totalPaidCollective);
       const totalPaidAbs = totalPaidSingleAbsence.add(totalPaidCollectiveAbs);
+      const totalPaidSlotsAmount = add(totalPaidSingleAmount, totalPaidCollectiveAmount);
       const totalNotPaid = totalNotPaidSingle.add(totalNotPaidCollective);
       const totalNotPaidAbs = totalNotPaidSingleAbsence.add(totalNotPaidCollectiveAbs);
+      const totalNotPaidSlotsAmount = add(totalNotPaidSingleAmount, totalNotPaidCollectiveAmount);
 
       return [
         trainerId,
@@ -224,14 +243,18 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
             totals: {
               paidCollectiveSlotsDuration: totalPaidCollective.toISO(),
               paidCollectiveSlotsAbsenceDuration: totalPaidCollectiveAbs.toISO(),
+              paidCollectiveSlotsAmount: totalPaidCollectiveAmount,
               notPaidCollectiveSlotsDuration: totalNotPaidCollective.toISO(),
               notPaidCollectiveSlotsAbsenceDuration: totalNotPaidCollectiveAbs.toISO(),
+              notPaidCollectiveSlotsAmount: totalNotPaidCollectiveAmount,
             },
           },
           totalPaidSlotsDuration: totalPaid.toISO(),
           totalPaidSlotsAbsenceDuration: totalPaidAbs.toISO(),
+          totalPaidSlotsAmount,
           totalNotPaidSlotsDuration: totalNotPaid.toISO(),
           totalNotPaidSlotsAbsenceDuration: totalNotPaidAbs.toISO(),
+          totalNotPaidSlotsAmount,
         },
       ];
     })
