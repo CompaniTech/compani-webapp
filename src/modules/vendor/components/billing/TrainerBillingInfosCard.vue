@@ -53,7 +53,7 @@
                 &nbsp;({{ course.singleTraineeSlots[stepName].paidAmount }})
               </span>
             </div>
-            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns">
+            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns" hide-bottom>
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
@@ -113,7 +113,8 @@
                 &nbsp;({{ formattedCollectiveSlots.slots[day].paidAmount }})
               </span>
             </q-item-label>
-            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns">
+            <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns"
+              hide-bottom>
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
