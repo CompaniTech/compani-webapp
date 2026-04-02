@@ -3,23 +3,27 @@
     class="container clickable cursor-pointer" flat>
     <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
-        <div class="row items-center justify-between full-width">
-          <div>
-            <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
-            <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
-              <span v-if="isDashboard">&nbsp;- </span>À régler : {{ formattedTrainerDurations.notPaid }} -
-              &nbsp;{{ formattedTrainerDurations.notPaidAmount }} (dont {{ formattedTrainerDurations.notPaidAbsence }}
-              &nbsp;d'absence)
-            </span>
-            <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
-              <span v-if="isDashboard || displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
-              {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
-              &nbsp;{{ formattedTrainerDurations.paidAbsence }} d'absence)
-            </span>
+        <div class="full-width items-center">
+          <div class="row items-center justify-between full-width">
+            <div class="trainerInfosContainer">
+              <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+              <div class="q-ml-md">
+                <span v-if="displayDuration(formattedTrainerDurations.notPaid)"
+                  class="text-weight-bold text-orange-400">
+                  À régler : {{ formattedTrainerDurations.notPaid }} - {{ formattedTrainerDurations.notPaidAmount }}
+                  &nbsp;(dont {{ formattedTrainerDurations.notPaidAbsence }} d'absence)
+                </span>
+                <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
+                  <span v-if="displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
+                  {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
+                  &nbsp;{{ formattedTrainerDurations.paidAbsence }} d'absence)
+                </span>
+              </div>
+            </div>
+            <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
+              @click.stop="openCourseSlotListValidationModal"
+              :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
           </div>
-          <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
-            @click.stop="openCourseSlotListValidationModal"
-            :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
         </div>
       </template>
       <div class="q-pa-sm bg-peach-200">
@@ -518,4 +522,6 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.trainerInfosContainer
+  max-width: 65%
 </style>
