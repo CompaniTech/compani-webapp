@@ -343,10 +343,8 @@ export default {
         notPaidSingleSlotsDuration: CompaniDuration(notPaidSingleSlotsDuration).format(LONG_DURATION_H_MM),
         notPaidSingleSlotsAbsenceDuration: CompaniDuration(notPaidSingleSlotsAbsenceDuration)
           .format(LONG_DURATION_H_MM),
-        ...(course.notPaidSingleSlotsAmount &&
-          { notPaidSingleSlotsAmount: formatStringToPrice(course.notPaidSingleSlotsAmount) }),
-        ...(course.paidSingleSlotsAmount &&
-          { paidSingleSlotsAmount: formatStringToPrice(course.paidSingleSlotsAmount) }),
+        notPaidSingleSlotsAmount: formatStringToPrice(course.notPaidSingleSlotsAmount),
+        paidSingleSlotsAmount: formatStringToPrice(course.paidSingleSlotsAmount),
         rows,
       };
     }));
@@ -356,10 +354,8 @@ export default {
       notPaidAbsence: CompaniDuration(trainerInfos.value.totalNotPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
       paid: CompaniDuration(trainerInfos.value.totalPaidSlotsDuration).format(LONG_DURATION_H_MM),
       paidAbsence: CompaniDuration(trainerInfos.value.totalPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
-      ...(trainerInfos.value.totalPaidSlotsAmount &&
-        { paidAmount: formatStringToPrice(trainerInfos.value.totalPaidSlotsAmount) }),
-      ...(trainerInfos.value.totalNotPaidSlotsAmount &&
-        { notPaidAmount: formatStringToPrice(trainerInfos.value.totalNotPaidSlotsAmount) }),
+      paidAmount: formatStringToPrice(trainerInfos.value.totalPaidSlotsAmount),
+      notPaidAmount: formatStringToPrice(trainerInfos.value.totalNotPaidSlotsAmount),
     }));
 
     const formattedCollectiveSlots = computed(() => {
@@ -372,8 +368,8 @@ export default {
             ...slotGroup,
             toPayDuration: CompaniDuration(slotGroup.toPayDuration).format(LONG_DURATION_H_MM),
             paidDuration: CompaniDuration(slotGroup.paidDuration).format(LONG_DURATION_H_MM),
-            ...(slotGroup.toPayAmount && { toPayAmount: formatStringToPrice(slotGroup.toPayAmount) }),
-            ...(slotGroup.paidAmount && { paidAmount: formatStringToPrice(slotGroup.paidAmount) }),
+            toPayAmount: formatStringToPrice(slotGroup.toPayAmount),
+            paidAmount: formatStringToPrice(slotGroup.paidAmount),
           },
         ])
       );
@@ -384,10 +380,8 @@ export default {
         notPaidAbsence: CompaniDuration(totals.notPaidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
         paid: CompaniDuration(totals.paidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
         paidAbsence: CompaniDuration(totals.paidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
-        ...(totals.notPaidCollectiveSlotsAmount &&
-          { notPaidCollectiveSlotsAmount: formatStringToPrice(totals.notPaidCollectiveSlotsAmount) }),
-        ...(totals.paidCollectiveSlotsAmount &&
-          { paidCollectiveSlotsAmount: formatStringToPrice(totals.paidCollectiveSlotsAmount) }),
+        notPaidCollectiveSlotsAmount: formatStringToPrice(totals.notPaidCollectiveSlotsAmount),
+        paidCollectiveSlotsAmount: formatStringToPrice(totals.paidCollectiveSlotsAmount),
       };
     });
 
