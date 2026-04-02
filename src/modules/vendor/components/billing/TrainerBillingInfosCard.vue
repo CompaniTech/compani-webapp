@@ -58,7 +58,7 @@
             <ni-expanding-table :data="course.rows" :columns="singleSlotColumns" hide-bottom>
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
-                  <template v-if="col.name === 'actions'">
+                  <template v-if="col.name === 'actions' && !isTrainer">
                     <q-checkbox :model-value="multipleSlotSelection[course._id]" class="q-mr-sm" size="sm"
                       @update:model-value="selectSlotList($event, { courseId: course._id, slots: course.rows })"
                       :disable="course.rows.every(s => s.status === PAID)" />
@@ -121,7 +121,7 @@
               hide-bottom>
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
-                  <template v-if="col.name === 'actions'">
+                  <template v-if="col.name === 'actions' && !isTrainer">
                     <q-checkbox :model-value="multipleSlotSelection[day]" class="q-mr-sm" size="sm"
                       @update:model-value="
                         selectSlotList($event, { day, slots: trainerInfos.collectiveSlots.slots[day].slots })"
