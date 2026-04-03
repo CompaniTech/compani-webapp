@@ -4,10 +4,10 @@
     <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
         <div class="full-width items-center">
-          <div class="row items-center justify-between full-width">
-            <div class="trainerInfosContainer">
+          <div :class="[{ 'trainerInfosContainer': !isTrainer }]">
+            <div>
               <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
-              <div class="q-ml-md">
+              <div class="q-ml-md q-py-sm">
                 <span v-if="displayDuration(formattedTrainerDurations.notPaid)"
                   class="text-weight-bold text-orange-400">
                   À régler : {{ formattedTrainerDurations.notPaid }} - {{ formattedTrainerDurations.notPaidAmount }}
@@ -20,7 +20,7 @@
                 </span>
               </div>
             </div>
-            <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
+            <ni-primary-button v-if="!isTrainer" class="q-ma-sm" label="Régler les créneaux sélectionnés"
               @click.stop="openCourseSlotListValidationModal"
               :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
           </div>
@@ -523,5 +523,12 @@ export default {
 
 <style lang="sass" scoped>
 .trainerInfosContainer
-  max-width: 65%
+  display: flex
+  flex-direction: row
+  justify-content: space-between
+  align-items: center
+
+  @media screen and (max-width: $breakpoint-md-max)
+    flex-direction: column
+    align-items: flex-start
 </style>
