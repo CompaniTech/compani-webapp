@@ -3,21 +3,27 @@
     class="container clickable cursor-pointer" flat>
     <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
-        <div class="row items-center justify-between full-width">
-          <div>
-            <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
-            <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
-              <span v-if="isDashboard">&nbsp;- </span>À régler : {{ formattedTrainerDurations.notPaid }} (dont
-              &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
-            </span>
-            <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
-              <span v-if="isDashboard || displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
-              {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }} &nbsp;d'absence)
-            </span>
+        <div class="full-width items-center">
+          <div :class="[{ 'trainerInfosContainer': !isTrainer }]">
+            <div>
+              <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+              <div class="q-ml-md q-py-sm">
+                <span v-if="displayDuration(formattedTrainerDurations.notPaid)"
+                  class="text-weight-bold text-orange-400">
+                  À régler : {{ formattedTrainerDurations.notPaid }} - {{ formattedTrainerDurations.notPaidAmount }}
+                  &nbsp;(dont {{ formattedTrainerDurations.notPaidAbsence }} d'absence)
+                </span>
+                <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
+                  <span v-if="displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
+                  {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
+                  &nbsp;{{ formattedTrainerDurations.paidAbsence }} d'absence)
+                </span>
+              </div>
+            </div>
+            <ni-primary-button v-if="!isTrainer" class="q-ma-sm" label="Régler les créneaux sélectionnés"
+              @click.stop="openCourseSlotListValidationModal"
+              :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
           </div>
-          <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
-            @click.stop="openCourseSlotListValidationModal"
-            :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
         </div>
       </template>
       <div class="q-pa-sm bg-peach-200">
@@ -30,11 +36,11 @@
               </router-link>
               <span v-if="displayDuration(course.notPaidSingleSlotsDuration)"
                 class="text-weight-bold text-orange-400">
-                  <br> À régler : {{ course.notPaidSingleSlotsDuration }} (dont
+                  <br> À régler : {{ course.notPaidSingleSlotsDuration }} - {{ course.notPaidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.notPaidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
                 <span class="text-copper-500" v-if="displayDuration(course.paidSingleSlotsDuration)">
-                  &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} (dont
+                  &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} - {{ course.paidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.paidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
             </div>
@@ -56,7 +62,7 @@
             <ni-expanding-table :data="course.rows" :columns="singleSlotColumns" hide-bottom>
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
-                  <template v-if="col.name === 'actions'">
+                  <template v-if="col.name === 'actions' && !isTrainer">
                     <q-checkbox :model-value="multipleSlotSelection[course._id]" class="q-mr-sm" size="sm"
                       @update:model-value="selectSlotList($event, { courseId: course._id, slots: course.rows })"
                       :disable="course.rows.every(s => s.status === PAID)" />
@@ -82,11 +88,13 @@
               <span class="text-weight-bold text-copper-600"> Sessions collectives</span>
               <span v-if="displayDuration(formattedCollectiveSlots.notPaid)"
                 class="text-weight-bold text-orange-400 q-ma-md">
-                <br> À régler : {{ formattedCollectiveSlots.notPaid }} (dont
+                <br> À régler : {{ formattedCollectiveSlots.notPaid }} -
+                &nbsp;{{ formattedCollectiveSlots.notPaidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.notPaidAbsence }} d'absence)
               </span>
               <span class="text-copper-500" v-if="displayDuration(formattedCollectiveSlots.paid)">
-                &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} (dont
+                &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} -
+                &nbsp;{{ formattedCollectiveSlots.paidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.paidAbsence }} d'absence)
               </span>
             </div>
@@ -117,7 +125,7 @@
               hide-bottom>
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
-                  <template v-if="col.name === 'actions'">
+                  <template v-if="col.name === 'actions' && !isTrainer">
                     <q-checkbox :model-value="multipleSlotSelection[day]" class="q-mr-sm" size="sm"
                       @update:model-value="
                         selectSlotList($event, { day, slots: trainerInfos.collectiveSlots.slots[day].slots })"
@@ -339,6 +347,8 @@ export default {
         notPaidSingleSlotsDuration: CompaniDuration(notPaidSingleSlotsDuration).format(LONG_DURATION_H_MM),
         notPaidSingleSlotsAbsenceDuration: CompaniDuration(notPaidSingleSlotsAbsenceDuration)
           .format(LONG_DURATION_H_MM),
+        notPaidSingleSlotsAmount: formatStringToPrice(course.notPaidSingleSlotsAmount),
+        paidSingleSlotsAmount: formatStringToPrice(course.paidSingleSlotsAmount),
         rows,
       };
     }));
@@ -348,6 +358,8 @@ export default {
       notPaidAbsence: CompaniDuration(trainerInfos.value.totalNotPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
       paid: CompaniDuration(trainerInfos.value.totalPaidSlotsDuration).format(LONG_DURATION_H_MM),
       paidAbsence: CompaniDuration(trainerInfos.value.totalPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+      paidAmount: formatStringToPrice(trainerInfos.value.totalPaidSlotsAmount),
+      notPaidAmount: formatStringToPrice(trainerInfos.value.totalNotPaidSlotsAmount),
     }));
 
     const formattedCollectiveSlots = computed(() => {
@@ -372,6 +384,8 @@ export default {
         notPaidAbsence: CompaniDuration(totals.notPaidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
         paid: CompaniDuration(totals.paidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
         paidAbsence: CompaniDuration(totals.paidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+        notPaidCollectiveSlotsAmount: formatStringToPrice(totals.notPaidCollectiveSlotsAmount),
+        paidCollectiveSlotsAmount: formatStringToPrice(totals.paidCollectiveSlotsAmount),
       };
     });
 
@@ -508,4 +522,13 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.trainerInfosContainer
+  display: flex
+  flex-direction: row
+  justify-content: space-between
+  align-items: center
+
+  @media screen and (max-width: $breakpoint-md-max)
+    flex-direction: column
+    align-items: flex-start
 </style>
