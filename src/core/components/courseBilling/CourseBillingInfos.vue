@@ -643,9 +643,9 @@ export default {
         billingRepresentativeModal.value = false;
       } catch (e) {
         console.error(e);
+        if (e.status === 409) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la modification.');
       } finally {
-        tmpBillingRepresentativeId.value = '';
         billingRepresentativeModalLoading.value = false;
       }
     };
