@@ -154,8 +154,8 @@
       :interlocutors-options="billingRepresentativeGroupedByCompany[company._id]" @hide="resetBillingRepresentative" />
 
     <ni-send-bill-modal v-model="sendBillModal" v-model:bill-list-infos="billListInfos"
-      :loading="sendBillModalLoading" :email-options="adminUserOptions" :validations="validations.billListInfos"
-      @submit="sendBills" @hide="resetBillListInfos" />
+      :loading="sendBillModalLoading" :email-options="billingRepresentativeOptions"
+      :validations="validations.billListInfos" @submit="sendBills" @hide="resetBillListInfos" />
 
     <div v-if="isVendorInterface" class="fixed fab-custom">
       <q-btn class="q-my-sm q-mx-lg" no-caps rounded icon="mail" label="Envoyer par email"
@@ -270,7 +270,7 @@ export default {
     });
     const sendBillModal = ref(false);
     const sendBillModalLoading = ref(false);
-    const adminUserOptions = ref([]);
+    const billingRepresentativeOptions = ref([]);
     const selectedBills = ref([]);
 
     const rules = {
@@ -660,11 +660,17 @@ export default {
       if (!courseBillList.value.length && company.value._id) {
         await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions()]);
       }
+      billingRepresentativeOptions.value = company.value.billingRepresentatives
+        .map(el => ({
+          value: el.local.email,
+          label: el.local.email,
+          identity: formatIdentity(el.identity, 'FL'),
+          additionalFilters: [el.local.email],
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label));
     });
 
     const openSendBillModal = async () => {
-      await refreshAdminUsers();
-
       const selectedCourseBills = courseBillList.value
         .filter(cb => selectedBills.value.includes(cb._id))
         .map(cb => pick(
@@ -678,7 +684,7 @@ export default {
       }
 
       billListInfos.value.selectedBills = selectedCourseBills;
-      billListInfos.value.recipientEmails = adminUserOptions.value.map(user => user.value);
+      billListInfos.value.recipientEmails = billingRepresentativeOptions.value.map(user => user.value);
       if (sendingDatesNumber[0] >= 1) billListInfos.value.type = RESEND;
       sendBillModal.value = true;
     };
@@ -703,23 +709,6 @@ export default {
         else NotifyNegative('Erreur lors de l\'envoi de factures.');
       } finally {
         sendBillModalLoading.value = false;
-      }
-    };
-
-    const refreshAdminUsers = async () => {
-      try {
-        const adminUsers = await Users.list({ role: CLIENT_ADMIN, company: company.value._id });
-        adminUserOptions.value = adminUsers
-          .map(el => ({
-            value: el.local.email,
-            label: el.local.email,
-            identity: formatIdentity(el.identity, 'FL'),
-            additionalFilters: [el.local.email],
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-      } catch (e) {
-        console.error(e);
-        adminUserOptions.value = [];
       }
     };
 
@@ -770,7 +759,7 @@ export default {
       billListInfos,
       sendBillModal,
       sendBillModalLoading,
-      adminUserOptions,
+      billingRepresentativeOptions,
       selectedBills,
       // Computed
       validations,
