@@ -3,9 +3,12 @@
     <div class="q-mb-xl">
       <p class="text-weight-bold">Contact</p>
       <div class="interlocutor-container">
-        <ni-interlocutor-cell :interlocutor="company.billingRepresentative" can-update
+        <ni-interlocutor-cell v-for="billingRepresentative of company.billingRepresentatives" clearable
+          :key="billingRepresentative._id" :interlocutor="billingRepresentative" can-update interlocutor-is-non-editable
           caption="Chargé de facturation dans la structure" label="Ajouter un chargé de facturation"
           @open-modal="openBillingRepresentativeModal" />
+        <ni-secondary-button class="button-billing-representative" label="Ajouter un chargé de facturation"
+          @click="() => openBillingRepresentativeModal({ action: CREATION })" />
       </div>
     </div>
     <template v-if="Object.keys(groupedCourseBills).length">
@@ -146,9 +149,9 @@
     </template>
     <div v-else class="text-italic">Pas de factures</div>
     <ni-interlocutor-modal v-model="billingRepresentativeModal" v-model:interlocutor="tmpBillingRepresentativeId"
-      @submit="updateCompany" :label="billingRepresentativeModalLabel" :loading="billingRepresentativeModalLoading"
-      :interlocutors-options="billingRepresentativeGroupedByCompany[company._id]" @hide="resetBillingRepresentative"
-      :validations="validations.tmpBillingRepresentativeId" />
+      @submit="addBillingRepresentative" :label="billingRepresentativeModalLabel"
+      :loading="billingRepresentativeModalLoading" :validations="validations.tmpBillingRepresentativeId"
+      :interlocutors-options="billingRepresentativeGroupedByCompany[company._id]" @hide="resetBillingRepresentative" />
 
     <ni-send-bill-modal v-model="sendBillModal" v-model:bill-list-infos="billListInfos"
       :loading="sendBillModalLoading" :email-options="adminUserOptions" :validations="validations.billListInfos"
@@ -165,7 +168,7 @@
 import get from 'lodash/get';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
-import { Screen } from 'quasar';
+import { Screen, useQuasar } from 'quasar';
 import { ref, computed, watch, toRefs } from 'vue';
 import { useStore } from 'vuex';
 import useVuelidate from '@vuelidate/core';
@@ -181,6 +184,7 @@ import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup
 import ExpandingTable from '@components/table/ExpandingTable';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
 import InterlocutorModal from '@components/courses/InterlocutorModal';
+import SecondaryButton from '@components/SecondaryButton';
 import {
   BALANCE,
   PAYMENT,
@@ -189,7 +193,7 @@ import {
   REFUND,
   DD_MM_YYYY,
   CLIENT_ADMIN,
-  EDITION,
+  DELETION,
   HOLDING_ADMIN,
   PAYMENT_STATUS_OPTIONS,
   PENDING,
@@ -233,12 +237,14 @@ export default {
     'ni-interlocutor-cell': InterlocutorCell,
     'ni-interlocutor-modal': InterlocutorModal,
     'ni-send-bill-modal': SendBillModal,
+    'ni-secondary-button': SecondaryButton,
   },
   emits: ['refresh-company'],
   setup (props, { emit }) {
     const { company } = toRefs(props);
 
     const $store = useStore();
+    const $q = useQuasar();
     const courseBillsGroupedByCompany = ref({});
     const loading = ref(false);
     const paymentCreationLoading = ref(false);
@@ -570,16 +576,50 @@ export default {
       return `${programName}${misc}`;
     };
 
-    const openBillingRepresentativeModal = (event) => {
-      const { action: eventAction } = event;
-      const action = eventAction === EDITION ? 'Modifier le ' : 'Ajouter un ';
+    const removeBillingRepresentative = async(billingRepresentativeId) => {
+      try {
+        tmpBillingRepresentativeId.value = '';
+        await Companies.deleteBillingRepresentative(company.value._id, billingRepresentativeId);
 
-      tmpBillingRepresentativeId.value = get(company.value, 'billingRepresentative._id');
-      billingRepresentativeModalLabel.value = {
-        action,
-        interlocutor: `chargé de facturation chez ${truncate(company.value.name, 20)}`,
-      };
-      billingRepresentativeModal.value = true;
+        emit('refresh-company');
+        NotifyPositive('Chargé de facturation détaché.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors du détachement du chargé de facturation.');
+      }
+    };
+
+    const openBillingRepresentativeDeletionValidationModal = (identity, billingRepresentativeId = '') => {
+      const billingRepresentativeIdentity = formatIdentity(identity, 'FL');
+      const message = `Êtes-vous sûr(e) de vouloir détacher ${billingRepresentativeIdentity} de la structure&nbsp;?`;
+      $q.dialog({
+        title: 'Confirmation',
+        message,
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => removeBillingRepresentative(billingRepresentativeId))
+        .onCancel(() => NotifyPositive('Détachement annulé.'));
+    };
+
+    const openBillingRepresentativeModal = (event) => {
+      const { action, interlocutorId: billingRepresentativeId } = event;
+
+      if (action === DELETION) {
+        const billinRepresentativeToRemove = company.value.billingRepresentatives
+          .find(br => br._id === billingRepresentativeId);
+        openBillingRepresentativeDeletionValidationModal(
+          get(billinRepresentativeToRemove, 'identity'),
+          billingRepresentativeId
+        );
+      } else {
+        tmpBillingRepresentativeId.value = billingRepresentativeId;
+        billingRepresentativeModalLabel.value = {
+          action: 'Ajouter un ',
+          interlocutor: `chargé de facturation chez ${truncate(company.value.name, 20)}`,
+        };
+        billingRepresentativeModal.value = true;
+      }
     };
 
     const refreshBillingRepresentativeOptions = async () => {
@@ -589,13 +629,14 @@ export default {
       billingRepresentativeGroupedByCompany.value[company.value._id] = formatAndSortUserOptions(usersOptions, false);
     };
 
-    const updateCompany = async () => {
+    const addBillingRepresentative = async () => {
       try {
         billingRepresentativeModalLoading.value = true;
         validations.value.tmpBillingRepresentativeId.$touch();
         if (validations.value.tmpBillingRepresentativeId.$error) return NotifyWarning('Champ(s) invalide(s)');
 
-        await Companies.updateById(company.value._id, { billingRepresentative: tmpBillingRepresentativeId.value });
+        await Companies
+          .addBillingRepresentative(company.value._id, { billingRepresentative: tmpBillingRepresentativeId.value });
         NotifyPositive('Modification enregistrée.');
 
         emit('refresh-company');
@@ -761,7 +802,7 @@ export default {
       getProgramName,
       CompaniDate,
       openBillingRepresentativeModal,
-      updateCompany,
+      addBillingRepresentative,
       resetBillingRepresentative,
       openSendBillModal,
       sendBills,
@@ -849,4 +890,6 @@ export default {
     width: 12%
   .sending-dates
     width: 15%
+  .button-billing-representative
+    justify-self: start
 </style>

@@ -30,4 +30,12 @@ export default {
   async updateMandate (params, data) {
     return alenviAxios.put(`${process.env.API_HOSTNAME}/companies/${params._id}/mandates/${params.mandateId}`, data);
   },
+  async addBillingRepresentative (companyId, payload) {
+    await alenviAxios.put(`${process.env.API_HOSTNAME}/companies/${companyId}/billing-representatives`, payload);
+  },
+  async deleteBillingRepresentative (companyId, billingRepresentativeId) {
+    await alenviAxios.delete(
+      `${process.env.API_HOSTNAME}/companies/${companyId}/billing-representatives/${billingRepresentativeId}`
+    );
+  },
 };
