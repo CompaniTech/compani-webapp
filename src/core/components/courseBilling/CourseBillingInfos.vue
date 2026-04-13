@@ -660,7 +660,7 @@ export default {
       if (!courseBillList.value.length && company.value._id) {
         await Promise.all([refreshCourseBills(), refreshBillingRepresentativeOptions()]);
       }
-      billingRepresentativeOptions.value = company.value.billingRepresentatives
+      billingRepresentativeOptions.value = (company.value.billingRepresentatives || [])
         .map(el => ({
           value: el.local.email,
           label: el.local.email,
