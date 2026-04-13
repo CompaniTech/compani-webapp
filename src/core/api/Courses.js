@@ -112,4 +112,10 @@ export default {
   async uploadSingleCoursesCsv (payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/courses/single-courses-csv`, payload);
   },
+  async downloadAllDocuments (courseId, params) {
+    return alenviAxios.get(
+      `${process.env.API_HOSTNAME}/courses/${courseId}/all-documents`,
+      { params, responseType: 'arraybuffer', headers: { Accept: 'application/zip' } }
+    );
+  },
 };
