@@ -76,7 +76,10 @@ export default {
         const traineeLength = isInterCourse.value
           ? course.value.trainees.filter(t => t.registrationCompany === event).length
           : 1;
-        const computedPrice = Number(divide(add(get(price, 'global', 0), get(price, 'trainerFees', 0)), traineeLength));
+        const computedPrice = Number(divide(
+          add(get(price, 'global') || 0, get(price, 'trainerFees') || 0),
+          traineeLength
+        ));
         const displayedPrice = Number.isNaN(computedPrice) ? 0 : toFixedToFloat(computedPrice);
         emit(
           'update:new-generated-training-contract-infos',

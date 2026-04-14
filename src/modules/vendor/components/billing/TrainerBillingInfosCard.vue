@@ -3,20 +3,27 @@
     class="container clickable cursor-pointer" flat>
     <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
-        <div class="row items-center justify-between full-width">
-          <div>
-            <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
-            <span v-if="displayDuration(formattedTrainerDurations.notPaid)" class="text-weight-bold text-orange-400">
-              <span v-if="isDashboard">&nbsp;- </span>À régler : {{ formattedTrainerDurations.notPaid }} (dont
-              &nbsp;{{ formattedTrainerDurations.notPaidAbsence }} d'absence)
-            </span>
-            <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
-              <span v-if="isDashboard || displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
-              {{ formattedTrainerDurations.paid }} (dont {{ formattedTrainerDurations.paidAbsence }} &nbsp;d'absence)
-            </span>
+        <div class="full-width items-center">
+          <div :class="[{ 'trainerInfosContainer': !isTrainer }]">
+            <div>
+              <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+              <div class="q-ml-md q-py-sm">
+                <span v-if="displayDuration(formattedTrainerDurations.notPaid)"
+                  class="text-weight-bold text-orange-400">
+                  À régler : {{ formattedTrainerDurations.notPaid }} - {{ formattedTrainerDurations.notPaidAmount }}
+                  &nbsp;(dont {{ formattedTrainerDurations.notPaidAbsence }} d'absence)
+                </span>
+                <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
+                  <span v-if="displayDuration(formattedTrainerDurations.notPaid)">&nbsp;/ </span>réglé :
+                  {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
+                  &nbsp;{{ formattedTrainerDurations.paidAbsence }} d'absence)
+                </span>
+              </div>
+            </div>
+            <ni-primary-button v-if="!isTrainer" class="q-ma-sm" label="Régler les créneaux sélectionnés"
+              @click.stop="openCourseSlotListValidationModal"
+              :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
           </div>
-          <ni-primary-button v-if="!isTrainer" class="q-ma-md" label="Régler les créneaux sélectionnés"
-            @click.stop="openCourseSlotListValidationModal" :disabled="selectedCourseSlots.length === 0" />
         </div>
       </template>
       <div class="q-pa-sm bg-peach-200">
@@ -29,11 +36,11 @@
               </router-link>
               <span v-if="displayDuration(course.notPaidSingleSlotsDuration)"
                 class="text-weight-bold text-orange-400">
-                  <br> À régler : {{ course.notPaidSingleSlotsDuration }} (dont
+                  <br> À régler : {{ course.notPaidSingleSlotsDuration }} - {{ course.notPaidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.notPaidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
                 <span class="text-copper-500" v-if="displayDuration(course.paidSingleSlotsDuration)">
-                  &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} (dont
+                  &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} - {{ course.paidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.paidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
             </div>
@@ -52,12 +59,21 @@
                 &nbsp;({{ course.singleTraineeSlots[stepName].paidAmount }})
               </span>
             </div>
-            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns"
-              v-model:pagination="coursePaginations[course._id]" :rows-per-page="[10, 20]">
+            <ni-expanding-table :data="course.rows" :columns="singleSlotColumns" hide-bottom>
+              <template #header="{ props }">
+                <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+                  <template v-if="col.name === 'actions' && !isTrainer">
+                    <q-checkbox :model-value="multipleSlotSelection[course._id]" class="q-mr-sm" size="sm"
+                      @update:model-value="selectSlotList($event, { courseId: course._id, slots: course.rows })"
+                      :disable="course.rows.every(s => s.status === PAID)" />
+                  </template>
+                  <template v-else>{{ col.label }}</template>
+                </q-th>
+              </template>
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'actions' && !isTrainer">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots[course._id]" :val="props.row._id" dense
                       :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
@@ -72,11 +88,13 @@
               <span class="text-weight-bold text-copper-600"> Sessions collectives</span>
               <span v-if="displayDuration(formattedCollectiveSlots.notPaid)"
                 class="text-weight-bold text-orange-400 q-ma-md">
-                <br> À régler : {{ formattedCollectiveSlots.notPaid }} (dont
+                <br> À régler : {{ formattedCollectiveSlots.notPaid }} -
+                &nbsp;{{ formattedCollectiveSlots.notPaidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.notPaidAbsence }} d'absence)
               </span>
               <span class="text-copper-500" v-if="displayDuration(formattedCollectiveSlots.paid)">
-                &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} (dont
+                &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} -
+                &nbsp;{{ formattedCollectiveSlots.paidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.paidAbsence }} d'absence)
               </span>
             </div>
@@ -104,7 +122,18 @@
               </span>
             </q-item-label>
             <ni-expanding-table :data="trainerInfos.collectiveSlots.slots[day].slots" :columns="collectiveSlotsColumns"
-              v-model:pagination="collectiveSlotsPaginations[day]" :rows-per-page="[10, 20]">
+              hide-bottom>
+              <template #header="{ props }">
+                <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
+                  <template v-if="col.name === 'actions' && !isTrainer">
+                    <q-checkbox :model-value="multipleSlotSelection[day]" class="q-mr-sm" size="sm"
+                      @update:model-value="
+                        selectSlotList($event, { day, slots: trainerInfos.collectiveSlots.slots[day].slots })"
+                      :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => s.status === PAID)" />
+                  </template>
+                  <template v-else>{{ col.label }}</template>
+                </q-th>
+              </template>
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'traineeName'">
@@ -113,7 +142,10 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions' && !isTrainer">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots" :val="props.row._id" dense
+                    <q-checkbox class="q-mr-md"
+                      :model-value="selectedCourseSlots[day]?.includes(props.row._id)" dense
+                      @update:model-value="val =>
+                        selectSlotGroupByDate(val, props.row, day, trainerInfos.collectiveSlots.slots[day].slots)"
                       :disable="props.row.status === PAID" />
                   </template>
                   <template v-else>{{ col.value }}</template>
@@ -135,9 +167,10 @@
 
 import { ref, toRefs, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import get from 'lodash/get';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
-import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID } from '@data/constants';
+import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, PAID, NOT_PAID } from '@data/constants';
 import { formatIdentity, formatStringToPrice } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -168,20 +201,11 @@ export default {
     const isDashboard = /\/trainers-follow-up/.test($route.path);
     const displayDetails = ref(!isDashboard);
 
-    const areCourseDetailsVisible = ref(
-      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, false]))
-    );
-    const coursePaginations = ref(
-      Object.fromEntries(trainerInfos.value.courses.map(course => [course._id, { page: 1, rowsPerPage: 10 }]))
-    );
-    const collectiveSlotsPaginations = ref(
-      Object.fromEntries(
-        Object.keys(trainerInfos.value.collectiveSlots.slots).map(day => [day, { page: 1, rowsPerPage: 10 }])
-      )
-    );
-    const selectedCourseSlots = ref([]);
+    const areCourseDetailsVisible = ref({});
+    const selectedCourseSlots = ref({});
     const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
     const courseSlotListValidationModal = ref(false);
+    const multipleSlotSelection = ref({});
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -323,6 +347,8 @@ export default {
         notPaidSingleSlotsDuration: CompaniDuration(notPaidSingleSlotsDuration).format(LONG_DURATION_H_MM),
         notPaidSingleSlotsAbsenceDuration: CompaniDuration(notPaidSingleSlotsAbsenceDuration)
           .format(LONG_DURATION_H_MM),
+        notPaidSingleSlotsAmount: formatStringToPrice(course.notPaidSingleSlotsAmount),
+        paidSingleSlotsAmount: formatStringToPrice(course.paidSingleSlotsAmount),
         rows,
       };
     }));
@@ -332,6 +358,8 @@ export default {
       notPaidAbsence: CompaniDuration(trainerInfos.value.totalNotPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
       paid: CompaniDuration(trainerInfos.value.totalPaidSlotsDuration).format(LONG_DURATION_H_MM),
       paidAbsence: CompaniDuration(trainerInfos.value.totalPaidSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+      paidAmount: formatStringToPrice(trainerInfos.value.totalPaidSlotsAmount),
+      notPaidAmount: formatStringToPrice(trainerInfos.value.totalNotPaidSlotsAmount),
     }));
 
     const formattedCollectiveSlots = computed(() => {
@@ -356,6 +384,8 @@ export default {
         notPaidAbsence: CompaniDuration(totals.notPaidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
         paid: CompaniDuration(totals.paidCollectiveSlotsDuration).format(LONG_DURATION_H_MM),
         paidAbsence: CompaniDuration(totals.paidCollectiveSlotsAbsenceDuration).format(LONG_DURATION_H_MM),
+        notPaidCollectiveSlotsAmount: formatStringToPrice(totals.notPaidCollectiveSlotsAmount),
+        paidCollectiveSlotsAmount: formatStringToPrice(totals.paidCollectiveSlotsAmount),
       };
     });
 
@@ -374,7 +404,7 @@ export default {
     });
 
     const openCourseSlotListValidationModal = () => {
-      courseSlotsToPay.value._ids = selectedCourseSlots.value;
+      courseSlotsToPay.value._ids = Object.values(selectedCourseSlots.value).flat();
       courseSlotListValidationModal.value = true;
     };
 
@@ -394,7 +424,7 @@ export default {
         await CourseSlots.updateSlotList({ ...courseSlotsToPay.value, trainer: trainerId.value });
         emit('refresh');
         courseSlotListValidationModal.value = false;
-        selectedCourseSlots.value = [];
+
         NotifyPositive('Créneaux modifiés.');
       } catch (e) {
         console.error(e);
@@ -402,25 +432,73 @@ export default {
       }
     };
 
-    watch(trainerInfos, () => {
-      selectedCourseSlots.value = [];
+    const selectSlotList = (event, obj) => {
+      const selectableSlots = obj.slots.filter(s => s.status === NOT_PAID).map(s => s._id);
+
+      if (!obj.day) {
+        const { courseId } = obj;
+        multipleSlotSelection.value[courseId] = event;
+        selectedCourseSlots.value[courseId] = event ? selectableSlots : [];
+      } else {
+        const { day } = obj;
+        multipleSlotSelection.value[day] = event;
+        selectedCourseSlots.value[day] = event ? selectableSlots : [];
+      }
+    };
+
+    const selectSlotGroupByDate = (event, row, day, slots) => {
+      const sameDate = slots
+        .filter(s => CompaniDate(s.startDate).isSame(row.startDate) &&
+          CompaniDate(s.endDate).isSame(row.endDate) && s.status !== PAID)
+        .map(s => s._id);
+
+      const currentSelectedCourseSlots = Array.isArray(selectedCourseSlots.value[day])
+        ? selectedCourseSlots.value[day]
+        : [];
+
+      selectedCourseSlots.value[day] = event
+        ? [...new Set([...currentSelectedCourseSlots, ...sameDate])]
+        : currentSelectedCourseSlots.filter(id => !sameDate.includes(id));
+    };
+
+    watch(() => trainerInfos.value, (newVal) => {
+      selectedCourseSlots.value = Object.fromEntries([
+        ...newVal.courses.map(course => [course._id, []]),
+        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, []]),
+      ]);
+
+      multipleSlotSelection.value = Object.fromEntries([
+        ...newVal.courses.map(course => [course._id, false]),
+        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, false]),
+      ]);
 
       areCourseDetailsVisible.value = Object.fromEntries(
-        trainerInfos.value.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
+        newVal.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
       );
-    });
+    }, { immediate: true });
+
+    watch(() => selectedCourseSlots.value, (newVal) => {
+      Object.keys(newVal).forEach((val) => {
+        const slots = trainerInfos.value.collectiveSlots.slots[val]?.slots ||
+          get(coursesWithFormattedData.value.find(course => course._id === val), 'rows') || [];
+        const selectableSlots = slots.filter(s => s.status !== PAID).map(s => s._id);
+
+        if (selectableSlots.length) {
+          multipleSlotSelection.value[val] = selectableSlots.length === selectedCourseSlots.value[val].length;
+        }
+      });
+    }, { deep: true });
 
     return {
       // Data
       isDashboard,
       areCourseDetailsVisible,
-      coursePaginations,
-      collectiveSlotsPaginations,
       selectedCourseSlots,
       courseSlotsToPay,
       courseSlotListValidationModal,
       PAID,
       displayDetails,
+      multipleSlotSelection,
       // Validation
       v$,
       // Computed
@@ -436,10 +514,21 @@ export default {
       openCourseSlotListValidationModal,
       resetSlotListValidationInfos,
       updateSlotList,
+      selectSlotList,
+      selectSlotGroupByDate,
     };
   },
 };
 </script>
 
 <style lang="sass" scoped>
+.trainerInfosContainer
+  display: flex
+  flex-direction: row
+  justify-content: space-between
+  align-items: center
+
+  @media screen and (max-width: $breakpoint-md-max)
+    flex-direction: column
+    align-items: flex-start
 </style>

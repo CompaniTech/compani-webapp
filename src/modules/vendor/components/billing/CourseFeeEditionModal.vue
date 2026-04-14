@@ -101,9 +101,9 @@ export default {
       if (isSingleCourse.value || !totalPriceToBill.value.global) return;
 
       return {
-        global: toFixedToFloat(divide(multiply(courseFee.value.percentage, totalPriceToBill.value.global), 100)),
+        global: toFixedToFloat(divide(multiply(courseFee.value.percentage || 0, totalPriceToBill.value.global), 100)),
         trainerFees: toFixedToFloat(
-          divide(multiply(courseFee.value.percentage, totalPriceToBill.value.trainerFees), 100)
+          divide(multiply(courseFee.value.percentage || 0, totalPriceToBill.value.trainerFees), 100)
         ),
       };
     });

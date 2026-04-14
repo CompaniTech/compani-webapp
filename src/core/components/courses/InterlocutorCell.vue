@@ -27,12 +27,12 @@
         </div>
       </div>
       <div v-if="canUpdate">
-        <ni-button v-if="!interlocutorIsTrainerOrTutor" icon="edit" :disable="disable" @click="openModal(EDITION)" />
+        <ni-button v-if="!interlocutorIsNonEditable" icon="edit" :disable="disable" @click="openModal(EDITION)" />
         <ni-button v-if="clearable" icon="delete" :disable="disable" @click="openModal(DELETION, interlocutor._id)" />
       </div>
     </q-card>
   </div>
-  <ni-secondary-button v-else-if="canUpdate && !interlocutorIsTrainerOrTutor" :label="label" :disable="disable"
+  <ni-secondary-button v-else-if="canUpdate && !interlocutorIsNonEditable" :label="label" :disable="disable"
     @click="openModal(CREATION)" />
 </template>
 
@@ -54,7 +54,7 @@ export default {
     disable: { type: Boolean, default: false },
     label: { type: String, default: '' },
     clearable: { type: Boolean, default: false },
-    interlocutorIsTrainerOrTutor: { type: Boolean, default: false },
+    interlocutorIsNonEditable: { type: Boolean, default: false },
     displayConnectionInfos: { type: Boolean, default: false },
   },
   components: {

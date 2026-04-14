@@ -104,10 +104,10 @@ export default {
       v$,
     };
   },
-  async beforeRouteEnter (to, from, next) {
+  async beforeRouteEnter () {
     const isLogged = await isUserLogged();
-    if (isLogged) next({ path: '/' });
-    else next();
+    if (isLogged) return { path: '/' };
+    return true;
   },
 };
 </script>
