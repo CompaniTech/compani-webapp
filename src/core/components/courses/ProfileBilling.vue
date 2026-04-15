@@ -46,7 +46,7 @@
       </template>
     </ni-banner>
     <div v-for="(companies, index) of companiesList" :key="index">
-      <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
+      <ni-course-billing-card :course="course" :payer-list="payerList"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
         @refresh-course-bills="refreshCourseBills" @unroll="unrollBill({ _id: $event })"
         :are-details-visible="areDetailsVisible" :expected-bills-count-invalid="v$.course.expectedBillsCount.$error"

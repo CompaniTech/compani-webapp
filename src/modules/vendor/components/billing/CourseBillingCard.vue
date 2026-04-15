@@ -219,7 +219,6 @@ export default {
     payerList: { type: Array, default: () => ([]) },
     billingItemList: { type: Array, default: () => ([]) },
     courseBills: { type: Array, default: () => ([]) },
-    loading: { type: Boolean, default: false },
     expectedBillsCountInvalid: { type: Boolean, default: false },
     areDetailsVisible: { type: Object, default: () => ({}) },
     isDashboard: { type: Boolean, default: false },
