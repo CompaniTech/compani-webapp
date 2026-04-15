@@ -20,11 +20,26 @@
         {{ showValidatedCourseBills ? 'Masquer' : 'Afficher' }} les factures validées
         <q-icon size="xs" :name="showValidatedCourseBills ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
       </q-item-section>
-      <div v-if="showValidatedCourseBills">
+      <div v-show="showValidatedCourseBills">
         <div v-for="bill of filteredValidatedBills" :key="bill._id">
           <ni-course-billing-card :course="bill.course" :payer-list="payerList" :loading="billsLoading" is-dashboard
             :billing-item-list="billingItemList" :course-bills="[bill]" :are-details-visible="areDetailsVisible"
             @refresh-course-bills="refreshValidatedCourseBills" @unroll="unrollBill({ _id: $event })" />
+        </div>
+      </div>
+    </q-card>
+    <q-card v-if="filteredBillsWithoutCourseActions.length" class="q-px-md q-py-sm bg-peach-200 q-mt-md">
+      <q-item-section @click="showDetails(WITHOUT_COURSE_ACTIONS)" class="cursor-pointer details row copper-grey-700">
+        {{ showCourseBillsWithoutCourseActions ? 'Masquer' : 'Afficher' }} les factures sans action de formation
+        <q-icon size="xs" :name="showCourseBillsWithoutCourseActions ? 'expand_less' : 'expand_more'"
+          color="copper-grey-700" />
+      </q-item-section>
+      <div v-show="showCourseBillsWithoutCourseActions">
+        <div v-for="bill of filteredBillsWithoutCourseActions" :key="bill._id">
+          <ni-course-billing-card :course="bill.course" :payer-list="payerList" :loading="billsLoading" is-dashboard
+            :billing-item-list="billingItemList" :course-bills="[bill]" :are-details-visible="areDetailsVisible"
+            @refresh-course-bills="refreshCourseBillsToValidate" @unroll="unrollBill({ _id: $event })"
+            :selected-bills="selectedBills" @update-selected-bills="updateSelectedBills" />
         </div>
       </div>
     </q-card>
@@ -91,10 +106,14 @@ export default {
     const metaInfo = { title: 'A facturer' };
     useMeta(metaInfo);
 
+    const VALIDATED = 'validated';
+    const WITHOUT_COURSE_ACTIONS = 'without_course_actions';
     const billsLoading = ref(false);
     const showValidatedCourseBills = ref(false);
+    const showCourseBillsWithoutCourseActions = ref(false);
     const courseBillsToValidate = ref([]);
     const validatedCourseBills = ref([]);
+    const courseBillsWithoutAction = ref([]);
     const dateRange = ref({
       startDate: CompaniDate().startOf(MONTH).toISO(),
       endDate: CompaniDate().endOf(MONTH).toISO(),
@@ -137,7 +156,12 @@ export default {
           endDate: dateRange.value.endDate,
           isValidated: false,
         });
-        courseBillsToValidate.value = bills;
+
+        for (const bill of bills) {
+          if (bill.hasCourseAction) courseBillsToValidate.value.push(bill);
+          else courseBillsWithoutAction.value.push(bill);
+        }
+
         NotifyPositive('Factures à valider récupérées.');
       } catch (e) {
         console.error(e);
@@ -181,6 +205,32 @@ export default {
 
     const filteredBillsToValidate = computed(() => {
       let filteredBills = courseBillsToValidate.value;
+      if (selectedCompany.value) {
+        filteredBills = filteredBills.filter((bill) => {
+          const companiesIds = bill.companies.map(company => company._id);
+
+          return companiesIds.includes(selectedCompany.value);
+        });
+      }
+
+      if (selectedHolding.value) {
+        filteredBills = filteredBills.filter((bill) => {
+          const holdingsIds = bill.companies
+            .filter(company => company.holding).map(company => company.holding._id);
+
+          return holdingsIds.includes(selectedHolding.value);
+        });
+      }
+
+      if (selectedTypes.value.length && !selectedTypes.value.includes('')) {
+        filteredBills = filteredBills.filter(bill => selectedTypes.value.includes(bill.course.type));
+      }
+
+      return filteredBills;
+    });
+
+    const filteredBillsWithoutCourseActions = computed(() => {
+      let filteredBills = courseBillsWithoutAction.value;
       if (selectedCompany.value) {
         filteredBills = filteredBills.filter((bill) => {
           const companiesIds = bill.companies.map(company => company._id);
@@ -283,8 +333,9 @@ export default {
       max.value = CompaniDate(date.startDate).add('P1M').subtract('P1D').toISO();
     };
 
-    const showDetails = async () => {
-      showValidatedCourseBills.value = !showValidatedCourseBills.value;
+    const showDetails = async (type = VALIDATED) => {
+      if (type === VALIDATED) showValidatedCourseBills.value = !showValidatedCourseBills.value;
+      else showCourseBillsWithoutCourseActions.value = !showCourseBillsWithoutCourseActions.value;
     };
 
     const updateSelectedCompany = (value) => { selectedCompany.value = value; };
@@ -379,10 +430,12 @@ export default {
 
     return {
       // Data
+      WITHOUT_COURSE_ACTIONS,
       dateRange,
       courseBillsToValidate,
       validatedCourseBills,
       showValidatedCourseBills,
+      showCourseBillsWithoutCourseActions,
       payerList,
       billsLoading,
       billingItemList,
@@ -400,6 +453,7 @@ export default {
       typeOptions,
       filteredBillsToValidate,
       filteredValidatedBills,
+      filteredBillsWithoutCourseActions,
       courseInfos,
       v$,
       // Methods
