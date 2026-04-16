@@ -158,10 +158,6 @@
       <ni-button v-if="canUpdate" class="bg-primary" color="white" icon="add"
         label="Ajouter une feuille d'émargement" @click="openAttendanceSheetAdditionModal" />
     </div>
-    <div v-if="canDownloadAllDocuments">
-      <ni-bi-color-button icon="file_download" label="Télécharger tous les documents" @click="downloadAllDocuments"
-        :disable="disableAllDocumentsDownload" size="16px" />
-    </div>
 
     <trainee-attendance-creation-modal v-model="traineeAdditionModal" :course="course" @hide="resetNewTraineeAttendance"
       :loading="modalLoading" :validation="attendanceValidations.newTraineeAttendance"
@@ -196,18 +192,13 @@ import {
   PRESENT,
   MISSING,
 } from '@data/constants';
-import Courses from '@api/Courses';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
 import { formatQuantity, formatIdentity } from '@helpers/utils';
-import { composeCourseName } from '@helpers/courses';
-import { downloadZip } from '@helpers/file';
 import CompaniDate from '@helpers/dates/companiDates';
 import { multiply, divide } from '@helpers/numbers';
 import Button from '@components/Button';
 import PrimaryButton from '@components/PrimaryButton';
-import BiColorButton from '@components/BiColorButton';
-import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import AttendanceSheetAdditionModal from '@components/courses/AttendanceSheetAdditionModal';
 import Indicator from '@components/courses/Indicator';
@@ -224,7 +215,6 @@ export default {
   components: {
     'ni-button': Button,
     'ni-primary-button': PrimaryButton,
-    'ni-bi-color-button': BiColorButton,
     'ni-simple-table': SimpleTable,
     'trainee-attendance-creation-modal': TraineeAttendanceCreationModal,
     'attendance-sheet-addition-modal': AttendanceSheetAdditionModal,
@@ -377,9 +367,6 @@ export default {
       attendanceSheetValidations,
     } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading, refreshAttendances);
 
-    const disableAllDocumentsDownload = computed(() => !formattedAttendanceSheets.value.length ||
-      !isLastSlotStarted.value);
-
     const getDelimiterClass = (index) => {
       if (index === course.value.trainees.length) return 'unsubscribed-delimiter';
       if (index === course.value.trainees.length - 1) return 'last-subscribed-interline';
@@ -410,17 +397,6 @@ export default {
 
       return `${formatQuantity('Signature', missingNames.length, 's', false)} de `
         + `${missingNames.join(', ')} ${formatQuantity('manquante', missingNames.length, 's', false)}`;
-    };
-
-    const downloadAllDocuments = async () => {
-      try {
-        const zip = await Courses.downloadAllDocuments(course.value._id, { isClientInterface });
-        downloadZip(zip, composeCourseName(course.value, true));
-        NotifyPositive('Documents de la formation téléchargés.');
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors du téléchargement des documents.');
-      }
     };
 
     const created = async () => {
@@ -476,7 +452,6 @@ export default {
       editionSlotsGroupedByStep,
       isSingleCourse,
       loggedUser,
-      disableAllDocumentsDownload,
       canDownloadAllDocuments,
       // Methods
       get,
@@ -506,7 +481,6 @@ export default {
       getMissingSignatures,
       isTraineeConcerned,
       isInterCourseInProgress,
-      downloadAllDocuments,
       // Validations
       attendanceSheetValidations,
       attendanceValidations,

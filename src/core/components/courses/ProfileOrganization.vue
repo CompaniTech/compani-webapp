@@ -1,6 +1,10 @@
 <template>
   <div v-if="course">
     <div class="profile-container q-mb-xl">
+      <div v-if="canDownloadAllDocuments && isCourseCompleted">
+        <ni-bi-color-button icon="file_download" label="Télécharger tous les documents" @click="downloadAllDocuments"
+          size="16px" />
+      </div>
       <ni-bi-color-button v-if="canReadHistory" class="button-history" icon="history" label="Historique"
         @click="toggleHistory" />
       <div v-if="isIntraOrIntraHoldingOrVendor" class="row gutter-profile">
@@ -229,12 +233,14 @@ import {
   formatAndSortUserOptions,
   formatAndSortCompanyOptions,
 } from '@helpers/utils';
-import { downloadFile } from '@helpers/file';
+import { downloadZip, downloadFile } from '@helpers/file';
 import CompaniDate from '@helpers/dates/companiDates';
 import { descendingSortBy, ascendingSortBy } from '@helpers/dates/utils';
 import { strictPositiveNumber, integerNumber } from '@helpers/vuelidateCustomVal';
 import { useCourses } from '@composables/courses';
 import { useLearnersCreation } from '@composables/learnersCreation';
+import { useAttendances } from '../table/AttendanceTable/Composables/Attendances';
+import { useAttendanceSheets } from '../table/AttendanceTable/Composables/AttendanceSheets';
 
 export default {
   name: 'ProfileOrganization',
@@ -308,6 +314,7 @@ export default {
     const canReadHistory = ref(false);
     const canUpdateCertifyingTest = ref(false);
     const canReadAndUpdateSalesRepresentative = ref(false);
+    const canDownloadAllDocuments = ref(false);
     const courseHistoryFeed = useTemplateRef('courseHistoryFeed');
     const OPERATIONS_REPRESENTATIVE = 'operationsRepresentative';
     const COMPANY_REPRESENTATIVE = 'companyRepresentative';
@@ -394,6 +401,38 @@ export default {
       const slotsToCome = course.value.slots.filter(slot => CompaniDate().isBefore(slot.endDate));
       return !slotsToCome.length && !course.value.slotsToPlan.length;
     });
+
+    const {
+      // Data
+      attendances,
+      refreshAttendances,
+    } = useAttendances(course, isClientInterface, canDownloadAllDocuments, loggedUser, courseLoading);
+
+    const {
+      // Computed
+      formattedAttendanceSheets,
+      // Methods
+      refreshAttendanceSheets,
+    } = useAttendanceSheets(
+      course,
+      isClientInterface,
+      canDownloadAllDocuments,
+      loggedUser,
+      courseLoading,
+      refreshAttendances
+    );
+
+    const hasEmptyAttendances = computed(() => {
+      const expectedAttendances = course.value.slots.reduce((acc, slot) => {
+        if (slot.trainees) return acc + slot.trainees.length;
+        return acc + course.value.trainees.length;
+      }, 0);
+      const traineeIds = course.value.trainees.map(t => t._id);
+      return expectedAttendances !== attendances.value.filter(a => traineeIds.includes(a.trainee)).length;
+    });
+
+    const isCourseCompleted = computed(() => formattedAttendanceSheets.value.length &&
+      !hasEmptyAttendances.value);
 
     const courseNotStartedYet = computed(() => {
       const slots = course.value.slots.filter(slot => CompaniDate().isAfter(slot.endDate));
@@ -502,6 +541,7 @@ export default {
       canUpdateCertifyingTest.value = ability.can('update', subject('Course', course.value), 'certifying_test');
       canReadAndUpdateSalesRepresentative.value = ability
         .can('read', subject('Course', course.value), 'sales_representative');
+      canDownloadAllDocuments.value = ability.can('download', 'all_documents');
     };
 
     const toggleHistory = async () => {
@@ -1085,6 +1125,17 @@ export default {
 
     const openExternalUrl = (url) => { window.open(url, '_blank'); };
 
+    const downloadAllDocuments = async () => {
+      try {
+        const zip = await Courses.downloadAllDocuments(course.value._id, { isClientInterface });
+        downloadZip(zip, composeCourseName(course.value, true));
+        NotifyPositive('Documents de la formation téléchargés.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors du téléchargement des documents.');
+      }
+    };
+
     watch(tutorModal, () => {
       if (tutorModal.value && newTutorRegistration.value.user) {
         tmpInterlocutorId.value = newTutorRegistration.value.user;
@@ -1101,7 +1152,9 @@ export default {
       if (canUpdateTrainees.value) promises.push(refreshPotentialTrainees());
       if (canGetTrainingContracts.value) promises.push(refreshTrainingContracts());
       if (canGetTrainersAndAdminUsers.value) promises.push(refreshTrainersAndAdminUsers());
-      else {
+      if (canDownloadAllDocuments.value) {
+        promises.push(refreshAttendances({ course: profileId.value }), refreshAttendanceSheets());
+      } else {
         adminUserOptions.value = [formatInterlocutorOption(course.value.operationsRepresentative)];
       }
 
@@ -1148,6 +1201,7 @@ export default {
       canGetTrainingContracts,
       canUpdateCertifyingTest,
       canReadAndUpdateSalesRepresentative,
+      canDownloadAllDocuments,
       COMPANY_REPRESENTATIVE,
       OPERATIONS_REPRESENTATIVE,
       TRAINER,
@@ -1171,6 +1225,7 @@ export default {
       missingTraineesPhone,
       smsMissingInfo,
       disableSms,
+      isCourseCompleted,
       traineesEmails,
       contactOptions,
       isIntraOrIntraHoldingOrVendor,
@@ -1223,6 +1278,7 @@ export default {
       submitLearnerCreationModal,
       validateTutorAddition,
       openExternalUrl,
+      downloadAllDocuments,
     };
   },
 };
