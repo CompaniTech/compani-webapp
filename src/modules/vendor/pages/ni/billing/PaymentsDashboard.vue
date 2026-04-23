@@ -6,7 +6,8 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
-    <ni-select v-model="selectedTypes" multiple caption="Type de formation" :options="typeOptions" clearable />
+    <ni-select v-model="selectedTypes" multiple caption="Type de formation" :options="typeOptions" clearable
+      class="selector" />
     <div>
       <ni-button v-if="filteredPayments.length" label="Télécharger le fichier de prélèvements SEPA"
         @click="openXmlFileModal" :disable="!selectedPayments.length" />
