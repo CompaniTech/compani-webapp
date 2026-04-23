@@ -6,14 +6,16 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
+    <ni-select v-model="selectedTypes" multiple caption="Type de formation" :options="typeOptions" clearable
+      class="selector" />
     <div>
-      <ni-button v-if="paymentList.length" label="Télécharger le fichier de prélèvements SEPA"
+      <ni-button v-if="filteredPayments.length" label="Télécharger le fichier de prélèvements SEPA"
         @click="openXmlFileModal" :disable="!selectedPayments.length" />
     </div>
-    <template v-if="!paymentList.length">
-      <span class="text-italic q-pa-lg">Aucun paiement pour les statuts sélectionnés.</span>
+    <template v-if="!filteredPayments.length">
+      <span class="text-italic q-pa-lg">Aucun paiement pour les filtres sélectionnés.</span>
     </template>
-    <ni-simple-table v-else :data="sortedPayments" :columns="columns" :loading="tableLoading"
+    <ni-simple-table v-else :data="filteredPayments" :columns="columns" :loading="tableLoading"
       :pagination="{ rowsPerPage: 0 }" hide-bottom virtual-scroll>
       <template #header="{ props }">
         <q-tr :props="props">
@@ -82,7 +84,7 @@ import Select from '@components/form/Select';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
-import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED } from '@data/constants';
+import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED, COURSE_TYPES } from '@data/constants';
 import CoursePayments from '@api/CoursePayments';
 import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
 import { formatPrice, sortStrings, formatQuantity, getLastVersion } from '@helpers/utils';
@@ -154,6 +156,8 @@ export default {
       xmlSEPAFileInfosName: false,
     });
     const multipleSelection = ref(false);
+    const typeOptions = ref([{ label: 'Tous les types', value: '' }, ...COURSE_TYPES]);
+    const selectedTypes = ref(['']);
 
     const TRANSACTION_NAME_MAX_LENGTH = 140;
     const rules = computed(() => ({
@@ -202,6 +206,15 @@ export default {
         default:
           return paymentList;
       }
+    });
+
+    const filteredPayments = computed(() => {
+      let payments = sortedPayments.value;
+      if (selectedTypes.value.length && !selectedTypes.value.includes('')) {
+        payments = payments.filter(p => selectedTypes.value.includes(p.courseBill.course.type));
+      }
+
+      return payments;
     });
 
     const isPayerSelectable = (payer) => {
@@ -307,6 +320,19 @@ export default {
         : false;
     });
 
+    watch(selectedTypes, (newValue, oldValue) => {
+      if (Array.isArray(newValue) && newValue.length === 0) {
+        selectedTypes.value = [''];
+        return;
+      }
+      if (!oldValue.includes('') && newValue.includes('')) {
+        selectedTypes.value = [''];
+        return;
+      }
+
+      if (newValue.includes('') && newValue.length > 1) selectedTypes.value = newValue.filter(v => v !== '');
+    });
+
     const openCoursePaymentEditionModal = async () => {
       multipleCoursePaymentEditionModal.value = true;
     };
@@ -361,10 +387,13 @@ export default {
       sortBy,
       sortDesc,
       sortableColumns,
+      typeOptions,
+      selectedTypes,
       // Computed
       sortedPayments,
       multipleSelection,
       selectablePayments,
+      filteredPayments,
       // Methods
       updateSelectedStatus,
       getItemStatus,
