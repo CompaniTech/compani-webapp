@@ -37,7 +37,7 @@ import {
   WITHOUT_SALES_REPRESENTATIVE,
   INTERRUPTED_COURSES,
 } from '@data/constants';
-import { happened, composeCourseName } from '@helpers/courses';
+import { happened, composeCourseName, isInterrupted } from '@helpers/courses';
 import { formatQuantity } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -124,6 +124,8 @@ export default {
     const doesCourseMissTrainees = computed(() => course.value.type === INTRA &&
       course.value.maxTrainees !== course.value.trainees.length);
 
+    const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
+
     const isDisplayed = computed(() => {
       if (selectedProgram.value && course.value.subProgram.program._id !== selectedProgram.value) return false;
 
@@ -153,7 +155,7 @@ export default {
 
       if (selectedStatus.value === ARCHIVED_COURSES && !course.value.archivedAt) return false;
 
-      if (selectedStatus.value === INTERRUPTED_COURSES && !course.value.interruptedAt) return false;
+      if (selectedStatus.value === INTERRUPTED_COURSES && !isCourseInterrupted.value) return false;
 
       if (selectedStartDate.value && !selectedEndDate.value && !isCourseAfterStartDate.value) return false;
 

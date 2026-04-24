@@ -13,7 +13,7 @@ import {
   formatDownloadName,
   readAPIResponseWithTypeArrayBuffer,
 } from '@helpers/utils';
-import { composeCourseName, isCourseInterrupted } from '@helpers/courses';
+import { composeCourseName, isInterrupted } from '@helpers/courses';
 import { downloadFile } from '@helpers/file';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -79,7 +79,7 @@ export const useCourses = (course) => {
   });
 
   const headerInfo = computed(() => {
-    const isInterrupted = isCourseInterrupted(course.value.interruptionDates);
+    const isCourseInterrupted = isInterrupted(course.value.interruptionDates);
 
     const interruptedLabel = `${(course.value.interruptionDates || [])
       .map((dates) => {
@@ -97,7 +97,7 @@ export const useCourses = (course) => {
       ...(displaySalesRepresentative.value ? [{ icon: 'fa fa-handshake', label: salesRepresentativeName.value }] : []),
       ...(trainersName.value ? [{ icon: 'emoji_people', label: trainersName.value }] : []),
       ...(course.value.archivedAt ? [{ icon: 'circle', label: 'Archivée', iconClass: 'info-archived' }] : []),
-      ...(isInterrupted && !course.value.archivedAt
+      ...(isCourseInterrupted && !course.value.archivedAt
         ? [{ icon: 'circle', label: 'En pause', iconClass: 'info-warning', class: 'text-orange' }]
         : []
       ),

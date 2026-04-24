@@ -204,7 +204,7 @@ import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/con
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { add, toFixedToFloat } from '@helpers/numbers';
 import { formatPrice, formatName } from '@helpers/utils';
-import { composeCourseName } from '@helpers/courses';
+import { composeCourseName, isInterrupted } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import CourseBillEditionModal from 'src/modules/vendor/components/billing/CourseBillEditionModal';
 import CourseFeeEditionModal from 'src/modules/vendor/components/billing/CourseFeeEditionModal';
@@ -381,6 +381,8 @@ export default {
       traineesQuantity: Number(traineesQuantity.value),
     }]));
 
+    const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
+
     const setEditedBill = (bill, addMaturityDate = false) => {
       const payer = get(bill, 'payer._id');
       const maturityDate = get(bill, 'maturityDate');
@@ -455,7 +457,7 @@ export default {
     const openCourseBillValidationModal = (billId) => {
       billToValidate.value._id = billId;
 
-      if (course.value.interruptedAt) {
+      if (isCourseInterrupted.value) {
         const message = 'La formation est en pause. Êtes-vous sûr(e) de vouloir valider la facture&nbsp;?';
         $q.dialog({
           title: 'Confirmation',
