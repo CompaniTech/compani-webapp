@@ -7,15 +7,16 @@ import get from 'lodash/get';
 import pick from 'lodash/pick';
 import Courses from '@api/Courses';
 import { NotifyNegative } from '@components/popup/notify';
-import { INTRA, COURSE_TYPES, INTRA_HOLDING, INTER_B2B, SINGLE } from '@data/constants';
+import { INTRA, COURSE_TYPES, INTRA_HOLDING, INTER_B2B, SINGLE, DD_MM_YYYY } from '@data/constants';
 import {
   formatIdentity,
   formatDownloadName,
   readAPIResponseWithTypeArrayBuffer,
 } from '@helpers/utils';
-import { composeCourseName } from '@helpers/courses';
+import { composeCourseName, isCourseInterrupted } from '@helpers/courses';
 import { downloadFile } from '@helpers/file';
 import { defineAbilitiesForCourse } from '@helpers/ability';
+import CompaniDate from '@helpers/dates/companiDates';
 
 export const useCourses = (course) => {
   const $store = useStore();
@@ -77,16 +78,32 @@ export const useCourses = (course) => {
     return canReadSalesRepresentative && get(course.value, 'salesRepresentative._id');
   });
 
-  const headerInfo = computed(() => [
-    { icon: 'bookmark_border', label: courseType.value },
-    ...(displaySalesRepresentative.value ? [{ icon: 'fa fa-handshake', label: salesRepresentativeName.value }] : []),
-    ...(trainersName.value ? [{ icon: 'emoji_people', label: trainersName.value }] : []),
-    ...(course.value.archivedAt ? [{ icon: 'circle', label: 'Archivée', iconClass: 'info-archived' }] : []),
-    ...(course.value.interruptedAt && !course.value.archivedAt
-      ? [{ icon: 'circle', label: 'En pause', iconClass: 'info-warning', class: 'text-orange' }]
-      : []
-    ),
-  ]);
+  const headerInfo = computed(() => {
+    const isInterrupted = isCourseInterrupted(course.value.interruptionDates);
+
+    const interruptedLabel = `${(course.value.interruptionDates || [])
+      .map((dates) => {
+        if (dates.endDate) {
+          return ` du ${CompaniDate(dates.startDate).format(DD_MM_YYYY)}
+            au ${CompaniDate(dates.endDate).format(DD_MM_YYYY)}`;
+        }
+        return ` depuis le ${CompaniDate(dates.startDate).format(DD_MM_YYYY)}`;
+      })
+      .join(',')
+    }`;
+
+    return [
+      { icon: 'bookmark_border', label: courseType.value },
+      ...(displaySalesRepresentative.value ? [{ icon: 'fa fa-handshake', label: salesRepresentativeName.value }] : []),
+      ...(trainersName.value ? [{ icon: 'emoji_people', label: trainersName.value }] : []),
+      ...(course.value.archivedAt ? [{ icon: 'circle', label: 'Archivée', iconClass: 'info-archived' }] : []),
+      ...(isInterrupted && !course.value.archivedAt
+        ? [{ icon: 'circle', label: 'En pause', iconClass: 'info-warning', class: 'text-orange' }]
+        : []
+      ),
+      ...(course.value.interruptionDates ? [{ icon: 'pause', label: interruptedLabel }] : []),
+    ];
+  });
 
   const validateAttendanceSheetDownload = async () => {
     if (isIntraCourse.value || isIntraHoldingCourse.value) {
