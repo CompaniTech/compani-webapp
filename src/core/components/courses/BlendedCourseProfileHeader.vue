@@ -19,6 +19,7 @@ import ProfileHeader from '@components/ProfileHeader';
 import Button from '@components/Button';
 import { NotifyPositive, NotifyNegative } from '@components/popup/notify';
 import { VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER } from '@data/constants';
+import { isInterrupted } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 
 export default {
@@ -48,7 +49,9 @@ export default {
 
     const archiveLabel = computed(() => (!course.value.archivedAt ? 'Archiver' : 'Désarchiver'));
 
-    const interruptionButtonLabel = computed(() => (!course.value.interruptedAt ? 'Mettre en pause' : 'Reprendre'));
+    const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
+
+    const interruptionButtonLabel = computed(() => (!isCourseInterrupted.value ? 'Mettre en pause' : 'Reprendre'));
 
     const deleteCourse = () => emit('delete');
 
@@ -93,21 +96,20 @@ export default {
 
     const interruptOrRestartCourse = async () => {
       try {
-        const interruptedAt = !course.value.interruptedAt ? CompaniDate().toISO() : '';
-        await Courses.update(course.value._id, { interruptedAt });
+        await Courses.update(course.value._id, { interruptionDate: CompaniDate().toISO() });
 
-        NotifyPositive(!course.value.interruptedAt ? 'Formation mise en pause.' : 'Reprise de la formation.');
+        NotifyPositive(!isCourseInterrupted.value ? 'Formation mise en pause.' : 'Reprise de la formation.');
         await refreshCourse();
       } catch (e) {
         console.error(e);
         NotifyNegative(
-          `Erreur lors de la ${!course.value.interruptedAt ? 'mise en pause' : 'reprise'} de la formation.`
+          `Erreur lors de la ${!isCourseInterrupted.value ? 'mise en pause' : 'reprise'} de la formation.`
         );
       }
     };
 
     const validateCourseInterruptionOrRestart = () => {
-      const message = !course.value.interruptedAt
+      const message = !isCourseInterrupted.value
         ? 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation&nbsp;? <br /><br />'
           + 'Vous ne pourrez plus créer de factures.'
         : 'Êtes-vous sûr(e) de vouloir reprendre cette formation&nbsp;? <br /><br />'
@@ -120,7 +122,7 @@ export default {
         ok: 'Oui',
         cancel: 'Non',
       }).onOk(interruptOrRestartCourse)
-        .onCancel(() => NotifyPositive(!course.value.interruptedAt ? 'Mise en pause annulée.' : 'Reprise annulée.'));
+        .onCancel(() => NotifyPositive(!isCourseInterrupted.value ? 'Mise en pause annulée.' : 'Reprise annulée.'));
     };
 
     return {

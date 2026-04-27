@@ -25,7 +25,7 @@
             <q-icon size="12px" name="circle" class="info-archived" />
             Archivée
           </div>
-          <div v-else-if="Object.keys(col.value).includes('interruptedAt') && !!col.value.interruptedAt">
+          <div v-else-if="col.value.isCourseInterrupted">
             <q-icon size="12px" name="circle" class="info-warning" />
             En&nbsp;pause
           </div>
@@ -91,6 +91,7 @@ import {
 import { integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSort } from '@helpers/dates/utils';
+import { isInterrupted } from '@helpers/courses';
 import store from 'src/store/index';
 
 export default {
@@ -201,7 +202,7 @@ export default {
       {
         name: 'status',
         label: '',
-        field: row => ({ archivedAt: row.archivedAt, interruptedAt: row.interruptedAt }),
+        field: row => ({ archivedAt: row.archivedAt, isCourseInterrupted: row.isCourseInterrupted }),
         align: 'right',
       },
     ]);
@@ -310,7 +311,7 @@ export default {
         let startDate = '';
         if (c.slots.length) startDate = CompaniDate(c.slots[0].startDate).format(DD_MM_YYYY);
         if (c.estimatedStartDate) startDate = CompaniDate(c.estimatedStartDate).format(DD_MM_YYYY);
-        return { ...c, startDate };
+        return { ...c, startDate, isCourseInterrupted: isInterrupted(c.interruptionDates) };
       }));
 
     const {
@@ -336,6 +337,8 @@ export default {
     } = useCourseFilters(activeCourses, archivedCourses, holdingOptions, SINGLE_TYPE);
 
     const isDisplayed = (course) => {
+      const isCourseInterrupted = isInterrupted(course.interruptionDates);
+
       if (selectedProgram.value && course.subProgram.program._id !== selectedProgram.value) return false;
       if (selectedTrainer.value) {
         const courseTrainerIds = course.trainers ? course.trainers.map(trainer => trainer._id) : [];
@@ -361,7 +364,7 @@ export default {
 
       if (selectedStatus.value === ARCHIVED_COURSES && !course.archivedAt) return false;
 
-      if (selectedStatus.value === INTERRUPTED_COURSES && !course.interruptedAt) return false;
+      if (selectedStatus.value === INTERRUPTED_COURSES && !isCourseInterrupted) return false;
 
       return true;
     };

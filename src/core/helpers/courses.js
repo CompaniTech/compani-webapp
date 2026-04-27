@@ -60,3 +60,5 @@ export const getQuestionnaireTypeTitle = (types) => {
 
   return labels.join(' et ');
 };
+
+export const isInterrupted = (interruptionDates = []) => interruptionDates.some(d => !d.endDate);
