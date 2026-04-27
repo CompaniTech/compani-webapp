@@ -81,7 +81,7 @@ export const useCourses = (course) => {
   const headerInfo = computed(() => {
     const isCourseInterrupted = isInterrupted(course.value.interruptionDates);
 
-    const interruptedLabel = `${(course.value.interruptionDates || [])
+    const interruptedLabel = `Périodes de pause : ${(course.value.interruptionDates || [])
       .map((dates) => {
         if (dates.endDate) {
           return ` du ${CompaniDate(dates.startDate).format(DD_MM_YYYY)}
