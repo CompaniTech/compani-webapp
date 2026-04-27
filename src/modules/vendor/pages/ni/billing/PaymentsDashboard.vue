@@ -84,7 +84,15 @@ import Select from '@components/form/Select';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import SimpleTable from '@components/table/SimpleTable';
 import Button from '@components/Button';
-import { PAYMENT_STATUS_OPTIONS, DD_MM_YYYY, PENDING, PAYMENT_OPTIONS, RECEIVED, COURSE_TYPES } from '@data/constants';
+import {
+  PAYMENT_STATUS_OPTIONS,
+  DD_MM_YYYY,
+  PENDING,
+  PAYMENT_OPTIONS,
+  RECEIVED,
+  COURSE_TYPES,
+  CANCELLED,
+} from '@data/constants';
 import CoursePayments from '@api/CoursePayments';
 import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
 import { formatPrice, sortStrings, formatQuantity, getLastVersion } from '@helpers/utils';
@@ -253,6 +261,8 @@ export default {
           return 'orange-chip';
         case RECEIVED:
           return 'green-chip';
+        case CANCELLED:
+          return 'red-chip';
         default:
           return 'peach-chip';
       }
