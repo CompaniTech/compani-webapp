@@ -200,6 +200,7 @@ import {
   RECEIVED,
   XML_GENERATED,
   RESEND,
+  CANCELLED,
 } from '@data/constants.js';
 import CompaniDate from '@helpers/dates/companiDates';
 import { ascendingSortBy, descendingSortBy } from '@helpers/dates/utils';
@@ -511,6 +512,8 @@ export default {
           return 'orange-chip';
         case RECEIVED:
           return 'green-chip';
+        case CANCELLED:
+          return 'red-chip';
         default:
           return 'peach-chip';
       }
