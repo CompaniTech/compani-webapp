@@ -127,10 +127,12 @@ export const PAYMENT_NATURE_OPTIONS = [
 export const RECEIVED = 'received';
 export const XML_GENERATED = 'xml_generated';
 export const PENDING = 'pending';
+export const CANCELLED = 'cancelled';
 export const PAYMENT_STATUS_OPTIONS = [
   { label: 'Reçu', value: RECEIVED },
   { label: 'En attente', value: PENDING },
   { label: 'Fichier XML associé', value: XML_GENERATED },
+  { label: 'Annulé', value: CANCELLED },
 ];
 
 // PAY

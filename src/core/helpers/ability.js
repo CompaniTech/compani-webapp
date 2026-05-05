@@ -76,6 +76,7 @@ export const defineAbilitiesForCourse = (user) => {
       can('read', 'Course', 'sales_representative');
       can('set', 'Course', 'learner_list', { type: { $ne: SINGLE } });
       can('update', 'Course', 'slot_trainers');
+      can('download', 'all_documents');
     } else if (vendorRole === TRAINER) can('update', 'Course', 'trainees', { type: { $in: [INTRA, SINGLE] } });
   } else {
     const holdingRole = get(role, 'holding.name');
@@ -89,12 +90,14 @@ export const defineAbilitiesForCourse = (user) => {
     can('read', 'Course', 'training_contracts', { type: { $ne: SINGLE } });
     can('read', 'Course', 'certificates');
 
+    if (clientRole === CLIENT_ADMIN) can('download', 'all_documents');
     if ([HOLDING_ADMIN].includes(holdingRole)) {
       can('update', 'Course', 'company_representative', { type: INTRA_HOLDING });
       can('update', 'Course', 'companies', { type: INTRA_HOLDING });
       can('read', 'Course', 'all_trainees');
       can('update', 'Course', 'sms', { type: INTRA_HOLDING });
       can('read', 'Course', 'history', { type: INTRA_HOLDING });
+      can('download', 'all_documents');
     } else if ([COACH, CLIENT_ADMIN].includes(clientRole)) {
       can('read', 'Course', 'all_trainees', { type: { type: { $in: [INTRA, SINGLE] } } });
     }

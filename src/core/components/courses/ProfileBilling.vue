@@ -46,7 +46,7 @@
       </template>
     </ni-banner>
     <div v-for="(companies, index) of companiesList" :key="index">
-      <ni-course-billing-card :course="course" :payer-list="payerList" :loading="billsLoading"
+      <ni-course-billing-card :course="course" :payer-list="payerList"
         :billing-item-list="billingItemList" :course-bills="billsGroupedByCompanies[companies]"
         @refresh-course-bills="refreshCourseBills" @unroll="unrollBill({ _id: $event })"
         :are-details-visible="areDetailsVisible" :expected-bills-count-invalid="v$.course.expectedBillsCount.$error"
@@ -101,7 +101,7 @@ import has from 'lodash/has';
 import useVuelidate from '@vuelidate/core';
 import { required, minValue, maxValue, helpers, or, requiredIf } from '@vuelidate/validators';
 import { minArrayLength, integerNumber, positiveNumber, strictPositiveNumber } from '@helpers/vuelidateCustomVal';
-import { composeCourseName, computeDuration } from '@helpers/courses';
+import { composeCourseName, computeDuration, isInterrupted } from '@helpers/courses';
 import { formatPrice, formatName, sortStrings, formatIdentity, removeEmptyProps, formatQuantity } from '@helpers/utils';
 import { ascendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -351,6 +351,8 @@ export default {
       return { billedPrice: toFixedToFloat(billedPrice), validatedPrice: toFixedToFloat(validatedPrice) };
     });
 
+    const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
+
     const saveTmp = (path) => { tmpInput.value = course.value[path]; };
 
     const formatPayerForPayload = (payloadPayer) => {
@@ -513,7 +515,7 @@ export default {
     };
 
     const openMultipleBillCreationModal = () => {
-      if (course.value.interruptedAt) return NotifyWarning('Impossible : la formation est en pause.');
+      if (isCourseInterrupted.value) return NotifyWarning('Impossible : la formation est en pause.');
 
       if (!courseBills.value.length && !course.value.prices.some(p => p.global)) {
         return NotifyWarning('Prix de la formation manquant.');
