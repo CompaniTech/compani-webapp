@@ -4,7 +4,7 @@
       Ajouter un <span class="text-weight-bold">nom commercial</span>
     </template>
     <ni-input in-modal :model-value="newTradeName" :error="validations.$error" caption="Nom commercial"
-      @blur="validations.$touch" required-field @update:model-value="$emit('update:new-trade-name', $event)" />
+      @blur="validations.$touch" required-field @update:model-value="update($event)" />
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Ajouter le nom commercial" color="primary" :loading="loading"
         icon-right="add" @click="submit" />
@@ -34,11 +34,14 @@ export default {
 
     const input = event => emit('update:model-value', event);
 
+    const update = (event) => { emit('update:new-trade-name', event); };
+
     const submit = () => emit('submit');
 
     return {
       hide,
       input,
+      update,
       submit,
     };
   },

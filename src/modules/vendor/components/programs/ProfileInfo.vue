@@ -190,9 +190,9 @@ export default {
       }
     };
 
-    const programImageUploaded = () => {
+    const programImageUploaded = async () => {
       NotifyPositive('Image envoyée');
-      refreshProgram();
+      await refreshProgram();
     };
 
     const deleteProgramImage = async () => {
@@ -200,7 +200,7 @@ export default {
         if (get(program.value, 'image')) {
           await Programs.deleteImage(program.value._id);
 
-          refreshProgram();
+          await refreshProgram();
           NotifyPositive('Image supprimée');
         } else NotifyWarning('Il n\'y a pas d\'image a supprimer.');
       } catch (e) {
@@ -281,7 +281,7 @@ export default {
         if (v$.value.newTradeName.$error) return NotifyWarning('Champ(s) invalide(s)');
 
         loading.value = true;
-        await Programs.addTradeName(program.value._id, { tradeName: newTradeName.value });
+        await Programs.addTradeName(program.value._id, { tradeName: newTradeName.value.trim() });
 
         tradeNameAdditionModal.value = false;
         NotifyPositive('Nom commercial ajouté.');
