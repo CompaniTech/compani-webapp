@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { toRefs, computed } from 'vue';
+import { toRefs, computed, watch } from 'vue';
 import DateInput from '@components/form/DateInput';
 import TimeInput from '@components/form/TimeInput';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -86,14 +86,6 @@ export default {
 
           dates.startDate = CompaniDate(dates.startDate).set({ second: 0, millisecond: 0 }).toISO();
         }
-
-        if (!disableEndHour.value) {
-          if (dates.endHour === '23:59') {
-            dates.endDate = CompaniDate(dates.endDate).set({ second: 59, millisecond: 999 }).toISO();
-          } else {
-            dates.endDate = CompaniDate(dates.endDate).set({ second: 0, millisecond: 0 }).toISO();
-          }
-        }
       } catch (e) {
         if (e.message.startsWith('Invalid DateTime: unparsable') ||
           e.message.startsWith('Invalid DateTime: unit out of range')) return '';
@@ -106,6 +98,30 @@ export default {
     const startClick = () => { emit('start-lock-click'); };
 
     const endClick = () => { emit('end-lock-click'); };
+
+    watch(() => modelValue.value.endHour, (endHour) => {
+      if (disableEndHour.value) return;
+
+      const { endDate } = modelValue.value;
+
+      emit('update:model-value', {
+        ...modelValue.value,
+        endDate: CompaniDate(endDate)
+          .set(endHour === '23:59' ? { second: 59, millisecond: 999 } : { second: 0, millisecond: 0 })
+          .toISO(),
+      });
+    }, { immediate: true });
+
+    watch(() => modelValue.value.endDate, (endDate) => {
+      const { endHour } = modelValue.value;
+
+      emit('update:model-value', {
+        ...modelValue.value,
+        endDate: CompaniDate(endDate)
+          .set(endHour === '23:59' ? { second: 59, millisecond: 999 } : { second: 0, millisecond: 0 })
+          .toISO(),
+      });
+    });
 
     return {
       // Computed
