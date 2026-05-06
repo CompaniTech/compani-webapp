@@ -76,7 +76,7 @@ export const defineAbilitiesForCourse = (user) => {
       can('read', 'Course', 'sales_representative');
       can('set', 'Course', 'learner_list', { type: { $ne: SINGLE } });
       can('update', 'Course', 'slot_trainers');
-      can('download', 'all_documents');
+      can('download', 'Course', 'all_documents', { type: { $ne: SINGLE } });
     } else if (vendorRole === TRAINER) can('update', 'Course', 'trainees', { type: { $in: [INTRA, SINGLE] } });
   } else {
     const holdingRole = get(role, 'holding.name');

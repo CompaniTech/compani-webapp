@@ -541,7 +541,7 @@ export default {
       canUpdateCertifyingTest.value = ability.can('update', subject('Course', course.value), 'certifying_test');
       canReadAndUpdateSalesRepresentative.value = ability
         .can('read', subject('Course', course.value), 'sales_representative');
-      canDownloadAllDocuments.value = ability.can('download', 'all_documents');
+      canDownloadAllDocuments.value = ability.can('download', subject('Course', course.value), 'all_documents');
     };
 
     const toggleHistory = async () => {
