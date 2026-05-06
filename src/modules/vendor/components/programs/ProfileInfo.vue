@@ -355,6 +355,7 @@ export default {
       v$,
       saveTmp,
       updateProgram,
+      refreshProgram,
       programImageUploaded,
       validateProgramImageDeletion,
       resetModal,
