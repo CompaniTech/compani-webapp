@@ -41,12 +41,15 @@
     <div class="q-mb-xl">
       <p class="text-weight-bold">Noms commerciaux</p>
       <q-card>
-        <ni-responsive-table :data="program.tradeNames" :columns="tradeNameColumns">
+        <ni-responsive-table :data="program.tradeNames" :columns="columns">
           <template #body="{ props }">
             <q-tr :props="props">
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
-                {{ col.value }}
+                <template v-if="col.name === 'actions'">
+                  <ni-button class="table-actions" icon="close" @click="validateTradeNameRemoval(props.row)" />
+                </template>
+                <template v-else>{{ col.value }}</template>
               </q-td>
             </q-tr>
           </template>
@@ -74,6 +77,7 @@ import { useQuasar } from 'quasar';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import get from 'lodash/get';
+import groupBy from 'lodash/groupBy';
 import set from 'lodash/set';
 import Programs from '@api/Programs';
 import Categories from '@api/Categories';
@@ -86,7 +90,7 @@ import TradeNameAdditionModal from 'src/modules/vendor/components/programs/Trade
 import TesterTable from 'src/modules/vendor/components/programs/TesterTable';
 import Button from '@components/Button';
 import { IMAGE_EXTENSIONS } from '@data/constants';
-import { upperCaseFirstLetter, formatAndSortOptions } from '@helpers/utils';
+import { upperCaseFirstLetter, formatAndSortOptions, formatQuantity } from '@helpers/utils';
 
 export default {
   name: 'ProfileInfo',
@@ -117,9 +121,6 @@ export default {
       { name: 'name', label: 'Nom', align: 'left', field: 'name', format: upperCaseFirstLetter, style: 'width: 90%' },
       { name: 'actions', label: '', field: '_id', align: 'right' },
     ];
-    const tradeNameColumns = [
-      { name: 'name', label: 'Nom', align: 'left', field: 'name', style: 'width: 100%' },
-    ];
     const categoryAdditionModal = ref(false);
     const tradeNameAdditionModal = ref(false);
     const loading = ref(false);
@@ -135,6 +136,11 @@ export default {
     const categoryOptions = computed(() => formatAndSortOptions(
       categories.value.filter(c => !program.value.categories.find(e => e._id === c._id)),
       'name'
+    ));
+
+    const coursesByTradeName = computed(() => groupBy(
+      program.value.subPrograms.flatMap(sp => sp.courses || []),
+      'tradeName'
     ));
 
     const rules = computed(() => ({
@@ -275,6 +281,36 @@ export default {
         .onCancel(() => NotifyPositive('Retrait annulé.'));
     };
 
+    const removeTradeName = async (tradeNameId) => {
+      try {
+        loading.value = true;
+        await Programs.removeTradeName(program.value._id, tradeNameId);
+
+        NotifyPositive('Nom commercial retiré.');
+        await refreshProgram();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors du retrait du nom commercial.');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const validateTradeNameRemoval = (tradeName) => {
+      const linkedCourses = coursesByTradeName.value[tradeName.name];
+      const linkedCoursesWarning = linkedCourses
+        ? `Ce nom est lié à ${formatQuantity('formation existante', linkedCourses.length)}.`
+        : '';
+      $q.dialog({
+        title: 'Confirmation',
+        message: `Êtes-vous sûr(e) de vouloir retirer ce nom commercial&nbsp;? ${linkedCoursesWarning}`,
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => removeTradeName(tradeName._id))
+        .onCancel(() => NotifyPositive('Retrait annulé.'));
+    };
+
     const addTradeName = async () => {
       try {
         v$.value.newTradeName.$touch();
@@ -309,7 +345,6 @@ export default {
       newCategory,
       newTradeName,
       columns,
-      tradeNameColumns,
       categoryAdditionModal,
       tradeNameAdditionModal,
       loading,
@@ -320,6 +355,7 @@ export default {
       v$,
       saveTmp,
       updateProgram,
+      refreshProgram,
       programImageUploaded,
       validateProgramImageDeletion,
       resetModal,
@@ -327,6 +363,8 @@ export default {
       addCategory,
       validateCategoryRemoval,
       addTradeName,
+      validateTradeNameRemoval,
+      removeTradeName,
     };
   },
 };

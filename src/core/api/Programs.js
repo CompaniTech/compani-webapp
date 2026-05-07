@@ -36,4 +36,7 @@ export default {
   async addTradeName (programId, payload) {
     await alenviAxios.post(`${process.env.API_HOSTNAME}/programs/${programId}/trade-names`, payload);
   },
+  async removeTradeName (programId, tradeNameId) {
+    await alenviAxios.delete(`${process.env.API_HOSTNAME}/programs/${programId}/trade-names/${tradeNameId}`);
+  },
 };
