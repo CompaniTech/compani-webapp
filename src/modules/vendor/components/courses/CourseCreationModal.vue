@@ -15,6 +15,9 @@
       <ni-select in-modal :model-value="newCourse.subProgram" @update:model-value="update($event, 'subProgram')"
         @blur="validations.subProgram.$touch" required-field caption="Sous-programme" :options="subProgramOptions"
         :disable="disableSubProgram" :error="validations.subProgram.$error" />
+      <ni-select in-modal :model-value="newCourse.tradeName" @update:model-value="update($event, 'tradeName')"
+        @blur="validations.tradeName.$touch" required-field caption="Nom commercial" :options="tradeNameOptions"
+        :error="validations.tradeName.$error" />
       <company-select v-if="isIntraCourse" in-modal :company="newCourse.company" :validation="validations.company"
         required-field :company-options="companyOptions" @update="update($event, 'company')" />
       <ni-select in-modal :model-value="newCourse.salesRepresentative" caption="Chargé(e) d'accompagnement"
@@ -116,6 +119,7 @@ export default {
     const { programs, validations, newCourse, companies, traineeOptions } = toRefs(props);
 
     const subProgramOptions = ref([]);
+    const tradeNameOptions = ref([]);
     const disableSubProgram = ref(false);
 
     const programOptions = computed(() => programs.value
@@ -128,6 +132,7 @@ export default {
           value: p._id,
           disable: !blendedPublishedSubPrograms.length,
           blendedPublishedSubPrograms,
+          tradeNames: p.tradeNames,
         };
       })
       .sort((a, b) => a.label.localeCompare(b.label)));
@@ -196,7 +201,7 @@ export default {
 
     watch(
       () => newCourse.value.program,
-      (value) => {
+      async (value) => {
         const selectedProgram = programOptions.value.find(p => p.value === value);
         if (selectedProgram) {
           const { blendedPublishedSubPrograms } = selectedProgram;
@@ -204,8 +209,15 @@ export default {
           subProgramOptions.value = formatAndSortOptions(blendedPublishedSubPrograms, 'name');
           disableSubProgram.value = !subProgramOptions.value.length;
 
-          if (subProgramOptions.value.length === 1) update(subProgramOptions.value[0].value, 'subProgram');
-          else update('', 'subProgram');
+          if (subProgramOptions.value.length === 1) await update(subProgramOptions.value[0].value, 'subProgram');
+          else await update('', 'subProgram');
+
+          tradeNameOptions.value = [
+            { label: selectedProgram.label, value: selectedProgram.label },
+            ...(selectedProgram.tradeNames || []).map(name => ({ label: name.name, value: name.name })),
+          ];
+          if (tradeNameOptions.value.length === 1) await update(tradeNameOptions.value[0].value, 'tradeName');
+          else await update('', 'tradeName');
         }
       }
     );
@@ -227,6 +239,7 @@ export default {
       disableSubProgram,
       // Computed
       programOptions,
+      tradeNameOptions,
       maxTraineesErrorMessage,
       expectedBillsCountErrorMessage,
       globalPriceErrorMessage,
