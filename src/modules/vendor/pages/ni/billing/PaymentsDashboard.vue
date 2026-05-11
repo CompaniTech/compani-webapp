@@ -231,7 +231,7 @@ export default {
       return get(lastMandate, 'signedAt') && get(lastMandate, 'file.link');
     };
 
-    const selectablePayments = computed(() => paymentList.value
+    const selectablePayments = computed(() => filteredPayments.value
       .filter(p => isPayerSelectable(p.courseBill.payer))
       .map(p => p._id));
 
@@ -331,6 +331,7 @@ export default {
     });
 
     watch(selectedTypes, (newValue, oldValue) => {
+      selectedPayments.value = [];
       if (Array.isArray(newValue) && newValue.length === 0) {
         selectedTypes.value = [''];
         return;
