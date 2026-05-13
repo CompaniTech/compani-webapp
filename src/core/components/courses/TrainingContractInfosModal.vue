@@ -4,7 +4,7 @@
       <span class="text-weight-bold">Informations de la convention</span>
     </template>
      <div><span class="text-weight-bold">Structure :</span> {{ companyName }}</div>
-     <div><span class="text-weight-bold">Nom du programme :</span> {{ course.subProgram.program.name }}</div>
+     <div><span class="text-weight-bold">Nom du programme :</span> {{ course.tradeName }}</div>
      <div class="learning-goals">
       <div class="text-weight-bold">Objectifs :</div>
       {{ course.subProgram.program.learningGoals }}

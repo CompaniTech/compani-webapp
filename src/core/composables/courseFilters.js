@@ -66,7 +66,7 @@ export const useCourseFilters = (activeCourses, archivedCourses, holdingsOptions
 
   const programFilterOptions = computed(() => {
     const programs = courses.value
-      .map(course => ({ label: course.subProgram.program.name, value: course.subProgram.program._id }))
+      .map(course => ({ label: course.tradeName, value: course.subProgram.program._id }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     return [{ label: 'Tous les programmes', value: '' }, ...sortedUniqBy(programs, 'value')];

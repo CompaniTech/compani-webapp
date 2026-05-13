@@ -93,7 +93,7 @@
               <q-card flat class="q-mx-lg q-mb-sm">
                 <q-card-section class="fee">
                   <div class="fee-info">
-                    <div class="text-copper-500">{{ get(course, 'subProgram.program.name') }}</div>
+                    <div class="text-copper-500">{{ get(course, 'tradeName') }}</div>
                     <div>Prix unitaire : {{ formatPrice(get(bill, 'mainFee.price')) }}</div>
                     <div>
                       Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
@@ -412,7 +412,7 @@ export default {
     const openMainFeeEditionModal = (bill) => {
       setEditedBill(bill);
       courseFeeEditionModalMetaInfo.value = {
-        title: get(course, 'value.subProgram.program.name'),
+        title: get(course, 'value.tradeName'),
         isBilled: isBilled(bill),
       };
       totalPriceToBill.value = course.value.prices.reduce((acc, price) => {

@@ -192,11 +192,8 @@ export default {
       field: row => row,
       align: 'left',
       sortable: true,
-      format: value => (get(value, 'subProgram.program.name') || '') + (value.misc ? ` - ${value.misc}` : ''),
-      sort: (a, b) => sortStrings(
-        get(a, 'subProgram.program.name') + a.misc || '',
-        get(b, 'subProgram.program.name') + b.misc || ''
-      ),
+      format: value => (value.tradeName || '') + (value.misc ? ` - ${value.misc}` : ''),
+      sort: (a, b) => sortStrings(a.tradeName + a.misc || '', b.tradeName + b.misc || ''),
       style: 'width: 30%',
     }]);
     const courseColumns = ref([

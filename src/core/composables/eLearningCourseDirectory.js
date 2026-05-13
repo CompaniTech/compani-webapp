@@ -66,8 +66,8 @@ export const useELearningCourseDirectory = () => {
       const courseList = await Courses.list(query);
 
       courses.value = courseList.map(c => ({
-        name: c.subProgram.program.name,
-        noDiacriticsName: removeDiacritics(c.subProgram.program.name),
+        name: c.tradeName,
+        noDiacriticsName: removeDiacritics(c.tradeName),
         createdAt: c.createdAt,
         _id: c._id,
         traineesCount: c.trainees.length || '0',
