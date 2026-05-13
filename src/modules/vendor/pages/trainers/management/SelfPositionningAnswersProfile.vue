@@ -88,7 +88,7 @@ export default {
 
     const headerInfo = computed(() => {
       const { course } = questionnaireAnswers.value;
-      const infos = [{ icon: 'bookmark_border', label: get(course, 'subProgram') && composeCourseName(course) }];
+      const infos = [{ icon: 'bookmark_border', label: course && composeCourseName(course) }];
 
       if ([INTRA, INTRA_HOLDING].includes(get(course, 'type'))) {
         infos.push({ icon: 'apartment', label: get(course, 'holding.name') || course.companies[0].name });

@@ -1,7 +1,6 @@
 import useVuelidate from '@vuelidate/core';
 import pick from 'lodash/pick';
 import get from 'lodash/get';
-import uniqBy from 'lodash/uniqBy';
 import { ref, computed } from 'vue';
 import CourseSlots from '@api/CourseSlots';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
@@ -261,7 +260,7 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   );
 
   const slotFilter = (slot) => {
-    if (selectedProgram.value && slot.program._id !== selectedProgram.value) return false;
+    if (selectedProgram.value && slot.tradeName !== selectedProgram.value) return false;
     if (selectedStatus.value && slot.status !== selectedStatus.value) return false;
     return true;
   };
@@ -283,20 +282,20 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   ]);
 
   const programOptions = computed(() => {
-    const programs = Object.values(trainerBillingInfos.value).flatMap((t) => {
-      const singleTraineeSlotsPrograms = t.courses
-        .flatMap(c => Object.values(c.singleTraineeSlots).flatMap(stepInfos => stepInfos.slots.map(s => s.program)));
-      const collectiveSlotsPrograms = Object.values(t.collectiveSlots.slots)
-        .flatMap(slotGroup => (slotGroup.slots || []).map(s => s.program));
+    const tradeNames = Object.values(trainerBillingInfos.value).flatMap((t) => {
+      const singleTraineeSlotsTradeNames = t.courses
+        .flatMap(c => Object.values(c.singleTraineeSlots).flatMap(stepInfos => stepInfos.slots.map(s => s.tradeName)));
+      const collectiveSlotsTradeNames = Object.values(t.collectiveSlots.slots)
+        .flatMap(slotGroup => (slotGroup.slots || []).map(s => s.tradeName));
 
-      return [...singleTraineeSlotsPrograms, ...collectiveSlotsPrograms];
+      return [...singleTraineeSlotsTradeNames, ...collectiveSlotsTradeNames];
     });
 
-    const uniqPrograms = uniqBy(programs, '_id');
+    const uniqTradeNames = [...new Set(tradeNames)];
 
     return [
       { label: 'Tous les programmes', value: '' },
-      ...uniqPrograms.map(p => ({ label: p.name, value: p._id })).sort((a, b) => a.label.localeCompare(b.label)),
+      ...uniqTradeNames.map(name => ({ label: name, value: name })).sort((a, b) => a.label.localeCompare(b.label)),
     ];
   });
 

@@ -170,12 +170,11 @@ export default {
       {
         name: 'program',
         label: 'Programme',
-        field: row => row.subProgram.program,
-        format: value => value.name,
+        field: row => row.tradeName,
         align: 'left',
         sortable: true,
         style: 'width: 25%',
-        sort: (a, b) => sortStrings(a.name, b.name),
+        sort: (a, b) => sortStrings(a, b),
       },
       {
         name: 'company',
