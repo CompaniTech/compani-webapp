@@ -51,8 +51,13 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     try {
       pdfLoading.value = true;
       const pdf = await CourseCreditNotes.getPdf(creditNote._id);
-      const { payer } = courseBills.value.find(bill => bill._id === creditNote.courseBill);
-      const pdfName = `${formatDownloadName(`${payer.name} ${creditNote.number}`)}.pdf`;
+      const { course, companies } = courseBills.value.find(bill => bill._id === creditNote.courseBill);
+      const formattedCompanies = companies.map(c => c.name).join(',');
+      const name = course.type === SINGLE
+        ? `${creditNote.number} ${formatIdentity(course.trainees[0].identity, 'FL')} `
+          + `${CompaniDate(creditNote.date).format(MM_YYYY)} ${formattedCompanies}`
+        : `${formattedCompanies} ${creditNote.number}`;
+      const pdfName = `${formatDownloadName(`${name}`)}.pdf`;
       downloadFile(pdf, pdfName, 'application/octet-stream');
     } catch (e) {
       console.error(e);
