@@ -30,7 +30,7 @@ export default {
   computed: {
     ...mapState('course', ['course']),
     courseName () {
-      return get(this.course, 'subProgram.program.name');
+      return get(this.course, 'tradeName');
     },
     headerInfo () {
       return [{
