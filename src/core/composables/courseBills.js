@@ -7,11 +7,17 @@ import CourseBillingItems from '@api/CourseBillingItems';
 import CourseFundingOrganisations from '@api/CourseFundingOrganisations';
 import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
-import { formatDownloadName, formatQuantity, formatAndSortCompanyOptions, formatAndSortOptions } from '@helpers/utils';
+import {
+  formatDownloadName,
+  formatQuantity,
+  formatAndSortCompanyOptions,
+  formatAndSortOptions,
+  formatIdentity,
+} from '@helpers/utils';
 import { downloadFile } from '@helpers/file';
 import { descendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
-import { COMPANY, REQUIRED_LABEL, FUNDING_ORGANISATION, DIRECTORY, EDITION } from '../data/constants';
+import { COMPANY, REQUIRED_LABEL, FUNDING_ORGANISATION, DIRECTORY, EDITION, SINGLE, MM_YYYY } from '../data/constants';
 
 export const useCourseBilling = (courseBills, validations, refreshCourseBills) => {
   const $q = useQuasar();
@@ -26,7 +32,12 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     try {
       pdfLoading.value = true;
       const pdf = await CourseBills.getPdf(bill._id);
-      const pdfName = `${formatDownloadName(`${bill.payer.name} ${bill.number}`)}.pdf`;
+      const companies = bill.companies.map(c => c.name).join(',');
+      const name = bill.course.type === SINGLE
+        ? `${bill.number} ${formatIdentity(bill.course.trainees[0].identity, 'FL')} `
+          + `${CompaniDate(bill.billedAt).format(MM_YYYY)} ${companies}`
+        : `${companies} ${bill.number}`;
+      const pdfName = `${formatDownloadName(name)}.pdf`;
       downloadFile(pdf, pdfName, 'application/octet-stream');
     } catch (e) {
       console.error(e);
@@ -40,8 +51,13 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
     try {
       pdfLoading.value = true;
       const pdf = await CourseCreditNotes.getPdf(creditNote._id);
-      const { payer } = courseBills.value.find(bill => bill._id === creditNote.courseBill);
-      const pdfName = `${formatDownloadName(`${payer.name} ${creditNote.number}`)}.pdf`;
+      const { course, companies } = courseBills.value.find(bill => bill._id === creditNote.courseBill);
+      const formattedCompanies = companies.map(c => c.name).join(',');
+      const name = course.type === SINGLE
+        ? `${creditNote.number} ${formatIdentity(course.trainees[0].identity, 'FL')} `
+          + `${CompaniDate(creditNote.date).format(MM_YYYY)} ${formattedCompanies}`
+        : `${formattedCompanies} ${creditNote.number}`;
+      const pdfName = `${formatDownloadName(`${name}`)}.pdf`;
       downloadFile(pdf, pdfName, 'application/octet-stream');
     } catch (e) {
       console.error(e);

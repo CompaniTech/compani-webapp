@@ -114,9 +114,9 @@ export default {
       }
     };
 
-    const goToCourse = courseId => ({
+    const goToCourse = course => ({
       name: 'ni management blended courses info',
-      params: { courseId },
+      params: { courseId: course._id },
       query: { defaultTab: 'billing' },
     });
 
