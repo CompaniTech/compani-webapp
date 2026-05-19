@@ -126,6 +126,7 @@ export default {
       certificateGenerationMode: MONTHLY,
       trainee: '',
       prices: { global: '', trainerFees: '' },
+      tradeName: '',
     });
     const holdingOptions = ref([]);
     const programs = ref([]);
@@ -139,8 +140,9 @@ export default {
     const constraints = `
       <ul class="text-14">
         <li>Les champs <span class="text-weight-bold">firstname</span>, <span class="text-weight-bold">lastname</span>,
-          <span class="text-weight-bold">company</span>, <span class="text-weight-bold">subProgram</span> et 
-          <span class="text-weight-bold">operationsRepresentative</span> sont obligatoires.</li>
+          <span class="text-weight-bold">company</span>, <span class="text-weight-bold">subProgram</span>,  
+          <span class="text-weight-bold">operationsRepresentative</span> et 
+          <span class="text-weight-bold">tradeName</span> sont obligatoires.</li>
         <li>Les autres champs (<span class="text-weight-bold">email</span>, <span class="text-weight-bold">phone</span>,
           <span class="text-weight-bold">countryCode</span>, <span class="text-weight-bold">suffix</span>, 
           <span class="text-weight-bold">coach</span>, <span class="text-weight-bold">architect</span> et
@@ -168,12 +170,11 @@ export default {
       {
         name: 'program',
         label: 'Programme',
-        field: row => row.subProgram.program,
-        format: value => value.name,
+        field: row => row.tradeName,
         align: 'left',
         sortable: true,
         style: 'width: 25%',
-        sort: (a, b) => sortStrings(a.name, b.name),
+        sort: (a, b) => sortStrings(a, b),
       },
       {
         name: 'company',
@@ -213,6 +214,7 @@ export default {
       newCourse: {
         program: { required },
         subProgram: { required },
+        tradeName: { required },
         type: { required },
         operationsRepresentative: { required },
         certificateGenerationMode: { required },
@@ -292,6 +294,7 @@ export default {
       newCourse.value = {
         program: '',
         subProgram: '',
+        tradeName: '',
         misc: '',
         type: SINGLE,
         operationsRepresentative: '',

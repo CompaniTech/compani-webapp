@@ -245,11 +245,6 @@ export default {
       return ability.can('access', 'trainee');
     });
 
-    const canDownloadAllDocuments = computed(() => {
-      const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
-      return ability.can('download', 'all_documents');
-    });
-
     const isLastSlotStarted = computed(() => {
       if (course.value.slotsToPlan.length) return false;
 
@@ -452,7 +447,6 @@ export default {
       editionSlotsGroupedByStep,
       isSingleCourse,
       loggedUser,
-      canDownloadAllDocuments,
       // Methods
       get,
       attendanceCheckboxValue,

@@ -18,7 +18,7 @@ export const happened = sameDaySlots => CompaniDate().isSameOrAfter(sameDaySlots
 export const composeCourseName = (course, attachCompany = false) => {
   const companyName = (attachCompany && course.type === INTRA) ? `${course.companies[0].name} - ` : '';
   const misc = course.misc ? ` - ${course.misc}` : '';
-  return companyName + course.subProgram.program.name + misc;
+  return companyName + course.tradeName + misc;
 };
 
 export const getStepTypeIcon = (type) => {

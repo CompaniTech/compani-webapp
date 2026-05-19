@@ -436,7 +436,7 @@ export default {
       coursePaymentMetaInfo.value = {
         number: courseBill.number,
         netInclTaxes: courseBill.netInclTaxes,
-        courseName: `${company.value.name} - ${courseBill.course.subProgram.program.name} - ${courseBill.course.misc}`,
+        courseName: `${company.value.name} - ${courseBill.course.tradeName} - ${courseBill.course.misc}`,
       };
       editedCoursePayment.value = pick(coursePayment, ['_id', 'nature', 'netInclTaxes', 'type', 'date', 'status']);
       coursePaymentEditionModal.value = true;
@@ -565,7 +565,7 @@ export default {
     };
 
     const getProgramName = (course) => {
-      const programName = get(course, 'subProgram.program.name');
+      const programName = course.tradeName;
       const misc = get(course, 'misc') ? `\u00A0- ${get(course, 'misc')}` : '';
       const miscLength = misc ? misc.length : 0;
       const length = programName.length + miscLength;
@@ -678,7 +678,7 @@ export default {
         .filter(cb => selectedBills.value.includes(cb._id))
         .map(cb => pick(
           cb,
-          ['_id', 'number', 'course.misc', 'course.subProgram.program.name', 'netInclTaxes', 'billedAt', 'sendingDates']
+          ['_id', 'number', 'course.misc', 'course.tradeName', 'netInclTaxes', 'billedAt', 'sendingDates']
         ));
 
       const sendingDatesNumber = [...new Set(selectedCourseBills.map(cb => get(cb, 'sendingDates', []).length))];

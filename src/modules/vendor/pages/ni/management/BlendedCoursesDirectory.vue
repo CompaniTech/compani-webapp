@@ -107,6 +107,7 @@ export default {
       salesRepresentative: '',
       certificateGenerationMode: GLOBAL,
       prices: { global: '', trainerFees: '' },
+      tradeName: '',
     });
     const companies = ref([]);
     const holdingOptions = ref([]);
@@ -159,6 +160,7 @@ export default {
       newCourse: {
         program: { required },
         subProgram: { required },
+        tradeName: { required },
         type: { required },
         operationsRepresentative: { required },
         ...(isIntraCourse.value &&
@@ -242,6 +244,7 @@ export default {
       v$.value.newCourse.$reset();
       newCourse.value = {
         program: '',
+        tradeName: '',
         company: '',
         holding: '',
         misc: '',

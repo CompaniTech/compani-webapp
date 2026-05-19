@@ -52,7 +52,7 @@ export default {
 
     const $store = useStore();
     const course = computed(() => $store.state.course.course);
-    const courseName = computed(() => get(course.value, 'subProgram.program.name'));
+    const courseName = computed(() => get(course.value, 'tradeName'));
     const headerInfo = computed(() => [{
       icon: 'hourglass_empty',
       label: `Durée : ${CompaniDuration(course.value.totalTheoreticalDuration).format(LONG_DURATION_H_MM)}`,
