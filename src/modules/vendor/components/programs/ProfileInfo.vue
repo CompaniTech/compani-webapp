@@ -184,7 +184,7 @@ export default {
         if (get(v$.value.program, path).$error) return NotifyWarning('Champ(s) invalide(s)');
 
         const payload = set({}, path, value.trim());
-        await Programs.update(profileId, payload);
+        await Programs.update(profileId.value, payload);
         NotifyPositive('Modification enregistrée.');
 
         await refreshProgram();
