@@ -30,6 +30,11 @@
                   <div>{{ step.name }}</div>
                   <div class="type text-capitalize">{{ step.typeLabel }}</div>
                 </div>
+                <span v-if="course.type === SINGLE" class="text-bold">
+                  {{ [ON_SITE, REMOTE].includes(step.type)
+                  ? (`(${presenceDurationByStep[step.key] || 'Aucune présence émargée'})`)
+                  : '' }}
+                </span>
               </div>
               <div v-if="!isElearningStep(step)" class="slots-container">
                 <span v-if="isEmptyStep(step)" class="text-italic q-mx-lg">
@@ -118,13 +123,14 @@
 </template>
 <script>
 import { useStore } from 'vuex';
-import { computed, ref, toRefs } from 'vue';
+import { computed, ref, toRefs, watch } from 'vue';
 import get from 'lodash/get';
 import has from 'lodash/has';
 import set from 'lodash/set';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 import tail from 'lodash/tail';
+import keyBy from 'lodash/keyBy';
 import unset from 'lodash/unset';
 import groupBy from 'lodash/groupBy';
 import uniqBy from 'lodash/uniqBy';
@@ -150,6 +156,7 @@ import {
   SINGLE,
   VENDOR_ADMIN,
   TRAINING_ORGANISATION_MANAGER,
+  PRESENT,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { formatQuantity, formatAndSortIdentityOptions, formatIdentity } from '@helpers/utils';
@@ -167,6 +174,7 @@ import {
 } from '@helpers/vuelidateCustomVal';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
+import { useAttendances } from '../table/AttendanceTable/Composables/Attendances';
 
 export default {
   name: 'SlotContainer',
@@ -273,6 +281,22 @@ export default {
       return ability.can('create', subject('Course', course.value), 'slot');
     });
 
+    const { attendances, refreshAttendances } = useAttendances(course);
+
+    const presenceDurationByStep = computed(() => {
+      const attendanceBySlot = keyBy(attendances.value, 'courseSlot');
+      const slotsWithPresence = course.value.slots.filter(s => get(attendanceBySlot[s._id], 'status') === PRESENT);
+      const groupedSlotsByStep = groupBy(slotsWithPresence, 'step');
+
+      return Object.keys(groupedSlotsByStep).reduce((acc, value) => {
+        const duration = getISOTotalDuration(groupedSlotsByStep[value]);
+        acc[value] = Math.trunc(CompaniDuration(duration).asHours()) === 1
+          ? `${CompaniDuration(duration).format(SHORT_DURATION_H_MM)} émargée`
+          : `${CompaniDuration(duration).format(SHORT_DURATION_H_MM)} émargées`;
+
+        return acc;
+      }, {});
+    });
     const canUpdateConcernedTrainees = computed(() => {
       if (!course.value.trainees.length) return false;
 
@@ -571,6 +595,10 @@ export default {
       v$.value.slotsToAdd.$reset();
     };
 
+    watch(course, async() => {
+      if (course.value.type === SINGLE) await refreshAttendances({ course: course.value._id });
+    }, { immediate: true });
+
     const created = async () => {
       if (!course.value) emit('refresh');
 
@@ -587,6 +615,8 @@ export default {
       // Data
       isVendorInterface,
       ON_SITE,
+      REMOTE,
+      SINGLE,
       slotCreationLoading,
       modalLoading,
       editedCourseSlot,
@@ -611,6 +641,7 @@ export default {
       trainerOptions,
       canUpdateSlotTrainers,
       addressOptions,
+      presenceDurationByStep,
       // Methods
       get,
       omit,
