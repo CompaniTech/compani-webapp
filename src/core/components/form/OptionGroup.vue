@@ -7,12 +7,12 @@
       </div>
       <q-field dense borderless :error="error" :error-message="errorMessage" class="col-12">
         <q-option-group :model-value="groupValue" :options="computedOptions" :readonly="readOnly" :type="type"
-          :inline="inline" :disable="disable" @update:model-value="onGroupUpdate" dense class="q-px-sm">
+          :inline="inline" :disable="disable" @update:model-value="update" dense class="q-px-sm">
           <template #label="opt">
             <div class="row items-end">
               <span>{{ opt.label }}</span>
               <q-input v-if="opt.value === OTHER_VALUE" :model-value="otherText" :readonly="readOnly" :disable="disable"
-                dense @update:model-value="onOtherAnswerInput" @click.stop @keydown.space.stop @keyup.space.stop />
+                dense @update:model-value="updateOtherAnswer" @click.stop @keydown.space.stop @keyup.space.stop />
             </div>
           </template>
         </q-option-group>
@@ -23,7 +23,7 @@
 
 <script>
 import { ref, computed, onMounted, toRefs } from 'vue';
-import { REQUIRED_LABEL } from '@data/constants';
+import { REQUIRED_LABEL, CHECKBOX } from '@data/constants';
 
 export default {
   name: 'NiOptionGroup',
@@ -51,19 +51,19 @@ export default {
     const otherText = ref('');
     const otherOptionSelected = ref(false);
 
-    const computedOptions = computed(() => {
-      if (!allowOtherAnswer.value) return options.value;
-      return [...options.value, { label: 'Autre :', value: OTHER_VALUE }];
-    });
+    const computedOptions = computed(() => [
+      ...options.value,
+      ...allowOtherAnswer.value ? [{ label: 'Autre :', value: OTHER_VALUE }] : [],
+    ]);
 
     const groupValue = computed(() => {
       if (!allowOtherAnswer.value || !otherOptionSelected.value) return modelValue.value;
-      if (type.value === 'checkbox') return [...modelValue.value, OTHER_VALUE];
+      if (type.value === CHECKBOX) return [...modelValue.value, OTHER_VALUE];
       return OTHER_VALUE;
     });
 
-    const onGroupUpdate = (value) => {
-      if (type.value === 'checkbox') {
+    const update = (value) => {
+      if (type.value === CHECKBOX) {
         const hasOtherAnswer = value.includes(OTHER_VALUE);
         const optionsAnswers = value.filter(v => v !== OTHER_VALUE && v !== otherText.value);
         if (hasOtherAnswer) {
@@ -84,11 +84,11 @@ export default {
       }
     };
 
-    const onOtherAnswerInput = (text) => {
+    const updateOtherAnswer = (text) => {
       const prev = otherText.value;
       otherText.value = text;
       otherOptionSelected.value = true;
-      if (type.value === 'checkbox') {
+      if (type.value === CHECKBOX) {
         const base = modelValue.value.filter(v => v !== OTHER_VALUE && v !== '' && v !== prev);
         emit('update:model-value', [...base, text]);
       } else {
@@ -100,7 +100,7 @@ export default {
       if (!allowOtherAnswer.value) return;
       const optionValues = options.value.map(o => o.value);
 
-      if (type.value === 'checkbox') {
+      if (type.value === CHECKBOX) {
         const otherAnswer = modelValue.value.find(v => !optionValues.includes(v));
         if (otherAnswer) {
           otherText.value = otherAnswer;
@@ -128,8 +128,8 @@ export default {
       computedOptions,
       groupValue,
       // Methods
-      onOtherAnswerInput,
-      onGroupUpdate,
+      updateOtherAnswer,
+      update,
     };
   },
 };
