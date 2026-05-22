@@ -188,3 +188,5 @@ export const formatStringForExport = (str) => {
 };
 
 export const formatPercentage = number => roundFrenchPercentage(number * 100, 0);
+
+export const isObjectId = value => typeof value === 'string' && /^[a-f\d]{24}$/i.test(value);

@@ -114,6 +114,8 @@ export const matchingTagsCount = (card, value) => {
 
 export const minArrayLength = minLength => value => value.filter(a => !!a).length >= minLength;
 
+export const noEmptyValue = value => value.filter(a => !!a).length === value.length;
+
 export const minOneCorrectAnswer = value => value.filter(a => a.isCorrect).length >= 1;
 
 export const urlAddress = (value) => {
