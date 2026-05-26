@@ -6,7 +6,7 @@
     <q-icon v-if="error" name="error_outline" color="secondary" class="col-1" />
   </div>
   <div borderless class="container">
-    <q-rating :model-value="modelValue" @update:model-value="update" :icon="icon" max="5" :color="color"
+    <q-rating :model-value="modelValue" @update:model-value="update" :icon="icon" :max="maxLabel" :color="color"
       size="lg" class="q-my-md" :readonly="readonly">
       <template v-for="[tipKey, label] in formattedTipAndLabels" #[tipKey] :key="label">
         <q-tooltip v-if="label">{{ label }}</q-tooltip>
@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import { toRefs } from 'vue';
+import { toRefs, ref } from 'vue';
 import { REQUIRED_LABEL } from '@data/constants';
 import LabelsDetails from '@components/LabelsDetails';
 
@@ -41,6 +41,7 @@ export default {
   },
   setup (props, { emit }) {
     const { labels } = toRefs(props);
+    const maxLabel = ref(Math.max(...Object.keys(labels.value).map(Number)));
 
     const update = (value) => {
       emit('update:model-value', value);
@@ -51,6 +52,7 @@ export default {
     return {
       // Data
       formattedTipAndLabels,
+      maxLabel,
       // Methods
       update,
     };

@@ -32,13 +32,9 @@ export default {
     const { card } = toRefs(props);
     const $store = useStore();
     const answer = ref(0);
-    const iconTab = ref([
-      'mdi-numeric-1-box',
-      'mdi-numeric-2-box',
-      'mdi-numeric-3-box',
-      'mdi-numeric-4-box',
-      'mdi-numeric-5-box',
-    ]);
+    const maxLabel = ref(Math.max(...Object.keys(card.value.labels).map(Number)));
+    const labelKeys = ref(Array.from({ length: maxLabel.value }, (_, i) => i + 1));
+    const iconTab = ref(labelKeys.value.map(key => `mdi-numeric-${key}-box`));
 
     const isRequired = computed(() => get(card.value, 'isMandatory') || false);
 

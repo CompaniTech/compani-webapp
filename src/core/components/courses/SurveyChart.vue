@@ -4,7 +4,7 @@
     <div class="q-mb-lg subtitle">{{ subtitle }}</div>
     <ni-banner v-if="isRofOrVendorAdmin" icon="info_outline" class="bg-peach-100">
       <template #message>
-        Moyenne des réponses : <a class="text-weight-bold text-copper-grey-700">{{ average }} / 5</a>
+        Moyenne des réponses : <a class="text-weight-bold text-copper-grey-700">{{ average }} / {{ maxLabel }}</a>
       </template>
     </ni-banner>
     <div class="container">
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { toRefs, computed } from 'vue';
+import { toRefs, computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { formatQuantity, formatPercentage } from '@helpers/utils';
 import LabelsDetails from '@components/LabelsDetails';
@@ -49,13 +49,16 @@ export default {
 
     const $store = useStore();
 
+    const maxLabel = ref(Math.max(...Object.keys(card.value.labels).map(Number)));
+    const labelKeys = ref(Array.from({ length: maxLabel.value }, (_, i) => i + 1));
+
     const vendorRole = computed(() => $store.getters['main/getVendorRole']);
 
     const isRofOrVendorAdmin = computed(() => [TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN].includes(vendorRole.value));
 
     const subtitle = computed(() => `${formatQuantity('réponse', card.value.answers.length)} à ce sondage`);
 
-    const lines = computed(() => ['1', '2', '3', '4', '5'].map((pa) => {
+    const lines = computed(() => labelKeys.value.map((_, i) => String(i + 1)).map((pa) => {
       const total = card.value.answers.filter(a => a === pa).length;
 
       return { title: pa, total, percentage: total / card.value.answers.length || 0 };
@@ -73,6 +76,7 @@ export default {
       lines,
       average,
       isRofOrVendorAdmin,
+      maxLabel,
       // Methods
       formatPercentage,
     };
@@ -96,15 +100,15 @@ export default {
 .bar-container
   display: flex
   justify-content: space-between
-  width: 312px
+  gap: 4px
+  max-width: 100%
   align-items: center
-  @media screen and (max-width: 420px)
-    width: 100%
+  overflow-x: auto
 
 .bar
   position: relative
   border-radius: 8px
-  width: 56px
+  width: 42px
   height: 160px
   @media screen and (max-width: 420px)
     width: 32px
