@@ -23,7 +23,7 @@ export const composeCourseName = (course, attachCompany = false) => {
 
 export const getStepTypeIcon = (type) => {
   if (type === E_LEARNING) return 'stay_current_portrait';
-  if (type === ON_SITE) return 'mdi-teach';
+  if (type === ON_SITE) return 'mdi-human-male-board';
   return 'videocam';
 };
 

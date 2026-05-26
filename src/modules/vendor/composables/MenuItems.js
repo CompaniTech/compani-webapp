@@ -20,7 +20,7 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
       ref: 'management',
       label: 'Gestion',
       children: [
-        { name: 'ni management blended courses', icon: 'mdi-teach', label: 'Formations de groupe' },
+        { name: 'ni management blended courses', icon: 'mdi-human-male-board', label: 'Formations de groupe' },
         { name: 'ni management single courses', icon: 'mdi-numeric-1-box', label: 'Formations individuelles' },
         { name: 'ni management elearning courses', icon: 'stay_primary_portrait', label: 'Formations eLearning' },
       ],
@@ -84,7 +84,7 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
     {
       ref: 'management',
       label: 'Gestion',
-      children: [{ name: 'trainers courses', icon: 'mdi-teach', label: 'Formations' }],
+      children: [{ name: 'trainers courses', icon: 'mdi-human-male-board', label: 'Formations' }],
     },
     {
       ref: 'administrative',
