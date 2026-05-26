@@ -3,10 +3,10 @@
     <ni-input caption="Question" v-model="card.question" required-field @focus="saveTmp('question')"
       @blur="updateCard('question')" :error="v$.card.question.$error" :error-message="errorMsg('question')"
       :disable="disableEdition" type="textarea" />
-      <div class="label-count">
-        <ni-input :model-value="labelCount" @update:model-value="updateLabelCount" caption="Nombre de niveau"
+      <div class="max-label">
+        <ni-input :model-value="maxLabel" @update:model-value="updateMaxLabel" caption="Nombre de niveau"
           type="number" required-field error-message="La valeur doit être comprise entre 5 et 10"
-          :error="v$.labelCount.$error" :disable="displayAllLabels || disableEdition || isCardParentPublished" />
+          :error="v$.maxLabel.$error" :disable="displayAllLabels || disableEdition || isCardParentPublished" />
       </div>
     <div class="checkbox-container">
       <q-checkbox v-model="card.isMandatory" @update:model-value="updateCard('isMandatory')" label="Réponse obligatoire"
@@ -57,7 +57,7 @@ export default {
 
     const displayAllLabels = ref(Object.keys(card.value.labels).length > 2);
 
-    const labelCount = ref(Object.keys(card.value.labels)[Object.keys(card.value.labels).length - 1]);
+    const maxLabel = ref(Math.max(...Object.keys(card.value.labels).map(Number)));
 
     const rules = computed(() => ({
       card: {
@@ -75,9 +75,9 @@ export default {
           10: { required: requiredIf(Object.keys(card.value.labels).includes('10')) },
         },
       },
-      labelCount: { required, minValue: minValue(5), maxValue: maxValue(10), strictPositiveNumber, integerNumber },
+      maxLabel: { required, minValue: minValue(5), maxValue: maxValue(10), strictPositiveNumber, integerNumber },
     }));
-    const v$ = useVuelidate(rules, { card, labelCount });
+    const v$ = useVuelidate(rules, { card, maxLabel });
 
     const isCardParentPublished = computed(() => get(cardParent.value, 'status') === PUBLISHED);
 
@@ -95,14 +95,14 @@ export default {
       return '';
     };
 
-    const updateCardLabels = async (labelKey) => {
+    const updateCardLabels = async (labelKey, changeCountLabelPayload = null) => {
       try {
-        if (tmpInput.value === get(card.value, `labels.${labelKey}`)) return;
+        if (!changeCountLabelPayload && tmpInput.value === get(card.value, `labels.${labelKey}`)) return;
 
         v$.value.card.labels.$touch();
         if (get(v$.value, `card.labels.${labelKey}.$error`)) return NotifyWarning('Champ(s) invalide(s).');
-
-        await Cards.updateById(card.value._id, { labels: card.value.labels });
+        const payload = changeCountLabelPayload || { labels: card.value.labels };
+        await Cards.updateById(card.value._id, payload);
 
         await refreshCard();
         NotifyPositive('Carte mise à jour.');
@@ -128,10 +128,9 @@ export default {
 
     const validateInitialization = async (value) => {
       try {
-        const maxLabel = Math.max(...Object.keys(card.value.labels).map(Number));
-        const labelKeys = Array.from({ length: maxLabel }, (_, i) => i + 1);
+        const labelKeys = Array.from({ length: Number(maxLabel.value) }, (_, i) => i + 1);
         const payload = labelKeys
-          .filter(key => key !== 1 && key !== maxLabel)
+          .filter(key => key !== 1 && key !== Number(maxLabel.value))
           .reduce((acc, key) => {
             if (!value) acc[key] = null;
             else acc[key] = '';
@@ -155,18 +154,20 @@ export default {
       }
     };
 
-    const updateLabelCount = async (value) => {
+    const updateMaxLabel = async (value) => {
       try {
-        labelCount.value = value;
-        v$.value.labelCount.$touch();
-        if (get(v$.value, 'labelCount.$error')) return NotifyWarning('Champ(s) invalide(s).');
+        maxLabel.value = value;
+        v$.value.maxLabel.$touch();
+        if (get(v$.value, 'maxLabel.$error')) return NotifyWarning('Champ(s) invalide(s).');
         const labelKeys = Object.keys(card.value.labels);
-        card.value.labels = {
-          [labelKeys[0]]: card.value.labels[labelKeys[0]],
-          [labelKeys[1]]: null,
-          [labelCount.value]: card.value.labels[labelKeys[1]],
+        const changeCountLabelPayload = {
+          labels: {
+            [labelKeys[0]]: card.value.labels[labelKeys[0]] || '',
+            [labelKeys[1]]: null,
+            [maxLabel.value]: card.value.labels[labelKeys[1]] || '',
+          },
         };
-        await updateCardLabels(labelCount);
+        await updateCardLabels(maxLabel.value, changeCountLabelPayload);
       } catch (error) {
         console.error(error);
       }
@@ -175,7 +176,7 @@ export default {
     return {
       // Data
       displayAllLabels,
-      labelCount,
+      maxLabel,
       // Validation
       v$,
       // Computed
@@ -189,7 +190,7 @@ export default {
       updateCard,
       get,
       validateInitialization,
-      updateLabelCount,
+      updateMaxLabel,
     };
   },
 };
@@ -198,8 +199,10 @@ export default {
 .container
   display: flex
   flex-direction: column
-.label-count
-  width: 30%
+.max-label
+  margin-bottom: 8px
+  @media screen and (min-width: 768px)
+    width: 20%
 
 .checkbox-container
   grid-auto-flow: row

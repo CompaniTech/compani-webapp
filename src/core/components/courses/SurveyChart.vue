@@ -108,7 +108,7 @@ export default {
 .bar
   position: relative
   border-radius: 8px
-  min-width: 48px
+  width: 42px
   height: 160px
   @media screen and (max-width: 420px)
     width: 32px
