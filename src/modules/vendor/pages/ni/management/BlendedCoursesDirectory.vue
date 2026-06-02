@@ -136,11 +136,13 @@ export default {
           <span class="text-weight-bold">hasCertifyingTest</span>, <span class="text-weight-bold">tradeName</span>,
           <span class="text-weight-bold">certificateGenerationMode</span> et
           <span class="text-weight-bold">operationsRepresentative</span> sont obligatoires.</li>
-        <li>Les champs <span class="text-weight-bold">salesRepresentative</span> et 
-          <span class="text-weight-bold">estimatedStartDate</span> sont optionnels.</li>  
+        <li>Les champs <span class="text-weight-bold">salesRepresentative</span>,
+          <span class="text-weight-bold">misc</span> et <span class="text-weight-bold">estimatedStartDate</span> sont 
+          optionnels.</li>  
         <li>Les autres champs (<span class="text-weight-bold">holding</span>,
-          <span class="text-weight-bold">maxTrainees</span>, <span class="text-weight-bold">company</span>) sont
-          conditionnés au type de la formation.</li>
+          <span class="text-weight-bold">maxTrainees</span>, <span class="text-weight-bold">company</span>, 
+          <span class="text-weight-bold">globalPrice</span>, <span class="text-weight-bold">trainerFees</span>, 
+          <span class="text-weight-bold">expectedBillsCount</span>) sont conditionnés au type de la formation.</li>
         <li>Assurez-vous de rentrer un format valide :
           <ul>
             <li>sous-programme : id</li>
