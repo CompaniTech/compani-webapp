@@ -135,18 +135,18 @@ export default {
         <li>Les champs <span class="text-weight-bold">subProgram</span>, <span class="text-weight-bold">type</span>,  
           <span class="text-weight-bold">hasCertifyingTest</span>, <span class="text-weight-bold">tradeName</span>,
           <span class="text-weight-bold">certificateGenerationMode</span> et
-          <span class="text-weight-bold">operationsRepresentative</span>.</li>
+          <span class="text-weight-bold">operationsRepresentative</span> sont obligatoires.</li>
         <li>Les champs <span class="text-weight-bold">salesRepresentative</span> et 
           <span class="text-weight-bold">estimatedStartDate</span> sont optionnels.</li>  
         <li>Les autres champs (<span class="text-weight-bold">holding</span>,
           <span class="text-weight-bold">maxTrainees</span>, <span class="text-weight-bold">company</span>) sont
           conditionnés au type de la formation.</li>
-        <li>Assurez-vous de rentrer un format valide:
+        <li>Assurez-vous de rentrer un format valide :
           <ul>
             <li>sous-programme : id</li>
             <li>chargé des opérations/d'accompagnement : email</li>
             <li>type : intra/inter_b2b/intra_holding</li>
-            <li>date de début : AAAA-MM-JJ</li>
+            <li>estimatedStartDate : AAAA-MM-JJ</li>
             <li>certificateGenerationMode : global/monthly</li>
             <li>hasCertifyingTest : true/false</li>
           <ul>
