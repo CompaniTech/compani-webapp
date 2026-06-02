@@ -7,7 +7,7 @@ import { env } from './env.mjs';
 
 export default defineConfig(ctx => ({
   css: ['app.sass', 'colors.sass'],
-  extras: ['material-icons', 'mdi-v3', 'ionicons-v4', 'fontawesome-v5'],
+  extras: ['material-icons', 'mdi-v7', 'ionicons-v4', 'fontawesome-v5'],
   framework: {
     all: false,
     lang: 'fr',

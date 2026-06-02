@@ -2,7 +2,7 @@
   <div class="card-container">
     <ni-option-group :model-value="isMultipleChoiced ? multipleAnswer : singleAnswer" :error="v$.answers.$error"
       :required-field="isRequired" :options="answerOptions" :type="optionType" :caption="cardTitle"
-      @update:model-value="updateAnswers" class="elm-width" />
+      @update:model-value="updateAnswers" class="elm-width" :allow-other-answer="card.allowOtherAnswer" />
     <ni-footer label="Suivant" @submit="updateQuestionnaireAnswer" />
   </div>
 </template>
@@ -12,7 +12,7 @@ import { useStore } from 'vuex';
 import { ref, toRefs, computed } from 'vue';
 import get from 'lodash/get';
 import useVuelidate from '@vuelidate/core';
-import { minArrayLength } from '@helpers/vuelidateCustomVal';
+import { minArrayLength, noEmptyValue } from '@helpers/vuelidateCustomVal';
 import { NotifyWarning } from '@components/popup/notify';
 import OptionGroup from '@components/form/OptionGroup';
 import Footer from '@components/questionnaires/cards/Footer';
@@ -46,7 +46,9 @@ export default {
 
     const answers = computed(() => (isMultipleChoiced.value ? multipleAnswer.value : [singleAnswer.value]));
 
-    const rules = computed(() => ({ answers: { ...(isRequired.value && { minArrayLength: minArrayLength(1) }) } }));
+    const rules = computed(() => ({
+      answers: { ...(isRequired.value && { minArrayLength: minArrayLength(1), noEmptyValue }) },
+    }));
     const v$ = useVuelidate(rules, { answers });
 
     const updateQuestionnaireAnswer = () => {

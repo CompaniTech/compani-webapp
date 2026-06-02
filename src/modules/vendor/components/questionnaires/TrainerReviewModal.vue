@@ -38,14 +38,11 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit'],
   setup (props, { emit }) {
-    const iconTab = ref([
-      'mdi-numeric-1-box',
-      'mdi-numeric-2-box',
-      'mdi-numeric-3-box',
-      'mdi-numeric-4-box',
-      'mdi-numeric-5-box',
-    ]);
-    const { trainerAnswer } = toRefs(props);
+    const { trainerAnswer, labels } = toRefs(props);
+
+    const maxLabel = ref(Math.max(...Object.keys(labels.value).map(Number)));
+    const labelKeys = ref(Array.from({ length: maxLabel.value }, (_, i) => i + 1));
+    const iconTab = ref(labelKeys.value.map(key => `mdi-numeric-${key}-box`));
     const answer = ref(trainerAnswer.value);
 
     const hide = () => {

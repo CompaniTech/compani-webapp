@@ -7,6 +7,8 @@
       class="q-mb-lg" dense :disable="disableEdition" />
     <q-checkbox v-model="card.isQuestionAnswerMultipleChoiced" dense :disable="disableEdition" class="q-mb-lg"
       @update:model-value="updateCard('isQuestionAnswerMultipleChoiced')" label="Sélection multiple" />
+    <q-checkbox v-model="card.allowOtherAnswer" dense :disable="disableEdition" class="q-mb-lg"
+      @update:model-value="updateCard('allowOtherAnswer')" label="Autoriser une autre réponse" />
     <div v-for="(answer, i) in card.qcAnswers" :key="i" class="answers">
       <ni-input :caption="`Réponse ${i + 1}`" v-model="card.qcAnswers[i].text" @focus="saveTmp(`qcAnswers[${i}].text`)"
         @blur="updateTextAnswer(i)" class="input" :disable="disableEdition" :required-field="answerIsRequired(i)"
