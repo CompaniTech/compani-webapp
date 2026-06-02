@@ -25,13 +25,15 @@
         @update:model-value="updateSelectedType" />
       <ni-select :options="statusOptions" :model-value="selectedStatus" @update:model-value="updateSelectedStatus" />
     </div>
-    <ni-button color="primary" icon="upload" label="Ajouter une liste de formations" :disable="modalLoading"
-      @click="openCsvUploadModal" />
     <div class="q-mb-lg filters-container checkboxes">
       <q-checkbox dense :model-value="selectedNoAddressInSlots" color="primary" label="Aucune adresse"
         @update:model-value="updateSelectedNoAddressInSlots" />
       <q-checkbox dense :model-value="selectedMissingTrainees" color="primary" label="Apprenant(s) manquant(s) (INTRA)"
         @update:model-value="updateSelectedMissingTrainees" />
+    </div>
+    <div class="upload-button">
+      <ni-button color="primary" icon="upload" label="Ajouter une liste de formations" :disable="modalLoading"
+        @click="openCsvUploadModal" />
     </div>
     <ni-trello :active-courses="activeCourses" :archived-courses="archivedCourses" />
     <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Ajouter une formation"
@@ -132,16 +134,23 @@ export default {
       <ul class="text-14">
         <li>Les champs <span class="text-weight-bold">subProgram</span>, <span class="text-weight-bold">type</span>,  
           <span class="text-weight-bold">hasCertifyingTest</span>, <span class="text-weight-bold">tradeName</span>,
-          <span class="text-weight-bold">certificateGenerationMode</span>,
-          <span class="text-weight-bold">operationsRepresentative</span> et 
-          <span class="text-weight-bold">tradeName</span> sont obligatoires.</li>
+          <span class="text-weight-bold">certificateGenerationMode</span> et
+          <span class="text-weight-bold">operationsRepresentative</span>.</li>
         <li>Les champs <span class="text-weight-bold">salesRepresentative</span> et 
           <span class="text-weight-bold">estimatedStartDate</span> sont optionnels.</li>  
         <li>Les autres champs (<span class="text-weight-bold">holding</span>,
           <span class="text-weight-bold">maxTrainees</span>, <span class="text-weight-bold">company</span>) sont
           conditionnés au type de la formation.</li>
-        <li>Assurez-vous de rentrer un format de sous-programme (id), de chargé des opérations/d'accompagnement (email)
-          et de date de début (AAAA-MM-JJ) valide.</li>
+        <li>Assurez-vous de rentrer un format valide:
+          <ul>
+            <li>sous-programme : id</li>
+            <li>chargé des opérations/d'accompagnement : email</li>
+            <li>type : intra/inter_b2b/intra_holding</li>
+            <li>date de début : AAAA-MM-JJ</li>
+            <li>certificateGenerationMode : global/monthly</li>
+            <li>hasCertifyingTest : true/false</li>
+          <ul>
+        </li>
       </ul>
     `;
 
@@ -427,4 +436,7 @@ export default {
 <style lang="sass" scoped>
 .checkboxes
   grid-gap: 12px 10px
+.upload-button
+  :deep(.q-btn__content)
+    margin: 10px 0px !important
 </style>
