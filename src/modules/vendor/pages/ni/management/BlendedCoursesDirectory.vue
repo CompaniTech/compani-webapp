@@ -31,6 +31,10 @@
       <q-checkbox dense :model-value="selectedMissingTrainees" color="primary" label="Apprenant(s) manquant(s) (INTRA)"
         @update:model-value="updateSelectedMissingTrainees" />
     </div>
+    <div class="upload-button">
+      <ni-button color="primary" icon="upload" label="Ajouter une liste de formations" :disable="modalLoading"
+        @click="openCsvUploadModal" />
+    </div>
     <ni-trello :active-courses="activeCourses" :archived-courses="archivedCourses" />
     <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Ajouter une formation"
       @click="openCourseCreationModal" />
@@ -39,26 +43,32 @@
       :companies="companies" :validations="v$.newCourse" :loading="modalLoading" @hide="resetCreationModal"
       @submit="createCourse([INTRA, INTER_B2B, INTRA_HOLDING])" :admin-user-options="adminUserOptions"
       :holding-options="holdingOptions" />
+    <upload-csv-modal v-model="csvUploadModal" @hide="resetCsvUploadModal" @submit="uploadCourseCsv" v-model:csv="csv"
+      :loading="modalLoading" :validations="v$.csv" :constraints="constraints" />
   </q-page>
 </template>
 
 <script>
 import { computed, ref } from 'vue';
-import { useMeta } from 'quasar';
+import { useMeta, useQuasar } from 'quasar';
 import { useStore } from 'vuex';
 import { onBeforeRouteLeave } from 'vue-router';
 import get from 'lodash/get';
 import useVuelidate from '@vuelidate/core';
 import { required, requiredIf, or } from '@vuelidate/validators';
 import Companies from '@api/Companies';
+import Courses from '@api/Courses';
 import Holdings from '@api/Holdings';
 import Programs from '@api/Programs';
 import Users from '@api/Users';
 import DirectoryHeader from '@components/DirectoryHeader';
 import DateInput from '@components/form/DateInput';
 import Select from '@components/form/Select';
+import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import CourseCreationModal from 'src/modules/vendor/components/courses/CourseCreationModal';
+import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
+import UploadCsvModal from '@components/courses/UploadCsvModal';
 import Trello from '@components/courses/Trello';
 import { useCourseCreation } from '@composables/courseCreation';
 import { useCourseFilters } from '@composables/courseFilters';
@@ -81,12 +91,15 @@ export default {
   components: {
     'ni-directory-header': DirectoryHeader,
     'ni-select': Select,
+    'ni-button': Button,
     'company-select': CompanySelect,
     'course-creation-modal': CourseCreationModal,
+    'upload-csv-modal': UploadCsvModal,
     'ni-trello': Trello,
     'ni-date-input': DateInput,
   },
   setup () {
+    const $q = useQuasar();
     const $store = useStore();
     const metaInfo = { title: 'Kanban formations mixtes' };
     useMeta(metaInfo);
@@ -115,6 +128,31 @@ export default {
     const adminUserOptions = ref([]);
     const activeCourses = ref([]);
     const archivedCourses = ref([]);
+    const csvUploadModal = ref(false);
+    const csv = ref(null);
+    const constraints = `
+      <ul class="text-14">
+        <li>Les champs <span class="text-weight-bold">subProgram</span>, <span class="text-weight-bold">type</span>,  
+          <span class="text-weight-bold">hasCertifyingTest</span>, <span class="text-weight-bold">tradeName</span>,
+          <span class="text-weight-bold">certificateGenerationMode</span> et
+          <span class="text-weight-bold">operationsRepresentative</span>.</li>
+        <li>Les champs <span class="text-weight-bold">salesRepresentative</span> et 
+          <span class="text-weight-bold">estimatedStartDate</span> sont optionnels.</li>  
+        <li>Les autres champs (<span class="text-weight-bold">holding</span>,
+          <span class="text-weight-bold">maxTrainees</span>, <span class="text-weight-bold">company</span>) sont
+          conditionnés au type de la formation.</li>
+        <li>Assurez-vous de rentrer un format valide:
+          <ul>
+            <li>sous-programme : id</li>
+            <li>chargé des opérations/d'accompagnement : email</li>
+            <li>type : intra/inter_b2b/intra_holding</li>
+            <li>date de début : AAAA-MM-JJ</li>
+            <li>certificateGenerationMode : global/monthly</li>
+            <li>hasCertifyingTest : true/false</li>
+          <ul>
+        </li>
+      </ul>
+    `;
 
     const isIntraCourse = computed(() => newCourse.value.type === INTRA);
     const isIntraHoldingCourse = computed(() => newCourse.value.type === INTRA_HOLDING);
@@ -182,8 +220,9 @@ export default {
       },
       selectedStartDate: { maxDate: selectedEndDate.value ? maxDate(selectedEndDate.value) : '' },
       selectedEndDate: { minDate: selectedStartDate.value ? minDate(selectedStartDate.value) : '' },
+      csv: { required },
     }));
-    const v$ = useVuelidate(rules, { newCourse, selectedStartDate, selectedEndDate });
+    const v$ = useVuelidate(rules, { newCourse, selectedStartDate, selectedEndDate, csv });
 
     const {
       refreshActiveCourses,
@@ -260,6 +299,47 @@ export default {
       };
     };
 
+    const openCsvUploadModal = () => { csvUploadModal.value = true; };
+
+    const resetCsvUploadModal = () => {
+      v$.value.csv.$reset();
+      csv.value = null;
+    };
+
+    const uploadCourseCsv = async () => {
+      try {
+        v$.value.csv.$touch();
+        if (v$.value.csv.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        modalLoading.value = true;
+        const form = new FormData();
+        form.append('file', csv.value);
+        await Courses.uploadCollectiveCourseCsv(form);
+
+        csvUploadModal.value = false;
+        NotifyPositive('Liste de formations créées.');
+        await refreshActiveCourses([INTRA, INTER_B2B, INTRA_HOLDING]);
+      } catch (e) {
+        console.error(e);
+        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors de la création des formations.');
+        const { errorsByCourse } = e.data;
+
+        const message = Object.entries(errorsByCourse)
+          .map(([key, values]) => `<li><span class="text-weight-bold">${key}</span> : ${values.join(', ')}</li>`)
+          .join('<br>');
+
+        $q.dialog({
+          title: 'La création des formations a échoué',
+          message: `<ul class="text-14">${message}</ul>`,
+          html: true,
+          ok: 'ok',
+        });
+      } finally {
+        modalLoading.value = false;
+      }
+    };
+
     onBeforeRouteLeave((to) => {
       if (to.name !== 'ni management blended courses info') {
         resetFilters();
@@ -299,6 +379,9 @@ export default {
       archivedCourses,
       statusOptions,
       typeFilterOptions,
+      constraints,
+      csvUploadModal,
+      csv,
       // Computed
       selectedHolding,
       holdingFilterOptions,
@@ -322,6 +405,9 @@ export default {
       openCourseCreationModal,
       resetCreationModal,
       createCourse,
+      openCsvUploadModal,
+      resetCsvUploadModal,
+      uploadCourseCsv,
       updateSelectedHolding,
       updateSelectedCompany,
       updateSelectedTrainer,
@@ -350,4 +436,7 @@ export default {
 <style lang="sass" scoped>
 .checkboxes
   grid-gap: 12px 10px
+.upload-button
+  :deep(.q-btn__content)
+    margin: 10px 0px !important
 </style>
