@@ -75,7 +75,7 @@
                   {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
                 </span>
                 <span v-else :class="{ 'missing-info': !bill.maturityDate }">
-                  Date d'échéance : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
+                  Date de facturation : {{ bill.maturityDate ? CompaniDate(bill.maturityDate).format(DD_MM_YYYY) : '' }}
                 </span>
                 <div class="text-weight-bold text-14">
                   Avancement : {{ progress }}
