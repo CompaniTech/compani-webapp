@@ -83,7 +83,8 @@ export default {
 
     const getQuestionnaires = async () => {
       try {
-        const fetchedQuestionnaires = await Questionnaires.getFromNotLogged({ course: courseId.value });
+        const fetchedQuestionnaires = await Questionnaires
+          .getFromNotLogged({ course: courseId.value, courseTimeline: courseTimeline.value });
         const questionnaireTypes = fetchedQuestionnaires.map(q => q.type);
         const isAfterMiddleCourse = !questionnaireTypes.includes(EXPECTATIONS);
         const isBeforeEndOfCourse = !questionnaireTypes.includes(END_OF_COURSE);
