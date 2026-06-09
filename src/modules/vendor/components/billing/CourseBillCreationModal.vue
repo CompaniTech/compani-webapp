@@ -41,7 +41,7 @@
       <ni-input in-modal caption="Quantité" :error="validations.mainFee.count.$error" type="number" required-field
         :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
         :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
-      <ni-date-input caption="Date d'échéance" :model-value="newBill.maturityDate" in-modal required-field
+      <ni-date-input caption="Date de facturation" :model-value="newBill.maturityDate" in-modal required-field
         :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
         @update:model-value="update($event, 'maturityDate')" />
     </div>
@@ -50,7 +50,7 @@
         :model-value="newBill.mainFee.count" @blur="validations.mainFee.count.$touch" disable
         :error-message="errorMessages.count" @update:model-value="update($event, 'mainFee.count')" />
       <div v-if="course.type === SINGLE">
-        <ni-date-input caption="Date de 1ère échéance" :model-value="newBill.maturityDate" in-modal required-field
+        <ni-date-input caption="Date de 1ère facturation" :model-value="newBill.maturityDate" in-modal required-field
           :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
           @update:model-value="update($event, 'maturityDate')" />
         <ni-banner v-if="!!newBill.maturityDate" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
