@@ -58,14 +58,13 @@
           les attestations de fin de formation.
         </template>
       </ni-banner>
-      <div v-if="!isMonthlyCertificateMode">
-        <ni-bi-color-button icon="file_download" label="Attestations" size="16px"
-          :disable="disableDownloadCompletionCertificates" @click="downloadCompletionCertificates(CUSTOM)" />
-        <ni-bi-color-button v-if="canReadCompletionCertificate" icon="file_download" class="q-my-md"
-          label="Certificats de réalisation" size="16px" :disable="disableDownloadCompletionCertificates"
-          @click="downloadCompletionCertificates(OFFICIAL)" />
-      </div>
-      <div v-else-if="canReadCompletionCertificate">
+      <ni-bi-color-button v-if="!isMonthlyCertificateMode" icon="file_download" label="Attestations" size="16px"
+        :disable="disableDownloadCompletionCertificates" @click="downloadCompletionCertificates(CUSTOM)" />
+      <ni-bi-color-button v-if="canReadCompletionCertificate" icon="file_download" class="q-my-md"
+        :label="`Certificats de réalisation ${isMonthlyCertificateMode ? 'global' : ''}`" size="16px"
+        :disable="disableDownloadCompletionCertificates || (isMonthlyCertificateMode && !course.archivedAt)"
+        @click="downloadCompletionCertificates(OFFICIAL)" />
+      <div v-if="isMonthlyCertificateMode && canReadCompletionCertificate">
         <completion-certificate-table v-if="completionCertificates.length" :disabled-button="disableButton"
           :completion-certificates="completionCertificates" :columns="completionCertificateColumns"
           @generate="generateCompletionCertificate" @remove-file="validateCompletionCertificateDeletion"
@@ -407,7 +406,7 @@ export default {
         const formattedName = formatDownloadName(`${docType} ${composeCourseName(course.value, true)}`);
         const zipName = `${formattedName}.zip`;
 
-        if (isClientInterface || !isRofOrVendorAdmin.value) {
+        if (isClientInterface || !isRofOrVendorAdmin.value || isMonthlyCertificateMode.value) {
           await downloadCCFile(ALL_PDF, type, zipName);
         } else {
           $q.dialog({

@@ -247,10 +247,7 @@ export const useAttendanceSheets = (
         options: {
           type: 'checkbox',
           model: [],
-          items: [{
-            label: attendancesMessage,
-            value: true,
-          }],
+          items: [{ label: attendancesMessage, value: true }],
           size: '32px',
           class: 'text-14',
         },
