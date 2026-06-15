@@ -12,7 +12,7 @@
     <company-select in-modal caption="Payeur" :company-options="payerOptions" :company="editedBill.payer" required-field
       @update:model-value="update($event, 'payer')" :error="validations.payer.$error"
       @blur="validations.payer.$touch" />
-    <ni-date-input caption="Date d'échéance" :model-value="editedBill.maturityDate" in-modal required-field
+    <ni-date-input caption="Date de facturation" :model-value="editedBill.maturityDate" in-modal required-field
       :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
       @update:model-value="update($event, 'maturityDate')" />
     <template #footer>

@@ -31,7 +31,7 @@
           icon="info_outline">
           <template #message>{{ maturityDateDiffMessage }}</template>
         </ni-banner>
-        <ni-date-input v-if="has(billsToUpdate, 'maturityDate')" in-modal caption="Date d'échéance"
+        <ni-date-input v-if="has(billsToUpdate, 'maturityDate')" in-modal caption="Date de facturation"
           :model-value="billsToUpdate.maturityDate" @update:model-value="update($event, 'maturityDate')"
           required-field />
       </div>
@@ -113,8 +113,8 @@ export default {
       if (months) duration.push(`${months} mois`);
       if (days) duration.push(`${days} ${formatQuantity('jour', Math.abs(days), 's', false)}`);
 
-      return `La date d'échéance de toutes les factures sélectionnées va être décalée de ${duration.join(' et ')}, et
-        la description sera mise à jour en fonction du mois et de l’année correspondants à chaque facture.`;
+      return `La date de facturation de toutes les factures sélectionnées va être décalée de ${duration.join(' et ')}, 
+        et la description sera mise à jour en fonction du mois et de l’année correspondants à chaque facture.`;
     });
 
     const severalBillsToEdit = computed(() => billsToUpdate.value._ids.length > 1);

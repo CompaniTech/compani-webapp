@@ -143,7 +143,7 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
           type: 'checkbox',
           model: [],
           items: [{
-            label: 'Supprimer cette facture et toutes celles qui ont une date d\'échéance ultérieure',
+            label: 'Supprimer cette facture et toutes celles qui ont une date de facturation ultérieure',
             value: true,
           }],
           size: '32px',

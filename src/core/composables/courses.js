@@ -96,7 +96,13 @@ export const useCourses = (course) => {
       { icon: 'bookmark_border', label: courseType.value },
       ...(displaySalesRepresentative.value ? [{ icon: 'fa fa-handshake', label: salesRepresentativeName.value }] : []),
       ...(trainersName.value ? [{ icon: 'emoji_people', label: trainersName.value }] : []),
-      ...(course.value.archivedAt ? [{ icon: 'circle', label: 'Archivée', iconClass: 'info-archived' }] : []),
+      ...(course.value.archivedAt
+        ? [{
+          icon: 'circle',
+          label: course.value.isAbandoned ? 'Archivée (abandon)' : 'Archivée',
+          iconClass: 'info-archived',
+        }]
+        : []),
       ...(isCourseInterrupted && !course.value.archivedAt
         ? [{ icon: 'circle', label: 'En pause', iconClass: 'info-warning', class: 'text-orange' }]
         : []
