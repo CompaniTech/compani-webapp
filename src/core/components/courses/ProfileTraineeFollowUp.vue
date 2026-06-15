@@ -61,7 +61,7 @@
       <ni-bi-color-button v-if="!isMonthlyCertificateMode" icon="file_download" label="Attestations" size="16px"
         :disable="disableDownloadCompletionCertificates" @click="downloadCompletionCertificates(CUSTOM)" />
       <ni-bi-color-button v-if="canReadCompletionCertificate" icon="file_download" class="q-my-md"
-        :label="`Certificats de réalisation ${isMonthlyCertificateMode ? 'global' : ''}`" size="16px"
+        :label="`Certificats de réalisation${isMonthlyCertificateMode ? ' global' : ''}`" size="16px"
         :disable="disableDownloadCompletionCertificates || (isMonthlyCertificateMode && !course.archivedAt)"
         @click="downloadCompletionCertificates(OFFICIAL)" />
       <div v-if="isMonthlyCertificateMode && canReadCompletionCertificate">
@@ -507,7 +507,8 @@ export default {
         await refreshCompletionCertificates();
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la suppression du document.');
+        if (!!e.data.message && (e.status === 403)) NotifyWarning(e.data.message);
+        else NotifyNegative('Erreur lors de la suppression du document.');
       } finally {
         disableButton.value = false;
       }

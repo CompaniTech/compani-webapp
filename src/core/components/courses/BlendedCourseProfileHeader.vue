@@ -68,7 +68,7 @@ export default {
           options: {
             type: 'checkbox',
             model: [],
-            items: [{ label: 'Formation abandonnée en cours de parcours', value: 'isAbandoned' }],
+            items: [{ label: 'Formation abandonnée en cours de parcours', value: true }],
             size: '32px',
             class: 'text-14',
           },
