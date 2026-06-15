@@ -59,26 +59,43 @@ export default {
 
     const validateCourseArchive = () => {
       const isArchived = !!course.value.archivedAt;
-      const message = !isArchived
-        ? 'Êtes-vous sûr(e) de vouloir archiver cette formation&nbsp;? <br /><br /> Vous ne pourrez plus'
-        + ' modifier des informations, ajouter des émargements ni envoyer des sms.'
-        : 'Êtes-vous sûr(e) de vouloir désarchiver cette formation&nbsp;? <br /><br /> Il sera de nouveau possible de'
-        + ' modifier des informations, ajouter des émargements ou envoyer des sms.';
 
-      $q.dialog({
-        title: 'Confirmation',
-        message,
-        html: true,
-        ok: 'Oui',
-        cancel: 'Non',
-      }).onOk(archiveOrUnarchiveCourse)
-        .onCancel(() => NotifyPositive(!isArchived ? 'Archivage annulé.' : 'Désarchivage annulé.'));
+      if (!isArchived) {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Êtes-vous sûr(e) de vouloir archiver cette formation&nbsp;? <br /><br /> Vous ne pourrez plus'
+            + ' modifier des informations, ajouter des émargements ni envoyer des sms.',
+          options: {
+            type: 'checkbox',
+            model: [],
+            items: [{ label: 'Formation abandonnée en cours de parcours', value: true }],
+            size: '32px',
+            class: 'text-14',
+          },
+          html: true,
+          ok: 'Oui',
+          cancel: 'Non',
+        }).onOk(value => archiveOrUnarchiveCourse(!!value && value[0]))
+          .onCancel(() => NotifyPositive('Archivage annulé.'));
+      } else {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Êtes-vous sûr(e) de vouloir désarchiver cette formation&nbsp;? <br /><br /> Il sera de nouveau'
+            + ' possible de modifier des informations, ajouter des émargements ou envoyer des sms.',
+          html: true,
+          ok: 'Oui',
+          cancel: 'Non',
+        }).onOk(archiveOrUnarchiveCourse)
+          .onCancel(() => NotifyPositive('Désarchivage annulé.'));
+      }
     };
 
-    const archiveOrUnarchiveCourse = async () => {
+    const archiveOrUnarchiveCourse = async (isAbandoned = false) => {
       try {
         const isArchived = !!course.value.archivedAt;
-        const payload = !isArchived ? { archivedAt: CompaniDate().toISO() } : { archivedAt: '' };
+        const payload = !isArchived
+          ? { archivedAt: CompaniDate().toISO(), ...(isAbandoned && { isAbandoned: true }) }
+          : { archivedAt: '' };
 
         await Courses.update(course.value._id, payload);
 
