@@ -3,8 +3,8 @@
     <template #title>
       Liste des <span class="text-weight-bold">échéanciers</span>
     </template>
-    <div v-if="!paymentPlans.length" class="no-data">Aucun échéancier renseigné pour ce sous-programme.</div>
-    <div v-for="(plan, index) in paymentPlans" :key="plan._id" class="payment-plan-line">
+    <div v-if="!paymentPlans.length" class="no-data q-my-md">Aucun échéancier renseigné pour ce sous-programme.</div>
+    <div v-for="(plan, index) in paymentPlans" :key="plan._id" class="payment-plan-line q-mb-md">
       <div>Échéancier {{ index + 1 }} : {{ formatPrices(plan.prices) }}</div>
       <div class="payment-plan-actions">
         <ni-button icon="edit" @click="$emit('edit', plan)" />
@@ -72,10 +72,8 @@ export default {
   display: flex
   align-items: center
   justify-content: space-between
-  margin-bottom: 8px
 .payment-plan-actions
   display: flex
 .no-data
   text-align: center
-  margin: 16px 0
 </style>

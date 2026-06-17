@@ -6,10 +6,16 @@
     <div v-for="(line, index) in priceLines" :key="line.uid" class="price-line">
       <ni-input class="price-input" in-modal type="number" :suffix="'€'" required-field
         :caption="`Échéance ${index + 1}`" v-model="line.amount"
-        :error="getAmountError(index).hasError" :error-message="getAmountError(index).message" />
+        :error="hasAmountError(index)" :error-message="getAmountError(index)" />
       <ni-button icon="close" :disable="priceLines.length === 1" @click="removeLine(index)" />
     </div>
-    <ni-button color="primary" icon="add" label="Ajouter une échéance" @click="addLine" />
+    <div class="price-line q-mb-lg">
+      <div class="borders-parent add-line price-input" @click="addLine">
+        <q-icon name="add" size="xs" />
+        <span>Ajouter une échéance</span>
+      </div>
+      <ni-button class="spacer" icon="close" />
+    </div>
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" color="primary" icon-right="add"
         label="Éditer l'échéancier" @click="submit" :loading="loading" />
@@ -50,6 +56,7 @@ export default {
       return { uid: `payment-plan-line-${uidCounter}`, amount };
     };
     const priceLines = ref([makeLine()]);
+    const showErrors = ref(false);
 
     const rules = computed(() => ({
       priceLines: { $each: helpers.forEach({ amount: { required, strictPositiveNumber } }) },
@@ -60,23 +67,28 @@ export default {
       if (!isOpen) return;
       const prices = paymentPlan.value.prices || [];
       priceLines.value = prices.length ? prices.map(price => makeLine(price)) : [makeLine()];
+      showErrors.value = false;
       v$.value.$reset();
     });
 
     const addLine = () => priceLines.value.push(makeLine());
     const removeLine = (index) => { priceLines.value.splice(index, 1); };
 
+    const hasAmountError = index => showErrors.value && v$.value.priceLines.$each.$response.$data[index].amount.$error;
+
     const getAmountError = (index) => {
       const validation = v$.value.priceLines.$each.$response.$data[index].amount;
-      if (!validation || !validation.$error) return { hasError: false, message: '' };
-      if (validation.required === false) return { hasError: true, message: REQUIRED_LABEL };
-      return { hasError: true, message: 'Nombre non valide, doit être strictement positif' };
+      if (!validation) return '';
+      if (validation.required === false) return REQUIRED_LABEL;
+      if (validation.strictPositiveNumber === false) return 'Nombre non valide, doit être strictement positif';
+      return '';
     };
 
     const hide = () => { emit('hide'); };
     const input = (event) => { emit('update:model-value', event); };
 
     const submit = () => {
+      showErrors.value = true;
       v$.value.$touch();
       if (v$.value.$error) return NotifyWarning('Champ(s) invalide(s).');
 
@@ -90,6 +102,7 @@ export default {
       // Methods
       addLine,
       removeLine,
+      hasAmountError,
       getAmountError,
       hide,
       input,
@@ -102,7 +115,20 @@ export default {
 <style lang="sass" scoped>
 .price-line
   display: flex
-  align-items: center
+  flex-direction: row
 .price-input
   flex: 1
+.add-line
+  display: flex
+  align-items: center
+  height: 40px
+  padding: 0 10px
+  background-color: white
+  color: $primary
+  font-size: 16px
+  cursor: pointer
+  .q-icon
+    margin-right: 8px
+.spacer
+  visibility: hidden
 </style>
