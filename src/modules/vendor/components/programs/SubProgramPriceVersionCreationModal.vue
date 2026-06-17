@@ -1,7 +1,7 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input">
     <template #title>
-      Créer une nouvelle <span class="text-weight-bold">version des tarifs</span>
+      Créer une nouvelle <span class="text-weight-bold">version des tarifs des intervenants</span>
     </template>
     <ni-input v-for="(price, index) in newSubProgramPriceVersion.prices" :key="price.step" in-modal
       type="number" :model-value="price.hourlyAmount" :suffix="'€ / h'" required-field
@@ -11,8 +11,8 @@
     <ni-date-input caption="Date d'effet" v-model="newSubProgramPriceVersion.effectiveDate"
       class="date-item" :error="validations.effectiveDate.$error" :min="newSubProgramPriceVersion.minEffectiveDate" />
     <template #footer>
-      <q-btn no-caps class="full-width modal-btn" label="Créer la nouvelle version de tarifs" color="primary"
-        icon-right="add" @click="submit" :loading="loading" />
+      <q-btn no-caps class="full-width modal-btn" label="Créer la nouvelle version de tarifs des intervenants"
+        color="primary" icon-right="add" @click="submit" :loading="loading" />
     </template>
   </ni-modal>
 </template>
