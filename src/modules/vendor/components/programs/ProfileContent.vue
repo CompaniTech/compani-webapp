@@ -7,14 +7,14 @@
           <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
         </div>
         <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning" class="row">
-          <ni-secondary-button class="q-mr-md" label="éditer les tarifs des intervenants"
+          <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
             @click="openPriceVersionCreationModal(subProgram)" />
           <ni-bi-color-button class="button-history q-mr-md" icon="history" label="Historique"
             @click="openHistoryModal(subProgram)" />
-          <ni-secondary-button class="q-mr-md" label="ajouter un échéancier" data-cy="add-payment-plan"
+          <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
             @click="openPaymentPlanAdditionModal(subProgram)" />
           <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
-            data-cy="show-payment-plans" @click="openPaymentPlanListModal(subProgram)" />
+            @click="openPaymentPlanListModal(subProgram)" />
         </div>
       </div>
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"

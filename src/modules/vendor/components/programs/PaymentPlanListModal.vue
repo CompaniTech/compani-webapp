@@ -4,12 +4,11 @@
       Liste des <span class="text-weight-bold">échéanciers</span>
     </template>
     <div v-if="!paymentPlans.length" class="no-data">Aucun échéancier renseigné pour ce sous-programme.</div>
-    <div v-for="(plan, index) in paymentPlans" :key="plan._id" class="payment-plan-line"
-      :data-cy="`payment-plan-${index}`">
+    <div v-for="(plan, index) in paymentPlans" :key="plan._id" class="payment-plan-line">
       <div>Échéancier {{ index + 1 }} : {{ formatPrices(plan.prices) }}</div>
       <div class="payment-plan-actions">
-        <ni-button icon="edit" :data-cy="`edit-payment-plan-${index}`" @click="$emit('edit', plan)" />
-        <ni-button icon="close" :data-cy="`delete-payment-plan-${index}`" @click="validateDeletion(plan._id)" />
+        <ni-button icon="edit" @click="$emit('edit', plan)" />
+        <ni-button icon="close" @click="validateDeletion(plan._id)" />
       </div>
     </div>
   </ni-modal>

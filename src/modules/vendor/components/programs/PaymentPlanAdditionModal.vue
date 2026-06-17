@@ -5,14 +5,13 @@
     </template>
     <div v-for="(line, index) in priceLines" :key="line.uid" class="price-line">
       <ni-input class="price-input" in-modal type="number" :suffix="'€'" required-field
-        :caption="`Échéance ${index + 1}`" v-model="line.amount" :data-cy="`price-input-${index}`"
+        :caption="`Échéance ${index + 1}`" v-model="line.amount"
         :error="getAmountError(index).hasError" :error-message="getAmountError(index).message" />
-      <ni-button icon="close" :data-cy="`remove-price-${index}`" :disable="priceLines.length === 1"
-        @click="removeLine(index)" />
+      <ni-button icon="close" :disable="priceLines.length === 1" @click="removeLine(index)" />
     </div>
-    <ni-button color="primary" icon="add" label="Ajouter une échéance" data-cy="add-price-line" @click="addLine" />
+    <ni-button color="primary" icon="add" label="Ajouter une échéance" @click="addLine" />
     <template #footer>
-      <q-btn no-caps class="full-width modal-btn" color="primary" icon-right="add" data-cy="submit-payment-plan"
+      <q-btn no-caps class="full-width modal-btn" color="primary" icon-right="add"
         label="Créer l'échéancier" @click="submit" :loading="loading" />
     </template>
   </ni-modal>
