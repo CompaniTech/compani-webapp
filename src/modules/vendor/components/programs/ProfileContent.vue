@@ -6,15 +6,19 @@
           <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
           <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
         </div>
-        <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning" class="row">
-          <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
-            @click="openPriceVersionCreationModal(subProgram)" />
-          <ni-bi-color-button class="button-history q-mr-md" icon="history" label="Historique"
-            @click="openHistoryModal(subProgram)" />
-          <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
-            @click="openPaymentPlanAdditionModal(subProgram)" />
-          <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
-            @click="openPaymentPlanListModal(subProgram)" />
+        <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning">
+          <div class="row q-mb-sm">
+            <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
+              @click="openPriceVersionCreationModal(subProgram)" />
+            <ni-bi-color-button class="button-history" icon="history" label="Historique"
+              @click="openHistoryModal(subProgram)" />
+          </div>
+          <div class="row">
+            <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
+              @click="openPaymentPlanAdditionModal(subProgram)" />
+            <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
+              @click="openPaymentPlanListModal(subProgram)" />
+          </div>
         </div>
       </div>
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
