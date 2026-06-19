@@ -3,7 +3,9 @@
     <template #title>
       Liste des <span class="text-weight-bold">échéanciers</span>
     </template>
-    <div v-if="!paymentPlans.length" class="no-data text-italic q-my-md">Aucun échéancier renseigné pour ce sous-programme.</div>
+    <div v-if="!paymentPlans.length" class="no-data text-italic q-my-md">
+      Aucun échéancier renseigné pour ce sous-programme.
+    </div>
     <q-expansion-item v-for="(plan, index) in paymentPlans" :key="plan._id" class="q-mb-md">
       <template #header>
         <div class="full-width row items-center justify-between">
