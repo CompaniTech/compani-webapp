@@ -3,7 +3,7 @@
     <template #title>
       Liste des <span class="text-weight-bold">échéanciers</span>
     </template>
-    <div v-if="!paymentPlans.length" class="no-data q-my-md">Aucun échéancier renseigné pour ce sous-programme.</div>
+    <div v-if="!paymentPlans.length" class="no-data text-italic q-my-md">Aucun échéancier renseigné pour ce sous-programme.</div>
     <div v-for="(plan, index) in paymentPlans" :key="plan._id" class="payment-plan-line q-mb-md">
       <div>Échéancier {{ index + 1 }} : {{ formatPrices(plan.prices) }}</div>
       <div class="payment-plan-actions">
