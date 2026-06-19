@@ -47,10 +47,10 @@ export const usePaymentPlan = (modalLoading, refreshProgram, program) => {
     }
   };
 
-  const editPaymentPlan = async ({ _id, prices }) => {
+  const editPaymentPlan = async ({ _id: paymentPlanId, prices }) => {
     try {
       modalLoading.value = true;
-      await SubPrograms.update(selectedSubProgramForPlan.value._id, { paymentPlan: { _id, prices } });
+      await SubPrograms.update(selectedSubProgramForPlan.value._id, { paymentPlan: { paymentPlanId, prices } });
       NotifyPositive('Échéancier modifié.');
       paymentPlanEditionModal.value = false;
     } catch (e) {
@@ -68,7 +68,7 @@ export const usePaymentPlan = (modalLoading, refreshProgram, program) => {
     try {
       await SubPrograms.update(
         selectedSubProgramForPlan.value._id,
-        { paymentPlan: { _id: paymentPlanId, prices: [] } }
+        { paymentPlan: { paymentPlanId, prices: [] } }
       );
       NotifyPositive('Échéancier supprimé.');
       paymentPlanListModal.value = false;
