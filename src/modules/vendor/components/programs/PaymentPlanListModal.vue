@@ -4,13 +4,22 @@
       Liste des <span class="text-weight-bold">échéanciers</span>
     </template>
     <div v-if="!paymentPlans.length" class="no-data text-italic q-my-md">Aucun échéancier renseigné pour ce sous-programme.</div>
-    <div v-for="(plan, index) in paymentPlans" :key="plan._id" class="payment-plan-line q-mb-md">
-      <div>Échéancier {{ index + 1 }} : {{ formatPrices(plan.prices) }}</div>
-      <div class="payment-plan-actions">
-        <ni-button icon="edit" @click="$emit('edit', plan)" />
-        <ni-button icon="close" @click="validateDeletion(plan._id)" />
+    <q-expansion-item v-for="(plan, index) in paymentPlans" :key="plan._id" class="q-mb-md">
+      <template #header>
+        <div class="full-width row items-center justify-between">
+          <span class="text-weight-bold">Échéancier {{ index + 1 }}</span>
+          <div class="payment-plan-actions">
+            <ni-button icon="edit" @click.stop="$emit('edit', plan)" />
+            <ni-button icon="close" @click.stop="validateDeletion(plan._id)" />
+          </div>
+        </div>
+      </template>
+      <div class="q-pa-sm">
+        <div v-for="(price, monthIndex) in plan.prices" :key="monthIndex" class="q-py-xs">
+          Mois {{ monthIndex + 1 }} : {{ price }} €
+        </div>
       </div>
-    </div>
+    </q-expansion-item>
   </ni-modal>
 </template>
 
@@ -38,8 +47,6 @@ export default {
 
     const paymentPlans = computed(() => subProgram.value.paymentPlans || []);
 
-    const formatPrices = prices => prices.map(price => `${price} €`).join(' + ');
-
     const hide = () => { emit('hide'); };
     const input = (event) => { emit('update:model-value', event); };
 
@@ -58,7 +65,6 @@ export default {
       // Computed
       paymentPlans,
       // Methods
-      formatPrices,
       hide,
       input,
       validateDeletion,
@@ -68,10 +74,6 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-.payment-plan-line
-  display: flex
-  align-items: center
-  justify-content: space-between
 .payment-plan-actions
   display: flex
 .no-data
