@@ -75,6 +75,7 @@
 
     <ni-multiple-course-bill-creation-modal :validations="v$.newBillsQuantity"
       v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity"
+      v-model:new-prices="newPrices" :payment-plan-options="paymentPlans"
       :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
@@ -158,6 +159,7 @@ export default {
     const removeNewBillDatas = ref(true);
     const multipleBillCreationModal = ref(false);
     const newBillsQuantity = ref(1);
+    const newPrices = ref([]);
     const billsToUpdate = ref({ _ids: [] });
     const multipleCourseBillEditionModal = ref(false);
 
@@ -179,6 +181,11 @@ export default {
     const totalPriceToBill = ref({ global: 0, trainerFees: 0 });
 
     const { isIntraCourse, isSingleCourse } = useCourses(course);
+
+    const paymentPlans = computed(() => {
+      if (!isSingleCourse.value) return [];
+      return get(course.value, 'subProgram.paymentPlans', []);
+    });
 
     const rules = computed(() => ({
       course: {
@@ -402,6 +409,7 @@ export default {
         ? omit(newBill.value.mainFee, 'description')
         : newBill.value.mainFee,
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
+      ...(newPrices.value.length && { prices: newPrices.value }),
     });
 
     const validateBillCreation = async () => {
@@ -473,6 +481,7 @@ export default {
     const resetBillsQuantity = () => {
       if (!billCreationModal.value && !companiesSelectionModal.value) {
         newBillsQuantity.value = 1;
+        newPrices.value = [];
         v$.value.newBillsQuantity.$reset();
       }
     };
@@ -706,6 +715,8 @@ export default {
       showPrices,
       totalPriceToBill,
       newBillsQuantity,
+      newPrices,
+      paymentPlans,
       // Validation
       v$,
       // Data
