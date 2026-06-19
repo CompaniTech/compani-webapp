@@ -71,6 +71,7 @@ export const usePaymentPlan = (modalLoading, refreshProgram, program) => {
         { paymentPlan: { _id: paymentPlanId, prices: [] } }
       );
       NotifyPositive('Échéancier supprimé.');
+      paymentPlanListModal.value = false;
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de la suppression de l\'échéancier.');
