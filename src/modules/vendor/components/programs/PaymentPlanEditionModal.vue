@@ -3,11 +3,12 @@
     <template #title>
       Éditer un <span class="text-weight-bold">échéancier</span>
     </template>
-    <div v-for="(line, index) in priceLines" :key="line.uid" class="price-line">
+    <div v-for="(line, index) in editedPaymentPlan.priceLines" :key="index" class="price-line">
       <ni-input class="price-input" in-modal type="number" :suffix="'€'" required-field
-        :caption="`Échéance ${index + 1}`" v-model="line.amount"
-        :error="hasAmountError(index)" :error-message="getAmountError(index)" />
-      <ni-button icon="close" :disable="priceLines.length === 1" @click="removeLine(index)" />
+        :caption="`Échéance ${index + 1}`" :model-value="line.amount" :error-message="getAmountError(index)"
+        :error="showErrors && validations.priceLines.$each.$response.$data[index].amount.$error"
+        @update:model-value="updateAmount($event, index)" />
+      <ni-button icon="close" :disable="editedPaymentPlan.priceLines.length === 1" @click="removeLine(index)" />
     </div>
     <div class="price-line q-mb-lg">
       <div class="borders-parent add-line price-input" @click="addLine">
@@ -24,12 +25,8 @@
 </template>
 
 <script>
-import { ref, toRefs, computed, watch } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import { required, helpers } from '@vuelidate/validators';
-import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
+import { toRefs, ref } from 'vue';
 import { REQUIRED_LABEL } from '@data/constants';
-import { NotifyWarning } from '@components/popup/notify';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
@@ -38,7 +35,8 @@ export default {
   name: 'PaymentPlanEditionModal',
   props: {
     modelValue: { type: Boolean, default: false },
-    paymentPlan: { type: Object, default: () => ({ prices: [] }) },
+    editedPaymentPlan: { type: Object, default: () => ({ priceLines: [] }) },
+    validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
   },
   components: {
@@ -46,66 +44,63 @@ export default {
     'ni-input': Input,
     'ni-button': Button,
   },
-  emits: ['hide', 'update:model-value', 'submit'],
+  emits: ['hide', 'update:model-value', 'update:edited-payment-plan', 'submit'],
   setup (props, { emit }) {
-    const { paymentPlan, modelValue } = toRefs(props);
-
-    let uidCounter = 0;
-    const makeLine = (amount = null) => {
-      uidCounter += 1;
-      return { uid: `payment-plan-line-${uidCounter}`, amount };
-    };
-    const priceLines = ref([makeLine()]);
+    const { editedPaymentPlan, validations } = toRefs(props);
     const showErrors = ref(false);
 
-    const rules = computed(() => ({
-      priceLines: { $each: helpers.forEach({ amount: { required, strictPositiveNumber } }) },
-    }));
-    const v$ = useVuelidate(rules, { priceLines });
-
-    watch(modelValue, (isOpen) => {
-      if (!isOpen) return;
-      const prices = paymentPlan.value.prices || [];
-      priceLines.value = prices.length ? prices.map(price => makeLine(price)) : [makeLine()];
+    const hide = () => {
       showErrors.value = false;
-      v$.value.$reset();
-    });
+      emit('hide');
+    };
 
-    const addLine = () => priceLines.value.push(makeLine());
-    const removeLine = (index) => { priceLines.value.splice(index, 1); };
+    const input = (event) => { emit('update:model-value', event); };
 
-    const hasAmountError = index => showErrors.value && v$.value.priceLines.$each.$response.$data[index].amount.$error;
+    const addLine = () => {
+      emit('update:edited-payment-plan', {
+        ...editedPaymentPlan.value,
+        priceLines: [...editedPaymentPlan.value.priceLines, { amount: null }],
+      });
+    };
+
+    const removeLine = (index) => {
+      emit('update:edited-payment-plan', {
+        ...editedPaymentPlan.value,
+        priceLines: editedPaymentPlan.value.priceLines.filter((_, i) => i !== index),
+      });
+    };
+
+    const updateAmount = (value, index) => {
+      emit('update:edited-payment-plan', {
+        ...editedPaymentPlan.value,
+        priceLines: editedPaymentPlan.value.priceLines
+          .map((line, i) => (i === index ? { ...line, amount: value } : line)),
+      });
+    };
 
     const getAmountError = (index) => {
-      const validation = v$.value.priceLines.$each.$response.$data[index].amount;
+      const validation = validations.value.priceLines.$each.$response.$data[index].amount;
       if (!validation) return '';
       if (validation.required === false) return REQUIRED_LABEL;
       if (validation.strictPositiveNumber === false) return 'Nombre non valide, doit être strictement positif';
       return '';
     };
 
-    const hide = () => { emit('hide'); };
-    const input = (event) => { emit('update:model-value', event); };
-
     const submit = () => {
       showErrors.value = true;
-      v$.value.$touch();
-      if (v$.value.$error) return NotifyWarning('Champ(s) invalide(s).');
-
-      const prices = priceLines.value.map(line => Number(line.amount));
-      return emit('submit', { _id: paymentPlan.value._id, prices });
+      emit('submit');
     };
 
     return {
       // Data
-      priceLines,
+      showErrors,
       // Methods
-      addLine,
-      removeLine,
-      hasAmountError,
-      getAmountError,
       hide,
       input,
+      addLine,
+      removeLine,
+      updateAmount,
+      getAmountError,
       submit,
     };
   },

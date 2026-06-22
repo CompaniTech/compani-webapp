@@ -1,24 +1,23 @@
 <template>
   <div v-if="program">
     <div v-for="(subProgram, index) of program.subPrograms" class="q-mb-xl sub-program-container" :key="index">
-      <div class="flex align-center justify-between">
-        <div class="align-items-center">
-          <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
-          <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
+      <div class="align-items-center">
+        <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
+        <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
+      </div>
+      <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning"
+        class="row q-my-md justify-between">
+        <div class="row">
+          <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
+            @click="openPriceVersionCreationModal(subProgram)" />
+          <ni-bi-color-button class="button-history" icon="history" label="Historique"
+            @click="openHistoryModal(subProgram)" />
         </div>
-        <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning">
-          <div class="row q-mb-sm">
-            <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
-              @click="openPriceVersionCreationModal(subProgram)" />
-            <ni-bi-color-button class="button-history" icon="history" label="Historique"
-              @click="openHistoryModal(subProgram)" />
-          </div>
-          <div class="row">
-            <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
-              @click="openPaymentPlanAdditionModal(subProgram)" />
-            <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
-              @click="openPaymentPlanListModal(subProgram)" />
-          </div>
+        <div class="row">
+          <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
+            @click="openPaymentPlanAdditionModal(subProgram)" />
+          <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
+            @click="openPaymentPlanListModal(subProgram)" />
         </div>
       </div>
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
@@ -135,10 +134,13 @@
     <sub-program-price-version-history-modal v-model="subProgramPriceVersionHistoryModal"
       :sub-program="selectedSubProgram" />
 
-    <payment-plan-addition-modal v-model="paymentPlanAdditionModal" @submit="addPaymentPlan" :loading="modalLoading" />
+    <payment-plan-addition-modal v-model="paymentPlanAdditionModal" :loading="modalLoading"
+      v-model:new-payment-plan="newPaymentPlan" :validations="paymentPlanValidations.newPaymentPlan"
+      @hide="resetPaymentPlanAdditionModal" @submit="addPaymentPlan" />
 
-    <payment-plan-edition-modal v-model="paymentPlanEditionModal" :payment-plan="editedPaymentPlan"
-      @submit="editPaymentPlan" @hide="resetPaymentPlanEditionModal" :loading="modalLoading" />
+    <payment-plan-edition-modal v-model="paymentPlanEditionModal" :loading="modalLoading"
+      v-model:edited-payment-plan="editedPaymentPlan" :validations="paymentPlanValidations.editedPaymentPlan"
+      @hide="resetPaymentPlanEditionModal" @submit="editPaymentPlan" />
 
     <payment-plan-list-modal v-model="paymentPlanListModal" :sub-program="currentPlanSubProgram"
       @edit="openPaymentPlanEditionModal" @delete="deletePaymentPlan" />
@@ -274,15 +276,18 @@ export default {
       paymentPlanAdditionModal,
       paymentPlanEditionModal,
       paymentPlanListModal,
+      newPaymentPlan,
       editedPaymentPlan,
+      v$: paymentPlanValidations,
       selectedSubProgramForPlan,
       openPaymentPlanAdditionModal,
+      resetPaymentPlanAdditionModal,
       openPaymentPlanListModal,
       openPaymentPlanEditionModal,
+      resetPaymentPlanEditionModal,
       addPaymentPlan,
       editPaymentPlan,
       deletePaymentPlan,
-      resetPaymentPlanEditionModal,
     } = usePaymentPlan(modalLoading, refreshProgram, program);
 
     const currentPlanSubProgram = computed(() => (program.value.subPrograms || [])
@@ -693,15 +698,18 @@ export default {
       paymentPlanAdditionModal,
       paymentPlanEditionModal,
       paymentPlanListModal,
+      newPaymentPlan,
       editedPaymentPlan,
+      paymentPlanValidations,
       currentPlanSubProgram,
       openPaymentPlanAdditionModal,
+      resetPaymentPlanAdditionModal,
       openPaymentPlanListModal,
       openPaymentPlanEditionModal,
+      resetPaymentPlanEditionModal,
       addPaymentPlan,
       editPaymentPlan,
       deletePaymentPlan,
-      resetPaymentPlanEditionModal,
     };
   },
 };
