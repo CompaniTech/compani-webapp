@@ -416,9 +416,8 @@ export default {
       mainFee: {
         ...isSingleCourse.value && newBillsQuantity.value > 1
           ? omit(newBill.value.mainFee, 'description')
-          : omit(newBill.value.mainFee, 'price'),
-        ...(newPrices.value.length && { prices: newPrices.value }),
-        ...(newBill.value.mainFee.price && { prices: [newBill.value.mainFee.price] }),
+          : newBill.value.mainFee,
+        ...(newPrices.value.length && { price: newPrices.value }),
       },
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
     });
