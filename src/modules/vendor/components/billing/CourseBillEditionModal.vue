@@ -15,6 +15,9 @@
     <ni-date-input caption="Date de facturation" :model-value="editedBill.maturityDate" in-modal required-field
       :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
       @update:model-value="update($event, 'maturityDate')" />
+    <q-checkbox :model-value="editedBill.delaySubsequentBills" dense class="q-mb-lg"
+      label="Décaler les autres factures du même nombre de jours"
+      @update:model-value="update($event, 'delaySubsequentBills')" />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Éditer la facture" icon-right="add" color="white"
         :loading="loading" @click="submit" />
