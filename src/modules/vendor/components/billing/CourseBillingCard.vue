@@ -200,7 +200,7 @@ import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
-import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/constants';
+import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT, LIST } from '@data/constants';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { add, toFixedToFloat } from '@helpers/numbers';
 import { formatPrice, formatName } from '@helpers/utils';
@@ -248,6 +248,7 @@ export default {
       expectedBillsCountInvalid,
       areDetailsVisible,
       selectedBills,
+      isDashboard,
     } = toRefs(props);
     const billEditionLoading = ref(false);
     const billingPurchaseCreationLoading = ref(false);
@@ -264,6 +265,7 @@ export default {
       _id: '',
       payer: '',
       mainFee: { price: '', description: '', count: '', countUnit: GROUP },
+      delaySubsequentBills: false,
     });
     const newBillingPurchase = ref({ billId: '', billingItem: '', price: 0, count: 1, description: '' });
     const editedBillingPurchase = ref({ _id: '', billId: '', price: 0, count: 1, description: '' });
@@ -274,6 +276,7 @@ export default {
     const minCourseCreditNoteDate = ref('');
     const enableMainFeeValidation = ref(true);
     const addPercentage = ref(false);
+    const originalPayer = ref('');
 
     const rules = computed(() => ({
       editedBill: {
@@ -383,14 +386,14 @@ export default {
     const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
 
     const setEditedBill = (bill, addMaturityDate = false) => {
-      const payer = get(bill, 'payer._id');
+      originalPayer.value = get(bill, 'payer._id');
       const maturityDate = get(bill, 'maturityDate');
       addPercentage.value = course.value.type !== SINGLE && bill.companies
         .every(c => course.value.prices.find(p => p.company === c._id && p.global));
 
       editedBill.value = {
         _id: bill._id,
-        payer,
+        payer: originalPayer.value,
         mainFee: {
           price: get(bill, 'mainFee.price', 0),
           count: bill.mainFee.count,
@@ -399,6 +402,7 @@ export default {
           ...(addPercentage.value && { percentage: get(bill, 'mainFee.percentage', 0) }),
         },
         ...(addMaturityDate && { maturityDate }),
+        delaySubsequentBills: false,
       };
     };
 
@@ -476,8 +480,10 @@ export default {
         _id: '',
         payer: '',
         mainFee: { price: '', description: '', count: '', countUnit: GROUP },
+        delaySubsequentBills: false,
       };
       totalPriceToBill.value = { global: 0, trainerFees: 0 };
+      originalPayer.value = '';
       validations.value.editedBill.$reset();
     };
 
@@ -514,15 +520,37 @@ export default {
 
         await nextTick();
 
-        const payload = payloadWithMainFee
-          ? { ...omit(editedBill.value, '_id'), payer: formatPayerForPayload(editedBill.value.payer) }
-          : { payer: formatPayerForPayload(editedBill.value.payer), maturityDate: editedBill.value.maturityDate };
-
         validations.value.editedBill.$touch();
         if (validations.value.editedBill.$error) return NotifyWarning('Champ(s) invalide(s)');
 
         billEditionLoading.value = true;
-        await CourseBills.update(editedBill.value._id, payload);
+
+        const { payer, maturityDate } = editedBill.value;
+        if (payloadWithMainFee) {
+          const payload = {
+            ...omit(editedBill.value, ['_id', 'delaySubsequentBills']),
+            payer: formatPayerForPayload(payer),
+          };
+          await CourseBills.update(editedBill.value._id, payload);
+        } else if (!editedBill.value.delaySubsequentBills) {
+          const payload = { payer: formatPayerForPayload(payer), maturityDate };
+          await CourseBills.update(editedBill.value._id, payload);
+        } else {
+          if (originalPayer.value !== payer) {
+            await CourseBills.update(editedBill.value._id, { payer: formatPayerForPayload(payer) });
+          }
+
+          const allCourseBills = !isDashboard.value
+            ? courseBills.value
+            : await CourseBills.list({ course: course.value._id, action: LIST });
+
+          const billsToDelay = allCourseBills
+            .filter(b => b._id === editedBill.value._id || (!b.billedAt && b.maturityDate &&
+              CompaniDate(b.maturityDate).isSameOrAfter(maturityDate)))
+            .map(b => b._id);
+
+          await CourseBills.updateBillList({ _ids: billsToDelay, maturityDate: editedBill.value.maturityDate });
+        }
 
         NotifyPositive('Facture modifiée.');
 
