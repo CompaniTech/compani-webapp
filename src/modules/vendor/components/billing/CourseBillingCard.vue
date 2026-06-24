@@ -540,9 +540,9 @@ export default {
             await CourseBills.update(editedBill.value._id, { payer: formatPayerForPayload(payer) });
           }
 
-          let allCourseBills;
-          if (!isDashboard.value) allCourseBills = courseBills.value;
-          else allCourseBills = await CourseBills.list({ course: course.value._id, action: LIST });
+          const allCourseBills = !isDashboard.value
+            ? courseBills.value
+            : await CourseBills.list({ course: course.value._id, action: LIST });
 
           const billsToDelay = allCourseBills
             .filter(b => b._id === editedBill.value._id || (!b.billedAt && b.maturityDate &&
