@@ -20,11 +20,11 @@
             @click="openPaymentPlanListModal(subProgram)" />
         </div>
       </div>
-      <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
-        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)" />
       <q-checkbox :model-value="program.subPrograms[index].subjectToVat || false"
         label="La TVA s'applique à ce sous-programme"
         @update:model-value="updateSubProgramSubjectToVat(index, $event)" />
+      <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
+        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)" />
       <draggable v-model="subProgram.steps" @change="dropStep(subProgram._id)" ghost-class="ghost"
         :disabled="$q.platform.is.mobile || isPublished(subProgram)" item-key="_id">
         <template #item="{element: step, index: stepIndex}">

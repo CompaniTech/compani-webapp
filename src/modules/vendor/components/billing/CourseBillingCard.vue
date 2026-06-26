@@ -24,11 +24,11 @@
               <div class="flex" v-if="!isDashboard">
                 <div v-if="bill.number" class="text-weight-bold clickable-name" @click.stop="downloadBill(bill)"
                   :disable="pdfLoading">
-                  {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
+                  {{ bill.number }} - {{ formatPrice(bill.netExclTaxes) }}
                 </div>
                 <div v-else class="row text-weight-bold">
-                  <div :class="['q-pt-xs', { 'missing-info': !bill.netInclTaxes }]">
-                    A facturer - {{ formatPrice(bill.netInclTaxes) }}
+                  <div :class="['q-pt-xs', { 'missing-info': !bill.netExclTaxes }]">
+                    A facturer - {{ formatPrice(bill.netExclTaxes) }}
                   </div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
@@ -51,8 +51,8 @@
                   <span v-if="bill.number">
                     &nbsp;<span class="clickable-name" @click.stop="downloadBill(bill)">{{ bill.number }}</span> -
                   </span>
-                  <span :class="{ 'missing-info': !bill.netInclTaxes }">
-                    &nbsp;{{ formatPrice(bill.netInclTaxes) }}
+                  <span :class="{ 'missing-info': !bill.netExclTaxes }">
+                    &nbsp;{{ formatPrice(bill.netExclTaxes) }}
                   </span>
                 </div>
                 <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
@@ -270,7 +270,7 @@ export default {
     const newBillingPurchase = ref({ billId: '', billingItem: '', price: 0, count: 1, description: '' });
     const editedBillingPurchase = ref({ _id: '', billId: '', price: 0, count: 1, description: '' });
     const newCreditNote = ref({ courseBill: '', misc: '', date: '' });
-    const creditNoteMetaInfo = ref({ number: '', netInclTaxes: '', courseName: '', companiesName: '' });
+    const creditNoteMetaInfo = ref({ number: '', netExclTaxes: '', courseName: '', companiesName: '' });
     const billToValidate = ref({ _id: '', billedAt: '' });
     const courseFeeEditionModalMetaInfo = ref({ title: '', isBilled: false });
     const minCourseCreditNoteDate = ref('');
@@ -639,11 +639,11 @@ export default {
 
     const openCreditNoteCreationModal = (bill) => {
       if (expectedBillsCountInvalid.value) return NotifyWarning('Champ(s) invalide(s).');
-      const { _id: billId, number, netInclTaxes } = bill;
+      const { _id: billId, number, netExclTaxes } = bill;
       newCreditNote.value = { courseBill: billId, date: '', misc: '' };
       creditNoteCreationModal.value = true;
       minCourseCreditNoteDate.value = bill.billedAt;
-      creditNoteMetaInfo.value = { number, netInclTaxes, courseName: composeCourseName(course.value), companiesName };
+      creditNoteMetaInfo.value = { number, netExclTaxes, courseName: composeCourseName(course.value), companiesName };
     };
 
     const addCreditNote = async () => {
@@ -669,7 +669,7 @@ export default {
     const resetCreditNoteCreationModal = () => {
       newCreditNote.value = { courseBill: '', date: '', misc: '' };
       minCourseCreditNoteDate.value = '';
-      creditNoteMetaInfo.value = { number: '', netInclTaxes: '', courseName: '', companiesName: '' };
+      creditNoteMetaInfo.value = { number: '', netExclTaxes: '', courseName: '', companiesName: '' };
       validations.value.newCreditNote.$reset();
     };
 

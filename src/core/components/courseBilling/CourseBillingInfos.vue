@@ -100,6 +100,7 @@
                 </div>
                 <div class="progress" />
                 <div class="formatted-price" />
+                <div class="formatted-price" />
                 <div v-if="item.netInclTaxes >=0" class="formatted-price">
                   {{ item.nature === REFUND ? '-' : '' }}{{ formatPrice(item.netInclTaxes) }}
                 </div>
@@ -126,6 +127,7 @@
           </template>
           <template #bottom-row="{ props }">
             <q-tr class="text-weight-bold" :props="props">
+              <q-td />
               <q-td />
               <q-td />
               <q-td />
@@ -361,8 +363,16 @@ export default {
       },
       { name: 'progress', label: 'Avancement formation', field: 'progress', align: 'center', classes: 'progress' },
       {
+        name: 'netExclTaxes',
+        label: 'Montant HT',
+        field: 'netExclTaxes',
+        format: formatPrice,
+        align: 'right',
+        classes: 'formatted-price',
+      },
+      {
         name: 'netInclTaxes',
-        label: 'Montant',
+        label: 'Montant TTC',
         field: 'netInclTaxes',
         format: formatPrice,
         align: 'right',
