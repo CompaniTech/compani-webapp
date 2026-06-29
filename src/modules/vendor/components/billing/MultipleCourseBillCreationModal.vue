@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import { computed, toRefs } from 'vue';
+import { computed, toRefs, ref, watch } from 'vue';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
@@ -75,7 +75,12 @@ export default {
     'update:mode',
   ],
   setup (props, { emit }) {
-    const { validations } = toRefs(props);
+    const { validations, newBillsQuantity } = toRefs(props);
+    const initialBillsQuantity = ref(newBillsQuantity.value);
+
+    watch(() => props.modelValue, (isOpen) => {
+      if (isOpen) initialBillsQuantity.value = newBillsQuantity.value;
+    });
 
     const modeOptions = [
       { label: 'Manuel', value: MANUAL },
@@ -112,7 +117,7 @@ export default {
       emit('update:mode', value);
       emit('update:selected-plan-id', null);
       emit('update:new-prices', []);
-      emit('update:new-bills-quantity', 1);
+      emit('update:new-bills-quantity', initialBillsQuantity.value);
     };
 
     const selectPlan = (planId) => {
