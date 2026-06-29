@@ -20,7 +20,7 @@
             @click="openPaymentPlanListModal(subProgram)" />
         </div>
       </div>
-      <q-checkbox :model-value="program.subPrograms[index].subjectToVat || false"
+      <q-checkbox :model-value="!!program.subPrograms[index].subjectToVat"
         label="La TVA s'applique à ce sous-programme"
         @update:model-value="updateSubProgramSubjectToVat(index, $event)" />
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
