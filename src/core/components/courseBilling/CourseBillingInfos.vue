@@ -106,7 +106,7 @@
                 </div>
                 <div v-else class="formatted-price">{{ formatPrice(props.row.netInclTaxes) }}</div>
                 <template v-if="isVendorInterface">
-                  <div class="formatted-price" />
+                  <div class="checkbox-empty" />
                   <div v-if="item.status" class="status">
                     <div class="chip-container q-my-md">
                       <q-chip :class="[getStatusClass(item.status)]" :label="getItemStatus(item.status)" />
@@ -342,9 +342,11 @@ export default {
     const displayCheckbox = computed(() => [0, 1, 2].map(value => groupedCourseBills.value[value] || [])
       .map(bills => isVendorInterface && bills.some(cb => !isEqualTo(cb.total, 0))));
 
+    const formattedPriceStyle = isVendorInterface ? 'width: 8%' : 'width: 9%';
+    const noCheckboxStyle = isVendorInterface ? 'width: 25%' : 'width: 24%';
     const columns = index => [
       ...(displayCheckbox.value[index]
-        ? [{ name: 'actions', label: '', align: 'center', field: '' }]
+        ? [{ name: 'actions', label: '', align: 'center', field: '', style: 'width: 5%; min-width: 48px' }]
         : []),
       {
         name: 'date',
@@ -352,23 +354,23 @@ export default {
         field: 'billedAt',
         format: value => CompaniDate(value).format(DD_MM_YYYY),
         align: 'left',
-        classes: 'date',
+        style: 'width: 10%',
       },
       {
         name: 'number',
         label: '#',
         field: 'number',
         align: 'left',
-        classes: displayCheckbox.value[index] ? 'payment' : 'payment-without-checkbox',
+        style: displayCheckbox.value[index] ? 'width: 20%' : noCheckboxStyle,
       },
-      { name: 'progress', label: 'Avancement formation', field: 'progress', align: 'center', classes: 'progress' },
+      { name: 'progress', label: 'Avancement formation', field: 'progress', align: 'center', style: 'width: 10%' },
       {
         name: 'netExclTaxes',
         label: 'Montant HT',
         field: 'netExclTaxes',
         format: formatPrice,
         align: 'right',
-        classes: 'formatted-price',
+        style: formattedPriceStyle,
       },
       {
         name: 'netInclTaxes',
@@ -376,7 +378,7 @@ export default {
         field: 'netInclTaxes',
         format: formatPrice,
         align: 'right',
-        classes: 'formatted-price',
+        style: formattedPriceStyle,
       },
       {
         name: 'paid',
@@ -384,7 +386,7 @@ export default {
         field: 'paid',
         format: formatPrice,
         align: 'right',
-        classes: 'formatted-price',
+        style: formattedPriceStyle,
       },
       {
         name: 'total',
@@ -392,7 +394,8 @@ export default {
         field: 'total',
         format: formatPriceWithSign,
         align: 'right',
-        classes: 'text-weight-bold formatted-price',
+        classes: 'text-weight-bold',
+        style: formattedPriceStyle,
       },
       {
         name: 'sendingDates',
@@ -400,12 +403,12 @@ export default {
         field: 'sendingDates',
         format: values => (values || []).map(v => CompaniDate(v).format(DD_MM_YYYY)).join(', '),
         align: 'center',
-        classes: 'sending-dates',
+        style: isVendorInterface ? 'width: 10%' : 'width: 15%',
       },
       ...(isVendorInterface
-        ? [{ name: 'payment', align: 'center', field: val => val.coursePayments || '', classes: 'formatted-price' }]
+        ? [{ name: 'payment', align: 'center', field: val => val.coursePayments || '', style: formattedPriceStyle }]
         : []),
-      { name: 'expand', classes: 'expand' },
+      { name: 'expand', classes: 'expand', style: 'width: 5%' },
     ];
 
     const { pdfLoading, downloadBill, downloadCreditNote } = useCourseBilling(courseBillList);
@@ -865,7 +868,7 @@ export default {
     height: 48px
     padding: 4px
 .formatted-price
-  width: 10%
+  width: 8%
   padding: 4px
   text-align: right
 .status
@@ -889,7 +892,7 @@ export default {
   .payment-without-checkbox
     width: 24%
   .formatted-price
-    width: 12%
+    width: 9%
   .sending-dates
     width: 15%
   .button-billing-representative
