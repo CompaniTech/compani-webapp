@@ -441,6 +441,10 @@ export const YES = 'Oui';
 export const NO = 'Non';
 export const NO_DATA = 'Aucune donnée';
 
+// MULTIPLE COURSE BILL CREATION MODES
+export const MANUAL = 'manual';
+export const PAYMENT_PLAN = 'paymentPlan';
+
 // COURSE SLOT STATUS
 export const PRESENT = 'present';
 export const MISSING = 'missing';

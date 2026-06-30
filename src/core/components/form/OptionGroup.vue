@@ -9,11 +9,14 @@
         <q-option-group :model-value="groupValue" :options="computedOptions" :readonly="readOnly" :type="type"
           :inline="inline" :disable="disable" @update:model-value="update" dense class="q-px-sm">
           <template #label="opt">
-            <div class="row items-end">
-              <span>{{ opt.label }}</span>
-              <q-input v-if="opt.value === OTHER_VALUE" :model-value="otherText" :readonly="readOnly" :disable="disable"
-                dense @update:model-value="updateOtherAnswer" @click.stop @keydown.space.stop @keyup.space.stop />
-            </div>
+            <slot name="label" v-bind="opt">
+              <div class="row items-end">
+                <span>{{ opt.label }}</span>
+                <q-input v-if="opt.value === OTHER_VALUE" :model-value="otherText" :readonly="readOnly"
+                  :disable="disable" dense @update:model-value="updateOtherAnswer"
+                  @click.stop @keydown.space.stop @keyup.space.stop />
+              </div>
+            </slot>
           </template>
         </q-option-group>
       </q-field>

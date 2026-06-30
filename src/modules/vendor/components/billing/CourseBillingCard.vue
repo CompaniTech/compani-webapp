@@ -24,11 +24,11 @@
               <div class="flex" v-if="!isDashboard">
                 <div v-if="bill.number" class="text-weight-bold clickable-name" @click.stop="downloadBill(bill)"
                   :disable="pdfLoading">
-                  {{ bill.number }} - {{ formatPrice(bill.netInclTaxes) }}
+                  {{ bill.number }} - {{ formatPrice(bill.netExclTaxes) }}
                 </div>
                 <div v-else class="row text-weight-bold">
-                  <div :class="['q-pt-xs', { 'missing-info': !bill.netInclTaxes }]">
-                    A facturer - {{ formatPrice(bill.netInclTaxes) }}
+                  <div :class="['q-pt-xs', { 'missing-info': !bill.netExclTaxes }]">
+                    A facturer - {{ formatPrice(bill.netExclTaxes) }}
                   </div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
@@ -51,8 +51,8 @@
                   <span v-if="bill.number">
                     &nbsp;<span class="clickable-name" @click.stop="downloadBill(bill)">{{ bill.number }}</span> -
                   </span>
-                  <span :class="{ 'missing-info': !bill.netInclTaxes }">
-                    &nbsp;{{ formatPrice(bill.netInclTaxes) }}
+                  <span :class="{ 'missing-info': !bill.netExclTaxes }">
+                    &nbsp;{{ formatPrice(bill.netExclTaxes) }}
                   </span>
                 </div>
                 <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
@@ -150,7 +150,8 @@
 
     <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill"
       @submit="() => editBill(false)" @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList"
-      :course-name="courseName" :companies-name="companiesName" :validations="validations.editedBill" />
+      :course-name="courseName" :companies-name="companiesName" :validations="validations.editedBill"
+      :is-single-course="course.type === SINGLE" />
 
     <!-- main fee edition modal -->
     <ni-course-fee-edition-modal v-model="mainFeeEditionModal" v-model:course-fee="editedBill.mainFee"
@@ -200,10 +201,10 @@ import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
-import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT } from '@data/constants';
+import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT, LIST } from '@data/constants';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { add, toFixedToFloat } from '@helpers/numbers';
-import { formatPrice, formatName } from '@helpers/utils';
+import { formatPrice, formatName, formatIdentity } from '@helpers/utils';
 import { composeCourseName, isInterrupted } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import CourseBillEditionModal from 'src/modules/vendor/components/billing/CourseBillEditionModal';
@@ -248,6 +249,7 @@ export default {
       expectedBillsCountInvalid,
       areDetailsVisible,
       selectedBills,
+      isDashboard,
     } = toRefs(props);
     const billEditionLoading = ref(false);
     const billingPurchaseCreationLoading = ref(false);
@@ -264,16 +266,18 @@ export default {
       _id: '',
       payer: '',
       mainFee: { price: '', description: '', count: '', countUnit: GROUP },
+      delaySubsequentBills: false,
     });
     const newBillingPurchase = ref({ billId: '', billingItem: '', price: 0, count: 1, description: '' });
     const editedBillingPurchase = ref({ _id: '', billId: '', price: 0, count: 1, description: '' });
     const newCreditNote = ref({ courseBill: '', misc: '', date: '' });
-    const creditNoteMetaInfo = ref({ number: '', netInclTaxes: '', courseName: '', companiesName: '' });
+    const creditNoteMetaInfo = ref({ number: '', netExclTaxes: '', courseName: '', companiesName: '' });
     const billToValidate = ref({ _id: '', billedAt: '' });
     const courseFeeEditionModalMetaInfo = ref({ title: '', isBilled: false });
     const minCourseCreditNoteDate = ref('');
     const enableMainFeeValidation = ref(true);
     const addPercentage = ref(false);
+    const originalPayer = ref('');
 
     const rules = computed(() => ({
       editedBill: {
@@ -383,14 +387,14 @@ export default {
     const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
 
     const setEditedBill = (bill, addMaturityDate = false) => {
-      const payer = get(bill, 'payer._id');
+      originalPayer.value = get(bill, 'payer._id');
       const maturityDate = get(bill, 'maturityDate');
       addPercentage.value = course.value.type !== SINGLE && bill.companies
         .every(c => course.value.prices.find(p => p.company === c._id && p.global));
 
       editedBill.value = {
         _id: bill._id,
-        payer,
+        payer: originalPayer.value,
         mainFee: {
           price: get(bill, 'mainFee.price', 0),
           count: bill.mainFee.count,
@@ -399,6 +403,7 @@ export default {
           ...(addPercentage.value && { percentage: get(bill, 'mainFee.percentage', 0) }),
         },
         ...(addMaturityDate && { maturityDate }),
+        delaySubsequentBills: false,
       };
     };
 
@@ -476,8 +481,10 @@ export default {
         _id: '',
         payer: '',
         mainFee: { price: '', description: '', count: '', countUnit: GROUP },
+        delaySubsequentBills: false,
       };
       totalPriceToBill.value = { global: 0, trainerFees: 0 };
+      originalPayer.value = '';
       validations.value.editedBill.$reset();
     };
 
@@ -514,15 +521,49 @@ export default {
 
         await nextTick();
 
-        const payload = payloadWithMainFee
-          ? { ...omit(editedBill.value, '_id'), payer: formatPayerForPayload(editedBill.value.payer) }
-          : { payer: formatPayerForPayload(editedBill.value.payer), maturityDate: editedBill.value.maturityDate };
-
         validations.value.editedBill.$touch();
         if (validations.value.editedBill.$error) return NotifyWarning('Champ(s) invalide(s)');
 
         billEditionLoading.value = true;
-        await CourseBills.update(editedBill.value._id, payload);
+
+        const { payer, maturityDate } = editedBill.value;
+        if (payloadWithMainFee) {
+          const payload = {
+            ...omit(editedBill.value, ['_id', 'delaySubsequentBills']),
+            payer: formatPayerForPayload(payer),
+          };
+          await CourseBills.update(editedBill.value._id, payload);
+        } else if (!editedBill.value.delaySubsequentBills) {
+          const payload = { payer: formatPayerForPayload(payer), maturityDate };
+          await CourseBills.update(editedBill.value._id, payload);
+        } else {
+          if (originalPayer.value !== payer) {
+            await CourseBills.update(editedBill.value._id, { payer: formatPayerForPayload(payer) });
+          }
+
+          const allCourseBills = !isDashboard.value
+            ? courseBills.value
+            : await CourseBills.list({ course: course.value._id, action: LIST });
+          const initialMaturityDate = allCourseBills.find(cb => cb._id === editedBill.value._id)?.maturityDate;
+          const billsToDelay = allCourseBills
+            .filter(b => b._id === editedBill.value._id || (!b.billedAt && b.maturityDate &&
+              CompaniDate(b.maturityDate).isSameOrAfter(initialMaturityDate)))
+            .map(b => b._id);
+          const traineeName = formatIdentity(get(course.value.trainees[0], 'identity'), 'FL');
+          const trainersName = course.value.trainers
+            .map(trainer => formatIdentity(get(trainer, 'identity'), 'FL'))
+            .join(', ');
+          const mainFee = {
+            description: 'Facture liée à des frais pédagogiques \r\n'
+          + 'Contrat de professionnalisation \r\n'
+          + `ACCOMPAGNEMENT ${CompaniDate(editedBill.value.maturityDate).format('LLLL yyyy')} \r\n`
+          + `Nom de l'apprenant·e: ${traineeName} \r\n`
+          + `Nom du / des intervenants: ${trainersName}`,
+          };
+
+          await CourseBills
+            .updateBillList({ _ids: billsToDelay, maturityDate: editedBill.value.maturityDate, mainFee });
+        }
 
         NotifyPositive('Facture modifiée.');
 
@@ -611,11 +652,11 @@ export default {
 
     const openCreditNoteCreationModal = (bill) => {
       if (expectedBillsCountInvalid.value) return NotifyWarning('Champ(s) invalide(s).');
-      const { _id: billId, number, netInclTaxes } = bill;
+      const { _id: billId, number, netExclTaxes } = bill;
       newCreditNote.value = { courseBill: billId, date: '', misc: '' };
       creditNoteCreationModal.value = true;
       minCourseCreditNoteDate.value = bill.billedAt;
-      creditNoteMetaInfo.value = { number, netInclTaxes, courseName: composeCourseName(course.value), companiesName };
+      creditNoteMetaInfo.value = { number, netExclTaxes, courseName: composeCourseName(course.value), companiesName };
     };
 
     const addCreditNote = async () => {
@@ -641,7 +682,7 @@ export default {
     const resetCreditNoteCreationModal = () => {
       newCreditNote.value = { courseBill: '', date: '', misc: '' };
       minCourseCreditNoteDate.value = '';
-      creditNoteMetaInfo.value = { number: '', netInclTaxes: '', courseName: '', companiesName: '' };
+      creditNoteMetaInfo.value = { number: '', netExclTaxes: '', courseName: '', companiesName: '' };
       validations.value.newCreditNote.$reset();
     };
 

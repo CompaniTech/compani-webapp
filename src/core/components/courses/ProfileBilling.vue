@@ -73,8 +73,9 @@
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
       :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity" />
 
-    <ni-multiple-course-bill-creation-modal :validations="v$.newBillsQuantity"
-      v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity"
+    <ni-multiple-course-bill-creation-modal :validations="v$"
+      v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity" v-model:new-prices="newPrices"
+      :payment-plan-options="paymentPlans" v-model:selected-plan-id="selectedPlanId" v-model:mode="mode"
       :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
@@ -124,6 +125,8 @@ import {
   INTER_B2B,
   SINGLE,
   EDITION,
+  MANUAL,
+  PAYMENT_PLAN,
 } from '@data/constants';
 import CourseBillingCard from 'src/modules/vendor/components/billing/CourseBillingCard';
 import BillCreationModal from 'src/modules/vendor/components/billing/CourseBillCreationModal';
@@ -158,6 +161,9 @@ export default {
     const removeNewBillDatas = ref(true);
     const multipleBillCreationModal = ref(false);
     const newBillsQuantity = ref(1);
+    const newPrices = ref([]);
+    const selectedPlanId = ref(null);
+    const mode = ref(MANUAL);
     const billsToUpdate = ref({ _ids: [] });
     const multipleCourseBillEditionModal = ref(false);
 
@@ -179,6 +185,11 @@ export default {
     const totalPriceToBill = ref({ global: 0, trainerFees: 0 });
 
     const { isIntraCourse, isSingleCourse } = useCourses(course);
+
+    const paymentPlans = computed(() => {
+      if (!isSingleCourse.value) return [];
+      return get(course.value, 'subProgram.paymentPlans', []);
+    });
 
     const rules = computed(() => ({
       course: {
@@ -210,6 +221,7 @@ export default {
       },
       companiesToBill: { minArrayLength: minArrayLength(1) },
       newBillsQuantity: { strictPositiveNumber, integerNumber, required },
+      selectedPlanId: { required: requiredIf(() => mode.value === PAYMENT_PLAN) },
       billsToUpdate: {
         _ids: { minArrayLength: minArrayLength(1) },
         payer: { required: requiredIf(Object.keys(billsToUpdate.value).includes('payer')) },
@@ -220,7 +232,10 @@ export default {
       },
     }));
 
-    const v$ = useVuelidate(rules, { course, newBill, companiesToBill, newBillsQuantity, billsToUpdate });
+    const v$ = useVuelidate(
+      rules,
+      { course, newBill, companiesToBill, newBillsQuantity, billsToUpdate, selectedPlanId }
+    );
 
     const defaultDescription = computed(() => {
       const trainersName = course.value.trainers
@@ -398,9 +413,12 @@ export default {
       quantity: newBillsQuantity.value,
       companies: companiesToBill.value,
       payer: formatPayerForPayload(newBill.value.payer),
-      mainFee: isSingleCourse.value && newBillsQuantity.value > 1
-        ? omit(newBill.value.mainFee, 'description')
-        : newBill.value.mainFee,
+      mainFee: {
+        ...isSingleCourse.value && newBillsQuantity.value > 1
+          ? omit(newBill.value.mainFee, 'description')
+          : newBill.value.mainFee,
+        ...(newPrices.value.length && { price: newPrices.value }),
+      },
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
     });
 
@@ -434,8 +452,13 @@ export default {
     };
 
     const validateBillsQuantity = async () => {
-      v$.value.newBillsQuantity.$touch();
-      if (v$.value.newBillsQuantity.$error) return NotifyWarning('Champ invalide.');
+      if (mode.value === MANUAL) {
+        v$.value.newBillsQuantity.$touch();
+        if (v$.value.newBillsQuantity.$error) return NotifyWarning('Champ invalide.');
+      } else {
+        v$.value.selectedPlanId.$touch();
+        if (v$.value.selectedPlanId.$error) return NotifyWarning('Champ invalide.');
+      }
 
       const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
       const totalBillsAfterCreation = courseBillsWithoutCreditNote.length + newBillsQuantity.value;
@@ -473,7 +496,11 @@ export default {
     const resetBillsQuantity = () => {
       if (!billCreationModal.value && !companiesSelectionModal.value) {
         newBillsQuantity.value = 1;
+        newPrices.value = [];
+        selectedPlanId.value = null;
+        mode.value = MANUAL;
         v$.value.newBillsQuantity.$reset();
+        v$.value.selectedPlanId.$reset();
       }
     };
 
@@ -684,6 +711,16 @@ export default {
       v$.value.billsToUpdate.$reset();
     };
 
+    watch(mode, (newMode) => {
+      v$.value.newBillsQuantity.$reset();
+      v$.value.selectedPlanId.$reset();
+      if (newMode === MANUAL) {
+        selectedPlanId.value = null;
+      } else {
+        newBillsQuantity.value = 1;
+      }
+    });
+
     watch(billCreationModal, () => {
       if (billCreationModal.value) newBill.value.mainFee.description = defaultDescription.value;
     });
@@ -706,6 +743,10 @@ export default {
       showPrices,
       totalPriceToBill,
       newBillsQuantity,
+      newPrices,
+      selectedPlanId,
+      mode,
+      paymentPlans,
       // Validation
       v$,
       // Data

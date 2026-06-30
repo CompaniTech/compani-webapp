@@ -73,7 +73,7 @@ export default {
     };
 
     onBeforeUnmount(() => {
-      if (!(new RegExp(`programs/${program.value._id}`)).test($route.path)) {
+      if (!(new RegExp(`programs/${get(program.value, '_id')}`)).test($route.path)) {
         $store.dispatch('program/resetProgram');
       }
     });

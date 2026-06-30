@@ -1,7 +1,7 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input">
     <template #title>
-      Historique <span class="text-weight-bold">des tarifs</span>
+      Historique <span class="text-weight-bold">des tarifs des intervenants</span>
     </template>
     <ni-responsive-table :data="subProgramPrices" :columns="subProgramPricesColumns" :hide-bottom="false"
       no-data-label="Pas de tarifs renseignés pour ce sous-programme." v-model:pagination="pagination"
