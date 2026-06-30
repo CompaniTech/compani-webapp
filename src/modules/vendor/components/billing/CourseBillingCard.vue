@@ -150,7 +150,8 @@
 
     <ni-course-bill-edition-modal v-model="courseBillEditionModal" v-model:edited-bill="editedBill"
       @submit="() => editBill(false)" @hide="resetEditedBill" :loading="billEditionLoading" :payer-options="payerList"
-      :course-name="courseName" :companies-name="companiesName" :validations="validations.editedBill" />
+      :course-name="courseName" :companies-name="companiesName" :validations="validations.editedBill"
+      :is-single-course="course.type === SINGLE" />
 
     <!-- main fee edition modal -->
     <ni-course-fee-edition-modal v-model="mainFeeEditionModal" v-model:course-fee="editedBill.mainFee"
