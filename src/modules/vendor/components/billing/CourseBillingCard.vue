@@ -204,7 +204,7 @@ import { useCourseBilling } from '@composables/courseBills';
 import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT, LIST } from '@data/constants';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { add, toFixedToFloat } from '@helpers/numbers';
-import { formatPrice, formatName } from '@helpers/utils';
+import { formatPrice, formatName, formatIdentity } from '@helpers/utils';
 import { composeCourseName, isInterrupted } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import CourseBillEditionModal from 'src/modules/vendor/components/billing/CourseBillEditionModal';
@@ -544,13 +544,25 @@ export default {
           const allCourseBills = !isDashboard.value
             ? courseBills.value
             : await CourseBills.list({ course: course.value._id, action: LIST });
-
+          const initialMaturityDate = allCourseBills.find(cb => cb._id === editedBill.value._id)?.maturityDate;
           const billsToDelay = allCourseBills
             .filter(b => b._id === editedBill.value._id || (!b.billedAt && b.maturityDate &&
-              CompaniDate(b.maturityDate).isSameOrAfter(maturityDate)))
+              CompaniDate(b.maturityDate).isSameOrAfter(initialMaturityDate)))
             .map(b => b._id);
+          const traineeName = formatIdentity(get(course.value.trainees[0], 'identity'), 'FL');
+          const trainersName = course.value.trainers
+            .map(trainer => formatIdentity(get(trainer, 'identity'), 'FL'))
+            .join(', ');
+          const mainFee = {
+            description: 'Facture liée à des frais pédagogiques \r\n'
+          + 'Contrat de professionnalisation \r\n'
+          + `ACCOMPAGNEMENT ${CompaniDate(editedBill.value.maturityDate).format('LLLL yyyy')} \r\n`
+          + `Nom de l'apprenant·e: ${traineeName} \r\n`
+          + `Nom du / des intervenants: ${trainersName}`,
+          };
 
-          await CourseBills.updateBillList({ _ids: billsToDelay, maturityDate: editedBill.value.maturityDate });
+          await CourseBills
+            .updateBillList({ _ids: billsToDelay, maturityDate: editedBill.value.maturityDate, mainFee });
         }
 
         NotifyPositive('Facture modifiée.');
