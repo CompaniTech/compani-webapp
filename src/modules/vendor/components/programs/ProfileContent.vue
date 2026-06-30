@@ -20,9 +20,11 @@
             @click="openPaymentPlanListModal(subProgram)" />
         </div>
       </div>
+      <q-checkbox :model-value="!!program.subPrograms[index].subjectToVat"
+        label="La TVA s'applique à ce sous-programme"
+        @update:model-value="updateSubProgramSubjectToVat(index, $event)" />
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
-        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)"
-        :disable="isPublished(subProgram)" />
+        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)" />
       <draggable v-model="subProgram.steps" @change="dropStep(subProgram._id)" ghost-class="ghost"
         :disabled="$q.platform.is.mobile || isPublished(subProgram)" item-key="_id">
         <template #item="{element: step, index: stepIndex}">
@@ -500,6 +502,18 @@ export default {
       }
     };
 
+    const updateSubProgramSubjectToVat = async (index, value) => {
+      try {
+        const subProgram = program.value.subPrograms[index];
+        await SubPrograms.update(subProgram._id, { subjectToVat: value });
+        NotifyPositive('Modification enregistrée.');
+        await refreshProgram();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification du sous-programme.');
+      }
+    };
+
     // ACTIVITY
     const goToActivityProfile = (subProgram, step, activity) => {
       $router.push({
@@ -658,6 +672,7 @@ export default {
       getActivityTypeLabel,
       showActivities,
       updateSubProgramName,
+      updateSubProgramSubjectToVat,
       createSubProgram,
       resetSubProgramCreationModal,
       openStepAdditionModal,

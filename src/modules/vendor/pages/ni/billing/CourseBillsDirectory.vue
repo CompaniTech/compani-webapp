@@ -71,8 +71,15 @@ export default {
       },
       { name: 'number', label: '#', field: 'number', align: 'left' },
       {
+        name: 'netExclTaxes',
+        label: 'Montant HT',
+        field: 'netExclTaxes',
+        format: formatPrice,
+        align: 'left',
+      },
+      {
         name: 'netInclTaxes',
-        label: 'Montant',
+        label: 'Montant TTC',
         field: 'netInclTaxes',
         format: formatPrice,
         align: 'left',

@@ -25,6 +25,9 @@
             :error-message="shareCapitalErrorMessage" required-field />
           <ni-input caption="ICS" v-model="vendorCompany.ics" @focus="saveTmp('ics')" @blur="updateVendorCompany('ics')"
             :error="validations.vendorCompany.ics.$error" :error-message="icsErrorMessage" required-field />
+          <ni-input caption="TVA (%)" v-model="vendorCompany.vat" @focus="saveTmp('vat')"
+            @blur="updateVendorCompany('vat')" :error="validations.vendorCompany.vat.$error"
+            :error-message="vatErrorMessage" type="number" required-field />
           <ni-file-uploader caption="Template mandat de prélèvement SEPA" path="debitMandateTemplate"
             :entity="vendorCompany" :url="templateUploadUrl" @delete="validateTemplateDeletion"
             @uploaded="templateUploaded" drive-storage hide-image :extensions="UPLOAD_TEMPLATE_EXTENSIONS" />
@@ -169,6 +172,7 @@ export default {
       bic: '',
       shareCapital: '',
       ics: '',
+      vat: '',
     });
     const courseBillingItems = ref([]);
     const courseBillingItemColumns = [
@@ -199,6 +203,7 @@ export default {
         bic: { required, bic },
         shareCapital: { required, strictPositiveNumber },
         ics: { required, ics },
+        vat: { required, strictPositiveNumber },
       },
       tmpBillingRepresentativeId: { required },
     };
@@ -252,6 +257,14 @@ export default {
 
     const shareCapitalErrorMessage = computed(() => {
       const validation = get(validations, 'value.vendorCompany.shareCapital');
+      if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
+      if (get(validation, 'strictPositiveNumber.$response') === false) return 'Nombre non valide';
+
+      return '';
+    });
+
+    const vatErrorMessage = computed(() => {
+      const validation = get(validations, 'value.vendorCompany.vat');
       if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
       if (get(validation, 'strictPositiveNumber.$response') === false) return 'Nombre non valide';
 
@@ -515,6 +528,7 @@ export default {
       bicErrorMessage,
       shareCapitalErrorMessage,
       icsErrorMessage,
+      vatErrorMessage,
       templateUploadUrl,
       // Methods
       refreshCourseFundingOrganisations,

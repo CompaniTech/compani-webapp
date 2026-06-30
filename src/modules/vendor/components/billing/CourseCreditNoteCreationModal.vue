@@ -6,7 +6,7 @@
     <div>
       Cet avoir annule la facture
       <span class="text-weight-bold">
-          {{ creditNoteMetaInfo.number }} - {{ formatPrice(creditNoteMetaInfo.netInclTaxes) }}
+          {{ creditNoteMetaInfo.number }} - {{ formatPrice(creditNoteMetaInfo.netExclTaxes) }}
       </span>
     </div>
     <div class="course-bill-infos">
