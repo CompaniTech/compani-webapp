@@ -35,7 +35,7 @@ import { computed, ref } from 'vue';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
 import useVuelidate from '@vuelidate/core';
-import { required, requiredIf } from '@vuelidate/validators';
+import { required, requiredIf, helpers } from '@vuelidate/validators';
 import { positiveNumber } from '@helpers/vuelidateCustomVal';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import Courses from '@api/Courses';
@@ -81,8 +81,7 @@ export default {
       newTrainerMission: {
         program: { required },
         file: { required: requiredIf(creationMethod.value === UPLOAD) },
-        fee: { required, positiveNumber },
-        courses: { required },
+        courses: { required, $each: helpers.forEach({ fee: { required, positiveNumber } }) },
       },
     }));
 
@@ -102,7 +101,7 @@ export default {
     });
 
     const selectedCourses = computed(() => activeCourseList.value
-      .filter(c => newTrainerMission.value.courses.includes(c._id)));
+      .filter(c => newTrainerMission.value.courses.some(course => course._id === c._id)));
 
     const refreshCourses = async () => {
       try {
@@ -132,12 +131,11 @@ export default {
     };
 
     const formatPayload = () => {
-      const { courses, file, fee } = newTrainerMission.value;
+      const { courses, file } = newTrainerMission.value;
       const form = new FormData();
-      courses.forEach(course => form.append('courses', course));
+      courses.forEach(course => form.append('courses', JSON.stringify(course)));
       if (file) form.append('file', file);
       form.append('trainer', trainer.value._id);
-      form.append('fee', fee);
 
       return form;
     };
