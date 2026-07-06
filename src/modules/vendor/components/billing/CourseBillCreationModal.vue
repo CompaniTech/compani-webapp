@@ -34,7 +34,7 @@
         <div v-if="!validations.mainFee.percentage.$error" class="q-ml-md text-14">
           {{ computedPrice.global > 0 ? formatPrice(computedPrice.global) : '' }}
           {{ computedPrice.trainerFees > 0 ?
-          `(+ frais de formateurs : ${formatPrice(computedPrice.trainerFees)})`
+          `(+ frais de gestion : ${formatPrice(computedPrice.trainerFees)})`
           : '' }}
         </div>
       </div>

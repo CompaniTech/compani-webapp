@@ -8,12 +8,21 @@
     <ni-select in-modal :model-value="trainerMission.program" caption="Programme" :options="programOptions"
       required-field @update:model-value="update($event, 'program')" />
     <div v-if="trainerMission.program">
-      <ni-option-group in-modal :model-value="trainerMission.courses" :options="coursesOptions"
-        type="checkbox" @update:model-value="update($event, 'courses')" :error="validations.courses.$error"
-        caption="Formations" required-field />
-      <ni-input in-modal caption="Frais de formateur" :error="validations.fee.$error" type="number" suffix="€"
-        :model-value="trainerMission.fee" @blur="validations.fee.$touch" required-field
-        @update:model-value="update($event, 'fee')" error-message="La valeur doit être supérieure ou égale à 0" />
+      <ni-option-group in-modal :model-value="checkedCourseIds" :options="coursesOptions" class="courses-option-group"
+        type="checkbox" @update:model-value="updateCourses" :error="isCoursesRequiredError" caption="Formations"
+        required-field>
+        <template #label="opt">
+          <div class="row items-center full-width justify-between">
+            <span class="course-label" :title="opt.label">{{ opt.label }}</span>
+            <div class="course-fee-input" @click.stop @keydown.space.stop @keyup.space.stop>
+              <ni-input type="number" suffix="€" required-field :disable="!isCourseChecked(opt.value)"
+                :model-value="getCourseFee(opt.value)" @update:model-value="updateCourseFee(opt.value, $event)"
+                :error="getCourseFeeError(opt.value)" :error-message="getCourseFeeErrorMessage(opt.value)" />
+            </div>
+          </div>
+        </template>
+      </ni-option-group>
+      <ni-input in-modal caption="Frais de formateur" type="number" suffix="€" :model-value="totalFee" disable />
       <ni-input v-if="creationMethod === UPLOAD" in-modal caption="Ordre de mission" type="file"
         @blur="validations.file.$touch" last required-field :model-value="trainerMission.file"
         @update:model-value="update($event, 'file')" :extensions="[DOC_EXTENSIONS, IMAGE_EXTENSIONS]"
@@ -47,6 +56,7 @@ import {
   UPLOAD,
   CREATION_METHOD_OPTIONS,
   GENERATION,
+  REQUIRED_LABEL,
 } from '@data/constants';
 
 export default {
@@ -69,7 +79,7 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:trainer-mission', 'update:creation-method'],
   setup (props, { emit }) {
-    const { trainerMission, courses, creationMethod } = toRefs(props);
+    const { trainerMission, courses, creationMethod, validations } = toRefs(props);
 
     const titleLabel = computed(() => (creationMethod.value === UPLOAD ? 'Téléverser' : 'Générer'));
 
@@ -102,6 +112,54 @@ export default {
     const coursesOptions = computed(() => coursesGroupedByProgram.value[trainerMission.value.program]
       .map(c => ({ value: c._id, label: formatCourseLabel(c) })));
 
+    const checkedCourseIds = computed(() => trainerMission.value.courses.map(c => c.courseId));
+
+    const totalFee = computed(() => trainerMission.value.courses.reduce((acc, c) => acc + (Number(c.fee) || 0), 0));
+
+    const isCourseChecked = courseId => checkedCourseIds.value.includes(courseId);
+
+    const isCoursesRequiredError = computed(() => (
+      !!validations.value.courses?.$dirty && !checkedCourseIds.value.length
+    ));
+
+    const getCourseFee = (courseId) => {
+      const course = trainerMission.value.courses.find(c => c.courseId === courseId);
+      return course ? course.fee : '';
+    };
+
+    const getCourseFeeError = (courseId) => {
+      const index = trainerMission.value.courses.findIndex(c => c.courseId === courseId);
+      if (index === -1) return false;
+
+      return !!validations.value.courses?.$each?.$response?.$data?.[index]?.fee?.$error;
+    };
+
+    const getCourseFeeErrorMessage = (courseId) => {
+      const fee = getCourseFee(courseId);
+
+      return (fee === '' || fee === null || fee === undefined)
+        ? REQUIRED_LABEL
+        : 'La valeur doit être supérieure ou égale à 0';
+    };
+
+    const emitCoursesUpdate = (updatedCourses) => {
+      const fee = updatedCourses.reduce((acc, c) => acc + (Number(c.fee) || 0), 0);
+      emit('update:trainer-mission', { ...trainerMission.value, courses: updatedCourses, fee });
+    };
+
+    const updateCourses = (courseIds) => {
+      const updatedCourses = courseIds.map((courseId) => {
+        const existingCourse = trainerMission.value.courses.find(c => c.courseId === courseId);
+        return existingCourse || { courseId, fee: '' };
+      });
+      emitCoursesUpdate(updatedCourses);
+    };
+
+    const updateCourseFee = (courseId, fee) => {
+      const updatedCourses = trainerMission.value.courses.map(c => (c.courseId === courseId ? { ...c, fee } : c));
+      emitCoursesUpdate(updatedCourses);
+    };
+
     const hide = () => emit('hide');
 
     const input = event => emit('update:model-value', event);
@@ -133,6 +191,9 @@ export default {
       programOptions,
       coursesGroupedByProgram,
       coursesOptions,
+      checkedCourseIds,
+      isCoursesRequiredError,
+      totalFee,
       titleLabel,
       submitLabel,
       // Methods
@@ -141,7 +202,46 @@ export default {
       submit,
       update,
       updateMethod,
+      isCourseChecked,
+      getCourseFee,
+      getCourseFeeError,
+      getCourseFeeErrorMessage,
+      updateCourses,
+      updateCourseFee,
     };
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.courses-option-group
+  :deep(.q-checkbox)
+    width: 100%
+    max-width: 100%
+    .q-checkbox__label
+      flex: 1
+      min-width: 0
+
+.course-label
+  overflow: hidden
+  text-overflow: ellipsis
+  white-space: nowrap
+  min-width: 40px
+  max-width: 70%
+
+.course-fee-input
+  max-width: 25%
+  flex-shrink: 1
+  :deep(.input-caption)
+    display: none
+  :deep(.q-field__bottom)
+    display: block !important
+  :deep(.q-field__control)
+    height: 32px !important
+    min-height: 32px !important
+    width: 100% !important
+    min-width: 0 !important
+    border: 1px solid $copper-grey-300 !important
+    border-radius: 3px !important
+    background-color: white
+</style>
