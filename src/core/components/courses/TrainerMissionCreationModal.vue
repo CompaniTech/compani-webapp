@@ -112,7 +112,7 @@ export default {
     const coursesOptions = computed(() => coursesGroupedByProgram.value[trainerMission.value.program]
       .map(c => ({ value: c._id, label: formatCourseLabel(c) })));
 
-    const checkedCourseIds = computed(() => trainerMission.value.courses.map(c => c._id));
+    const checkedCourseIds = computed(() => trainerMission.value.courses.map(c => c.courseId));
 
     const totalFee = computed(() => trainerMission.value.courses.reduce((acc, c) => acc + (Number(c.fee) || 0), 0));
 
@@ -123,12 +123,12 @@ export default {
     ));
 
     const getCourseFee = (courseId) => {
-      const course = trainerMission.value.courses.find(c => c._id === courseId);
+      const course = trainerMission.value.courses.find(c => c.courseId === courseId);
       return course ? course.fee : '';
     };
 
     const getCourseFeeError = (courseId) => {
-      const index = trainerMission.value.courses.findIndex(c => c._id === courseId);
+      const index = trainerMission.value.courses.findIndex(c => c.courseId === courseId);
       if (index === -1) return false;
 
       return !!validations.value.courses?.$each?.$response?.$data?.[index]?.fee?.$error;
@@ -149,14 +149,14 @@ export default {
 
     const updateCourses = (courseIds) => {
       const updatedCourses = courseIds.map((courseId) => {
-        const existingCourse = trainerMission.value.courses.find(c => c._id === courseId);
-        return existingCourse || { _id: courseId, fee: '' };
+        const existingCourse = trainerMission.value.courses.find(c => c.courseId === courseId);
+        return existingCourse || { courseId, fee: '' };
       });
       emitCoursesUpdate(updatedCourses);
     };
 
     const updateCourseFee = (courseId, fee) => {
-      const updatedCourses = trainerMission.value.courses.map(c => (c._id === courseId ? { ...c, fee } : c));
+      const updatedCourses = trainerMission.value.courses.map(c => (c.courseId === courseId ? { ...c, fee } : c));
       emitCoursesUpdate(updatedCourses);
     };
 

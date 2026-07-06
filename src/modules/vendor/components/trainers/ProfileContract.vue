@@ -101,7 +101,7 @@ export default {
     });
 
     const selectedCourses = computed(() => activeCourseList.value
-      .filter(c => newTrainerMission.value.courses.some(course => course._id === c._id)));
+      .filter(c => newTrainerMission.value.courses.some(course => course.courseId === c._id)));
 
     const refreshCourses = async () => {
       try {
