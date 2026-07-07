@@ -5,7 +5,7 @@
     </template>
     <div class="course-bill-infos">
       <div>{{ courseName }} </div>
-      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <ni-banner v-if="!isCourse" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
         <template #message>Facture pour le compte de {{ companiesName }}</template>
       </ni-banner>
     </div>
@@ -73,6 +73,7 @@ export default {
     traineesQuantity: { type: Number, default: 1 },
     isSingleCourse: { type: Boolean, default: false },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
+    isCourse: { type: Boolean, default: false },
   },
   components: {
     'ni-modal': Modal,

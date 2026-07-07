@@ -1,17 +1,18 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template #title>
-      Ajouter un article <span class="text-weight-bold">à facturer</span>
+      <template v-if="isCourse">Ajouter un coût <span class="text-weight-bold">de formation</span></template>
+      <template v-else>Ajouter un article <span class="text-weight-bold">à facturer</span></template>
     </template>
     <div class="course-bill-infos">
       <div>{{ courseName }} </div>
-      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <ni-banner v-if="!isCourse" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
         <template #message>Facture pour le compte de {{ companiesName }}</template>
       </ni-banner>
     </div>
-    <ni-select in-modal caption="Article" :options="billingItemOptions" :model-value="newBillingPurchase.billingItem"
-      required-field @blur="validations.billingItem.$touch" :error="validations.billingItem.$error"
-      @update:model-value="update($event, 'billingItem')" />
+    <ni-select in-modal :caption="isCourse ? 'Coût' : 'Article'" :options="billingItemOptions"
+      :model-value="newBillingPurchase.billingItem" required-field @blur="validations.billingItem.$touch"
+      :error="validations.billingItem.$error" @update:model-value="update($event, 'billingItem')" />
     <ni-input in-modal caption="Prix unitaire" :error="validations.price.$error" type="number"
       :model-value="newBillingPurchase.price" @blur="validations.price.$touch" suffix="€" required-field
       :error-message="errorMessages.price" @update:model-value="update($event, 'price')" />
@@ -21,8 +22,8 @@
     <ni-input in-modal caption="Description" type="textarea" :model-value="newBillingPurchase.description"
       @update:model-value="update($event, 'description')" />
     <template #footer>
-      <ni-button class="full-width modal-btn bg-primary" label="Ajouter l'article" icon-right="add" color="white"
-        :loading="loading" @click="submit" />
+      <ni-button class="full-width modal-btn bg-primary" icon-right="add" color="white" :loading="loading"
+        :label="isCourse ? 'Ajouter le coût de formation' : 'Ajouter l\'article'" @click="submit" />
     </template>
   </ni-modal>
 </template>
@@ -46,6 +47,7 @@ export default {
     loading: { type: Boolean, default: false },
     courseName: { type: String, default: '' },
     companiesName: { type: String, default: '' },
+    isCourse: { type: Boolean, default: false },
   },
   components: {
     'ni-modal': Modal,

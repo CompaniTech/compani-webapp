@@ -18,9 +18,10 @@ import { NotifyPositive, NotifyNegative } from '@components/popup/notify';
 import ProfileTabs from '@components/ProfileTabs';
 import ProfileOrganization from '@components/courses/ProfileOrganization';
 import ProfileBilling from '@components/courses/ProfileBilling';
+import CourseBillingItems from '@components/courses/CourseBillingItems';
 import BlendedCourseProfileHeader from '@components/courses/BlendedCourseProfileHeader';
 import ProfileTraineeFollowUp from '@components/courses/ProfileTraineeFollowUp';
-import { VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER } from '@data/constants';
+import { VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER, SINGLE } from '@data/constants';
 import { composeCourseName } from '@helpers/courses';
 import { useCourses } from '@composables/courses';
 
@@ -72,7 +73,16 @@ export default {
             name: 'billing',
             default: defaultTab.value === 'billing',
             component: ProfileBilling,
-          }]
+          },
+          ...course.value.type !== SINGLE
+            ? [{
+              label: 'Coûts de formation',
+              name: 'billingItems',
+              default: defaultTab.value === 'billingItems',
+              component: CourseBillingItems,
+            }]
+            : [],
+          ]
           : []
         ),
       ];
