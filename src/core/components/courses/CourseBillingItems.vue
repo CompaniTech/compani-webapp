@@ -14,8 +14,10 @@
             :style="col.style">
             <template v-if="col.name === 'actions'">
               <div class="row no-wrap table-actions">
-                <ni-button icon="edit" @click="openEditionModal(props.row)" />
-                <ni-button icon="delete" @click="validateBillingPurchaseDeletion(props.row._id)" />
+                <ni-button icon="edit" @click="openEditionModal(props.row)"
+                  :disable="props.row.billingItem.type !== COURSE" />
+                <ni-button icon="delete" @click="validateBillingPurchaseDeletion(props.row._id)"
+                  :disable="props.row.billingItem.type !== COURSE" />
               </div>
             </template>
             <template v-else-if="['billingItem', 'description'].includes(col.name)">
@@ -287,6 +289,7 @@ export default {
 
     return {
       // Data
+      COURSE,
       loading,
       creationLoading,
       editionLoading,

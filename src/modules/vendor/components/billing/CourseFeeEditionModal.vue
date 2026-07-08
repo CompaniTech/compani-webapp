@@ -84,9 +84,10 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:course-fee'],
   setup (props, { emit }) {
-    const { courseFee, traineesQuantity, showCountUnit, isSingleCourse, totalPriceToBill } = toRefs(props);
+    const { courseFee, traineesQuantity, showCountUnit, isSingleCourse, totalPriceToBill, isCourse } = toRefs(props);
 
     const priceCaption = computed(() => {
+      if (isCourse.value) return 'Coût';
       if (!(showCountUnit.value || isSingleCourse.value) || courseFee.value.countUnit === GROUP) {
         return 'Prix du groupe';
       }
