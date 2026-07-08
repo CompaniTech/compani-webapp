@@ -94,6 +94,7 @@ import { useQuasar } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import cloneDeep from 'lodash/cloneDeep';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import groupBy from 'lodash/groupBy';
@@ -168,6 +169,8 @@ export default {
     const multipleCourseBillEditionModal = ref(false);
 
     const course = computed(() => $store.state.course.course);
+
+    const savedPrices = ref(cloneDeep(course.value.prices || []));
 
     const showPrices = ref((course.value.prices || []).some(p => !p.global));
 
@@ -380,6 +383,7 @@ export default {
       try {
         billsLoading.value = true;
         await $store.dispatch('course/fetchCourse', { courseId: course.value._id });
+        savedPrices.value = cloneDeep(course.value.prices || []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -617,7 +621,7 @@ export default {
         get(v$.value, 'course.prices').$touch();
         const validation = get(v$.value, `course.prices.$each.$response.$errors[${index}].[${path}].0.$response`);
         if (validation === false) return NotifyWarning('Champ(s) invalide(s).');
-        if (path === 'trainerFees' && !get(course.value, `prices[${index}].global`)) {
+        if (path === 'trainerFees' && !get(savedPrices.value[index], 'global')) {
           return NotifyWarning('Veuillez ajouter un prix à la formation.');
         }
         const editedPrice = get(course.value, `prices[${index}].${path}`) || '';
