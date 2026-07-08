@@ -13,7 +13,7 @@ export const env = {
   GA_TRACKING_ID: process.env.GA_TRACKING_ID,
   BULB_LINK: process.env.BULB_LINK,
   DETACHMENT_ALLOWED_COMPANY_IDS: process.env.DETACHMENT_ALLOWED_COMPANY_IDS,
-  TRAINER_FEES_BILLING_ITEM: process.env.TRAINER_FEES_BILLING_ITEM,
+  MANAGEMENT_FEES_BILLING_ITEM: process.env.MANAGEMENT_FEES_BILLING_ITEM,
 };
 
 export const parseEnv = environment => Object.keys(environment).reduce((acc, key) => {

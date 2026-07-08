@@ -110,7 +110,7 @@ export default {
     });
 
     const isTrainerFeesWithPercentage = computed(() => has(courseFee.value, 'percentage') &&
-      courseFee.value.billingItem === process.env.TRAINER_FEES_BILLING_ITEM);
+      courseFee.value.billingItem === process.env.MANAGEMENT_FEES_BILLING_ITEM);
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
