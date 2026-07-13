@@ -5,7 +5,7 @@
     </template>
     <div class="course-bill-infos">
       <div>{{ courseName }} </div>
-      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <ni-banner v-if="!isCourseFee" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
         <template #message>Facture pour le compte de {{ companiesName }}</template>
       </ni-banner>
     </div>
@@ -73,6 +73,7 @@ export default {
     traineesQuantity: { type: Number, default: 1 },
     isSingleCourse: { type: Boolean, default: false },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
+    isCourseFee: { type: Boolean, default: false },
   },
   components: {
     'ni-modal': Modal,
@@ -83,9 +84,10 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:course-fee'],
   setup (props, { emit }) {
-    const { courseFee, traineesQuantity, showCountUnit, isSingleCourse, totalPriceToBill } = toRefs(props);
+    const { courseFee, traineesQuantity, showCountUnit, isSingleCourse, totalPriceToBill, isCourseFee } = toRefs(props);
 
     const priceCaption = computed(() => {
+      if (isCourseFee.value) return 'Coût';
       if (!(showCountUnit.value || isSingleCourse.value) || courseFee.value.countUnit === GROUP) {
         return 'Prix du groupe';
       }
@@ -109,7 +111,7 @@ export default {
     });
 
     const isTrainerFeesWithPercentage = computed(() => has(courseFee.value, 'percentage') &&
-      courseFee.value.billingItem === process.env.TRAINER_FEES_BILLING_ITEM);
+      courseFee.value.billingItem === process.env.MANAGEMENT_FEES_BILLING_ITEM);
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);

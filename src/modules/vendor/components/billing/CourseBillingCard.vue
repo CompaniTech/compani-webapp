@@ -734,7 +734,7 @@ export default {
     });
 
     const isTrainerFeesWithPercentage = billingPurchase => has(billingPurchase, 'percentage') &&
-      billingPurchase.billingItem === process.env.TRAINER_FEES_BILLING_ITEM;
+      billingPurchase.billingItem === process.env.MANAGEMENT_FEES_BILLING_ITEM;
 
     const updateSelectedBills = billId => emit('update-selected-bills', billId);
 
