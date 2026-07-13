@@ -15,9 +15,9 @@
             <template v-if="col.name === 'actions'">
               <div class="row no-wrap table-actions">
                 <ni-button icon="edit" @click="openEditionModal(props.row)"
-                  :disable="props.row.billingItem.type !== COURSE" />
+                  :disable="props.row.billingItem.type !== COURSE || creationLoading || editionLoading" />
                 <ni-button icon="delete" @click="validateBillingPurchaseDeletion(props.row._id)"
-                  :disable="props.row.billingItem.type !== COURSE" />
+                  :disable="props.row.billingItem.type !== COURSE || creationLoading || editionLoading" />
               </div>
             </template>
             <template v-else-if="['billingItem', 'description'].includes(col.name)">
@@ -46,10 +46,10 @@
 
     <ni-billing-purchase-addition-modal v-model="creationModal" v-model:new-billing-purchase="newBillingPurchase"
       @submit="addBillingPurchase" :validations="v$.newBillingPurchase" @hide="resetCreationModal"
-      :loading="creationLoading" :billing-item-options="billingItemOptions" is-course
+      :loading="creationLoading" :billing-item-options="billingItemOptions" is-course-fee
       :error-messages="newBillingPurchaseErrorMessages" :course-name="courseName" :companies-name="companiesName" />
 
-    <ni-course-fee-edition-modal v-model="editionModal" v-model:course-fee="editedBillingPurchase" is-course
+    <ni-course-fee-edition-modal v-model="editionModal" v-model:course-fee="editedBillingPurchase" is-course-fee
       @submit="editBillingPurchase" :validations="v$.editedBillingPurchase" @hide="resetEditionModal"
       :loading="editionLoading" :error-messages="editedBillingPurchaseErrorMessages" :title="editedBillingPurchaseTitle"
       :course-name="courseName" :companies-name="companiesName" />
