@@ -14,9 +14,9 @@
         type="radio" @update:model-value="update($event, 'countUnit')" :error="validations.countUnit.$error"
         caption="Unité" inline required-field :disable="isBilled" />
       <ni-input v-if="isSingleCourse || !totalPriceToBill.global" in-modal :caption="priceCaption"
-        :error="validations.price.$error" type="number" :disable="isBilled" :model-value="courseFee.price"
-        @blur="validations.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
-        @update:model-value="update($event, 'price')" />
+        :error="validations.price.$error" type="number" :disable="isBilled || disableEdition"
+        :model-value="courseFee.price" @blur="validations.price.$touch" suffix="€" required-field
+        :error-message="errorMessages.price" @update:model-value="update($event, 'price')" />
       <div v-else class="row items-center">
         <ni-input caption="Pourcentage" :error="validations.percentage.$error" type="number" suffix="%"
           :model-value="courseFee.percentage" @blur="validations.percentage.$touch" required-field
@@ -33,7 +33,8 @@
       </div>
       <ni-input in-modal caption="Quantité" :error="validations.count.$error" type="number" required-field
         :model-value="courseFee.count" @blur="validations.count.$touch" @update:model-value="update($event, 'count')"
-        :disable="isBilled || isSingleCourse || !!totalPriceToBill.global" :error-message="errorMessages.count" />
+        :disable="isBilled || isSingleCourse || !!totalPriceToBill.global || disableEdition"
+        :error-message="errorMessages.count" />
     </div>
     <ni-input in-modal caption="Description" type="textarea" :model-value="courseFee.description"
       @update:model-value="update($event, 'description')" />
@@ -74,6 +75,7 @@ export default {
     isSingleCourse: { type: Boolean, default: false },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
     isCourseFee: { type: Boolean, default: false },
+    disableEdition: { type: Boolean, default: false },
   },
   components: {
     'ni-modal': Modal,
@@ -111,8 +113,8 @@ export default {
     });
 
     const isTrainerFeesWithPercentage = computed(() => has(courseFee.value, 'percentage') &&
-      courseFee.value.billingItem === process.env.MANAGEMENT_FEES_BILLING_ITEM);
-
+      [process.env.MANAGEMENT_FEES_BILLING_ITEM, process.env.TRAINER_FEES_BILLING_ITEM]
+        .includes(courseFee.value.billingItem));
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');

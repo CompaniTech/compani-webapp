@@ -15,7 +15,7 @@
             <template v-if="col.name === 'actions'">
               <div class="row no-wrap table-actions">
                 <ni-button icon="edit" @click="openEditionModal(props.row)"
-                  :disable="props.row.billingItem.type !== COURSE || creationLoading || editionLoading" />
+                  :disable="creationLoading || editionLoading" />
                 <ni-button icon="delete" @click="validateBillingPurchaseDeletion(props.row._id)"
                   :disable="props.row.billingItem.type !== COURSE || creationLoading || editionLoading" />
               </div>
@@ -52,7 +52,8 @@
     <ni-course-fee-edition-modal v-model="editionModal" v-model:course-fee="editedBillingPurchase" is-course-fee
       @submit="editBillingPurchase" :validations="v$.editedBillingPurchase" @hide="resetEditionModal"
       :loading="editionLoading" :error-messages="editedBillingPurchaseErrorMessages" :title="editedBillingPurchaseTitle"
-      :course-name="courseName" :companies-name="companiesName" />
+      :course-name="courseName" :companies-name="companiesName"
+      :disable-edition="disablePriceAndCount" />
   </div>
 </template>
 
@@ -100,6 +101,7 @@ export default {
     const newBillingPurchase = ref({ billingItem: '', price: 0, count: 1, description: '' });
     const editedBillingPurchase = ref({ _id: '', price: 0, count: 1, description: '' });
     const editedBillingPurchaseTitle = ref('');
+    const disablePriceAndCount = ref(false);
     const pagination = { rowsPerPage: 0 };
 
     const columns = [
@@ -233,12 +235,14 @@ export default {
         description: billingPurchase.description || '',
       };
       editedBillingPurchaseTitle.value = get(billingPurchase, 'billingItem.name');
+      disablePriceAndCount.value = get(billingPurchase, 'billingItem.type') !== COURSE;
       editionModal.value = true;
     };
 
     const resetEditionModal = () => {
       editedBillingPurchase.value = { _id: '', price: 0, count: 1, description: '' };
       editedBillingPurchaseTitle.value = '';
+      disablePriceAndCount.value = false;
       v$.value.editedBillingPurchase.$reset();
     };
 
@@ -299,6 +303,7 @@ export default {
       newBillingPurchase,
       editedBillingPurchase,
       editedBillingPurchaseTitle,
+      disablePriceAndCount,
       pagination,
       columns,
       // Computed
