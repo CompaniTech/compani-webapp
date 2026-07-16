@@ -215,12 +215,17 @@ export default {
 
 <style lang="sass" scoped>
 .courses-option-group
+  :deep(.q-option-group)
+    min-width: 0
+    width: 100%
+    padding: 0
   :deep(.q-checkbox)
     width: 100%
     max-width: 100%
     .q-checkbox__label
       flex: 1
       min-width: 0
+      opacity: 1
 
 .course-label
   overflow: hidden
