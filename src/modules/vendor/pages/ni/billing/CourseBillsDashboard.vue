@@ -133,7 +133,11 @@ export default {
     const billValidationLoading = ref(false);
     const billsToValidate = ref({ _ids: [], billedAt: '' });
 
-    const billList = computed(() => [...validatedCourseBills.value, ...courseBillsToValidate.value]);
+    const billList = computed(() => [
+      ...validatedCourseBills.value,
+      ...courseBillsToValidate.value,
+      ...courseBillsToValidate.value,
+    ]);
 
     const billsLoading = computed(() => validatedBillsLoading.value || billsLoadingToValidate.value);
 
@@ -157,6 +161,7 @@ export default {
 
         courseBillsToValidate.value = [];
         courseBillsWithoutAction.value = [];
+        selectedBills.value = [];
         billsLoadingToValidate.value = true;
         const bills = await CourseBills.list({
           action: DASHBOARD,
@@ -301,7 +306,7 @@ export default {
     });
 
     const courseInfos = computed(() => {
-      const bills = courseBillsToValidate.value
+      const bills = [...courseBillsToValidate.value, ...courseBillsWithoutAction.value]
         .filter(bill => billsToValidate.value._ids.includes(bill._id));
 
       return bills.map(bill => ({
@@ -442,8 +447,6 @@ export default {
       WITHOUT_COURSE_ACTIONS,
       VALIDATED,
       dateRange,
-      courseBillsToValidate,
-      validatedCourseBills,
       showValidatedCourseBills,
       showCourseBillsWithoutCourseActions,
       payerList,
