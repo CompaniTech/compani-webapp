@@ -1,5 +1,22 @@
 <template>
   <div class="q-mt-lg q-mb-xl">
+    <q-card class="q-mb-md">
+      <ni-expanding-table :data="[billingSummary]" :columns="summaryColumns" hide-bottom separator="none">
+        <template #header="{ props }">
+          <q-tr :props="props">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">{{ col.label }}</q-th>
+          </q-tr>
+        </template>
+        <template #row="{ props }">
+          <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props"
+            class="text-weight-bold" :style="col.style">
+            {{ col.value }}
+          </q-td>
+        </template>
+      </ni-expanding-table>
+    </q-card>
+
+    <p class="q-pt-md q-px-md text-weight-bold">Détail des coûts de formation</p>
     <q-card>
       <ni-expanding-table v-if="course.billingPurchaseList?.length" :data="course.billingPurchaseList"
         :columns="columns" v-model:pagination="pagination" class="q-mb-md" :loading="loading" hide-bottom
@@ -66,8 +83,8 @@ import pickBy from 'lodash/pickBy';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import { strictPositiveNumber, integerNumber } from '@helpers/vuelidateCustomVal';
-import { formatPrice, formatName } from '@helpers/utils';
-import { add, multiply, toNumber } from '@helpers/numbers';
+import { formatPrice, formatName, formatPercentage } from '@helpers/utils';
+import { add, subtract, divide, multiply, toNumber } from '@helpers/numbers';
 import { composeCourseName } from '@helpers/courses';
 import Courses from '@api/Courses';
 import CourseBillingItemsApi from '@api/CourseBillingItems';
@@ -138,8 +155,56 @@ export default {
     ];
 
     const totalPrice = computed(() => toNumber(
-      course.value.billingPurchaseList.reduce((acc, item) => add(acc, multiply(item.price, item.count)), 0)
+      (course.value.billingPurchaseList || []).reduce((acc, item) => add(acc, multiply(item.price, item.count)), 0)
     ));
+
+    const totalCoursePrice = computed(() => toNumber(
+      (course.value.prices || []).reduce((acc, price) => add(acc, price.global || 0, price.trainerFees || 0), 0)
+    ));
+
+    const grossMargin = computed(() => toNumber(subtract(totalCoursePrice.value, totalPrice.value)));
+
+    const grossMarginRate = computed(() => (totalCoursePrice.value
+      ? toNumber(divide(grossMargin.value, totalCoursePrice.value))
+      : 0));
+
+    const billingSummary = computed(() => ({
+      coursePrice: totalCoursePrice.value,
+      courseCost: totalPrice.value,
+      grossMargin: grossMargin.value,
+      grossMarginRate: grossMarginRate.value,
+    }));
+
+    const summaryColumns = [
+      {
+        name: 'coursePrice',
+        label: 'Prix de la formation',
+        align: 'center',
+        field: row => formatPrice(row.coursePrice),
+        style: 'width: 25%',
+      },
+      {
+        name: 'courseCost',
+        label: 'Coût de la formation',
+        align: 'center',
+        field: row => formatPrice(row.courseCost),
+        style: 'width: 25%',
+      },
+      {
+        name: 'grossMargin',
+        label: 'Marge brute',
+        align: 'center',
+        field: row => formatPrice(row.grossMargin),
+        style: 'width: 25%',
+      },
+      {
+        name: 'grossMarginRate',
+        label: 'Taux de marge brut',
+        align: 'center',
+        field: row => formatPercentage(row.grossMarginRate),
+        style: 'width: 25%',
+      },
+    ];
 
     const rules = {
       newBillingPurchase: {
@@ -306,12 +371,14 @@ export default {
       disablePriceAndCount,
       pagination,
       columns,
+      summaryColumns,
       // Computed
       course,
       v$,
       courseName,
       companiesName,
       totalPrice,
+      billingSummary,
       newBillingPurchaseErrorMessages,
       editedBillingPurchaseErrorMessages,
       // Methods
