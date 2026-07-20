@@ -126,6 +126,7 @@ export default {
     const max = ref(CompaniDate().startOf(MONTH).add('P1M').toISO());
 
     const typeOptions = ref([{ label: 'Tous les types', value: '' }, ...COURSE_TYPES]);
+    const NO_HOLDING = 'no_holding';
     const selectedCompany = ref('');
     const selectedHolding = ref('');
     const selectedTypes = ref(['']);
@@ -212,6 +213,7 @@ export default {
         .flat();
       return [
         { label: 'Toutes les sociétés mères', value: '' },
+        { label: 'Structures sans société mère', value: NO_HOLDING },
         ...formatAndSortOptions(uniqBy(billsHolding, '_id'), 'name'),
       ];
     });
@@ -228,6 +230,8 @@ export default {
 
       if (selectedHolding.value) {
         filteredBills = filteredBills.filter((bill) => {
+          if (selectedHolding.value === NO_HOLDING) return bill.companies.some(company => !company.holding);
+
           const holdingsIds = bill.companies
             .filter(company => company.holding).map(company => company.holding._id);
 
@@ -254,6 +258,8 @@ export default {
 
       if (selectedHolding.value) {
         filteredBills = filteredBills.filter((bill) => {
+          if (selectedHolding.value === NO_HOLDING) return bill.companies.some(company => !company.holding);
+
           const holdingsIds = bill.companies
             .filter(company => company.holding).map(company => company.holding._id);
 
@@ -280,6 +286,8 @@ export default {
 
       if (selectedHolding.value) {
         filteredBills = filteredBills.filter((bill) => {
+          if (selectedHolding.value === NO_HOLDING) return bill.companies.some(company => !company.holding);
+
           const holdingsIds = bill.companies
             .filter(company => company.holding).map(company => company.holding._id);
 
