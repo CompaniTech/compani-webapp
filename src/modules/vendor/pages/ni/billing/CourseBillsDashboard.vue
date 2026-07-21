@@ -43,6 +43,21 @@
         </div>
       </div>
     </q-card>
+    <q-card v-if="filteredBillsFromInterruptedCourses.length" class="q-px-md q-py-sm bg-peach-200 q-mt-md">
+      <q-item-section @click="showDetails(INTERRUPTED_COURSES)" class="cursor-pointer details row copper-grey-700">
+        {{ showCourseBillsFromInterruptedCourses ? 'Masquer' : 'Afficher' }} les factures des formations en pause
+        <q-icon size="xs" :name="showCourseBillsFromInterruptedCourses ? 'expand_less' : 'expand_more'"
+          color="copper-grey-700" />
+      </q-item-section>
+      <div v-show="showCourseBillsFromInterruptedCourses">
+        <div v-for="bill of filteredBillsFromInterruptedCourses" :key="bill._id">
+          <ni-course-billing-card :course="bill.course" :payer-list="payerList" is-dashboard
+            :billing-item-list="billingItemList" :course-bills="[bill]" :are-details-visible="areDetailsVisible"
+            @refresh-course-bills="refreshCourseBillsToValidate" @unroll="unrollBill({ _id: $event })"
+            :selected-bills="selectedBills" @update-selected-bills="updateSelectedBills" />
+        </div>
+      </div>
+    </q-card>
     <div>
       <div v-for="bill of filteredBillsToValidate" :key="bill._id">
         <ni-course-billing-card :course="bill.course" :payer-list="payerList"
@@ -53,7 +68,8 @@
       </div>
     </div>
     <div v-if="!filteredBillsToValidate.length && !filteredValidatedBills.length &&
-      !filteredBillsWithoutCourseActions.length && !billsLoading" class="text-italic flex justify-center">
+      !filteredBillsWithoutCourseActions.length && !filteredBillsFromInterruptedCourses.length && !billsLoading"
+      class="text-italic flex justify-center">
       Aucune facture ne correspond à votre recherche
     </div>
     <q-inner-loading v-if="billsLoading" :showing="billsLoading">
@@ -74,6 +90,7 @@
 </template>
 <script>
 import { useMeta } from 'quasar';
+import get from 'lodash/get';
 import uniqBy from 'lodash/uniqBy';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
@@ -86,8 +103,8 @@ import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
-import { DASHBOARD, COURSE_TYPES, MONTH } from '@data/constants';
-import { composeCourseName } from '@helpers/courses';
+import { DASHBOARD, COURSE_TYPES, MONTH, INTERRUPTED_COURSES } from '@data/constants';
+import { composeCourseName, isInterrupted } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import { minDate, maxDate, minArrayLength } from '@helpers/vuelidateCustomVal';
 import { formatAndSortOptions, formatAndSortCompanyOptions, formatQuantity, formatName } from '@helpers/utils';
@@ -115,9 +132,11 @@ export default {
     const validatedBillsLoading = ref(false);
     const showValidatedCourseBills = ref(false);
     const showCourseBillsWithoutCourseActions = ref(false);
+    const showCourseBillsFromInterruptedCourses = ref(false);
     const courseBillsToValidate = ref([]);
     const validatedCourseBills = ref([]);
     const courseBillsWithoutAction = ref([]);
+    const courseBillsFromInterruptedCourses = ref([]);
     const dateRange = ref({
       startDate: CompaniDate().startOf(MONTH).toISO(),
       endDate: CompaniDate().endOf(MONTH).toISO(),
@@ -137,7 +156,8 @@ export default {
     const billList = computed(() => [
       ...validatedCourseBills.value,
       ...courseBillsToValidate.value,
-      ...courseBillsToValidate.value,
+      ...courseBillsWithoutAction.value,
+      ...courseBillsFromInterruptedCourses.value,
     ]);
 
     const billsLoading = computed(() => validatedBillsLoading.value || billsLoadingToValidate.value);
@@ -162,6 +182,7 @@ export default {
 
         courseBillsToValidate.value = [];
         courseBillsWithoutAction.value = [];
+        courseBillsFromInterruptedCourses.value = [];
         selectedBills.value = [];
         billsLoadingToValidate.value = true;
         const bills = await CourseBills.list({
@@ -172,8 +193,9 @@ export default {
         });
 
         for (const bill of bills) {
-          if (bill.hasCourseAction) courseBillsToValidate.value.push(bill);
-          else courseBillsWithoutAction.value.push(bill);
+          if (!bill.hasCourseAction) courseBillsWithoutAction.value.push(bill);
+          else if (isInterrupted(bill.course.interruptionDates)) courseBillsFromInterruptedCourses.value.push(bill);
+          else courseBillsToValidate.value.push(bill);
         }
 
         NotifyPositive('Factures à valider récupérées.');
@@ -198,7 +220,13 @@ export default {
     } = useCourseBilling(billList, v$, refreshCourseBillsToValidate);
 
     const companyOptions = computed(() => {
-      const billsCompanies = billList.value.map(bill => bill.companies).flat();
+      let billsCompanies = billList.value.map(bill => bill.companies).flat();
+      billsCompanies = billsCompanies.filter((company) => {
+        if (selectedHolding.value === NO_HOLDING) return !company.holding;
+        if (selectedHolding.value) return get(company, 'holding._id') === selectedHolding.value;
+        return true;
+      });
+
       return [
         { label: 'Toutes les structures', value: '' },
         ...formatAndSortCompanyOptions(uniqBy(billsCompanies, '_id')),
@@ -218,8 +246,8 @@ export default {
       ];
     });
 
-    const filteredBillsToValidate = computed(() => {
-      let filteredBills = courseBillsToValidate.value;
+    const filterBills = (bills) => {
+      let filteredBills = bills;
       if (selectedCompany.value) {
         filteredBills = filteredBills.filter((bill) => {
           const companiesIds = bill.companies.map(company => company._id);
@@ -244,63 +272,12 @@ export default {
       }
 
       return filteredBills;
-    });
+    };
 
-    const filteredBillsWithoutCourseActions = computed(() => {
-      let filteredBills = courseBillsWithoutAction.value;
-      if (selectedCompany.value) {
-        filteredBills = filteredBills.filter((bill) => {
-          const companiesIds = bill.companies.map(company => company._id);
-
-          return companiesIds.includes(selectedCompany.value);
-        });
-      }
-
-      if (selectedHolding.value) {
-        filteredBills = filteredBills.filter((bill) => {
-          if (selectedHolding.value === NO_HOLDING) return bill.companies.some(company => !company.holding);
-
-          const holdingsIds = bill.companies
-            .filter(company => company.holding).map(company => company.holding._id);
-
-          return holdingsIds.includes(selectedHolding.value);
-        });
-      }
-
-      if (selectedTypes.value.length && !selectedTypes.value.includes('')) {
-        filteredBills = filteredBills.filter(bill => selectedTypes.value.includes(bill.course.type));
-      }
-
-      return filteredBills;
-    });
-
-    const filteredValidatedBills = computed(() => {
-      let filteredBills = validatedCourseBills.value;
-      if (selectedCompany.value) {
-        filteredBills = filteredBills.filter((bill) => {
-          const companiesIds = bill.companies.map(company => company._id);
-
-          return companiesIds.includes(selectedCompany.value);
-        });
-      }
-
-      if (selectedHolding.value) {
-        filteredBills = filteredBills.filter((bill) => {
-          if (selectedHolding.value === NO_HOLDING) return bill.companies.some(company => !company.holding);
-
-          const holdingsIds = bill.companies
-            .filter(company => company.holding).map(company => company.holding._id);
-
-          return holdingsIds.includes(selectedHolding.value);
-        });
-      }
-
-      if (selectedTypes.value.length && !selectedTypes.value.includes('')) {
-        filteredBills = filteredBills.filter(bill => selectedTypes.value.includes(bill.course.type));
-      }
-
-      return filteredBills;
-    });
+    const filteredBillsToValidate = computed(() => filterBills(courseBillsToValidate.value));
+    const filteredBillsWithoutCourseActions = computed(() => filterBills(courseBillsWithoutAction.value));
+    const filteredBillsFromInterruptedCourses = computed(() => filterBills(courseBillsFromInterruptedCourses.value));
+    const filteredValidatedBills = computed(() => filterBills(validatedCourseBills.value));
 
     const dateRangeErrorMessage = computed(() => {
       if (CompaniDate(dateRange.value.endDate).isBefore(dateRange.value.startDate)) {
@@ -314,8 +291,11 @@ export default {
     });
 
     const courseInfos = computed(() => {
-      const bills = [...courseBillsToValidate.value, ...courseBillsWithoutAction.value]
-        .filter(bill => billsToValidate.value._ids.includes(bill._id));
+      const bills = [
+        ...courseBillsToValidate.value,
+        ...courseBillsWithoutAction.value,
+        ...courseBillsFromInterruptedCourses.value,
+      ].filter(bill => billsToValidate.value._ids.includes(bill._id));
 
       return bills.map(bill => ({
         courseType: bill.course.type,
@@ -357,7 +337,9 @@ export default {
 
     const showDetails = async (type) => {
       if (type === VALIDATED) showValidatedCourseBills.value = !showValidatedCourseBills.value;
-      else showCourseBillsWithoutCourseActions.value = !showCourseBillsWithoutCourseActions.value;
+      else if (type === INTERRUPTED_COURSES) {
+        showCourseBillsFromInterruptedCourses.value = !showCourseBillsFromInterruptedCourses.value;
+      } else showCourseBillsWithoutCourseActions.value = !showCourseBillsWithoutCourseActions.value;
     };
 
     const updateSelectedCompany = (value) => { selectedCompany.value = value; };
@@ -426,6 +408,10 @@ export default {
       return Promise.all(promises);
     });
 
+    watch(selectedHolding, () => {
+      if (!companyOptions.value.some(option => option.value === selectedCompany.value)) selectedCompany.value = '';
+    });
+
     watch(selectedTypes, (newValue, oldValue) => {
       if (Array.isArray(newValue) && newValue.length === 0) {
         selectedTypes.value = [''];
@@ -454,9 +440,11 @@ export default {
       // Data
       WITHOUT_COURSE_ACTIONS,
       VALIDATED,
+      INTERRUPTED_COURSES,
       dateRange,
       showValidatedCourseBills,
       showCourseBillsWithoutCourseActions,
+      showCourseBillsFromInterruptedCourses,
       payerList,
       billsLoading,
       billingItemList,
@@ -477,6 +465,7 @@ export default {
       filteredBillsToValidate,
       filteredValidatedBills,
       filteredBillsWithoutCourseActions,
+      filteredBillsFromInterruptedCourses,
       courseInfos,
       v$,
       // Methods
