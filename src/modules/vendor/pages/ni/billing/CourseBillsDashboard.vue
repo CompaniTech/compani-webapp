@@ -398,6 +398,7 @@ export default {
       selectedBills.value = [];
       await Promise.all([refreshCourseBillsToValidate(), refreshValidatedCourseBills()]);
 
+      if (!holdingOptions.value.some(option => option.value === selectedHolding.value)) selectedHolding.value = '';
       if (!companyOptions.value.some(option => option.value === selectedCompany.value)) selectedCompany.value = '';
     });
 
