@@ -172,6 +172,7 @@ export const MONTHLY = 'monthly';
 export const GLOBAL = 'global';
 export const CERTIFICATE_GENERATION_MODE = [{ label: 'Mensuel', value: MONTHLY }, { label: 'Global', value: GLOBAL }];
 export const INTERRUPTED_COURSES = 'interrupted_course';
+export const NO_HOLDING = 'no_holding';
 
 // SUBPROGRAM
 export const PUBLISHED = 'published';

@@ -103,7 +103,7 @@ import Button from '@components/Button';
 import CompanySelect from '@components/form/CompanySelect';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
-import { DASHBOARD, COURSE_TYPES, MONTH, INTERRUPTED_COURSES } from '@data/constants';
+import { DASHBOARD, COURSE_TYPES, MONTH, INTERRUPTED_COURSES, NO_HOLDING } from '@data/constants';
 import { composeCourseName, isInterrupted } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import { minDate, maxDate, minArrayLength } from '@helpers/vuelidateCustomVal';
@@ -145,7 +145,6 @@ export default {
     const max = ref(CompaniDate().startOf(MONTH).add('P1M').toISO());
 
     const typeOptions = ref([{ label: 'Tous les types', value: '' }, ...COURSE_TYPES]);
-    const NO_HOLDING = 'no_holding';
     const selectedCompany = ref('');
     const selectedHolding = ref('');
     const selectedTypes = ref(['']);
@@ -219,13 +218,14 @@ export default {
       openBillDeletionModal,
     } = useCourseBilling(billList, v$, refreshCourseBillsToValidate);
 
+    const doesCompanyMatchHolding = (company) => {
+      if (selectedHolding.value === NO_HOLDING) return !company.holding;
+      if (selectedHolding.value) return get(company, 'holding._id') === selectedHolding.value;
+      return true;
+    };
+
     const companyOptions = computed(() => {
-      let billsCompanies = billList.value.map(bill => bill.companies).flat();
-      billsCompanies = billsCompanies.filter((company) => {
-        if (selectedHolding.value === NO_HOLDING) return !company.holding;
-        if (selectedHolding.value) return get(company, 'holding._id') === selectedHolding.value;
-        return true;
-      });
+      const billsCompanies = billList.value.map(bill => bill.companies).flat().filter(doesCompanyMatchHolding);
 
       return [
         { label: 'Toutes les structures', value: '' },
@@ -257,14 +257,7 @@ export default {
       }
 
       if (selectedHolding.value) {
-        filteredBills = filteredBills.filter((bill) => {
-          if (selectedHolding.value === NO_HOLDING) return bill.companies.some(company => !company.holding);
-
-          const holdingsIds = bill.companies
-            .filter(company => company.holding).map(company => company.holding._id);
-
-          return holdingsIds.includes(selectedHolding.value);
-        });
+        filteredBills = filteredBills.filter(bill => bill.companies.some(doesCompanyMatchHolding));
       }
 
       if (selectedTypes.value.length && !selectedTypes.value.includes('')) {
@@ -403,9 +396,9 @@ export default {
 
     watch(dateRange, async () => {
       selectedBills.value = [];
-      const promises = [refreshCourseBillsToValidate(), refreshValidatedCourseBills()];
+      await Promise.all([refreshCourseBillsToValidate(), refreshValidatedCourseBills()]);
 
-      return Promise.all(promises);
+      if (!companyOptions.value.some(option => option.value === selectedCompany.value)) selectedCompany.value = '';
     });
 
     watch(selectedHolding, () => {
