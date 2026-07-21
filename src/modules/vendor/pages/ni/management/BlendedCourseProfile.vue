@@ -76,7 +76,7 @@ export default {
           },
           ...course.value.type !== SINGLE
             ? [{
-              label: 'Coûts de formation',
+              label: 'Coûts formation',
               name: 'billingItems',
               default: defaultTab.value === 'billingItems',
               component: CourseBillingItems,
