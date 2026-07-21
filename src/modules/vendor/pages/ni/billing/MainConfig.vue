@@ -132,6 +132,7 @@ import {
   TRAINING_ORGANISATION_MANAGER,
   VENDOR_ADMIN,
   UPLOAD_TEMPLATE_EXTENSIONS,
+  COURSE_BILL,
 } from '@data/constants';
 import { useValidations } from '@composables/validations';
 
@@ -183,7 +184,7 @@ export default {
     const organisationCreationModal = ref(false);
     const itemCreationModal = ref(false);
     const newOrganisation = ref({ name: '', address: '' });
-    const newItem = ref({ name: '' });
+    const newItem = ref({ name: '', type: COURSE_BILL });
     const tmpInput = ref('');
     const billingRepresentativeOptions = ref([]);
     const billingRepresentativeModal = ref(false);
@@ -336,7 +337,7 @@ export default {
 
     const refreshCourseBillingItems = async () => {
       try {
-        const items = await CourseBillingItems.list();
+        const items = await CourseBillingItems.list({ type: COURSE_BILL });
         courseBillingItems.value = items.sort((a, b) => sortStrings(a.name, b.name));
       } catch (e) {
         console.error(e);
@@ -395,7 +396,7 @@ export default {
     const openItemCreationModal = () => { itemCreationModal.value = true; };
 
     const resetItemAdditionForm = () => {
-      newItem.value = { name: '' };
+      newItem.value = { name: '', type: COURSE_BILL };
       validations.value.newItem.$reset();
     };
 

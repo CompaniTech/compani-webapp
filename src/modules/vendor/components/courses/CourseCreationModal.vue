@@ -58,7 +58,7 @@
         @update:model-value="update($event.trim(), 'prices.global')" caption="Prix de la formation" suffix="€"
         :error="validations.prices.global.$error" :error-message="globalPriceErrorMessage" type="number" />
       <ni-input v-if="isSingleCourse || isIntraCourse" in-modal :model-value="newCourse.prices.trainerFees"
-        @update:model-value="update($event.trim(), 'prices.trainerFees')" caption="Frais de formateurs" suffix="€"
+        @update:model-value="update($event.trim(), 'prices.trainerFees')" caption="Frais de gestion" suffix="€"
         :error="validations.prices.trainerFees.$error" :error-message="trainerFeesErrorMessage" type="number" />
       <q-checkbox in-modal :model-value="newCourse.hasCertifyingTest" label="La formation est certifiante" dense
         @update:model-value="update($event, 'hasCertifyingTest')" class="q-mb-lg" />

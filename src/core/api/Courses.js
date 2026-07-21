@@ -121,4 +121,16 @@ export default {
       { params, responseType: 'arraybuffer', headers: { Accept: 'application/zip' } }
     );
   },
+  async addBillingPurchase (courseId, payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/courses/${courseId}/billingpurchases`, payload);
+  },
+  async updateBillingPurchase (courseId, billingPurchaseId, payload) {
+    await alenviAxios.put(
+      `${process.env.API_HOSTNAME}/courses/${courseId}/billingpurchases/${billingPurchaseId}`,
+      payload
+    );
+  },
+  async deleteBillingPurchase (courseId, billingPurchaseId) {
+    await alenviAxios.delete(`${process.env.API_HOSTNAME}/courses/${courseId}/billingpurchases/${billingPurchaseId}`);
+  },
 };

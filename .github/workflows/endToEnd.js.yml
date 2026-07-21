@@ -37,7 +37,7 @@ jobs:
       - run: cd api && yarn install
         env:
           DETACHMENT_ALLOWED_COMPANY_IDS : ${{ secrets.DETACHMENT_ALLOWED_COMPANY_IDS }}
-          TRAINER_FEES_BILLING_ITEM : ${{ secrets.TRAINER_FEES_BILLING_ITEM }}
+          MANAGEMENT_FEES_BILLING_ITEM : ${{ secrets.MANAGEMENT_FEES_BILLING_ITEM }}
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           ALENVI_TOKEN: ${{ secrets.ALENVI_TOKEN }}
           REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
@@ -57,6 +57,6 @@ jobs:
           API_HOSTNAME: ${{ secrets.API_HOSTNAME }}
           TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
           DETACHMENT_ALLOWED_COMPANY_IDS : ${{ secrets.DETACHMENT_ALLOWED_COMPANY_IDS }}
-          TRAINER_FEES_BILLING_ITEM : ${{ secrets.TRAINER_FEES_BILLING_ITEM }}
+          MANAGEMENT_FEES_BILLING_ITEM : ${{ secrets.MANAGEMENT_FEES_BILLING_ITEM }}
           ALENVI_TOKEN: ${{ secrets.ALENVI_TOKEN }}
           REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}

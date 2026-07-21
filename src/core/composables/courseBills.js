@@ -17,7 +17,16 @@ import {
 import { downloadFile } from '@helpers/file';
 import { descendingSortBy } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
-import { COMPANY, REQUIRED_LABEL, FUNDING_ORGANISATION, DIRECTORY, EDITION, SINGLE, MM_YYYY } from '../data/constants';
+import {
+  COMPANY,
+  REQUIRED_LABEL,
+  FUNDING_ORGANISATION,
+  DIRECTORY,
+  EDITION,
+  SINGLE,
+  MM_YYYY,
+  COURSE_BILL,
+} from '../data/constants';
 
 export const useCourseBilling = (courseBills, validations, refreshCourseBills) => {
   const $q = useQuasar();
@@ -174,7 +183,7 @@ export const useCourseBilling = (courseBills, validations, refreshCourseBills) =
 
   const refreshBillingItems = async () => {
     try {
-      const billingItems = await CourseBillingItems.list();
+      const billingItems = await CourseBillingItems.list({ type: COURSE_BILL });
       billingItemList.value = formatAndSortOptions([...billingItems], 'name');
     } catch (e) {
       console.error(e);
