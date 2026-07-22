@@ -27,14 +27,14 @@
               :disable="(companiesList.some(c => c.includes(company._id)) && !isSingleCourse) || !!course.archivedAt"
               type="number" @focus="saveTmp('prices[i].global')" required-field
               :error-message="getPriceErrorMessage(i, 'global')" />
-            <ni-input v-model="course.prices[i].trainerFees" caption="Frais de formateur¹" type="number"
+            <ni-input v-model="course.prices[i].trainerFees" caption="Frais de gestion¹" type="number"
               :disable="(companiesList.some(c => c.includes(company._id)) && !isSingleCourse) || !!course.archivedAt"
               @focus="saveTmp('prices[i].trainerFees')" @blur="updatePrice(i, 'trainerFees', course.companies[i]._id)"
               :error="getPriceError(i, 'trainerFees')" :error-message="getPriceErrorMessage(i, 'trainerFees')" />
           </div>
         </div>
         <span class="text-italic text-12">
-          1 - si les frais de formateur ne s’appliquent qu’à une seule facture, ne pas remplir ce champ et ajouter
+          1 - si les frais de gestion ne s’appliquent qu’à une seule facture, ne pas remplir ce champ et ajouter
           plutôt un article de facturation
         </span>
       </div>
