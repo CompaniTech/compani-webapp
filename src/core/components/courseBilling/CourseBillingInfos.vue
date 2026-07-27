@@ -94,7 +94,7 @@
                 <div class="date">{{ CompaniDate(item.date).format(DD_MM_YYYY) }}</div>
                 <div :class="[displayCheckbox[index] ? 'payment' : 'payment-without-checkbox']">
                   {{ item.number }} ({{ getItemType(item) }}
-                  <template v-if="get(item, 'xmlSEPAFileInfos.name') && isVendorInterface">
+                  <template v-if="get(item, 'xmlSEPAFileInfos.name')">
                     associé au lot <span class="text-weight-bold">{{ item.xmlSEPAFileInfos.name }}</span>
                   </template>)
                 </div>
