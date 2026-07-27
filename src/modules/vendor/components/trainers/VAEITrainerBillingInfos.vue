@@ -30,12 +30,12 @@
 import { useMeta } from 'quasar';
 import { useStore } from 'vuex';
 import { computed, watch } from 'vue';
+import get from 'lodash/get';
 import ProfileHeader from '@components/ProfileHeader';
 import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
 import Banner from '@components/Banner';
-import { TRAINER } from '@data/constants';
 import { useTrainerBillingInfos } from '@composables/trainerBillingInfos';
 import TrainerBillingInfosCard from 'src/modules/vendor/components/billing/TrainerBillingInfosCard';
 
@@ -57,14 +57,11 @@ export default {
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
 
-    const loggedUserIsTrainer = computed(() => loggedUser.value.role.vendor.name === TRAINER);
-
     const userProfile = computed(() => $store.state.userProfile.userProfile);
 
-    const trainer = computed(() => {
-      if (loggedUserIsTrainer.value) return loggedUser.value;
-      return userProfile.value;
-    });
+    const trainer = computed(() => (get(userProfile.value, '_id') ? userProfile.value : loggedUser.value));
+
+    const loggedUserIsTrainer = computed(() => trainer.value._id === loggedUser.value._id);
 
     const {
       dateRange,

@@ -449,6 +449,7 @@ export const PAYMENT_PLAN = 'paymentPlan';
 // COURSE SLOT STATUS
 export const PRESENT = 'present';
 export const MISSING = 'missing';
+export const NOT_INVOICED = 'not_invoiced';
+export const INVOICED = 'invoiced';
 export const PAID = 'paid';
-export const NOT_PAID = 'not_paid';
-export const SLOT_STATUS = { [PAID]: 'Réglé', [NOT_PAID]: 'Non réglé' };
+export const SLOT_STATUS = { [NOT_INVOICED]: 'Non facturé', [INVOICED]: 'Facturé', [PAID]: 'Réglé' };
