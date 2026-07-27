@@ -4,7 +4,7 @@
     <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
         <div class="full-width items-center">
-          <div :class="[{ 'trainerInfosContainer': !isTrainer }]">
+          <div class="trainerInfosContainer">
             <div>
               <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
               <div class="q-ml-md q-py-sm">
@@ -625,6 +625,7 @@ export default {
 .trainerInfosContainer
   display: flex
   flex-direction: row
+  flex-wrap: wrap
   justify-content: space-between
   align-items: center
 
