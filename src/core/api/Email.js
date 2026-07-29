@@ -9,4 +9,8 @@ export default {
     const mail = await alenviAxios.post(`${process.env.API_HOSTNAME}/email/send-coursebill-list`, payload);
     return mail;
   },
+  async sendTrainerFeesBill (payload) {
+    const mail = await alenviAxios.post(`${process.env.API_HOSTNAME}/email/send-trainer-fees-bill`, payload);
+    return mail;
+  },
 };
