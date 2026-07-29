@@ -454,18 +454,14 @@ export default {
 
     const selectedSlots = computed(() => allSlots.value.filter(slot => selectedSlotIds.value.includes(slot._id)));
 
-    // Toggling a slot linked to a trainer invoice cascades to every slot sharing that same invoice (wherever it
-    // is, across any course or collective session), since a coach can only act on whole invoices. A not-yet-invoiced
-    // collective session has no trainerInvoice to cascade from : fall back to grouping by matching dates (daySlots),
-    // so the trainer still selects/deselects a whole session at once before invoicing it. Single-trainee slots have
-    // no daySlots to fall back on, so they're simply toggled on their own in that case.
     const selectSlot = (checked, slot, daySlots) => {
       let idsToSelect = [slot._id];
       if (slot.trainerInvoice) {
         idsToSelect = allSlots.value.filter(s => s.trainerInvoice === slot.trainerInvoice).map(s => s._id);
       } else if (daySlots) {
         idsToSelect = daySlots
-          .filter(s => CompaniDate(s.startDate).isSame(slot.startDate) && CompaniDate(s.endDate).isSame(slot.endDate))
+          .filter(s => CompaniDate(s.startDate).isSame(slot.startDate) && CompaniDate(s.endDate).isSame(slot.endDate) &&
+            isSlotSelectable(s))
           .map(s => s._id);
       }
       selectedSlotIds.value = checked

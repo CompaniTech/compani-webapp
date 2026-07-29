@@ -80,7 +80,7 @@ export default {
           ok: 'Oui',
           cancel: 'Non',
         }).onOk(() => emit('submit'))
-          .onCancel(() => NotifyPositive('Annulation des factures annulées.'));
+          .onCancel(() => NotifyPositive('Annulation des factures abandonnée.'));
       }
 
       return emit('submit');
