@@ -1,7 +1,7 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template #title>
-      Facturer mes frais annexes
+      Facturer des frais annexes
     </template>
     <ni-input type="file" in-modal caption="Facture (PDF)" v-model="invoice.file" @blur="validations.file.$touch"
       :error="validations.file.$error" :extensions="[DOC_EXTENSIONS]" required-field />

@@ -1,7 +1,7 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
     <div v-if="loggedUserIsTrainer" class="row justify-end q-mb-md">
-      <ni-primary-button label="Facturer mes frais annexes" @click="openTrainerFeesBillModal" />
+      <ni-primary-button label="Facturer des frais annexes" @click="openTrainerFeesBillModal" />
     </div>
     <ni-banner icon="info_outline" class="bg-peach-200">
       <template #message>
@@ -11,8 +11,9 @@
     </ni-banner>
     <div class="row justify-end">
       <ni-button icon="chevron_left" class="no-shadow" @click="goToPreviousMonth" />
-      <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange" :error="v$.dateRange.$error"
-        @update:model-value="input" :error-message="dateRangeErrorMessage" @blur="v$.dateRange.$touch" />
+      <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange"
+        :error="slotBillingValidations.dateRange.$error" @update:model-value="input"
+        :error-message="dateRangeErrorMessage" @blur="slotBillingValidations.dateRange.$touch" />
       <ni-button icon="chevron_right" class="no-shadow" @click="goToNextMonth" />
     </div>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
@@ -92,7 +93,7 @@ export default {
       statusOptions,
       programOptions,
       dateRangeErrorMessage,
-      v$,
+      v$: slotBillingValidations,
       input,
       goToPreviousMonth,
       goToNextMonth,
@@ -170,7 +171,7 @@ export default {
       // Computed
       filteredData,
       dateRangeErrorMessage,
-      v$,
+      slotBillingValidations,
       trainer,
       loggedUserIsTrainer,
       programOptions,
