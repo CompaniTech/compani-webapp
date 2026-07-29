@@ -21,7 +21,7 @@
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
     <trainer-billing-infos-card v-else-if="displaySlots" :trainer-infos="filteredData[trainer._id]"
-      @refresh="refreshCourseSlots" :trainer-id="trainer._id" :is-trainer="loggedUserIsTrainer" />
+      @refresh="refreshCourseSlots" :is-trainer="loggedUserIsTrainer" />
     <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période</div>
   </q-page>
 </template>
