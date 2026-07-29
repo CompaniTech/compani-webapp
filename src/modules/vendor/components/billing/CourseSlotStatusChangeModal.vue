@@ -5,9 +5,9 @@
     </template>
     <ni-banner class="bg-copper-grey-100 q-ma-md" icon="info_outline">
       <template #message>
-        <div v-for="group in invoiceGroups" :key="group.number" class="row invoice-row">
-          <span class="text-bold">{{ group.number }} :</span>
-          <span>{{ formatQuantity('créneau', group.count, 'x') }}</span>
+        <div v-for="bill in slotsByBillNumber" :key="bill.number" class="row bill-row">
+          <span class="text-bold">{{ bill.number }} :</span>
+          <span>{{ formatQuantity('créneau', bill.slotCount, 'x') }}</span>
         </div>
         <span class="q-ma-sm">(statut actuel : {{ SLOT_STATUS[currentStatus] }})</span>
       </template>
@@ -60,9 +60,9 @@ export default {
 
     const statusOptions = computed(() => STATUS_CHANGE_OPTIONS[currentStatus.value] || []);
 
-    const invoiceGroups = computed(() => {
-      const groups = groupBy(selectedSlots.value, 'trainerBillNumber');
-      return Object.entries(groups).map(([number, slots]) => ({ number, count: slots.length }));
+    const slotsByBillNumber = computed(() => {
+      const slotsGroupedByBillNumber = groupBy(selectedSlots.value, 'trainerBillNumber');
+      return Object.entries(slotsGroupedByBillNumber).map(([number, slots]) => ({ number, slotCount: slots.length }));
     });
 
     const hide = () => emit('hide');
@@ -91,7 +91,7 @@ export default {
       SLOT_STATUS,
       // Computed
       statusOptions,
-      invoiceGroups,
+      slotsByBillNumber,
       // Methods
       formatQuantity,
       hide,
@@ -106,7 +106,7 @@ export default {
 <style lang="sass" scoped>
 :deep(.q-banner__content > div)
   flex: 1
-.invoice-row
+.bill-row
   width: 60%
   justify-content: space-between
   margin: 8px

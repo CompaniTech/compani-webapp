@@ -7,7 +7,7 @@
           <div class="trainerInfosContainer">
             <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
             <ni-primary-button v-if="isTrainer" class="q-my-sm" label="Facturer les créneaux"
-              @click.stop="openCourseSlotInvoiceModal" :disabled="selectedSlotIds.length === 0" />
+              @click.stop="openCourseSlotBillModal" :disabled="selectedSlotIds.length === 0" />
             <ni-primary-button v-else class="q-my-sm" label="Changer le statut des créneaux sélectionnés"
               @click.stop="openCourseSlotStatusChangeModal" :disabled="selectedSlotIds.length === 0" />
           </div>
@@ -192,9 +192,9 @@
     :loading="statusChangeLoading" @update:new-status="newStatus = $event"
     @hide="resetCourseSlotStatusChangeModal" @submit="submitStatusChange" />
 
-  <course-slot-invoice-modal v-model="courseSlotInvoiceModal" :course-slots="selectedSlots"
-    :loading="courseSlotInvoiceLoading" :invoice="invoice" :validations="v$.invoice" @hide="resetCourseSlotInvoiceModal"
-    @submit="submitCourseSlotInvoice" />
+  <course-slot-bill-modal v-model="courseSlotBillModal" :course-slots="selectedSlots"
+    :loading="courseSlotBillLoading" :bill="bill" :validations="v$.bill" @hide="resetCourseSlotBillModal"
+    @submit="submitCourseSlotBill" />
 </template>
 
 <script>
@@ -212,8 +212,8 @@ import Banner from '@components/Banner';
 import Button from '@components/PrimaryButton';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import CourseSlotStatusChangeModal from 'src/modules/vendor/components/billing/CourseSlotStatusChangeModal';
-import CourseSlotInvoiceModal from 'src/modules/vendor/components/billing/CourseSlotInvoiceModal';
-import TrainerInvoices from '@api/TrainerInvoices';
+import CourseSlotBillModal from 'src/modules/vendor/components/billing/CourseSlotBillModal';
+import TrainerBills from '@api/TrainerBills';
 
 export default {
   name: 'TrainerBillingInfosCard',
@@ -226,7 +226,7 @@ export default {
     'ni-banner': Banner,
     'ni-primary-button': Button,
     'course-slot-status-change-modal': CourseSlotStatusChangeModal,
-    'course-slot-invoice-modal': CourseSlotInvoiceModal,
+    'course-slot-bill-modal': CourseSlotBillModal,
   },
   emits: ['refresh'],
   setup (props, { emit }) {
@@ -238,17 +238,17 @@ export default {
 
     const areCourseDetailsVisible = ref({});
     const selectedSlotIds = ref([]);
-    const invoice = ref({ number: '', file: '' });
+    const bill = ref({ number: '', file: '' });
     const courseSlotStatusChangeModal = ref(false);
     const currentStatus = ref('');
     const newStatus = ref('');
     const statusChangeLoading = ref(false);
-    const courseSlotInvoiceModal = ref(false);
-    const courseSlotInvoiceLoading = ref(false);
+    const courseSlotBillModal = ref(false);
+    const courseSlotBillLoading = ref(false);
 
     const isSlotSelectable = slot => (isTrainer.value
       ? slot.status === NOT_INVOICED
-      : slot.status !== NOT_INVOICED && !!slot.trainerInvoice);
+      : slot.status !== NOT_INVOICED && !!slot.trainerBillId);
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -435,11 +435,11 @@ export default {
     });
 
     const rules = computed(() => ({
-      invoice: { number: { required }, file: { required } },
+      bill: { number: { required }, file: { required } },
       newStatus: { required },
     }));
 
-    const v$ = useVuelidate(rules, { invoice, newStatus });
+    const v$ = useVuelidate(rules, { bill, newStatus });
 
     const displayDuration = value => value !== '0min';
 
@@ -458,8 +458,8 @@ export default {
 
     const selectSlot = (checked, slot, daySlots) => {
       let idsToSelect = [slot._id];
-      if (slot.trainerInvoice) {
-        idsToSelect = allSlots.value.filter(s => s.trainerInvoice === slot.trainerInvoice).map(s => s._id);
+      if (slot.trainerBillId) {
+        idsToSelect = allSlots.value.filter(s => s.trainerBillId === slot.trainerBillId).map(s => s._id);
       } else if (daySlots) {
         idsToSelect = daySlots
           .filter(s => CompaniDate(s.startDate).isSame(slot.startDate) && CompaniDate(s.endDate).isSame(slot.endDate) &&
@@ -502,13 +502,13 @@ export default {
 
         statusChangeLoading.value = true;
 
-        const trainerInvoiceIds = [...new Set(selectedSlots.value.map(s => s.trainerInvoice).filter(Boolean))];
+        const trainerBillIds = [...new Set(selectedSlots.value.map(s => s.trainerBillId).filter(Boolean))];
 
         if (newStatus.value === NOT_INVOICED) {
-          await Promise.all(trainerInvoiceIds.map(id => TrainerInvoices.remove(id)));
+          await Promise.all(trainerBillIds.map(id => TrainerBills.remove(id)));
         } else {
           await Promise.all(
-            trainerInvoiceIds.map(id => TrainerInvoices.update(id, { status: newStatus.value }))
+            trainerBillIds.map(id => TrainerBills.update(id, { status: newStatus.value }))
           );
         }
 
@@ -524,29 +524,29 @@ export default {
       }
     };
 
-    const openCourseSlotInvoiceModal = () => { courseSlotInvoiceModal.value = true; };
+    const openCourseSlotBillModal = () => { courseSlotBillModal.value = true; };
 
-    const resetCourseSlotInvoiceModal = () => {
-      courseSlotInvoiceModal.value = false;
-      invoice.value = { number: '', file: '' };
-      v$.value.invoice.$reset();
+    const resetCourseSlotBillModal = () => {
+      courseSlotBillModal.value = false;
+      bill.value = { number: '', file: '' };
+      v$.value.bill.$reset();
     };
 
-    const submitCourseSlotInvoice = async () => {
+    const submitCourseSlotBill = async () => {
       try {
-        v$.value.invoice.$touch();
-        if (v$.value.invoice.$error) return NotifyWarning('Champ(s) invalide(s).');
+        v$.value.bill.$touch();
+        if (v$.value.bill.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        courseSlotInvoiceLoading.value = true;
+        courseSlotBillLoading.value = true;
 
         const form = new FormData();
         selectedSlots.value.forEach(slot => form.append('courseSlots', slot._id));
-        form.append('number', invoice.value.number);
-        form.append('file', invoice.value.file);
+        form.append('number', bill.value.number);
+        form.append('file', bill.value.file);
 
-        await TrainerInvoices.create(form);
+        await TrainerBills.create(form);
         emit('refresh');
-        courseSlotInvoiceModal.value = false;
+        courseSlotBillModal.value = false;
 
         NotifyPositive('Créneaux facturés.');
       } catch (e) {
@@ -554,7 +554,7 @@ export default {
         if (e.data && e.data.statusCode === 409 && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la facturation des créneaux.');
       } finally {
-        courseSlotInvoiceLoading.value = false;
+        courseSlotBillLoading.value = false;
       }
     };
 
@@ -571,13 +571,13 @@ export default {
       isDashboard,
       areCourseDetailsVisible,
       selectedSlotIds,
-      invoice,
+      bill,
       courseSlotStatusChangeModal,
       currentStatus,
       newStatus,
       statusChangeLoading,
-      courseSlotInvoiceModal,
-      courseSlotInvoiceLoading,
+      courseSlotBillModal,
+      courseSlotBillLoading,
       displayDetails,
       // Validation
       v$,
@@ -599,9 +599,9 @@ export default {
       openCourseSlotStatusChangeModal,
       resetCourseSlotStatusChangeModal,
       submitStatusChange,
-      openCourseSlotInvoiceModal,
-      resetCourseSlotInvoiceModal,
-      submitCourseSlotInvoice,
+      openCourseSlotBillModal,
+      resetCourseSlotBillModal,
+      submitCourseSlotBill,
     };
   },
 };

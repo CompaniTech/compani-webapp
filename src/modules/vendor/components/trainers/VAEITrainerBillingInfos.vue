@@ -28,7 +28,7 @@
       @refresh="refreshCourseSlots" :is-trainer="loggedUserIsTrainer" />
     <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période</div>
 
-    <trainer-fees-bill-modal v-model="trainerFeesBillModal" :invoice="trainerFeesBill" :loading="trainerFeesBillLoading"
+    <trainer-fees-bill-modal v-model="trainerFeesBillModal" :bill="trainerFeesBill" :loading="trainerFeesBillLoading"
       :validations="validations.trainerFeesBill" @hide="resetTrainerFeesBillModal" @submit="submitTrainerFeesBill" />
   </q-page>
 </template>
