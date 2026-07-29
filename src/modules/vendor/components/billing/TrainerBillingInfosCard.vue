@@ -18,12 +18,12 @@
               {{ formattedTrainerDurations.notInvoicedAmount }}
               &nbsp;(dont {{ formattedTrainerDurations.notInvoicedAbsence }} d'absence)
             </span>
-            <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold">
+            <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold text-copper-500">
               <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)">&nbsp;/ </span>Facturé :
               {{ formattedTrainerDurations.invoiced }} - {{ formattedTrainerDurations.invoicedAmount }} (dont
               &nbsp;{{ formattedTrainerDurations.invoicedAbsence }} d'absence)
             </span>
-            <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
+            <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-weight-bold text-green-600">
               <span v-if="displayDuration(formattedTrainerDurations.notInvoiced) ||
                 displayDuration(formattedTrainerDurations.invoiced)">&nbsp;/ </span>réglé :
               {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
@@ -46,12 +46,13 @@
                   {{ course.notInvoicedSingleSlotsAmount }} (dont
                   &nbsp;{{ course.notInvoicedSingleSlotsAbsenceDuration }} d'absence)
                 </span>
-                <span class="text-weight-bold" v-if="displayDuration(course.invoicedSingleSlotsDuration)">
+                <span v-if="displayDuration(course.invoicedSingleSlotsDuration)"
+                  class="text-copper-500 text-weight-bold">
                   &nbsp;/&nbsp;Facturé : {{ course.invoicedSingleSlotsDuration }} -
                   {{ course.invoicedSingleSlotsAmount }} (dont
                   &nbsp;{{ course.invoicedSingleSlotsAbsenceDuration }} d'absence)
                 </span>
-                <span class="text-copper-500" v-if="displayDuration(course.paidSingleSlotsDuration)">
+                <span class="text-weight-bold text-green-600" v-if="displayDuration(course.paidSingleSlotsDuration)">
                   &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} - {{ course.paidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.paidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
@@ -111,12 +112,13 @@
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedAbsence }} d'absence)
               </span>
-              <span class="text-weight-bold q-ma-md" v-if="displayDuration(formattedCollectiveSlots.invoiced)">
+              <span v-if="displayDuration(formattedCollectiveSlots.invoiced)"
+                class="text-weight-bold text-copper-500 q-ma-md">
                 &nbsp;/ Facturé : {{ formattedCollectiveSlots.invoiced }} -
                 &nbsp;{{ formattedCollectiveSlots.invoicedCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.invoicedAbsence }} d'absence)
               </span>
-              <span class="text-copper-500" v-if="displayDuration(formattedCollectiveSlots.paid)">
+              <span class="text-weight-bold text-green-600" v-if="displayDuration(formattedCollectiveSlots.paid)">
                 &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} -
                 &nbsp;{{ formattedCollectiveSlots.paidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.paidAbsence }} d'absence)
@@ -135,16 +137,16 @@
             <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">
               Session du {{ day }}
               <span v-if="displayDuration(formattedCollectiveSlots.slots[day].notInvoicedDuration)"
-                class="text-weight-bold text-orange-400 q-ma-md">
+                class="text-orange-400 q-ma-md">
                 &nbsp;Non facturé : {{ formattedCollectiveSlots.slots[day].notInvoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].notInvoicedAmount }})
               </span>
-              <span class="text-weight-bold q-ma-md"
+              <span class="text-copper-500 q-ma-md"
                 v-if="displayDuration(formattedCollectiveSlots.slots[day].invoicedDuration)">
                 &nbsp;/ Facturé : {{ formattedCollectiveSlots.slots[day].invoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].invoicedAmount }})
               </span>
-              <span class="text-copper-500"
+              <span class="text-green-600"
                 v-if="displayDuration(formattedCollectiveSlots.slots[day].paidDuration)">
                 &nbsp;/ réglé : {{ formattedCollectiveSlots.slots[day].paidDuration }}
                 &nbsp;({{ formattedCollectiveSlots.slots[day].paidAmount }})
