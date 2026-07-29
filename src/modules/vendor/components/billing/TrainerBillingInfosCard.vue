@@ -5,34 +5,30 @@
       <template #header>
         <div class="full-width items-center">
           <div class="trainerInfosContainer">
-            <div>
-              <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
-              <div class="q-ml-md q-py-sm">
-                <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)"
-                  class="text-weight-bold text-orange-400">
-                  Non facturé : {{ formattedTrainerDurations.notInvoiced }} -
-                  {{ formattedTrainerDurations.notInvoicedAmount }}
-                  &nbsp;(dont {{ formattedTrainerDurations.notInvoicedAbsence }} d'absence)
-                </span>
-                <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold">
-                  <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)">&nbsp;/ </span>Facturé :
-                  {{ formattedTrainerDurations.invoiced }} - {{ formattedTrainerDurations.invoicedAmount }} (dont
-                  &nbsp;{{ formattedTrainerDurations.invoicedAbsence }} d'absence)
-                </span>
-                <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-copper-500">
-                  <span v-if="displayDuration(formattedTrainerDurations.notInvoiced) ||
-                    displayDuration(formattedTrainerDurations.invoiced)">&nbsp;/ </span>réglé :
-                  {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
-                  &nbsp;{{ formattedTrainerDurations.paidAbsence }} d'absence)
-                </span>
-              </div>
-            </div>
-            <ni-primary-button v-if="isTrainer" class="q-ma-sm" label="Facturer les créneaux"
-              @click.stop="openCourseSlotInvoiceModal"
-              :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
-            <ni-primary-button v-else class="q-ma-sm" label="Régler les créneaux sélectionnés"
-              @click.stop="openCourseSlotListValidationModal"
-              :disabled="Object.values(selectedCourseSlots).flat().length === 0" />
+            <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+            <ni-primary-button v-if="isTrainer" class="q-my-sm" label="Facturer les créneaux"
+              @click.stop="openCourseSlotInvoiceModal" :disabled="selectedSlotIds.length === 0" />
+            <ni-primary-button v-else class="q-my-sm" label="Changer le statut des créneaux sélectionnés"
+              @click.stop="openCourseSlotStatusChangeModal" :disabled="selectedSlotIds.length === 0" />
+          </div>
+          <div class="q-py-sm">
+            <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)"
+              class="text-weight-bold text-orange-400">
+              Non facturé : {{ formattedTrainerDurations.notInvoiced }} -
+              {{ formattedTrainerDurations.notInvoicedAmount }}
+              &nbsp;(dont {{ formattedTrainerDurations.notInvoicedAbsence }} d'absence)
+            </span>
+            <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold text-copper-500">
+              <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)">&nbsp;/ </span>Facturé :
+              {{ formattedTrainerDurations.invoiced }} - {{ formattedTrainerDurations.invoicedAmount }} (dont
+              &nbsp;{{ formattedTrainerDurations.invoicedAbsence }} d'absence)
+            </span>
+            <span v-if="displayDuration(formattedTrainerDurations.paid)" class="text-weight-bold text-green-600">
+              <span v-if="displayDuration(formattedTrainerDurations.notInvoiced) ||
+                displayDuration(formattedTrainerDurations.invoiced)">&nbsp;/ </span>réglé :
+              {{ formattedTrainerDurations.paid }} - {{ formattedTrainerDurations.paidAmount }} (dont
+              &nbsp;{{ formattedTrainerDurations.paidAbsence }} d'absence)
+            </span>
           </div>
         </div>
       </template>
@@ -50,12 +46,13 @@
                   {{ course.notInvoicedSingleSlotsAmount }} (dont
                   &nbsp;{{ course.notInvoicedSingleSlotsAbsenceDuration }} d'absence)
                 </span>
-                <span class="text-weight-bold" v-if="displayDuration(course.invoicedSingleSlotsDuration)">
+                <span v-if="displayDuration(course.invoicedSingleSlotsDuration)"
+                  class="text-copper-500 text-weight-bold">
                   &nbsp;/&nbsp;Facturé : {{ course.invoicedSingleSlotsDuration }} -
                   {{ course.invoicedSingleSlotsAmount }} (dont
                   &nbsp;{{ course.invoicedSingleSlotsAbsenceDuration }} d'absence)
                 </span>
-                <span class="text-copper-500" v-if="displayDuration(course.paidSingleSlotsDuration)">
+                <span class="text-weight-bold text-green-600" v-if="displayDuration(course.paidSingleSlotsDuration)">
                   &nbsp;/&nbsp;réglé : {{ course.paidSingleSlotsDuration }} - {{ course.paidSingleSlotsAmount }} (dont
                   &nbsp;{{ course.paidSingleSlotsAbsenceDuration }} d'absence)
                 </span>
@@ -86,8 +83,8 @@
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox :model-value="multipleSlotSelection[course._id]" class="q-mr-sm" size="sm"
-                      @update:model-value="selectSlotList($event, { courseId: course._id, slots: course.rows })"
+                    <q-checkbox :model-value="areMultipleSlotsSelected(course.rows)" class="q-mr-sm" size="sm"
+                      @update:model-value="selectSlotList($event, course.rows)"
                       :disable="course.rows.every(s => !isSlotSelectable(s))" />
                   </template>
                   <template v-else>{{ col.label }}</template>
@@ -96,8 +93,8 @@
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox class="q-mr-md" v-model="selectedCourseSlots[course._id]" :val="props.row._id" dense
-                      :disable="!isSlotSelectable(props.row)" />
+                    <q-checkbox class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)" dense
+                      @update:model-value="selectSlot($event, props.row)" :disable="!isSlotSelectable(props.row)" />
                   </template>
                   <template v-else>{{ col.value }}</template>
                   </q-td>
@@ -115,12 +112,13 @@
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedAbsence }} d'absence)
               </span>
-              <span class="text-weight-bold q-ma-md" v-if="displayDuration(formattedCollectiveSlots.invoiced)">
+              <span v-if="displayDuration(formattedCollectiveSlots.invoiced)"
+                class="text-weight-bold text-copper-500 q-ma-md">
                 &nbsp;/ Facturé : {{ formattedCollectiveSlots.invoiced }} -
                 &nbsp;{{ formattedCollectiveSlots.invoicedCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.invoicedAbsence }} d'absence)
               </span>
-              <span class="text-copper-500" v-if="displayDuration(formattedCollectiveSlots.paid)">
+              <span class="text-weight-bold text-green-600" v-if="displayDuration(formattedCollectiveSlots.paid)">
                 &nbsp;/ réglé : {{ formattedCollectiveSlots.paid }} -
                 &nbsp;{{ formattedCollectiveSlots.paidCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.paidAbsence }} d'absence)
@@ -139,16 +137,16 @@
             <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">
               Session du {{ day }}
               <span v-if="displayDuration(formattedCollectiveSlots.slots[day].notInvoicedDuration)"
-                class="text-weight-bold text-orange-400 q-ma-md">
+                class="text-orange-400 q-ma-md">
                 &nbsp;Non facturé : {{ formattedCollectiveSlots.slots[day].notInvoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].notInvoicedAmount }})
               </span>
-              <span class="text-weight-bold q-ma-md"
+              <span class="text-copper-500 q-ma-md"
                 v-if="displayDuration(formattedCollectiveSlots.slots[day].invoicedDuration)">
                 &nbsp;/ Facturé : {{ formattedCollectiveSlots.slots[day].invoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].invoicedAmount }})
               </span>
-              <span class="text-copper-500"
+              <span class="text-green-600"
                 v-if="displayDuration(formattedCollectiveSlots.slots[day].paidDuration)">
                 &nbsp;/ réglé : {{ formattedCollectiveSlots.slots[day].paidDuration }}
                 &nbsp;({{ formattedCollectiveSlots.slots[day].paidAmount }})
@@ -159,10 +157,10 @@
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox :model-value="multipleSlotSelection[day]" class="q-mr-sm" size="sm"
-                      @update:model-value="
-                        selectSlotList($event, { day, slots: trainerInfos.collectiveSlots.slots[day].slots })"
-                      :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => !isSlotSelectable(s))" />
+                    <q-checkbox :model-value="areMultipleSlotsSelected(trainerInfos.collectiveSlots.slots[day].slots)"
+                    @update:model-value="selectSlotList($event, trainerInfos.collectiveSlots.slots[day].slots, true)"
+                    :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => !isSlotSelectable(s))"
+                    class="q-mr-sm" size="sm" />
                   </template>
                   <template v-else>{{ col.label }}</template>
                 </q-th>
@@ -175,10 +173,8 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions'">
-                    <q-checkbox class="q-mr-md"
-                      :model-value="selectedCourseSlots[day]?.includes(props.row._id)" dense
-                      @update:model-value="val =>
-                        selectSlotGroupByDate(val, props.row, day, trainerInfos.collectiveSlots.slots[day].slots)"
+                    <q-checkbox class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)" dense
+                      @update:model-value="selectSlot($event, props.row, trainerInfos.collectiveSlots.slots[day].slots)"
                       :disable="!isSlotSelectable(props.row)" />
                   </template>
                   <template v-else>{{ col.value }}</template>
@@ -191,11 +187,12 @@
     </q-expansion-item>
   </q-card>
 
-  <course-slot-list-validation-modal v-model="courseSlotListValidationModal" :course-slots-to-pay="courseSlotsToPay"
-    :validations="v$.courseSlotsToPay" @hide="resetSlotListValidationInfos" @submit="updateSlotList"
-    @cancel="resetSlotListValidationInfos(true)" />
+  <course-slot-status-change-modal v-model="courseSlotStatusChangeModal" :current-status="currentStatus"
+    :new-status="newStatus" :validations="v$.newStatus" :selected-slots="selectedSlots"
+    :loading="statusChangeLoading" @update:new-status="newStatus = $event"
+    @hide="resetCourseSlotStatusChangeModal" @submit="submitStatusChange" />
 
-  <course-slot-invoice-modal v-model="courseSlotInvoiceModal" :course-slots="selectedSlotsForInvoice"
+  <course-slot-invoice-modal v-model="courseSlotInvoiceModal" :course-slots="selectedSlots"
     :loading="courseSlotInvoiceLoading" :invoice="invoice" :validations="v$.invoice" @hide="resetCourseSlotInvoiceModal"
     @submit="submitCourseSlotInvoice" />
 </template>
@@ -204,10 +201,9 @@
 
 import { ref, toRefs, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import get from 'lodash/get';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
-import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, NOT_INVOICED, PAID } from '@data/constants';
+import { LONG_DURATION_H_MM, DD_MM_YYYY, HHhMM, SLOT_STATUS, NOT_INVOICED } from '@data/constants';
 import { formatIdentity, formatStringToPrice } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -215,43 +211,44 @@ import ExpandingTable from '@components/table/ExpandingTable';
 import Banner from '@components/Banner';
 import Button from '@components/PrimaryButton';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
-import CourseSlotListValidationModal from 'src/modules/vendor/components/billing/CourseSlotListValidationModal';
+import CourseSlotStatusChangeModal from 'src/modules/vendor/components/billing/CourseSlotStatusChangeModal';
 import CourseSlotInvoiceModal from 'src/modules/vendor/components/billing/CourseSlotInvoiceModal';
-import CourseSlots from '@api/CourseSlots';
 import TrainerInvoices from '@api/TrainerInvoices';
 
 export default {
   name: 'TrainerBillingInfosCard',
   props: {
     trainerInfos: { type: Object, default: () => ({}) },
-    trainerId: { type: String, required: true },
     isTrainer: { type: Boolean, default: false },
   },
   components: {
     'ni-expanding-table': ExpandingTable,
     'ni-banner': Banner,
     'ni-primary-button': Button,
-    'course-slot-list-validation-modal': CourseSlotListValidationModal,
+    'course-slot-status-change-modal': CourseSlotStatusChangeModal,
     'course-slot-invoice-modal': CourseSlotInvoiceModal,
   },
   emits: ['refresh'],
   setup (props, { emit }) {
-    const { trainerInfos, trainerId, isTrainer } = toRefs(props);
+    const { trainerInfos, isTrainer } = toRefs(props);
     const $route = useRoute();
     const isDashboard = /\/trainers-follow-up/.test($route.path);
     const isTrainerSection = /^\/ad\/trainers\//.test($route.path);
     const displayDetails = ref(!isDashboard);
 
     const areCourseDetailsVisible = ref({});
-    const selectedCourseSlots = ref({});
-    const courseSlotsToPay = ref({ _ids: [], billNumber: '' });
+    const selectedSlotIds = ref([]);
     const invoice = ref({ number: '', file: '' });
-    const courseSlotListValidationModal = ref(false);
+    const courseSlotStatusChangeModal = ref(false);
+    const currentStatus = ref('');
+    const newStatus = ref('');
+    const statusChangeLoading = ref(false);
     const courseSlotInvoiceModal = ref(false);
     const courseSlotInvoiceLoading = ref(false);
-    const multipleSlotSelection = ref({});
 
-    const isSlotSelectable = slot => (isTrainer.value ? slot.status === NOT_INVOICED : slot.status !== PAID);
+    const isSlotSelectable = slot => (isTrainer.value
+      ? slot.status === NOT_INVOICED
+      : slot.status !== NOT_INVOICED && !!slot.trainerInvoice);
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -438,11 +435,11 @@ export default {
     });
 
     const rules = computed(() => ({
-      courseSlotsToPay: { billNumber: { required } },
       invoice: { number: { required }, file: { required } },
+      newStatus: { required },
     }));
 
-    const v$ = useVuelidate(rules, { courseSlotsToPay, invoice });
+    const v$ = useVuelidate(rules, { invoice, newStatus });
 
     const displayDuration = value => value !== '0min';
 
@@ -452,32 +449,78 @@ export default {
       query: { defaultTab: 'traineeFollowUp' },
     });
 
-    const openCourseSlotListValidationModal = () => {
-      courseSlotsToPay.value._ids = Object.values(selectedCourseSlots.value).flat();
-      courseSlotListValidationModal.value = true;
+    const allSlots = computed(() => [
+      ...coursesWithFormattedData.value.flatMap(course => course.rows),
+      ...Object.values(trainerInfos.value.collectiveSlots.slots).flatMap(dayGroup => dayGroup.slots),
+    ]);
+
+    const selectedSlots = computed(() => allSlots.value.filter(slot => selectedSlotIds.value.includes(slot._id)));
+
+    const selectSlot = (checked, slot, daySlots) => {
+      let idsToSelect = [slot._id];
+      if (slot.trainerInvoice) {
+        idsToSelect = allSlots.value.filter(s => s.trainerInvoice === slot.trainerInvoice).map(s => s._id);
+      } else if (daySlots) {
+        idsToSelect = daySlots
+          .filter(s => CompaniDate(s.startDate).isSame(slot.startDate) && CompaniDate(s.endDate).isSame(slot.endDate) &&
+            isSlotSelectable(s))
+          .map(s => s._id);
+      }
+      selectedSlotIds.value = checked
+        ? [...new Set([...selectedSlotIds.value, ...idsToSelect])]
+        : selectedSlotIds.value.filter(id => !idsToSelect.includes(id));
     };
 
-    const resetSlotListValidationInfos = (displayMessage = false) => {
-      courseSlotListValidationModal.value = false;
-      if (displayMessage) NotifyPositive('Modification des créneaux annulées.');
-
-      courseSlotsToPay.value = { _ids: [], billNumber: '' };
-      v$.value.courseSlotsToPay.$reset();
+    const selectSlotList = (checked, slots, isCollective) => {
+      slots.filter(isSlotSelectable).forEach(slot => selectSlot(checked, slot, isCollective ? slots : undefined));
     };
 
-    const updateSlotList = async () => {
+    const areMultipleSlotsSelected = (slots) => {
+      const selectableSlots = slots.filter(isSlotSelectable);
+      return selectableSlots.length > 0 && selectableSlots.every(s => selectedSlotIds.value.includes(s._id));
+    };
+
+    const openCourseSlotStatusChangeModal = () => {
+      const statuses = [...new Set(selectedSlots.value.map(s => s.status))];
+      if (statuses.length > 1) return NotifyWarning('Les créneaux sélectionnés n\'ont pas tous le même statut.');
+
+      currentStatus.value = statuses[0];
+      courseSlotStatusChangeModal.value = true;
+    };
+
+    const resetCourseSlotStatusChangeModal = () => {
+      courseSlotStatusChangeModal.value = false;
+      newStatus.value = '';
+      currentStatus.value = '';
+      v$.value.newStatus.$reset();
+    };
+
+    const submitStatusChange = async () => {
       try {
-        v$.value.courseSlotsToPay.$touch();
-        if (v$.value.courseSlotsToPay.$error) return NotifyWarning('Champ(s) invalide(s).');
+        v$.value.newStatus.$touch();
+        if (v$.value.newStatus.$error) return NotifyWarning('Champ(s) invalide(s).');
 
-        await CourseSlots.updateSlotList({ ...courseSlotsToPay.value, trainer: trainerId.value });
+        statusChangeLoading.value = true;
+
+        const trainerInvoiceIds = [...new Set(selectedSlots.value.map(s => s.trainerInvoice).filter(Boolean))];
+
+        if (newStatus.value === NOT_INVOICED) {
+          await Promise.all(trainerInvoiceIds.map(id => TrainerInvoices.remove(id)));
+        } else {
+          await Promise.all(
+            trainerInvoiceIds.map(id => TrainerInvoices.update(id, { status: newStatus.value }))
+          );
+        }
+
         emit('refresh');
-        courseSlotListValidationModal.value = false;
+        courseSlotStatusChangeModal.value = false;
 
-        NotifyPositive('Créneaux modifiés.');
+        NotifyPositive('Statut des créneaux modifié.');
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la modification des créneaux.');
+        NotifyNegative('Erreur lors de la modification du statut des créneaux.');
+      } finally {
+        statusChangeLoading.value = false;
       }
     };
 
@@ -497,7 +540,7 @@ export default {
         courseSlotInvoiceLoading.value = true;
 
         const form = new FormData();
-        selectedSlotsForInvoice.value.forEach(slot => form.append('courseSlots', slot._id));
+        selectedSlots.value.forEach(slot => form.append('courseSlots', slot._id));
         form.append('number', invoice.value.number);
         form.append('file', invoice.value.file);
 
@@ -515,85 +558,27 @@ export default {
       }
     };
 
-    const selectSlotList = (event, obj) => {
-      const selectableSlots = obj.slots.filter(isSlotSelectable).map(s => s._id);
-
-      if (!obj.day) {
-        const { courseId } = obj;
-        multipleSlotSelection.value[courseId] = event;
-        selectedCourseSlots.value[courseId] = event ? selectableSlots : [];
-      } else {
-        const { day } = obj;
-        multipleSlotSelection.value[day] = event;
-        selectedCourseSlots.value[day] = event ? selectableSlots : [];
-      }
-    };
-
-    const selectSlotGroupByDate = (event, row, day, slots) => {
-      const sameDate = slots
-        .filter(s => CompaniDate(s.startDate).isSame(row.startDate) &&
-          CompaniDate(s.endDate).isSame(row.endDate) && isSlotSelectable(s))
-        .map(s => s._id);
-
-      const currentSelectedCourseSlots = Array.isArray(selectedCourseSlots.value[day])
-        ? selectedCourseSlots.value[day]
-        : [];
-
-      selectedCourseSlots.value[day] = event
-        ? [...new Set([...currentSelectedCourseSlots, ...sameDate])]
-        : currentSelectedCourseSlots.filter(id => !sameDate.includes(id));
-    };
-
     watch(() => trainerInfos.value, (newVal) => {
-      selectedCourseSlots.value = Object.fromEntries([
-        ...newVal.courses.map(course => [course._id, []]),
-        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, []]),
-      ]);
-
-      multipleSlotSelection.value = Object.fromEntries([
-        ...newVal.courses.map(course => [course._id, false]),
-        ...Object.keys(get(newVal, 'collectiveSlots.slots', {})).map(day => [day, false]),
-      ]);
+      selectedSlotIds.value = [];
 
       areCourseDetailsVisible.value = Object.fromEntries(
         newVal.courses.map(course => [course._id, areCourseDetailsVisible.value[course._id]])
       );
     }, { immediate: true });
 
-    watch(() => selectedCourseSlots.value, (newVal) => {
-      Object.keys(newVal).forEach((val) => {
-        const slots = trainerInfos.value.collectiveSlots.slots[val]?.slots ||
-          get(coursesWithFormattedData.value.find(course => course._id === val), 'rows') || [];
-        const selectableSlots = slots.filter(isSlotSelectable).map(s => s._id);
-
-        if (selectableSlots.length) {
-          multipleSlotSelection.value[val] = selectableSlots.length === selectedCourseSlots.value[val].length;
-        }
-      });
-    }, { deep: true });
-
-    const selectedSlotsForInvoice = computed(() => {
-      const selectedIds = Object.values(selectedCourseSlots.value).flat();
-      const allSlots = [
-        ...coursesWithFormattedData.value.flatMap(course => course.rows),
-        ...Object.values(trainerInfos.value.collectiveSlots.slots).flatMap(dayGroup => dayGroup.slots),
-      ];
-
-      return allSlots.filter(slot => selectedIds.includes(slot._id));
-    });
-
     return {
       // Data
       isDashboard,
       areCourseDetailsVisible,
-      selectedCourseSlots,
-      courseSlotsToPay,
+      selectedSlotIds,
       invoice,
-      courseSlotListValidationModal,
+      courseSlotStatusChangeModal,
+      currentStatus,
+      newStatus,
+      statusChangeLoading,
       courseSlotInvoiceModal,
       courseSlotInvoiceLoading,
       displayDetails,
-      multipleSlotSelection,
       // Validation
       v$,
       // Computed
@@ -602,20 +587,21 @@ export default {
       collectiveSlotsColumns,
       formattedTrainerDurations,
       formattedCollectiveSlots,
-      selectedSlotsForInvoice,
+      selectedSlots,
       // Methods
       formatIdentity,
       displayDuration,
       goToCourse,
       isSlotSelectable,
-      openCourseSlotListValidationModal,
-      resetSlotListValidationInfos,
-      updateSlotList,
+      areMultipleSlotsSelected,
+      selectSlot,
+      selectSlotList,
+      openCourseSlotStatusChangeModal,
+      resetCourseSlotStatusChangeModal,
+      submitStatusChange,
       openCourseSlotInvoiceModal,
       resetCourseSlotInvoiceModal,
       submitCourseSlotInvoice,
-      selectSlotList,
-      selectSlotGroupByDate,
     };
   },
 };
