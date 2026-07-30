@@ -9,8 +9,9 @@
         Toute facture d'un montant différent sera refusée.
       </template>
     </ni-banner>
-    <q-expansion-item :label="`Créneaux sélectionnés (${courseSlots.length})`" header-class="text-weight-bold" dense>
-      <div v-for="slot of courseSlots" :key="slot._id" class="row q-mb-sm q-mt-sm">
+    <q-expansion-item :label="`Créneaux sélectionnés (${uniqueDateSlots.length})`" header-class="text-weight-bold"
+      dense>
+      <div v-for="slot of uniqueDateSlots" :key="slot._id" class="row q-my-sm q-mx-md">
         <span>
           {{ CompaniDate(slot.startDate).format(`${DD_MM_YYYY} ${HHhMM}`) }} -
           {{ CompaniDate(slot.endDate).format(HHhMM) }} ({{ formatStringToPrice(slot.amount) }})
@@ -36,6 +37,7 @@ import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
 import Banner from '@components/Banner';
+import { ascendingSortBy } from '@helpers/dates/utils';
 import { formatStringToPrice } from '@helpers/utils';
 import { add } from '@helpers/numbers';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -60,11 +62,12 @@ export default {
   setup (props, { emit }) {
     const { courseSlots } = toRefs(props);
 
+    const uniqueDateSlots = computed(
+      () => uniqBy(courseSlots.value, slot => `${slot.startDate}_${slot.endDate}`).sort(ascendingSortBy('startDate'))
+    );
+
     const formattedTotalAmount = computed(() => {
-      // A collective session is listed once per attending trainee : it must be counted once, not once
-      // per trainee, when summing the amount (cf. the same rule applied server-side).
-      const uniqueDateSlots = uniqBy(courseSlots.value, slot => `${slot.startDate}_${slot.endDate}`);
-      const total = uniqueDateSlots.reduce((acc, slot) => add(acc, slot.amount), 0);
+      const total = uniqueDateSlots.value.reduce((acc, slot) => add(acc, slot.amount), 0);
 
       return formatStringToPrice(total);
     });
@@ -82,6 +85,7 @@ export default {
       HHhMM,
       // Computed
       formattedTotalAmount,
+      uniqueDateSlots,
       // Methods
       CompaniDate,
       formatStringToPrice,
