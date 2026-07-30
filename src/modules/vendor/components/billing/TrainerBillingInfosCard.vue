@@ -248,7 +248,7 @@ export default {
 
     const isSlotSelectable = slot => (isTrainer.value
       ? slot.status === NOT_INVOICED
-      : slot.status !== NOT_INVOICED && !!slot.trainerBillId);
+      : slot.status !== NOT_INVOICED && !!slot.trainerBill);
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -458,8 +458,8 @@ export default {
 
     const selectSlot = (checked, slot, daySlots) => {
       let idsToSelect = [slot._id];
-      if (slot.trainerBillId) {
-        idsToSelect = allSlots.value.filter(s => s.trainerBillId === slot.trainerBillId).map(s => s._id);
+      if (slot.trainerBill) {
+        idsToSelect = allSlots.value.filter(s => s.trainerBill === slot.trainerBill).map(s => s._id);
       } else if (daySlots) {
         idsToSelect = daySlots
           .filter(s => CompaniDate(s.startDate).isSame(slot.startDate) && CompaniDate(s.endDate).isSame(slot.endDate) &&
@@ -502,7 +502,7 @@ export default {
 
         statusChangeLoading.value = true;
 
-        const trainerBillIds = [...new Set(selectedSlots.value.map(s => s.trainerBillId).filter(Boolean))];
+        const trainerBillIds = [...new Set(selectedSlots.value.map(s => s.trainerBill).filter(Boolean))];
 
         if (newStatus.value === NOT_INVOICED) {
           await Promise.all(trainerBillIds.map(id => TrainerBills.remove(id)));
