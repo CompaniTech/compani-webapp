@@ -14,4 +14,7 @@ export default {
     const courseSlots = await alenviAxios.get(`${process.env.API_HOSTNAME}/courseslots/trainers-billing`, { params });
     return courseSlots.data.data.courseSlots;
   },
+  async uploadCsv (payload) {
+    await alenviAxios.post(`${process.env.API_HOSTNAME}/courseslots/csv`, payload);
+  },
 };
