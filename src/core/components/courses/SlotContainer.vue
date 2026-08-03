@@ -660,8 +660,10 @@ export default {
         emit('refresh');
       } catch (e) {
         console.error(e);
-        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        if ([403, 400].includes(e.status) && e.data?.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de l\'import des créneaux.');
+
+        if (!e.data?.errorsBySlot) return;
 
         const { errorsBySlot } = e.data;
         const message = Object.entries(errorsBySlot)
