@@ -400,8 +400,11 @@ export default {
         refresh();
       } catch (e) {
         console.error(e);
-        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        if ([403, 400].includes(e.status) && e.data?.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de l\'ajout du/de la stagiaire.');
+
+        if (!e.data?.errorsByTrainee) return;
+
         const { errorsByTrainee } = e.data;
 
         const message = Object.entries(errorsByTrainee)
