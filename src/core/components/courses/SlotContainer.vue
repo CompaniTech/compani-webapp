@@ -20,7 +20,7 @@
           {{ showStepList ? 'Masquer' : 'Afficher' }} la liste des étapes de la formation
           <q-icon size="xs" :name="showStepList ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
         </q-item-section>
-        <div v-if="canEdit" class="q-px-md q-pt-sm" align="right">
+        <div v-if="isRofOrVendorAdmin && isVendorInterface" class="q-px-md q-pt-sm" align="right">
           <ni-button label="Importer des créneaux" color="primary" icon="upload" :disable="loading"
             @click="openSlotsCsvUploadModal" />
         </div>
