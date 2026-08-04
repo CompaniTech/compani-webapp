@@ -352,6 +352,7 @@ export const COURSE_SLOT = 'course_slot';
 export const SINGLE_COURSE_SLOT = 'single_course_slot';
 export const COURSE_BILL = 'course_bill';
 export const COURSE_PAYMENT = 'course_payment';
+export const DRAFT_COURSE_BILL = 'draft_course_bill';
 export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Formations de groupe', value: COURSE },
   { label: 'Formations individuelles', value: SINGLE_COURSE },
@@ -359,6 +360,7 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Créneaux de formation individuelle', value: SINGLE_COURSE_SLOT },
   { label: 'Questionnaires de satisfaction', value: END_OF_COURSE },
   { label: 'Factures et avoirs', value: COURSE_BILL },
+  { label: 'Factures à venir', value: DRAFT_COURSE_BILL },
   { label: 'Paiements et remboursements', value: COURSE_PAYMENT },
   { label: 'Questionnaires d\'auto-positionnement par groupe', value: SELF_POSITIONNING },
 
@@ -449,6 +451,11 @@ export const PAYMENT_PLAN = 'paymentPlan';
 // COURSE SLOT STATUS
 export const PRESENT = 'present';
 export const MISSING = 'missing';
+export const NOT_INVOICED = 'not_invoiced';
+export const INVOICED = 'invoiced';
 export const PAID = 'paid';
-export const NOT_PAID = 'not_paid';
-export const SLOT_STATUS = { [PAID]: 'Réglé', [NOT_PAID]: 'Non réglé' };
+export const SLOT_STATUS = { [NOT_INVOICED]: 'Non facturé', [INVOICED]: 'Facturé', [PAID]: 'Réglé' };
+export const STATUS_CHANGE_OPTIONS = {
+  [INVOICED]: [{ label: 'Réglé', value: PAID }, { label: 'Non facturé', value: NOT_INVOICED }],
+  [PAID]: [{ label: 'Facturé', value: INVOICED }],
+};

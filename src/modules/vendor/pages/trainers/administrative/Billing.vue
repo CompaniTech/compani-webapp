@@ -1,6 +1,6 @@
 <template>
   <q-page v-if="loggedUser" padding class="vendor-background">
-    <ni-title-header title="Suivi des heures" class="q-mb-xl" />
+    <ni-title-header title="Facturation" class="q-mb-xl" />
     <profile-billing />
   </q-page>
 </template>
@@ -19,7 +19,7 @@ export default {
     'profile-billing': ProfileBilling,
   },
   setup () {
-    const metaInfo = { title: 'Suivi des heures' };
+    const metaInfo = { title: 'Facturation' };
     useMeta(metaInfo);
 
     const $store = useStore();

@@ -20,6 +20,10 @@
           {{ showStepList ? 'Masquer' : 'Afficher' }} la liste des étapes de la formation
           <q-icon size="xs" :name="showStepList ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
         </q-item-section>
+        <div v-if="isRofOrVendorAdmin && isVendorInterface" class="q-px-md q-pt-sm" align="right">
+          <ni-button label="Importer des créneaux" color="primary" icon="upload" :disable="loading"
+            @click="openSlotsCsvUploadModal" />
+        </div>
         <div v-if="showStepList" class="bg-copper-grey-50 q-px-md">
           <q-item-section v-for="(step, index) in stepList" :key="step.key" class="q-pb-sm flex">
             <div :class="getStepClass(step)">
@@ -119,6 +123,9 @@
     <multiple-slot-creation-modal v-model="multipleSlotCreationModal" v-model:slots-to-add="slotsToAdd"
       @hide="resetCreationModal" @submit="createCourseSlots" :validations="v$.slotsToAdd"
       :loading="slotCreationLoading" />
+
+    <upload-csv-modal v-model="csvUploadModal" @hide="resetCsvUploadModal" @submit="uploadSlotsCsv"
+      v-model:csv="csv" :loading="csvLoading" :validations="v$.csv" :constraints="constraints" />
   </div>
 </template>
 <script>
@@ -135,12 +142,14 @@ import unset from 'lodash/unset';
 import groupBy from 'lodash/groupBy';
 import uniqBy from 'lodash/uniqBy';
 import { subject } from '@casl/ability';
+import { useQuasar } from 'quasar';
 import useVuelidate from '@vuelidate/core';
 import { required, requiredIf } from '@vuelidate/validators';
 import CourseSlots from '@api/CourseSlots';
 import Button from '@components/Button';
 import SlotEditionModal from '@components/courses/SlotEditionModal';
 import MultipleSlotCreationModal from '@components/courses/MultipleSlotCreationModal';
+import UploadCsvModal from '@components/courses/UploadCsvModal';
 import DateInput from '@components/form/DateInput';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import { useCourses } from '@composables/courses';
@@ -189,12 +198,14 @@ export default {
     'ni-button': Button,
     'ni-date-input': DateInput,
     'multiple-slot-creation-modal': MultipleSlotCreationModal,
+    'upload-csv-modal': UploadCsvModal,
   },
   emits: ['refresh', 'update', 'update:estimatedStartDate'],
   setup (props, { emit }) {
     const { canEdit } = toRefs(props);
 
     const $store = useStore();
+    const $q = useQuasar();
 
     const slotCreationLoading = ref(false);
     const modalLoading = ref(false);
@@ -206,6 +217,28 @@ export default {
     const showStepList = ref(true);
     const showSlotToPlan = ref([]);
     const multipleSlotCreationModal = ref(false);
+    const csvUploadModal = ref(false);
+    const csvLoading = ref(false);
+    const csv = ref(null);
+    const constraints = `
+      <ul class="text-14">
+        <li>La colonne <span class="text-weight-bold">step</span> (étape) doit correspondre exactement au nom d'une
+          étape de la formation.</li>
+        <li><span class="text-weight-bold">startDate</span> et <span class="text-weight-bold">endDate</span> (date de
+          début et fin) sont obligatoires, au format date (AAAA-MM-JJTHH:MM:SS) et doivent être le même jour.</li>
+        <li><span class="text-weight-bold">address</span> (adresse postale pour le présentiel) ou
+          <span class="text-weight-bold">meetingLink</span> (lien de visio pour le  distanciel) sont optionnels et
+          mutuellement exclusifs : utilisez le bon champ selon le type de l'étape.</li>
+        <li><span class="text-weight-bold">trainers</span> (intervenants rattachés au créneau) est obligatoire : un ou
+          plusieurs emails d'intervenants déjà rattachés à la formation, séparés par
+          <span class="text-weight-bold">/</span>.</li>
+        <li><span class="text-weight-bold">trainees</span> (apprenants concernés par le créneau) est optionnel : un ou
+          plusieurs emails d'apprenants déjà inscrits à la formation, séparés par
+          <span class="text-weight-bold">/</span>.</li>
+        <li>Les créneaux ne doivent pas se chevaucher entre eux, ni avec les créneaux déjà existants de la
+          formation.</li>
+      </ul>
+    `;
 
     const { isVendorInterface } = useCourses();
     const { waitForFormValidation } = useValidations();
@@ -333,9 +366,10 @@ export default {
         ...(isVendorInterface && { trainers: { required } }),
       },
       slotsToAdd: { quantity: { required, strictPositiveNumber, integerNumber } },
+      csv: { required },
     }));
 
-    const v$ = useVuelidate(rules, { editedCourseSlot, slotsToAdd });
+    const v$ = useVuelidate(rules, { editedCourseSlot, slotsToAdd, csv });
 
     const trainerOptions = computed(() => formatAndSortIdentityOptions(course.value.trainers));
 
@@ -595,6 +629,57 @@ export default {
       v$.value.slotsToAdd.$reset();
     };
 
+    const openSlotsCsvUploadModal = () => {
+      if (course.value.archivedAt) {
+        return NotifyWarning('Vous ne pouvez pas importer de créneaux pour une formation archivée.');
+      }
+      if (!course.value.trainers.length) {
+        return NotifyWarning('Vous ne pouvez pas importer de créneaux pour une formation sans intervenant.');
+      }
+      csvUploadModal.value = true;
+    };
+
+    const resetCsvUploadModal = () => {
+      v$.value.csv.$reset();
+      csv.value = null;
+    };
+
+    const uploadSlotsCsv = async () => {
+      try {
+        v$.value.csv.$touch();
+        if (v$.value.csv.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        csvLoading.value = true;
+        const form = new FormData();
+        form.append('course', course.value._id);
+        form.append('file', csv.value);
+        await CourseSlots.uploadCsv(form);
+
+        csvUploadModal.value = false;
+        NotifyPositive('Créneaux importés.');
+        emit('refresh');
+      } catch (e) {
+        console.error(e);
+        if ([403, 400].includes(e.status) && e.data?.message) return NotifyNegative(e.data.message);
+        NotifyNegative('Erreur lors de l\'import des créneaux.');
+
+        if (!e.data?.errorsBySlot) return;
+
+        const { errorsBySlot } = e.data;
+        const message = Object.entries(errorsBySlot)
+          .map(([key, values]) => `<li><span class="text-weight-bold">${key}</span> : ${values.join(', ')}</li>`)
+          .join('<br>');
+        $q.dialog({
+          title: 'L\'import des créneaux a échoué',
+          message: `<ul class="text-14">${message}</ul>`,
+          html: true,
+          ok: 'ok',
+        });
+      } finally {
+        csvLoading.value = false;
+      }
+    };
+
     watch(course, async() => {
       if (course.value.type === SINGLE) await refreshAttendances({ course: course.value._id });
     }, { immediate: true });
@@ -628,6 +713,10 @@ export default {
       showSlotToPlanDetails,
       slotsToAdd,
       multipleSlotCreationModal,
+      csvUploadModal,
+      csvLoading,
+      csv,
+      constraints,
       // Computed
       v$,
       course,
@@ -668,6 +757,9 @@ export default {
       createCourseSlots,
       formatQuantity,
       getSlotTrainersName,
+      openSlotsCsvUploadModal,
+      resetCsvUploadModal,
+      uploadSlotsCsv,
     };
   },
 };

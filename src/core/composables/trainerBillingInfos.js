@@ -4,7 +4,7 @@ import get from 'lodash/get';
 import { ref, computed } from 'vue';
 import CourseSlots from '@api/CourseSlots';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { MONTH, SLOT_STATUS, MINUTE, NOT_PAID } from '@data/constants';
+import { MONTH, SLOT_STATUS, MINUTE, NOT_INVOICED, INVOICED, PAID } from '@data/constants';
 import { formatAndSortIdentityOptions } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -60,24 +60,39 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     }
   };
 
+  const initStatusTotals = () => ({
+    [NOT_INVOICED]: { duration: CompaniDuration('PT0S'), amount: 0, absenceDuration: CompaniDuration('PT0S') },
+    [INVOICED]: { duration: CompaniDuration('PT0S'), amount: 0, absenceDuration: CompaniDuration('PT0S') },
+    [PAID]: { duration: CompaniDuration('PT0S'), amount: 0, absenceDuration: CompaniDuration('PT0S') },
+  });
+
+  const addToStatusTotals = (totals, status, durationObj, amount, isAbsence) => ({
+    ...totals,
+    [status]: {
+      duration: totals[status].duration.add(durationObj),
+      amount: add(totals[status].amount, amount),
+      absenceDuration: isAbsence ? totals[status].absenceDuration.add(durationObj) : totals[status].absenceDuration,
+    },
+  });
+
+  const mergeStatusTotals = (target, source) => Object.fromEntries(
+    [NOT_INVOICED, INVOICED, PAID].map(status => [status, {
+      duration: target[status].duration.add(source[status].duration),
+      amount: add(target[status].amount, source[status].amount),
+      absenceDuration: target[status].absenceDuration.add(source[status].absenceDuration),
+    }])
+  );
+
   const getFilteredData = (data, slotFilter) => Object.fromEntries(
     Object.entries(data).map(([trainerId, trainerInfos]) => {
       // Single slots
       const courses = trainerInfos.courses
         .map((course) => {
-          let paidSingleSlotsDuration = CompaniDuration('PT0S');
-          let paidSingleSlotsAbsenceDuration = CompaniDuration('PT0S');
-          let paidSingleSlotsAmount = 0;
-          let notPaidSingleSlotsDuration = CompaniDuration('PT0S');
-          let notPaidSingleSlotsAbsenceDuration = CompaniDuration('PT0S');
-          let notPaidSingleSlotsAmount = 0;
+          let courseTotals = initStatusTotals();
 
           const singleTraineeSlots = Object.fromEntries(
             Object.entries(course.singleTraineeSlots).map(([stepName, step]) => {
-              let toPayDuration = CompaniDuration('PT0S');
-              let paidDuration = CompaniDuration('PT0S');
-              let toPayAmount = 0;
-              let paidAmount = 0;
+              let stepTotals = initStatusTotals();
 
               const filteredStepSlots = step.slots.filter(slotFilter);
 
@@ -85,35 +100,20 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
                 const duration = CompaniDate(slot.endDate).diff(slot.startDate, MINUTE);
                 const durObj = CompaniDuration(duration);
 
-                if (slot.status === NOT_PAID) {
-                  toPayDuration = toPayDuration.add(durObj);
-                  toPayAmount = add(toPayAmount, slot.amount);
-
-                  notPaidSingleSlotsDuration = notPaidSingleSlotsDuration.add(durObj);
-                  if (slot.isAbsence) {
-                    notPaidSingleSlotsAbsenceDuration = notPaidSingleSlotsAbsenceDuration.add(durObj);
-                  }
-                } else {
-                  paidDuration = paidDuration.add(durObj);
-                  paidAmount = add(paidAmount, slot.amount);
-
-                  paidSingleSlotsDuration = paidSingleSlotsDuration.add(durObj);
-                  if (slot.isAbsence) {
-                    paidSingleSlotsAbsenceDuration = paidSingleSlotsAbsenceDuration.add(durObj);
-                  }
-                }
+                stepTotals = addToStatusTotals(stepTotals, slot.status, durObj, slot.amount, slot.isAbsence);
+                courseTotals = addToStatusTotals(courseTotals, slot.status, durObj, slot.amount, slot.isAbsence);
               });
 
-              paidSingleSlotsAmount = add(paidSingleSlotsAmount, paidAmount);
-              notPaidSingleSlotsAmount = add(notPaidSingleSlotsAmount, toPayAmount);
               return [
                 stepName,
                 {
                   slots: filteredStepSlots,
-                  toPayDuration: toPayDuration.toISO(),
-                  paidDuration: paidDuration.toISO(),
-                  toPayAmount,
-                  paidAmount,
+                  notInvoicedDuration: stepTotals[NOT_INVOICED].duration.toISO(),
+                  notInvoicedAmount: stepTotals[NOT_INVOICED].amount,
+                  invoicedDuration: stepTotals[INVOICED].duration.toISO(),
+                  invoicedAmount: stepTotals[INVOICED].amount,
+                  paidDuration: stepTotals[PAID].duration.toISO(),
+                  paidAmount: stepTotals[PAID].amount,
                 },
               ];
             }).filter(([, val]) => val.slots.length)
@@ -122,32 +122,27 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
           return {
             ...course,
             singleTraineeSlots,
-            paidSingleSlotsDuration: paidSingleSlotsDuration.toISO(),
-            paidSingleSlotsAbsenceDuration: paidSingleSlotsAbsenceDuration.toISO(),
-            paidSingleSlotsAmount,
-            notPaidSingleSlotsDuration: notPaidSingleSlotsDuration.toISO(),
-            notPaidSingleSlotsAbsenceDuration: notPaidSingleSlotsAbsenceDuration.toISO(),
-            notPaidSingleSlotsAmount,
+            notInvoicedSingleSlotsDuration: courseTotals[NOT_INVOICED].duration.toISO(),
+            notInvoicedSingleSlotsAmount: courseTotals[NOT_INVOICED].amount,
+            notInvoicedSingleSlotsAbsenceDuration: courseTotals[NOT_INVOICED].absenceDuration.toISO(),
+            invoicedSingleSlotsDuration: courseTotals[INVOICED].duration.toISO(),
+            invoicedSingleSlotsAmount: courseTotals[INVOICED].amount,
+            invoicedSingleSlotsAbsenceDuration: courseTotals[INVOICED].absenceDuration.toISO(),
+            paidSingleSlotsDuration: courseTotals[PAID].duration.toISO(),
+            paidSingleSlotsAmount: courseTotals[PAID].amount,
+            paidSingleSlotsAbsenceDuration: courseTotals[PAID].absenceDuration.toISO(),
           };
         })
         .filter(c => Object.keys(c.singleTraineeSlots).length);
 
       // Collective slots
-      let totalPaidCollective = CompaniDuration('PT0S');
-      let totalPaidCollectiveAbs = CompaniDuration('PT0S');
-      let totalPaidCollectiveAmount = 0;
-      let totalNotPaidCollective = CompaniDuration('PT0S');
-      let totalNotPaidCollectiveAbs = CompaniDuration('PT0S');
-      let totalNotPaidCollectiveAmount = 0;
+      let collectiveTotals = initStatusTotals();
 
       const collectiveSlots = Object.fromEntries(
         Object.entries(trainerInfos.collectiveSlots.slots).map(([day, daySlotGroup]) => {
           const filteredSlots = daySlotGroup.slots.filter(slotFilter);
 
-          let toPayDuration = CompaniDuration('PT0S');
-          let paidDuration = CompaniDuration('PT0S');
-          let toPayAmount = 0;
-          let paidAmount = 0;
+          let dayTotals = initStatusTotals();
 
           const slotsByDates = {};
           filteredSlots.forEach((slot) => {
@@ -167,70 +162,45 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
           });
 
           Object.values(slotsByDates).forEach(({ durationObj, amount, status, allAbsent }) => {
-            if (status === NOT_PAID) {
-              toPayDuration = toPayDuration.add(durationObj);
-              toPayAmount = add(toPayAmount, amount);
-
-              totalNotPaidCollective = totalNotPaidCollective.add(durationObj);
-              if (allAbsent) totalNotPaidCollectiveAbs = totalNotPaidCollectiveAbs.add(durationObj);
-            } else {
-              paidDuration = paidDuration.add(durationObj);
-              paidAmount = add(paidAmount, amount);
-
-              totalPaidCollective = totalPaidCollective.add(durationObj);
-              if (allAbsent) totalPaidCollectiveAbs = totalPaidCollectiveAbs.add(durationObj);
-            }
+            dayTotals = addToStatusTotals(dayTotals, status, durationObj, amount, allAbsent);
+            collectiveTotals = addToStatusTotals(collectiveTotals, status, durationObj, amount, allAbsent);
           });
 
-          totalPaidCollectiveAmount = add(totalPaidCollectiveAmount, paidAmount);
-          totalNotPaidCollectiveAmount = add(totalNotPaidCollectiveAmount, toPayAmount);
           return [
             day,
             {
               slots: filteredSlots,
-              toPayDuration: toPayDuration.toISO(),
-              paidDuration: paidDuration.toISO(),
-              toPayAmount,
-              paidAmount,
+              notInvoicedDuration: dayTotals[NOT_INVOICED].duration.toISO(),
+              notInvoicedAmount: dayTotals[NOT_INVOICED].amount,
+              invoicedDuration: dayTotals[INVOICED].duration.toISO(),
+              invoicedAmount: dayTotals[INVOICED].amount,
+              paidDuration: dayTotals[PAID].duration.toISO(),
+              paidAmount: dayTotals[PAID].amount,
             },
           ];
         }).filter(([, val]) => val.slots.length)
       );
 
-      // Single slots
-      const {
-        totalPaidSingle,
-        totalPaidSingleAbsence,
-        totalPaidSingleAmount,
-        totalNotPaidSingle,
-        totalNotPaidSingleAbsence,
-        totalNotPaidSingleAmount,
-      } = courses.reduce((acc, c) => {
-        acc.totalPaidSingle = acc.totalPaidSingle.add(CompaniDuration(c.paidSingleSlotsDuration));
-        acc.totalPaidSingleAbsence = acc.totalPaidSingleAbsence
-          .add(CompaniDuration(c.paidSingleSlotsAbsenceDuration));
-        acc.totalPaidSingleAmount = add(acc.totalPaidSingleAmount, c.paidSingleSlotsAmount);
-        acc.totalNotPaidSingle = acc.totalNotPaidSingle.add(CompaniDuration(c.notPaidSingleSlotsDuration));
-        acc.totalNotPaidSingleAbsence = acc.totalNotPaidSingleAbsence
-          .add(CompaniDuration(c.notPaidSingleSlotsAbsenceDuration));
-        acc.totalNotPaidSingleAmount = add(acc.totalNotPaidSingleAmount, c.notPaidSingleSlotsAmount);
+      // Trainer totals
+      const singleSlotsTotals = courses.reduce((acc, c) => mergeStatusTotals(acc, {
+        [NOT_INVOICED]: {
+          duration: CompaniDuration(c.notInvoicedSingleSlotsDuration),
+          amount: c.notInvoicedSingleSlotsAmount,
+          absenceDuration: CompaniDuration(c.notInvoicedSingleSlotsAbsenceDuration),
+        },
+        [INVOICED]: {
+          duration: CompaniDuration(c.invoicedSingleSlotsDuration),
+          amount: c.invoicedSingleSlotsAmount,
+          absenceDuration: CompaniDuration(c.invoicedSingleSlotsAbsenceDuration),
+        },
+        [PAID]: {
+          duration: CompaniDuration(c.paidSingleSlotsDuration),
+          amount: c.paidSingleSlotsAmount,
+          absenceDuration: CompaniDuration(c.paidSingleSlotsAbsenceDuration),
+        },
+      }), initStatusTotals());
 
-        return acc;
-      }, {
-        totalPaidSingle: CompaniDuration('PT0S'),
-        totalPaidSingleAbsence: CompaniDuration('PT0S'),
-        totalPaidSingleAmount: 0,
-        totalNotPaidSingle: CompaniDuration('PT0S'),
-        totalNotPaidSingleAbsence: CompaniDuration('PT0S'),
-        totalNotPaidSingleAmount: 0,
-      });
-
-      const totalPaid = totalPaidSingle.add(totalPaidCollective);
-      const totalPaidAbs = totalPaidSingleAbsence.add(totalPaidCollectiveAbs);
-      const totalPaidSlotsAmount = add(totalPaidSingleAmount, totalPaidCollectiveAmount);
-      const totalNotPaid = totalNotPaidSingle.add(totalNotPaidCollective);
-      const totalNotPaidAbs = totalNotPaidSingleAbsence.add(totalNotPaidCollectiveAbs);
-      const totalNotPaidSlotsAmount = add(totalNotPaidSingleAmount, totalNotPaidCollectiveAmount);
+      const trainerTotals = mergeStatusTotals(singleSlotsTotals, collectiveTotals);
 
       return [
         trainerId,
@@ -240,20 +210,26 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
           collectiveSlots: {
             slots: collectiveSlots,
             totals: {
-              paidCollectiveSlotsDuration: totalPaidCollective.toISO(),
-              paidCollectiveSlotsAbsenceDuration: totalPaidCollectiveAbs.toISO(),
-              paidCollectiveSlotsAmount: totalPaidCollectiveAmount,
-              notPaidCollectiveSlotsDuration: totalNotPaidCollective.toISO(),
-              notPaidCollectiveSlotsAbsenceDuration: totalNotPaidCollectiveAbs.toISO(),
-              notPaidCollectiveSlotsAmount: totalNotPaidCollectiveAmount,
+              notInvoicedCollectiveSlotsDuration: collectiveTotals[NOT_INVOICED].duration.toISO(),
+              notInvoicedCollectiveSlotsAmount: collectiveTotals[NOT_INVOICED].amount,
+              notInvoicedCollectiveSlotsAbsenceDuration: collectiveTotals[NOT_INVOICED].absenceDuration.toISO(),
+              invoicedCollectiveSlotsDuration: collectiveTotals[INVOICED].duration.toISO(),
+              invoicedCollectiveSlotsAmount: collectiveTotals[INVOICED].amount,
+              invoicedCollectiveSlotsAbsenceDuration: collectiveTotals[INVOICED].absenceDuration.toISO(),
+              paidCollectiveSlotsDuration: collectiveTotals[PAID].duration.toISO(),
+              paidCollectiveSlotsAmount: collectiveTotals[PAID].amount,
+              paidCollectiveSlotsAbsenceDuration: collectiveTotals[PAID].absenceDuration.toISO(),
             },
           },
-          totalPaidSlotsDuration: totalPaid.toISO(),
-          totalPaidSlotsAbsenceDuration: totalPaidAbs.toISO(),
-          totalPaidSlotsAmount,
-          totalNotPaidSlotsDuration: totalNotPaid.toISO(),
-          totalNotPaidSlotsAbsenceDuration: totalNotPaidAbs.toISO(),
-          totalNotPaidSlotsAmount,
+          totalNotInvoicedSlotsDuration: trainerTotals[NOT_INVOICED].duration.toISO(),
+          totalNotInvoicedSlotsAbsenceDuration: trainerTotals[NOT_INVOICED].absenceDuration.toISO(),
+          totalNotInvoicedSlotsAmount: trainerTotals[NOT_INVOICED].amount,
+          totalInvoicedSlotsDuration: trainerTotals[INVOICED].duration.toISO(),
+          totalInvoicedSlotsAbsenceDuration: trainerTotals[INVOICED].absenceDuration.toISO(),
+          totalInvoicedSlotsAmount: trainerTotals[INVOICED].amount,
+          totalPaidSlotsDuration: trainerTotals[PAID].duration.toISO(),
+          totalPaidSlotsAbsenceDuration: trainerTotals[PAID].absenceDuration.toISO(),
+          totalPaidSlotsAmount: trainerTotals[PAID].amount,
         },
       ];
     })

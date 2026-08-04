@@ -93,7 +93,7 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
         { name: 'trainers info', icon: 'person', label: 'Infos personnelles' },
         { name: 'trainers contracts', icon: 'description', label: 'Ordres de mission' },
         ...isSingleCourseTrainer.value
-          ? [{ name: 'trainers billing', icon: 'mdi-account-arrow-right-outline', label: 'Suivi des heures' }]
+          ? [{ name: 'trainers billing', icon: 'mdi-account-arrow-right-outline', label: 'Facturation' }]
           : [],
       ],
     },

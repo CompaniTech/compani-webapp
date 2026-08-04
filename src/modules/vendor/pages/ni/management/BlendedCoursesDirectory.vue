@@ -323,8 +323,11 @@ export default {
         await refreshActiveCourses([INTRA, INTER_B2B, INTRA_HOLDING]);
       } catch (e) {
         console.error(e);
-        if ([403, 400].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
+        if ([403, 400].includes(e.status) && e.data?.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la création des formations.');
+
+        if (!e.data?.errorsByCourse) return;
+
         const { errorsByCourse } = e.data;
 
         const message = Object.entries(errorsByCourse)
