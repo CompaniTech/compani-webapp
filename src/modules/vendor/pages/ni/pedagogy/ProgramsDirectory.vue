@@ -2,6 +2,9 @@
   <q-page class="vendor-background" padding>
     <ni-directory-header title="Catalogue" search-placeholder="Rechercher un programme" @update-search="updateSearch"
       :search="searchStr" />
+    <div class="filters-container">
+      <ni-select :options="statusOptions" :model-value="selectedStatus" @update:model-value="updateSelectedStatus" />
+    </div>
     <ni-table-list :data="filteredPrograms" :columns="columns" :loading="tableLoading" v-model:pagination="pagination"
       :path="path" />
     <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Ajouter un programme"
@@ -20,8 +23,10 @@ import escapeRegExp from 'lodash/escapeRegExp';
 import Programs from '@api/Programs';
 import DirectoryHeader from '@components/DirectoryHeader';
 import TableList from '@components/table/TableList';
+import Select from '@components/form/Select';
 import ProgramCreationModal from 'src/modules/vendor/components/programs/ProgramCreationModal';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
+import { ARCHIVED_PROGRAMS, UNARCHIVED_PROGRAMS } from '@data/constants';
 import { removeDiacritics } from '@helpers/utils';
 
 export default {
@@ -29,6 +34,7 @@ export default {
   components: {
     'ni-directory-header': DirectoryHeader,
     'ni-table-list': TableList,
+    'ni-select': Select,
     'program-creation-modal': ProgramCreationModal,
   },
   setup () {
@@ -52,13 +58,20 @@ export default {
           align: 'center',
         },
       ],
-      programs: [],
+      unarchivedPrograms: [],
+      archivedPrograms: [],
       modalLoading: false,
       programCreationModal: false,
       newProgram: { name: '', category: '' },
       pagination: { sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 },
       searchStr: '',
       path: { name: 'ni pedagogy programs info', params: 'programId' },
+      selectedStatus: UNARCHIVED_PROGRAMS,
+      statusOptions: [
+        { label: 'Tous les programmes', value: '' },
+        { label: 'Programmes archivés', value: ARCHIVED_PROGRAMS },
+        { label: 'Programmes non-archivés', value: UNARCHIVED_PROGRAMS },
+      ],
     };
   },
   validations () {
@@ -70,6 +83,11 @@ export default {
     };
   },
   computed: {
+    programs () {
+      if (this.selectedStatus === UNARCHIVED_PROGRAMS) return this.unarchivedPrograms;
+      if (this.selectedStatus === ARCHIVED_PROGRAMS) return this.archivedPrograms;
+      return [...this.unarchivedPrograms, ...this.archivedPrograms];
+    },
     filteredPrograms () {
       const formattedString = escapeRegExp(removeDiacritics(this.searchStr));
       return this.programs.filter(program => program.noDiacriticsName.match(new RegExp(formattedString, 'i')));
@@ -82,15 +100,37 @@ export default {
     updateSearch (value) {
       this.searchStr = value;
     },
+    async updateSelectedStatus (status) {
+      this.selectedStatus = status;
+
+      const needsArchivedPrograms = [ARCHIVED_PROGRAMS, ''].includes(status);
+      if (needsArchivedPrograms && !this.archivedPrograms.length) await this.refreshArchivedPrograms();
+    },
+    formatPrograms (programs) {
+      return programs.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
+    },
     async refreshProgram () {
       try {
         this.tableLoading = true;
-        const programList = await Programs.list();
+        const programList = await Programs.list({ isArchived: false });
 
-        this.programs = programList.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
+        this.unarchivedPrograms = this.formatPrograms(programList);
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la récupération des programmes.');
+      } finally {
+        this.tableLoading = false;
+      }
+    },
+    async refreshArchivedPrograms () {
+      try {
+        this.tableLoading = true;
+        const programList = await Programs.list({ isArchived: true });
+
+        this.archivedPrograms = this.formatPrograms(programList);
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la récupération des programmes archivés.');
       } finally {
         this.tableLoading = false;
       }

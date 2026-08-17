@@ -11,7 +11,8 @@
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
                 <template v-if="col.name === 'actions'">
-                  <ni-button class="table-actions" icon="close" @click="validateTesterDeletion(col.value)" />
+                  <ni-button class="table-actions" icon="close" :disable="isArchived"
+                    @click="validateTesterDeletion(col.value)" />
                 </template>
                 <template v-else>{{ col.value }}</template>
               </q-td>
@@ -19,7 +20,7 @@
           </template>
         </ni-responsive-table>
         <q-card-actions align="right">
-          <ni-button color="primary" icon="add" label="Ajouter une personne" :disable="loading"
+          <ni-button color="primary" icon="add" label="Ajouter une personne" :disable="loading || isArchived"
             @click="testerCreationModal = true" />
         </q-card-actions>
       </q-card>
@@ -53,6 +54,7 @@ export default {
   props: {
     programId: { type: String, required: true },
     testers: { type: Array, default: () => [] },
+    isArchived: { type: Boolean, default: false },
   },
   components: {
     'ni-button': Button,

@@ -4,16 +4,16 @@
       <p class="text-weight-bold">Identité</p>
       <div class="row gutter-profile">
         <ni-input caption="Nom" v-model.trim="program.name" @focus="saveTmp('name')" @blur="updateProgram('name')"
-          :error="v$.program.name.$error" required-field />
+          :error="v$.program.name.$error" required-field :disable="isArchived" />
         <ni-file-uploader caption="Image" path="image" :entity="program" :url="programsUploadUrl"
           @delete="validateProgramImageDeletion" @uploaded="programImageUploaded" :max-file-size="maxFileSize"
-          :additional-value="imageFileName" label="Pas d'image" :extensions="extensions" />
+          :additional-value="imageFileName" label="Pas d'image" :extensions="extensions" :disable="isArchived" />
         <ni-input caption="Description" v-model="program.description" type="textarea"
           @focus="saveTmp('description')" @blur="updateProgram('description')" required-field
-          :error="v$.program.description.$error" />
+          :error="v$.program.description.$error" :disable="isArchived" />
         <ni-input caption="Objectifs pédagogiques" v-model="program.learningGoals" type="textarea"
           @focus="saveTmp('learningGoals')" @blur="updateProgram('learningGoals')" required-field
-          :error="v$.program.learningGoals.$error" />
+          :error="v$.program.learningGoals.$error" :disable="isArchived" />
       </div>
     </div>
     <div class="q-mb-xl">
@@ -25,7 +25,8 @@
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
                 <template v-if="col.name === 'actions'">
-                  <ni-button class="table-actions" icon="close" :disable="program.categories.length <= 1"
+                  <ni-button class="table-actions" icon="close"
+                    :disable="program.categories.length <= 1 || isArchived"
                     @click="validateCategoryRemoval(props.row)" />
                 </template>
                 <template v-else>{{ col.value }}</template>
@@ -34,7 +35,7 @@
           </template>
         </ni-responsive-table>
         <q-card-actions align="right">
-          <ni-button color="primary" label="Ajouter une catégorie" @click="categoryAdditionModal = true" icon="add" />
+          <ni-button color="primary" label="Ajouter une catégorie" @click="openCategoryAdditionModal" icon="add" />
         </q-card-actions>
       </q-card>
     </div>
@@ -47,7 +48,8 @@
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
                 <template v-if="col.name === 'actions'">
-                  <ni-button class="table-actions" icon="close" @click="validateTradeNameRemoval(props.row)" />
+                  <ni-button class="table-actions" icon="close" :disable="isArchived"
+                    @click="validateTradeNameRemoval(props.row)" />
                 </template>
                 <template v-else>{{ col.value }}</template>
               </q-td>
@@ -55,12 +57,13 @@
           </template>
         </ni-responsive-table>
         <q-card-actions align="right">
-          <ni-button color="primary" label="Ajouter un nom commercial" @click="tradeNameAdditionModal = true"
+          <ni-button color="primary" label="Ajouter un nom commercial" @click="openTradeNameAdditionModal"
             icon="add" />
         </q-card-actions>
       </q-card>
     </div>
-    <tester-table :program-id="profileId" :testers="program.testers" @refresh="refreshProgram" />
+    <tester-table :program-id="profileId" :testers="program.testers" :is-archived="isArchived"
+      @refresh="refreshProgram" />
 
     <category-addition-modal v-model="categoryAdditionModal" v-model:new-category="newCategory" :loading="loading"
       @hide="resetModal" @submit="addCategory" :category-options="categoryOptions" :validations="v$.newCategory" />
@@ -127,6 +130,8 @@ export default {
 
     const program = computed(() => store.state.program.program);
 
+    const isArchived = computed(() => !!get(program.value, 'archivedAt'));
+
     const programsUploadUrl = computed(
       () => `${process.env.API_HOSTNAME}/programs/${program.value._id}/upload`
     );
@@ -173,6 +178,22 @@ export default {
 
     const saveTmp = (path) => {
       tmpInput.value = get(program.value, path);
+    };
+
+    const openCategoryAdditionModal = () => {
+      if (isArchived.value) {
+        return NotifyWarning('Vous ne pouvez pas ajouter de catégorie à un programme archivé.');
+      }
+
+      categoryAdditionModal.value = true;
+    };
+
+    const openTradeNameAdditionModal = () => {
+      if (isArchived.value) {
+        return NotifyWarning('Vous ne pouvez pas ajouter de nom commercial à un programme archivé.');
+      }
+
+      tradeNameAdditionModal.value = true;
     };
 
     const updateProgram = async (path) => {
@@ -349,11 +370,14 @@ export default {
       tradeNameAdditionModal,
       loading,
       program,
+      isArchived,
       programsUploadUrl,
       imageFileName,
       categoryOptions,
       v$,
       saveTmp,
+      openCategoryAdditionModal,
+      openTradeNameAdditionModal,
       updateProgram,
       refreshProgram,
       programImageUploaded,
