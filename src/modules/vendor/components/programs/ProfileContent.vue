@@ -1,32 +1,43 @@
 <template>
   <div v-if="program">
-    <div v-for="(subProgram, index) of program.subPrograms" class="q-mb-xl sub-program-container" :key="index">
+    <div class="filters-container q-mb-md">
+      <ni-select :options="SUBPROGRAM_STATUS_OPTIONS" v-model="selectedSubProgramStatus" />
+    </div>
+    <!-- on itère sur program.subPrograms pour conserver l'index d'origine (validations vuelidate et
+      accès program.subPrograms[index]), le filtre ne fait que masquer les sous-programmes -->
+    <div v-for="(subProgram, index) of program.subPrograms" class="q-mb-xl sub-program-container" :key="index"
+      v-show="visibleSubPrograms.includes(subProgram)">
       <div class="align-items-center">
         <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
         <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
+        <span class="archived-sub-program bg-copper-grey-300" v-if="isSubProgramArchived(subProgram)">Archivé</span>
+        <ni-button class="q-ml-sm" :icon="isSubProgramArchived(subProgram) ? 'unarchive' : 'archive'"
+          :disable="isArchived || modalLoading" @click="updateSubProgramArchivedAt(subProgram)" />
       </div>
       <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning"
         class="row q-my-md justify-between">
         <div class="row">
           <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
-            @click="openPriceVersionCreationModal(subProgram)" />
+            :disable="isSubProgramArchived(subProgram)" @click="openPriceVersionCreationModal(subProgram)" />
           <ni-bi-color-button class="button-history" icon="history" label="Historique"
             @click="openHistoryModal(subProgram)" />
         </div>
         <div class="row">
           <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
-            @click="openPaymentPlanAdditionModal(subProgram)" />
+            :disable="isSubProgramArchived(subProgram)" @click="openPaymentPlanAdditionModal(subProgram)" />
           <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
             @click="openPaymentPlanListModal(subProgram)" />
         </div>
       </div>
       <q-checkbox :model-value="!!program.subPrograms[index].subjectToVat"
-        label="La TVA s'applique à ce sous-programme"
+        label="La TVA s'applique à ce sous-programme" :disable="isSubProgramArchived(subProgram)"
         @update:model-value="updateSubProgramSubjectToVat(index, $event)" />
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
-        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)" />
+        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)"
+        :disable="isSubProgramArchived(subProgram)" />
       <draggable v-model="subProgram.steps" @change="dropStep(subProgram._id)" ghost-class="ghost"
-        :disabled="$q.platform.is.mobile || isPublished(subProgram)" item-key="_id">
+        :disabled="$q.platform.is.mobile || isPublished(subProgram) || isSubProgramArchived(subProgram)"
+        item-key="_id">
         <template #item="{element: step, index: stepIndex}">
           <q-card flat class="step q-mb-sm">
             <q-card-section :id="step._id" :class="{ 'step-lock': isLocked(step), 'step-head row': true,
@@ -48,9 +59,10 @@
                 </q-item-section>
               </div>
               <div class="flex align-center">
-                <ni-button icon="edit" @click="openStepEditionModal(step)" />
+                <ni-button icon="edit" :disable="isSubProgramArchived(subProgram)"
+                  @click="openStepEditionModal(step)" />
                 <ni-button icon="close" @click="validateStepDetachment(subProgram._id, step._id)"
-                  :disable="isPublished(subProgram)" />
+                  :disable="isPublished(subProgram) || isSubProgramArchived(subProgram)" />
               </div>
             </q-card-section>
             <div class="bg-peach-200 activity-container" v-if="areActivitiesVisible[step._id]">
@@ -93,11 +105,13 @@
       </draggable>
       <div class="q-my-md sub-program-footer">
         <ni-button v-if="!isPublished(subProgram)" color="primary" label="Publier" icon="vertical_align_top"
-          @click="checkPublicationAndOpenModal(subProgram)" :flat="false" />
+          @click="checkPublicationAndOpenModal(subProgram)" :flat="false"
+          :disable="isSubProgramArchived(subProgram)" />
         <ni-button v-if="!isPublished(subProgram)" class="add-step-button" color="primary" icon="add"
-          @click="openStepAdditionModal(subProgram._id)" label="Ajouter une étape" />
+          @click="openStepAdditionModal(subProgram._id)" label="Ajouter une étape"
+          :disable="isSubProgramArchived(subProgram)" />
       </div>
-      <q-separator v-if="index !== program.subPrograms.length-1" class="q-mt-lg" />
+      <q-separator v-if="subProgram !== visibleSubPrograms[visibleSubPrograms.length-1]" class="q-mt-lg" />
     </div>
 
     <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Ajouter un sous programme"
@@ -163,6 +177,7 @@ import omit from 'lodash/omit';
 import SubPrograms from '@api/SubPrograms';
 import Steps from '@api/Steps';
 import Input from '@components/form/Input';
+import Select from '@components/form/Select';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import Button from '@components/Button';
 import SecondaryButton from '@components/SecondaryButton';
@@ -176,6 +191,9 @@ import {
   LONG_DURATION_H_MM,
   PT0S,
   DAY,
+  ARCHIVED_SUBPROGRAMS,
+  UNARCHIVED_SUBPROGRAMS,
+  SUBPROGRAM_STATUS_OPTIONS,
 } from '@data/constants';
 import { getStepTypeLabel, getStepTypeIcon } from '@helpers/courses';
 import { formatQuantity, getLastVersion } from '@helpers/utils';
@@ -212,6 +230,7 @@ export default {
   },
   components: {
     'ni-input': Input,
+    'ni-select': Select,
     'ni-button': Button,
     'sub-program-creation-modal': SubProgramCreationModal,
     'step-addition-modal': StepAdditionModal,
@@ -267,6 +286,38 @@ export default {
     const program = computed(() => $store.state.program.program);
 
     const isArchived = computed(() => !!get(program.value, 'archivedAt'));
+
+    const selectedSubProgramStatus = ref(UNARCHIVED_SUBPROGRAMS);
+
+    const isSubProgramArchived = subProgram => !!get(subProgram, 'archivedAt');
+
+    const visibleSubPrograms = computed(() => {
+      const subPrograms = get(program.value, 'subPrograms') || [];
+      if (selectedSubProgramStatus.value === UNARCHIVED_SUBPROGRAMS) {
+        return subPrograms.filter(sp => !isSubProgramArchived(sp));
+      }
+      if (selectedSubProgramStatus.value === ARCHIVED_SUBPROGRAMS) {
+        return subPrograms.filter(sp => isSubProgramArchived(sp));
+      }
+
+      return subPrograms;
+    });
+
+    const updateSubProgramArchivedAt = async (subProgram) => {
+      try {
+        modalLoading.value = true;
+        const archivedAt = isSubProgramArchived(subProgram) ? '' : CompaniDate().toISO();
+        await SubPrograms.update(subProgram._id, { archivedAt });
+
+        NotifyPositive('Modification enregistrée.');
+        await refreshProgram();
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification du sous-programme.');
+      } finally {
+        modalLoading.value = false;
+      }
+    };
 
     const {
       subProgramPublicationModal,
@@ -631,6 +682,8 @@ export default {
       E_LEARNING,
       LONG_DURATION_H_MM,
       PT0S,
+      SUBPROGRAM_STATUS_OPTIONS,
+      selectedSubProgramStatus,
       modalLoading,
       subProgramCreationModal,
       newSubProgram,
@@ -666,7 +719,10 @@ export default {
       reusedActivityValidations,
       program,
       isArchived,
+      visibleSubPrograms,
       // Methods
+      isSubProgramArchived,
+      updateSubProgramArchivedAt,
       formatQuantity,
       getSubProgramError,
       dropStep,
@@ -743,6 +799,13 @@ export default {
   justify-content: space-between
 
 .published-sub-program
+  font-size: 14px
+  border-radius: 15px
+  padding: 1px 6px
+  color: white
+  margin-left: 10px
+
+.archived-sub-program
   font-size: 14px
   border-radius: 15px
   padding: 1px 6px
