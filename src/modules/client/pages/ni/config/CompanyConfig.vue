@@ -9,6 +9,8 @@
             @blur="updateCompany('name')" :error="v$.company.name.$error" required-field />
           <ni-search-address v-model="company.address" :error-message="addressError" @blur="updateCompany('address')"
             @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" required-field />
+          <ni-input caption="Numéro de facturation (figure sur les factures)" v-model="company.billingInfos"
+            @focus="saveTmp('billingInfos')" @blur="updateCompany('billingInfos')" />
         </div>
       </div>
       <div>
