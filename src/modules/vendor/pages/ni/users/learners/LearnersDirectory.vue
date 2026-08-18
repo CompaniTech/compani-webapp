@@ -1,6 +1,6 @@
 <template>
   <q-page class="vendor-background" padding>
-    <ni-directory-header title="Répertoire apprenants" @update-search="updateSearch" :search="searchStr" />
+    <ni-directory-header title="Répertoire utilisateurs" @update-search="updateSearch" :search="searchStr" />
     <ni-table-list :data="filteredLearners" :columns="columns" :loading="tableLoading" v-model:pagination="pagination"
       :path="path">
       <template #body="{ col }">
@@ -43,7 +43,7 @@ export default {
     'learner-creation-modal': LearnerCreationModal,
   },
   setup () {
-    const metaInfo = { title: 'Répertoire apprenants' };
+    const metaInfo = { title: 'Répertoire utilisateurs' };
     useMeta(metaInfo);
     const companyOptions = ref([]);
 

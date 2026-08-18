@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="q-mb-xl">
-      <p class="text-weight-bold">Coachs</p>
+      <p class="text-weight-bold">Utilisateurs administratifs</p>
       <q-card>
         <ni-responsive-table :data="users" :columns="usersColumns" v-model:pagination="usersPagination"
           :loading="usersLoading">
