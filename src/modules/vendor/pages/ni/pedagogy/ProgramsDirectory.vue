@@ -16,6 +16,7 @@
 </template>
 
 <script>
+import { ref, computed } from 'vue';
 import { useMeta } from 'quasar';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
@@ -41,120 +42,136 @@ export default {
     const metaInfo = { title: 'Catalogue' };
     useMeta(metaInfo);
 
-    return { v$: useVuelidate() };
-  },
-  data () {
-    return {
-      tableLoading: false,
-      columns: [
-        { name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true },
-        {
-          name: 'subPrograms',
-          label: 'Sous-programmes',
-          field: 'subPrograms',
-          format: value => value.length || '0',
-          sortable: true,
-          sort: (a, b) => b.length - a.length,
-          align: 'center',
-        },
-      ],
-      unarchivedPrograms: [],
-      archivedPrograms: [],
-      modalLoading: false,
-      programCreationModal: false,
-      newProgram: { name: '', category: '' },
-      pagination: { sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 },
-      searchStr: '',
-      path: { name: 'ni pedagogy programs info', params: 'programId' },
-      selectedStatus: UNARCHIVED_PROGRAMS,
-      statusOptions: [
-        { label: 'Tous les programmes', value: '' },
-        { label: 'Programmes archivés', value: ARCHIVED_PROGRAMS },
-        { label: 'Programmes non-archivés', value: UNARCHIVED_PROGRAMS },
-      ],
-    };
-  },
-  validations () {
-    return {
-      newProgram: {
-        name: { required },
-        category: { required },
+    const tableLoading = ref(false);
+    const columns = ref([
+      { name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true },
+      {
+        name: 'subPrograms',
+        label: 'Sous-programmes',
+        field: 'subPrograms',
+        format: value => value.length || '0',
+        sortable: true,
+        sort: (a, b) => b.length - a.length,
+        align: 'center',
       },
-    };
-  },
-  computed: {
-    programs () {
-      if (this.selectedStatus === UNARCHIVED_PROGRAMS) return this.unarchivedPrograms;
-      if (this.selectedStatus === ARCHIVED_PROGRAMS) return this.archivedPrograms;
-      return [...this.unarchivedPrograms, ...this.archivedPrograms];
-    },
-    filteredPrograms () {
-      const formattedString = escapeRegExp(removeDiacritics(this.searchStr));
-      return this.programs.filter(program => program.noDiacriticsName.match(new RegExp(formattedString, 'i')));
-    },
-  },
-  async created () {
-    await this.refreshProgram();
-  },
-  methods: {
-    updateSearch (value) {
-      this.searchStr = value;
-    },
-    async updateSelectedStatus (status) {
-      this.selectedStatus = status;
+    ]);
+    const unarchivedPrograms = ref([]);
+    const archivedPrograms = ref([]);
+    const modalLoading = ref(false);
+    const programCreationModal = ref(false);
+    const newProgram = ref({ name: '', category: '' });
+    const pagination = ref({ sortBy: 'name', ascending: true, page: 1, rowsPerPage: 15 });
+    const searchStr = ref('');
+    const path = ref({ name: 'ni pedagogy programs info', params: 'programId' });
+    const selectedStatus = ref(UNARCHIVED_PROGRAMS);
+    const statusOptions = ref([
+      { label: 'Tous les programmes', value: '' },
+      { label: 'Programmes archivés', value: ARCHIVED_PROGRAMS },
+      { label: 'Programmes non-archivés', value: UNARCHIVED_PROGRAMS },
+    ]);
 
-      if ([ARCHIVED_PROGRAMS, ''].includes(status) && !this.archivedPrograms.length) {
-        await this.refreshArchivedPrograms();
-      }
-    },
-    async refreshProgram () {
+    const rules = computed(() => ({ newProgram: { name: { required }, category: { required } } }));
+    const v$ = useVuelidate(rules, { newProgram });
+
+    const programs = computed(() => {
+      if (selectedStatus.value === UNARCHIVED_PROGRAMS) return unarchivedPrograms.value;
+      if (selectedStatus.value === ARCHIVED_PROGRAMS) return archivedPrograms.value;
+      return [...unarchivedPrograms.value, ...archivedPrograms.value];
+    });
+
+    const filteredPrograms = computed(() => {
+      const formattedString = escapeRegExp(removeDiacritics(searchStr.value));
+      return programs.value.filter(program => program.noDiacriticsName.match(new RegExp(formattedString, 'i')));
+    });
+
+    const updateSearch = (value) => { searchStr.value = value; };
+
+    const refreshProgram = async () => {
       try {
-        this.tableLoading = true;
+        tableLoading.value = true;
         const programList = await Programs.list({ isArchived: false });
 
-        this.unarchivedPrograms = programList.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
+        unarchivedPrograms.value = programList.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la récupération des programmes.');
       } finally {
-        this.tableLoading = false;
+        tableLoading.value = false;
       }
-    },
-    async refreshArchivedPrograms () {
+    };
+
+    const refreshArchivedPrograms = async () => {
       try {
-        this.tableLoading = true;
+        tableLoading.value = true;
         const programList = await Programs.list({ isArchived: true });
 
-        this.archivedPrograms = programList.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
+        archivedPrograms.value = programList.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la récupération des programmes archivés.');
       } finally {
-        this.tableLoading = false;
+        tableLoading.value = false;
       }
-    },
-    resetCreationModal () {
-      this.v$.newProgram.$reset();
-      this.newProgram = { name: '' };
-    },
-    async createProgram () {
+    };
+
+    const updateSelectedStatus = async (status) => {
+      selectedStatus.value = status;
+
+      if ([ARCHIVED_PROGRAMS, ''].includes(status) && !archivedPrograms.value.length) await refreshArchivedPrograms();
+    };
+
+    const resetCreationModal = () => {
+      v$.value.newProgram.$reset();
+      newProgram.value = { name: '' };
+    };
+
+    const createProgram = async () => {
       try {
-        this.v$.newProgram.$touch();
-        if (this.v$.newProgram.$error) return NotifyWarning('Champ(s) invalide(s)');
+        v$.value.newProgram.$touch();
+        if (v$.value.newProgram.$error) return NotifyWarning('Champ(s) invalide(s)');
 
-        this.modalLoading = true;
-        await Programs.create({ name: this.newProgram.name, categories: [this.newProgram.category] });
+        modalLoading.value = true;
+        await Programs.create({ name: newProgram.value.name, categories: [newProgram.value.category] });
 
-        this.programCreationModal = false;
+        programCreationModal.value = false;
         NotifyPositive('Programme créé.');
-        await this.refreshProgram();
+        await refreshProgram();
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la création du programme.');
       } finally {
-        this.modalLoading = false;
+        modalLoading.value = false;
       }
-    },
+    };
+
+    const created = async () => {
+      await refreshProgram();
+    };
+
+    created();
+
+    return {
+      // Validation
+      v$,
+      // Data
+      tableLoading,
+      columns,
+      modalLoading,
+      programCreationModal,
+      newProgram,
+      pagination,
+      searchStr,
+      path,
+      selectedStatus,
+      statusOptions,
+      // Computed
+      filteredPrograms,
+      // Method
+      updateSearch,
+      updateSelectedStatus,
+      resetCreationModal,
+      createProgram,
+    };
   },
 };
 </script>
