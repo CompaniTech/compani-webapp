@@ -20,8 +20,8 @@
           </template>
         </ni-responsive-table>
         <q-card-actions align="right">
-          <ni-button color="primary" icon="add" label="Ajouter une personne" :disable="loading || isArchived"
-            @click="testerCreationModal = true" />
+          <ni-button color="primary" icon="add" label="Ajouter une personne" :disable="loading"
+            @click="openTesterCreationModal" />
         </q-card-actions>
       </q-card>
     </div>
@@ -63,7 +63,7 @@ export default {
   },
   emits: ['refresh'],
   setup (props, { emit }) {
-    const { programId } = toRefs(props);
+    const { programId, isArchived } = toRefs(props);
 
     const $q = useQuasar();
 
@@ -136,6 +136,12 @@ export default {
       } finally {
         modalLoading.value = false;
       }
+    };
+
+    const openTesterCreationModal = () => {
+      if (isArchived.value) return NotifyWarning('Vous ne pouvez pas ajouter de testeur à un programme archivé.');
+
+      testerCreationModal.value = true;
     };
 
     const addTester = async () => {
@@ -215,6 +221,7 @@ export default {
       v$,
       // Methods
       nextStepTesterCreationModal,
+      openTesterCreationModal,
       addTester,
       resetTesterCreationModal,
       validateTesterDeletion,

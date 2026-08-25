@@ -98,17 +98,16 @@ export default {
     };
 
     const archiveOrUnarchiveProgram = async () => {
-      const wasArchived = isArchived.value;
       try {
-        await Programs.update(programId.value, { archivedAt: wasArchived ? '' : CompaniDate().toISO() });
+        await Programs.update(programId.value, { archivedAt: isArchived.value ? '' : CompaniDate().toISO() });
 
-        NotifyPositive(wasArchived ? 'Programme désarchivé.' : 'Programme archivé.');
+        NotifyPositive(isArchived.value ? 'Programme désarchivé.' : 'Programme archivé.');
         await refreshProgram();
       } catch (e) {
         console.error(e);
-        NotifyNegative(wasArchived
-          ? 'Erreur lors du désarchivage du programme.'
-          : 'Erreur lors de l\'archivage du programme.');
+        NotifyNegative(
+          isArchived.value ? 'Erreur lors du désarchivage du programme.' : 'Erreur lors de l\'archivage du programme.'
+        );
       }
     };
 

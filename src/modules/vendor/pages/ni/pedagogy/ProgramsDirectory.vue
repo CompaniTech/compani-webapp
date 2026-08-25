@@ -103,18 +103,16 @@ export default {
     async updateSelectedStatus (status) {
       this.selectedStatus = status;
 
-      const needsArchivedPrograms = [ARCHIVED_PROGRAMS, ''].includes(status);
-      if (needsArchivedPrograms && !this.archivedPrograms.length) await this.refreshArchivedPrograms();
-    },
-    formatPrograms (programs) {
-      return programs.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
+      if ([ARCHIVED_PROGRAMS, ''].includes(status) && !this.archivedPrograms.length) {
+        await this.refreshArchivedPrograms();
+      }
     },
     async refreshProgram () {
       try {
         this.tableLoading = true;
         const programList = await Programs.list({ isArchived: false });
 
-        this.unarchivedPrograms = this.formatPrograms(programList);
+        this.unarchivedPrograms = programList.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la récupération des programmes.');
@@ -127,7 +125,7 @@ export default {
         this.tableLoading = true;
         const programList = await Programs.list({ isArchived: true });
 
-        this.archivedPrograms = this.formatPrograms(programList);
+        this.archivedPrograms = programList.map(p => ({ ...p, noDiacriticsName: removeDiacritics(p.name) }));
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la récupération des programmes archivés.');

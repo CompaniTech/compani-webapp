@@ -25,8 +25,7 @@
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
                 <template v-if="col.name === 'actions'">
-                  <ni-button class="table-actions" icon="close"
-                    :disable="program.categories.length <= 1 || isArchived"
+                  <ni-button class="table-actions" icon="close" :disable="program.categories.length <= 1 || isArchived"
                     @click="validateCategoryRemoval(props.row)" />
                 </template>
                 <template v-else>{{ col.value }}</template>
@@ -181,9 +180,7 @@ export default {
     };
 
     const openCategoryAdditionModal = () => {
-      if (isArchived.value) {
-        return NotifyWarning('Vous ne pouvez pas ajouter de catégorie à un programme archivé.');
-      }
+      if (isArchived.value) return NotifyWarning('Vous ne pouvez pas ajouter de catégorie à un programme archivé.');
 
       categoryAdditionModal.value = true;
     };
