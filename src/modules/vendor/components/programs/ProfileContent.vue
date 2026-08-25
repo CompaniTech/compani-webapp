@@ -101,7 +101,7 @@
     </div>
 
     <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Ajouter un sous programme"
-      @click="subProgramCreationModal = true" />
+      @click="subProgramCreationModal = true" :disable="isArchived" />
 
     <sub-program-creation-modal v-model="subProgramCreationModal" :loading="modalLoading" @submit="createSubProgram"
       :validations="newSubProgramValidations" @hide="resetSubProgramCreationModal"
@@ -265,6 +265,8 @@ export default {
 
     // SubProgram publication
     const program = computed(() => $store.state.program.program);
+
+    const isArchived = computed(() => !!get(program.value, 'archivedAt'));
 
     const {
       subProgramPublicationModal,
@@ -663,6 +665,7 @@ export default {
       editedStepValidations,
       reusedActivityValidations,
       program,
+      isArchived,
       // Methods
       formatQuantity,
       getSubProgramError,

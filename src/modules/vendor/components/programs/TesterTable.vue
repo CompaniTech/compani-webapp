@@ -11,7 +11,8 @@
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props" :class="col.name"
                 :style="col.style">
                 <template v-if="col.name === 'actions'">
-                  <ni-button class="table-actions" icon="close" @click="validateTesterDeletion(col.value)" />
+                  <ni-button class="table-actions" icon="close" :disable="isArchived"
+                    @click="validateTesterDeletion(col.value)" />
                 </template>
                 <template v-else>{{ col.value }}</template>
               </q-td>
@@ -20,7 +21,7 @@
         </ni-responsive-table>
         <q-card-actions align="right">
           <ni-button color="primary" icon="add" label="Ajouter une personne" :disable="loading"
-            @click="testerCreationModal = true" />
+            @click="openTesterCreationModal" />
         </q-card-actions>
       </q-card>
     </div>
@@ -53,6 +54,7 @@ export default {
   props: {
     programId: { type: String, required: true },
     testers: { type: Array, default: () => [] },
+    isArchived: { type: Boolean, default: false },
   },
   components: {
     'ni-button': Button,
@@ -61,7 +63,7 @@ export default {
   },
   emits: ['refresh'],
   setup (props, { emit }) {
-    const { programId } = toRefs(props);
+    const { programId, isArchived } = toRefs(props);
 
     const $q = useQuasar();
 
@@ -134,6 +136,12 @@ export default {
       } finally {
         modalLoading.value = false;
       }
+    };
+
+    const openTesterCreationModal = () => {
+      if (isArchived.value) return NotifyWarning('Vous ne pouvez pas ajouter de testeur à un programme archivé.');
+
+      testerCreationModal.value = true;
     };
 
     const addTester = async () => {
@@ -213,6 +221,7 @@ export default {
       v$,
       // Methods
       nextStepTesterCreationModal,
+      openTesterCreationModal,
       addTester,
       resetTesterCreationModal,
       validateTesterDeletion,
