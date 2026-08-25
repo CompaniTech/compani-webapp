@@ -6,7 +6,17 @@
       <ni-select :options="statusOptions" :model-value="selectedStatus" @update:model-value="updateSelectedStatus" />
     </div>
     <ni-table-list :data="filteredPrograms" :columns="columns" :loading="tableLoading" v-model:pagination="pagination"
-      :path="path" />
+      :path="path">
+      <template #body="{ col }">
+        <q-item v-if="col.name === 'status'" class="items-center">
+          <div v-if="col.value">
+            <q-icon size="12px" name="circle" class="info-archived" />
+            Archivée
+          </div>
+        </q-item>
+        <template v-else>{{ col.value }}</template>
+      </template>
+    </ni-table-list>
     <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Ajouter un programme"
       @click="programCreationModal = true" :disable="tableLoading" />
 
@@ -44,7 +54,7 @@ export default {
 
     const tableLoading = ref(false);
     const columns = ref([
-      { name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true },
+      { name: 'name', label: 'Nom', field: 'name', align: 'left', sortable: true, style: 'width: 80%' },
       {
         name: 'subPrograms',
         label: 'Sous-programmes',
@@ -54,6 +64,7 @@ export default {
         sort: (a, b) => b.length - a.length,
         align: 'center',
       },
+      { name: 'status', label: '', field: row => row.archivedAt, align: 'right', style: 'width: 10%' },
     ]);
     const unarchivedPrograms = ref([]);
     const archivedPrograms = ref([]);
