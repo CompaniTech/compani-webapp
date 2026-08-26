@@ -86,7 +86,7 @@ export const ROLE_TRANSLATION = {
 // ROLE TRANSLATION
 export const ROLES_TRANSLATION = {
   [CLIENT_ADMIN]: 'Administrateur(rice)',
-  [COACH]: 'Coach',
+  [COACH]: 'Chargé(e) de formation',
 };
 
 // SUBSCRIPTIONS
