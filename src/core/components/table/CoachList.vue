@@ -101,7 +101,7 @@ export default {
       },
       {
         name: 'role',
-        label: 'Role',
+        label: 'Rôle',
         align: 'left',
         field: row => get(row, 'role.client.name') || '',
         format: value => (value ? ROLES_TRANSLATION[value] : ''),
