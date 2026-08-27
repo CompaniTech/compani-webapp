@@ -178,6 +178,14 @@ export const NO_HOLDING = 'no_holding';
 
 // SUBPROGRAM
 export const PUBLISHED = 'published';
+export const ARCHIVED_SUBPROGRAMS = 'archived_subprograms';
+export const UNARCHIVED_SUBPROGRAMS = 'unarchived_subprograms';
+export const ALL_SUBPROGRAMS = 'all_subprograms';
+export const SUBPROGRAM_STATUS_OPTIONS = [
+  { label: 'Sous-programmes non-archivés', value: UNARCHIVED_SUBPROGRAMS },
+  { label: 'Sous-programmes archivés', value: ARCHIVED_SUBPROGRAMS },
+  { label: 'Tous les sous-programmes', value: ALL_SUBPROGRAMS },
+];
 
 // STEP
 export const E_LEARNING = 'e_learning';
