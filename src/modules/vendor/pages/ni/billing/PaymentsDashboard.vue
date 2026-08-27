@@ -6,8 +6,15 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
+    <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <ni-select v-model="selectedTypes" multiple caption="Type de formation" :options="typeOptions" clearable
       class="selector" />
+    <div class="filters-container">
+      <ni-select caption="Société mère" :options="holdingOptions" :model-value="selectedHolding"
+        @update:model-value="updateSelectedHolding" clearable />
+      <ni-select caption="Structure" :options="companyOptions" :model-value="selectedCompany"
+        @update:model-value="updateSelectedCompany" clearable />
+    </div>
     <div>
       <ni-button v-if="filteredPayments.length" label="Télécharger le fichier de prélèvements SEPA"
         @click="openXmlFileModal" :disable="!selectedPayments.length" />
@@ -75,6 +82,7 @@
 
 <script>
 import get from 'lodash/get';
+import uniqBy from 'lodash/uniqBy';
 import { useMeta } from 'quasar';
 import { ref, watch, computed } from 'vue';
 import useVuelidate from '@vuelidate/core';
@@ -92,10 +100,11 @@ import {
   RECEIVED,
   COURSE_TYPES,
   CANCELLED,
+  NO_HOLDING,
 } from '@data/constants';
 import CoursePayments from '@api/CoursePayments';
 import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
-import { formatPrice, sortStrings, formatQuantity, getLastVersion } from '@helpers/utils';
+import { formatPrice, sortStrings, formatQuantity, getLastVersion, formatAndSortOptions } from '@helpers/utils';
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
@@ -166,6 +175,33 @@ export default {
     const multipleSelection = ref(false);
     const typeOptions = ref([{ label: 'Tous les types', value: '' }, ...COURSE_TYPES]);
     const selectedTypes = ref(['']);
+    const selectedHolding = ref('');
+    const selectedCompany = ref('');
+
+    const doesCompanyMatchHolding = (company) => {
+      if (selectedHolding.value === NO_HOLDING) return !company.holding;
+      if (selectedHolding.value) return get(company, 'holding._id') === selectedHolding.value;
+      return true;
+    };
+
+    const holdingOptions = computed(() => {
+      const holdings = paymentList.value.map(p => get(p, 'courseBill.payer.holding')).filter(Boolean);
+
+      return [
+        { label: 'Toutes les sociétés mères', value: '' },
+        { label: 'Structures sans société mère', value: NO_HOLDING },
+        ...formatAndSortOptions(uniqBy(holdings, '_id'), 'name'),
+      ];
+    });
+
+    const companyOptions = computed(() => {
+      const payers = paymentList.value.map(p => get(p, 'courseBill.payer')).filter(doesCompanyMatchHolding);
+
+      return [
+        { label: 'Toutes les structures', value: '' },
+        ...formatAndSortOptions(uniqBy(payers, '_id'), 'name'),
+      ];
+    });
 
     const TRANSACTION_NAME_MAX_LENGTH = 140;
     const rules = computed(() => ({
@@ -222,6 +258,14 @@ export default {
         payments = payments.filter(p => selectedTypes.value.includes(p.courseBill.course.type));
       }
 
+      if (selectedCompany.value) {
+        payments = payments.filter(p => selectedCompany.value === get(p, 'courseBill.payer._id'));
+      }
+
+      if (selectedHolding.value) {
+        payments = payments.filter(p => doesCompanyMatchHolding(get(p, 'courseBill.payer')));
+      }
+
       return payments;
     });
 
@@ -269,6 +313,16 @@ export default {
     };
 
     const updateSelectedStatus = (status) => { selectedStatus.value = status; };
+
+    const updateSelectedCompany = (companyId) => { selectedCompany.value = companyId; };
+
+    const updateSelectedHolding = (holdingId) => { selectedHolding.value = holdingId; };
+
+    const resetFilters = () => {
+      selectedHolding.value = '';
+      selectedCompany.value = '';
+      selectedTypes.value = [''];
+    };
 
     const goToCompany = row => ({
       name: 'ni users companies info', params: { companyId: row._id }, query: { defaultTab: 'bills' },
@@ -400,11 +454,15 @@ export default {
       sortableColumns,
       typeOptions,
       selectedTypes,
+      selectedHolding,
+      selectedCompany,
       // Computed
       sortedPayments,
       multipleSelection,
       selectablePayments,
       filteredPayments,
+      holdingOptions,
+      companyOptions,
       // Methods
       updateSelectedStatus,
       getItemStatus,
@@ -419,6 +477,9 @@ export default {
       resetMultiplePaymentEditionModal,
       onSort,
       isPayerSelectable,
+      updateSelectedHolding,
+      updateSelectedCompany,
+      resetFilters,
     };
   },
 };
