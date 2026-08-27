@@ -3,41 +3,41 @@
     <div class="filters-container q-mb-md">
       <ni-select :options="SUBPROGRAM_STATUS_OPTIONS" v-model="selectedSubProgramStatus" />
     </div>
-    <!-- on itère sur program.subPrograms pour conserver l'index d'origine (validations vuelidate et
-      accès program.subPrograms[index]), le filtre ne fait que masquer les sous-programmes -->
+    <span v-if="!visibleSubPrograms.length" class="text-italic">Aucun sous-programme à afficher.</span>
     <div v-for="(subProgram, index) of program.subPrograms" class="q-mb-xl sub-program-container" :key="index"
       v-show="visibleSubPrograms.includes(subProgram)">
       <div class="align-items-center">
         <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
         <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
-        <span class="archived-sub-program bg-copper-grey-300" v-if="isSubProgramArchived(subProgram)">Archivé</span>
-        <ni-button class="q-ml-sm" :icon="isSubProgramArchived(subProgram) ? 'unarchive' : 'archive'"
-          :disable="isArchived || modalLoading" @click="updateSubProgramArchivedAt(subProgram)" />
+        <span class="archived-sub-program bg-copper-grey-300" v-if="!!subProgram.archivedAt">Archivé</span>
+        <ni-button class="q-ml-sm" :flat="false" :label="!!subProgram.archivedAt ? 'Désarchiver' : 'Archiver'"
+          :disable="isArchived || modalLoading || !isPublished(subProgram)"
+          @click="validateSubProgramArchive(subProgram)" />
+        <ni-button class="q-ml-sm" icon="delete" @click="validateSubProgramDeletion(subProgram)"
+          :disable="isPublished(subProgram) || isArchived || !!subProgram.archivedAt" />
       </div>
       <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning"
         class="row q-my-md justify-between">
         <div class="row">
           <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
-            :disable="isSubProgramArchived(subProgram)" @click="openPriceVersionCreationModal(subProgram)" />
+            :disable="!!subProgram.archivedAt" @click="openPriceVersionCreationModal(subProgram)" />
           <ni-bi-color-button class="button-history" icon="history" label="Historique"
             @click="openHistoryModal(subProgram)" />
         </div>
         <div class="row">
           <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
-            :disable="isSubProgramArchived(subProgram)" @click="openPaymentPlanAdditionModal(subProgram)" />
+            :disable="!!subProgram.archivedAt" @click="openPaymentPlanAdditionModal(subProgram)" />
           <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
             @click="openPaymentPlanListModal(subProgram)" />
         </div>
       </div>
       <q-checkbox :model-value="!!program.subPrograms[index].subjectToVat"
-        label="La TVA s'applique à ce sous-programme" :disable="isSubProgramArchived(subProgram)"
+        label="La TVA s'applique à ce sous-programme" :disable="!!subProgram.archivedAt"
         @update:model-value="updateSubProgramSubjectToVat(index, $event)" />
       <ni-input v-model.trim="program.subPrograms[index].name" required-field caption="Nom" @focus="saveTmpName(index)"
-        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)"
-        :disable="isSubProgramArchived(subProgram)" />
+        @blur="updateSubProgramName(index)" :error="getSubProgramError(index)" :disable="!!subProgram.archivedAt" />
       <draggable v-model="subProgram.steps" @change="dropStep(subProgram._id)" ghost-class="ghost"
-        :disabled="$q.platform.is.mobile || isPublished(subProgram) || isSubProgramArchived(subProgram)"
-        item-key="_id">
+        :disabled="$q.platform.is.mobile || isPublished(subProgram) || !!subProgram.archivedAt" item-key="_id">
         <template #item="{element: step, index: stepIndex}">
           <q-card flat class="step q-mb-sm">
             <q-card-section :id="step._id" :class="{ 'step-lock': isLocked(step), 'step-head row': true,
@@ -59,10 +59,9 @@
                 </q-item-section>
               </div>
               <div class="flex align-center">
-                <ni-button icon="edit" :disable="isSubProgramArchived(subProgram)"
-                  @click="openStepEditionModal(step)" />
+                <ni-button icon="edit" :disable="!!subProgram.archivedAt" @click="openStepEditionModal(step)" />
                 <ni-button icon="close" @click="validateStepDetachment(subProgram._id, step._id)"
-                  :disable="isPublished(subProgram) || isSubProgramArchived(subProgram)" />
+                  :disable="isPublished(subProgram) || !!subProgram.archivedAt" />
               </div>
             </q-card-section>
             <div class="bg-peach-200 activity-container" v-if="areActivitiesVisible[step._id]">
@@ -105,11 +104,9 @@
       </draggable>
       <div class="q-my-md sub-program-footer">
         <ni-button v-if="!isPublished(subProgram)" color="primary" label="Publier" icon="vertical_align_top"
-          @click="checkPublicationAndOpenModal(subProgram)" :flat="false"
-          :disable="isSubProgramArchived(subProgram)" />
+          @click="checkPublicationAndOpenModal(subProgram)" :flat="false" :disable="!!subProgram.archivedAt" />
         <ni-button v-if="!isPublished(subProgram)" class="add-step-button" color="primary" icon="add"
-          @click="openStepAdditionModal(subProgram._id)" label="Ajouter une étape"
-          :disable="isSubProgramArchived(subProgram)" />
+          @click="openStepAdditionModal(subProgram._id)" label="Ajouter une étape" :disable="!!subProgram.archivedAt" />
       </div>
       <q-separator v-if="subProgram !== visibleSubPrograms[visibleSubPrograms.length-1]" class="q-mt-lg" />
     </div>
@@ -165,7 +162,7 @@
 
 <script>
 import { useStore } from 'vuex';
-import { ref, computed, toRefs } from 'vue';
+import { ref, computed, toRefs, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import draggable from 'vuedraggable';
@@ -289,15 +286,13 @@ export default {
 
     const selectedSubProgramStatus = ref(UNARCHIVED_SUBPROGRAMS);
 
-    const isSubProgramArchived = subProgram => !!get(subProgram, 'archivedAt');
-
     const visibleSubPrograms = computed(() => {
       const subPrograms = get(program.value, 'subPrograms') || [];
       if (selectedSubProgramStatus.value === UNARCHIVED_SUBPROGRAMS) {
-        return subPrograms.filter(sp => !isSubProgramArchived(sp));
+        return subPrograms.filter(sp => !sp.archivedAt);
       }
       if (selectedSubProgramStatus.value === ARCHIVED_SUBPROGRAMS) {
-        return subPrograms.filter(sp => isSubProgramArchived(sp));
+        return subPrograms.filter(sp => sp.archivedAt);
       }
 
       return subPrograms;
@@ -306,17 +301,30 @@ export default {
     const updateSubProgramArchivedAt = async (subProgram) => {
       try {
         modalLoading.value = true;
-        const archivedAt = isSubProgramArchived(subProgram) ? '' : CompaniDate().toISO();
-        await SubPrograms.update(subProgram._id, { archivedAt });
+        await SubPrograms.update(subProgram._id, { archivedAt: subProgram.archivedAt ? '' : CompaniDate().toISO() });
 
-        NotifyPositive('Modification enregistrée.');
+        NotifyPositive(subProgram.archivedAt ? 'Sous-programme désarchivé.' : 'Sous-programme archivé.');
         await refreshProgram();
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la modification du sous-programme.');
+        NotifyNegative(subProgram.archivedAt
+          ? 'Erreur lors du désarchivage du sous-programme.'
+          : 'Erreur lors de l\'archivage du sous-programme.');
       } finally {
         modalLoading.value = false;
       }
+    };
+
+    const validateSubProgramArchive = (subProgram) => {
+      const message = subProgram.archivedAt
+        ? 'Êtes-vous sûr(e) de vouloir désarchiver ce sous-programme&nbsp;? <br /><br /> Il sera de nouveau possible'
+          + ' de le modifier.'
+        : 'Êtes-vous sûr(e) de vouloir archiver ce sous-programme&nbsp;? <br /><br /> Vous ne pourrez plus le'
+          + ' modifier.';
+
+      $q.dialog({ title: 'Confirmation', message, html: true, ok: 'Oui', cancel: 'Non' })
+        .onOk(() => updateSubProgramArchivedAt(subProgram))
+        .onCancel(() => NotifyPositive(subProgram.archivedAt ? 'Désarchivage annulé.' : 'Archivage annulé.'));
     };
 
     const {
@@ -567,6 +575,28 @@ export default {
       }
     };
 
+    const validateSubProgramDeletion = (subProgram) => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: 'Êtes-vous sûr(e) de vouloir supprimer ce sous-programme&nbsp;?',
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => deleteSubProgram(subProgram._id))
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
+
+    const deleteSubProgram = async (subProgramId) => {
+      try {
+        await SubPrograms.delete(subProgramId);
+        await refreshProgram();
+        NotifyPositive('Sous-programme supprimé.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la suppression du sous-programme.');
+      }
+    };
+
     // ACTIVITY
     const goToActivityProfile = (subProgram, step, activity) => {
       $router.push({
@@ -660,6 +690,10 @@ export default {
       ${step.type === E_LEARNING ? `- ${formatQuantity('activité', step.activities.length)}` : ''} - 
       ${CompaniDuration(step.theoreticalDuration || PT0S).format(LONG_DURATION_H_MM)}`;
 
+    watch(isArchived, (value) => {
+      selectedSubProgramStatus.value = value ? ARCHIVED_SUBPROGRAMS : UNARCHIVED_SUBPROGRAMS;
+    }, { immediate: true });
+
     const created = async () => {
       if (!program.value) await refreshProgram();
       await refreshProgramList();
@@ -721,8 +755,7 @@ export default {
       isArchived,
       visibleSubPrograms,
       // Methods
-      isSubProgramArchived,
-      updateSubProgramArchivedAt,
+      validateSubProgramArchive,
       formatQuantity,
       getSubProgramError,
       dropStep,
@@ -750,6 +783,7 @@ export default {
       resetActivityReuseModal,
       validateStepDetachment,
       validateActivityDeletion,
+      validateSubProgramDeletion,
       checkPublicationAndOpenModal,
       validateSubProgramPublication,
       isPublished,
