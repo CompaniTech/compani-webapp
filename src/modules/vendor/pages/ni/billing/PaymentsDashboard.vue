@@ -398,6 +398,13 @@ export default {
       if (newValue.includes('') && newValue.length > 1) selectedTypes.value = newValue.filter(v => v !== '');
     });
 
+    watch(selectedHolding, () => {
+      if (!companyOptions.value.some(option => option.value === selectedCompany.value)) selectedCompany.value = '';
+      selectedPayments.value = [];
+    });
+
+    watch(selectedCompany, () => { selectedPayments.value = []; });
+
     const openCoursePaymentEditionModal = async () => {
       multipleCoursePaymentEditionModal.value = true;
     };
