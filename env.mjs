@@ -15,6 +15,7 @@ export const env = {
   DETACHMENT_ALLOWED_COMPANY_IDS: process.env.DETACHMENT_ALLOWED_COMPANY_IDS,
   MANAGEMENT_FEES_BILLING_ITEM: process.env.MANAGEMENT_FEES_BILLING_ITEM,
   TRAINER_FEES_BILLING_ITEM: process.env.TRAINER_FEES_BILLING_ITEM,
+  CONSULTING_PROGRAM_IDS: process.env.CONSULTING_PROGRAM_IDS,
 };
 
 export const parseEnv = environment => Object.keys(environment).reduce((acc, key) => {

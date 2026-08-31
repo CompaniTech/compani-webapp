@@ -8,7 +8,7 @@ import UserCompanies from '@api/UserCompanies';
 import { DAY } from '@data/constants';
 import { NotifyPositive, NotifyNegative } from '@components/popup/notify';
 
-const DETACHMENT_ALLOWED_COMPANY_IDS = process.env.DETACHMENT_ALLOWED_COMPANY_IDS.split(';');
+const DETACHMENT_ALLOWED_COMPANY_IDS = process.env.DETACHMENT_ALLOWED_COMPANY_IDS.split(',');
 
 export const useCompanyDetachment = (userProfile, refresh) => {
   const $q = useQuasar();
