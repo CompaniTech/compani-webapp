@@ -110,7 +110,10 @@ export const useCourses = (course) => {
         : []
       ),
       ...(course.value.interruptionDates ? [{ icon: 'pause', label: interruptedLabel }] : []),
-      ...(isConsultingCourse ? [{ icon: 'mdi-account-tie', label: 'Action de conseil' }] : []),
+      ...(isConsultingCourse
+        ? [{ icon: 'mdi-account-tie', label: 'Action de conseil' }]
+        : [{ icon: 'mdi-human-male-board', label: 'Action de formation' }]
+      ),
     ];
   });
 
