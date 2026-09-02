@@ -1,6 +1,6 @@
 <template>
   <q-page class="client-background" padding>
-    <ni-title-header title="Coachs" class="q-mb-xl" />
+    <ni-title-header title="Utilisateurs administratifs" class="q-mb-xl" />
     <ni-coach-list :company="company" />
   </q-page>
 </template>
@@ -11,7 +11,7 @@ import { mapGetters } from 'vuex';
 import TitleHeader from '@components/TitleHeader';
 import CoachList from '@components/table/CoachList';
 
-const metaInfo = { title: 'Configuration coachs' };
+const metaInfo = { title: 'Configuration utilisateurs administratifs' };
 
 export default {
   name: 'CoachConfig',

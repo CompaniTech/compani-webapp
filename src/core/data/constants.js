@@ -86,7 +86,7 @@ export const ROLE_TRANSLATION = {
 // ROLE TRANSLATION
 export const ROLES_TRANSLATION = {
   [CLIENT_ADMIN]: 'Administrateur(rice)',
-  [COACH]: 'Coach',
+  [COACH]: 'Chargé(e) de formation',
 };
 
 // SUBSCRIPTIONS
@@ -168,6 +168,8 @@ export const OPERATIONS = 'operations';
 export const PEDAGOGY = 'pedagogy';
 export const ARCHIVED_COURSES = 'archived_courses';
 export const UNARCHIVED_COURSES = 'unarchived_courses';
+export const ARCHIVED_PROGRAMS = 'archived_programs';
+export const UNARCHIVED_PROGRAMS = 'unarchived_programs';
 export const MONTHLY = 'monthly';
 export const GLOBAL = 'global';
 export const CERTIFICATE_GENERATION_MODE = [{ label: 'Mensuel', value: MONTHLY }, { label: 'Global', value: GLOBAL }];
@@ -176,6 +178,14 @@ export const NO_HOLDING = 'no_holding';
 
 // SUBPROGRAM
 export const PUBLISHED = 'published';
+export const ARCHIVED_SUBPROGRAMS = 'archived_subprograms';
+export const UNARCHIVED_SUBPROGRAMS = 'unarchived_subprograms';
+export const ALL_SUBPROGRAMS = 'all_subprograms';
+export const SUBPROGRAM_STATUS_OPTIONS = [
+  { label: 'Sous-programmes non-archivés', value: UNARCHIVED_SUBPROGRAMS },
+  { label: 'Sous-programmes archivés', value: ARCHIVED_SUBPROGRAMS },
+  { label: 'Tous les sous-programmes', value: ALL_SUBPROGRAMS },
+];
 
 // STEP
 export const E_LEARNING = 'e_learning';

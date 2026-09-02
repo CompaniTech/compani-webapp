@@ -11,7 +11,7 @@
     <div v-else class="text-italic q-mb-md">Aucun questionnaire "{{ QUESTIONNAIRE_TYPES[group.type] }}"</div>
   </div>
   <q-btn class="fixed fab-custom" no-caps rounded color="primary" icon="add" label="Créer un questionnaire"
-    @click="questionnaireCreationModal = true" :disable="loading" />
+    @click="questionnaireCreationModal = true" :disable="loading || isProgramArchived" />
 
   <questionnaire-creation-modal v-model="questionnaireCreationModal" @hide="resetCreationModal"
     :loading="modalLoading" @submit="createQuestionnaire" :validations="v$.newQuestionnaire"
@@ -20,8 +20,10 @@
 
 <script>
 import { ref, computed, toRefs } from 'vue';
+import { useStore } from 'vuex';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
+import get from 'lodash/get';
 import groupBy from 'lodash/groupBy';
 import Questionnaires from '@api/Questionnaires';
 import QuestionnaireCell from '@components/courses/QuestionnaireCell';
@@ -41,6 +43,7 @@ export default {
   },
   setup (props) {
     const { profileId: programId } = toRefs(props);
+    const $store = useStore();
     const loading = ref(false);
     const questionnairesByType = ref([]);
     const modalLoading = ref(false);
@@ -48,6 +51,10 @@ export default {
     const newQuestionnaire = ref(programId.value
       ? { name: '', type: SELF_POSITIONNING, program: programId.value }
       : { name: '', type: '' });
+
+    // le composant sert aussi hors fiche programme (annuaire des questionnaires), d'où le garde sur programId
+    const isProgramArchived = computed(() => !!programId.value &&
+      !!get($store.state.program.program, 'archivedAt'));
 
     const rules = computed(() => ({ newQuestionnaire: { name: { required }, type: { required } } }));
     const v$ = useVuelidate(rules, { newQuestionnaire });
@@ -127,6 +134,7 @@ export default {
     return {
       // Data
       loading,
+      isProgramArchived,
       questionnairesByType,
       QUESTIONNAIRE_TYPES,
       modalLoading,

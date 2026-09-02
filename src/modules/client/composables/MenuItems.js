@@ -41,7 +41,7 @@ export const useMenuItems = () => {
         { name: 'ni courses dashboard', icon: 'assessment', label: 'Tableau de bord' },
         { name: 'ni courses', icon: 'mdi-human-male-board', label: 'Formations mixtes' },
         { name: 'ni elearning courses', icon: 'stay_primary_portrait', label: 'Formations eLearning' },
-        { name: 'ni courses learners', icon: 'contacts', label: 'Apprenants' },
+        { name: 'ni courses learners', icon: 'contacts', label: 'Tous les utilisateurs' },
         { name: 'ni courses bills', icon: 'receipt', label: 'Factures' },
         { name: 'ni courses contacts', icon: 'people', label: 'Contacts Compani' },
         {
@@ -71,7 +71,7 @@ export const useMenuItems = () => {
       label: 'Configuration',
       children: [
         { name: 'ni config company', icon: 'settings', label: 'Configuration générale' },
-        { name: 'ni config coach', icon: 'people', label: 'Coachs' },
+        { name: 'ni config coach', icon: 'people', label: 'Utilisateurs administratifs' },
       ],
     },
   ]);

@@ -12,6 +12,8 @@
           @blur="trimAndUpdateCompany('name')" :error="v$.company.name.$error" />
         <ni-search-address v-model="company.address" :error-message="addressError" @blur="updateCompany('address')"
           @focus="saveTmp('address.fullAddress')" :error="v$.company.address.$error" />
+        <ni-input caption="Numéro de facturation (figure sur les factures)" v-model="company.billingInfos"
+          @focus="saveTmp('billingInfos')" @blur="updateCompany('billingInfos')" />
       </div>
     </div>
     <div class="q-mb-xl">
@@ -205,7 +207,8 @@ export default {
           if (path === 'address') {
             const isValid = await waitForValidation(v$.value.company, path);
             if (!isValid) return NotifyWarning('Champ(s) invalide(s)');
-          } else if (v$.value.company[path].$error) return NotifyWarning('Champ invalide');
+            // certains champs libres n'ont pas de règle de validation déclarée
+          } else if (get(v$.value.company, `${path}.$error`)) return NotifyWarning('Champ invalide');
 
           payload = set({}, path, value);
         }

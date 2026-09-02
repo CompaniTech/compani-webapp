@@ -27,12 +27,12 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
     },
     {
       ref: 'users',
-      label: 'Utilisateurs',
+      label: 'Entités',
       children: [
         { name: 'ni users holdings', icon: 'account_balance', label: 'Sociétés mères' },
         { name: 'ni users companies', icon: 'apartment', label: 'Structures' },
         { name: 'ni users trainers', icon: 'school', label: 'Formateurs' },
-        { name: 'ni users learners', icon: 'contacts', label: 'Apprenants' },
+        { name: 'ni users learners', icon: 'contacts', label: 'Tous les utilisateurs' },
       ],
     },
     {

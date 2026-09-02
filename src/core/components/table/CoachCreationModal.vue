@@ -6,7 +6,7 @@
     <ni-input :disable="!firstStep" in-modal :model-value="newCoach.local.email" :error="validations.local.email.$error"
       caption="Email" @blur="validations.local.email.$touch" :error-message="emailError" required-field
       @update:model-value="update($event.trim(), 'local.email')" />
-    <ni-select :disable="!firstStep" in-modal caption="Role" :options="roleOptions" :model-value="newCoach.role"
+    <ni-select :disable="!firstStep" in-modal caption="Rôle" :options="roleOptions" :model-value="newCoach.role"
       :error="validations.role.$error" @blur="validations.role.$touch" @update:model-value="update($event, 'role')"
       required-field />
     <template v-if="!firstStep">

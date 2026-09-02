@@ -1,8 +1,8 @@
 import { alenviAxios } from '@api/ressources/alenviAxios';
 
 export default {
-  async list () {
-    const programs = await alenviAxios.get(`${process.env.API_HOSTNAME}/programs`);
+  async list (params = { isArchived: false }) {
+    const programs = await alenviAxios.get(`${process.env.API_HOSTNAME}/programs`, { params });
     return programs.data.data.programs;
   },
   async create (payload) {

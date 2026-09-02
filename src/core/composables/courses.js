@@ -91,6 +91,8 @@ export const useCourses = (course) => {
       })
       .join(',')
     }`;
+    const isConsultingCourse = process.env.CONSULTING_PROGRAM_IDS.split(',')
+      .includes(get(course.value, 'subProgram.program._id'));
 
     return [
       { icon: 'bookmark_border', label: courseType.value },
@@ -108,6 +110,10 @@ export const useCourses = (course) => {
         : []
       ),
       ...(course.value.interruptionDates ? [{ icon: 'pause', label: interruptedLabel }] : []),
+      ...(isConsultingCourse
+        ? [{ icon: 'mdi-account-tie', label: 'Action de conseil' }]
+        : [{ icon: 'mdi-human-male-board', label: 'Action de formation' }]
+      ),
     ];
   });
 

@@ -6,7 +6,7 @@
     <ni-input in-modal :model-value="selectedCoach.local.email" :error="validations.local.email.$error" caption="Email"
       :error-message="emailError" @update:model-value="update($event, 'local.email')" required-field
       @blur="validations.local.email.$touch" />
-    <ni-select caption="Role" :options="roleOptions" :model-value="selectedCoach.role" @blur="validations.role.$touch"
+    <ni-select caption="Rôle" :options="roleOptions" :model-value="selectedCoach.role" @blur="validations.role.$touch"
       :error="validations.role.$error" required-field @update:model-value="update($event, 'role')" in-modal />
     <ni-input in-modal :model-value="selectedCoach.identity.firstname" caption="Prénom"
       @update:model-value="update($event, 'identity.firstname')" />
