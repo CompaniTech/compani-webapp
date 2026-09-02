@@ -3,21 +3,24 @@
     <template v-if="activity">
       <ni-profile-header :title="activity.name" :header-info="headerInfo" />
       <div class="q-mb-lg">
-        <ni-button v-if="isEditionLocked" label="Déverrouiller" color="primary" icon="mdi-lock"
+        <ni-button v-if="isEditionLocked && !isSubProgramArchived" label="Déverrouiller" color="primary" icon="mdi-lock"
           @click="validateUnlockEdition" />
       </div>
       <div class="row gutter-profile">
         <ni-input v-model.trim="editedActivity.name" required-field caption="Nom" :error="v$.editedActivity.name.$error"
-          @blur="updateActivity(editedActivity.name, 'name')" :disable="isEditionLocked" />
+          @blur="updateActivity(editedActivity.name, 'name')" :disable="isEditionLocked || isSubProgramArchived" />
         <ni-select v-model.trim="editedActivity.type" @update:model-value="updateActivity(editedActivity.type, 'type')"
-          :options="ACTIVITY_TYPES" caption="Type" :disable="isActivityPublished || isEditionLocked" required-field
+          :options="ACTIVITY_TYPES" caption="Type"
+          :disable="isActivityPublished || isEditionLocked || isSubProgramArchived"
+          required-field
           :error="v$.editedActivity.type.$error" />
       </div>
       <div class="row body">
         <card-container ref="cardContainer" class="col-md-3 col-sm-4 col-xs-6" @add="openCardCreationModal"
-          @delete-card="validateCardDeletion" :disable-edition="isEditionLocked" :card-parent="activity"
-          @update="updateActivity($event, 'cards')" />
-        <card-edition :disable-edition="isEditionLocked" :card-parent="activity" @refresh="refreshCard" />
+          @delete-card="validateCardDeletion" :disable-edition="isEditionLocked || isSubProgramArchived"
+          :card-parent="activity" @update="updateActivity($event, 'cards')" />
+        <card-edition :disable-edition="isEditionLocked || isSubProgramArchived" :card-parent="activity"
+          @refresh="refreshCard" />
       </div>
     </template>
 
@@ -75,6 +78,7 @@ export default {
     const stepName = ref('');
     const cardCreationModal = ref(false);
     const isEditionLocked = ref(false);
+    const isSubProgramArchived = ref(false);
     const isActivityUsedInSeveralPlaces = ref(false);
     const editedActivity = ref({ name: '', type: '' });
     const cardContainer = useTemplateRef('cardContainer');
@@ -229,6 +233,7 @@ export default {
         programName.value = get(program.value, 'name') || '';
 
         const subProgram = program.value.subPrograms.find(sp => sp._id === subProgramId.value);
+        isSubProgramArchived.value = !!get(subProgram, 'archivedAt');
 
         const step = subProgram ? subProgram.steps.find(s => s._id === stepId.value) : '';
         stepName.value = get(step, 'name') || '';
@@ -265,6 +270,7 @@ export default {
       ACTIVITY_TYPES,
       cardCreationModal,
       isEditionLocked,
+      isSubProgramArchived,
       editedActivity,
       isActivityPublished,
       // Computed

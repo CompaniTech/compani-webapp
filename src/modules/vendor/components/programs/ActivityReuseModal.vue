@@ -59,6 +59,7 @@ export default {
         const program = await Programs.getById(this.selectedProgram);
 
         const reuseableActivities = program.subPrograms
+          .filter(sp => !sp.archivedAt)
           .map(sp => sp.steps.map(s => s.activities.map(a => ({ label: a.name, value: a._id }))))
           .flat(2)
           .filter(a => !this.sameStepActivities.includes(a.value))
