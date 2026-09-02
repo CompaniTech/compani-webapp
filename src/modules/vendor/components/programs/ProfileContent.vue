@@ -65,7 +65,8 @@
               </div>
             </q-card-section>
             <div class="bg-peach-200 activity-container" v-if="areActivitiesVisible[step._id]">
-              <draggable v-model="step.activities" :disabled="$q.platform.is.mobile || isPublishedOrLocked(step)"
+              <draggable v-model="step.activities"
+                :disabled="$q.platform.is.mobile || isPublishedOrLocked(step) || !!subProgram.archivedAt"
                 class="activity-draggable" ghost-class="ghost" @change="dropActivity(subProgram._id, step._id)"
                 item-key="_id">
                 <template #item="{element: activity }">

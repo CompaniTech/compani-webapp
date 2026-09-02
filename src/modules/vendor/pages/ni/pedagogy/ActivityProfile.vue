@@ -8,9 +8,11 @@
       </div>
       <div class="row gutter-profile">
         <ni-input v-model.trim="editedActivity.name" required-field caption="Nom" :error="v$.editedActivity.name.$error"
-          @blur="updateActivity(editedActivity.name, 'name')" :disable="isEditionLocked" />
+          @blur="updateActivity(editedActivity.name, 'name')" :disable="isEditionLocked || isSubProgramArchived" />
         <ni-select v-model.trim="editedActivity.type" @update:model-value="updateActivity(editedActivity.type, 'type')"
-          :options="ACTIVITY_TYPES" caption="Type" :disable="isActivityPublished || isEditionLocked" required-field
+          :options="ACTIVITY_TYPES" caption="Type"
+          :disable="isActivityPublished || isEditionLocked || isSubProgramArchived"
+          required-field
           :error="v$.editedActivity.type.$error" />
       </div>
       <div class="row body">
