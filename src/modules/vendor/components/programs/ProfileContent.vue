@@ -82,7 +82,7 @@
                           :status="activity.areCardsValid ? PUBLISHED_DOT_ACTIVE : PUBLISHED_DOT_WARNING" />
                       </div>
                       <div class="row no-wrap">
-                        <ni-button class="q-px-sm" icon="close" :disable="isPublished(step)"
+                        <ni-button class="q-px-sm" icon="close" :disable="isPublished(step) || !!subProgram.archivedAt"
                           @click="validateActivityDeletion(step, activity._id)" />
                       </div>
                     </q-card-section>
@@ -90,10 +90,10 @@
                 </template>
               </draggable>
               <div v-if="!isPublished(step)" class="q-mt-md" align="right">
-                <ni-button color="primary" icon="add" label="Réutiliser une activité" :disable="isLocked(step)"
-                  @click="openActivityReuseModal(step)" />
-                <ni-button color="primary" icon="add" label="Créer une activité" :disable="isLocked(step)"
-                  @click="openActivityCreationModal(step._id)" />
+                <ni-button color="primary" icon="add" label="Réutiliser une activité"
+                  :disable="isLocked(step) || !!subProgram.archivedAt" @click="openActivityReuseModal(step)" />
+                <ni-button color="primary" icon="add" label="Créer une activité"
+                  :disable="isLocked(step) || !!subProgram.archivedAt" @click="openActivityCreationModal(step._id)" />
               </div>
               <div class="no-activity" v-if="isPublished(step) && !step.activities.length">
                 Il n'y a pas d'activité
