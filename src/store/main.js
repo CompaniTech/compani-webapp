@@ -1,4 +1,4 @@
-import { Platform, Screen } from 'quasar';
+import { Platform } from 'quasar';
 import get from 'lodash/get';
 import users from '@api/Users';
 import { userModel } from '@data/user';
@@ -9,7 +9,7 @@ export default {
   namespaced: true,
   state: {
     loggedUser: null,
-    drawer: !!Platform.is.desktop || Screen.width >= 1024,
+    drawer: !!Platform.is.desktop || window.innerWidth >= 1024,
   },
   mutations: {
     SET_DRAWER: (state, toggle) => { state.drawer = toggle; },
@@ -31,7 +31,7 @@ export default {
     },
     resetMain: ({ commit }) => {
       commit('SET_LOGGED_USER', null);
-      commit('SET_DRAWER', !!Platform.is.desktop);
+      commit('SET_DRAWER', !!Platform.is.desktop || window.innerWidth >= 1024);
     },
   },
   getters: {
