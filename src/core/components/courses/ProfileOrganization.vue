@@ -44,7 +44,8 @@
       <div class="interlocutor-container">
         <interlocutor-cell v-for="trainer in course.trainers" :key="trainer._id" :interlocutor="trainer"
           caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor" clearable
-          :role-label="getTrainerRoleLabel(trainer._id)" :disable="isArchived" @open-modal="openTrainerModal" />
+          :role-label="getTrainerRoleLabel(trainer._id)" :disable="isArchived" @open-modal="openTrainerModal"
+          :interlocutor-is-non-editable="!isSingleCourse" />
         <ni-secondary-button v-if="canUpdateInterlocutor" class="button-trainer" label="Ajouter un intervenant"
           @click="() => openTrainerModal({ action: CREATION })" />
       </div>
@@ -141,7 +142,8 @@
     <interlocutor-modal v-model="trainerModal" v-model:interlocutor="tmpInterlocutorId"
       v-model:role="tmpTrainerRole" @hide="resetInterlocutor(TRAINER)" @submit="addTrainer"
       :loading="interlocutorModalLoading" :label="interlocutorLabel" :validations="v$.trainer"
-      :interlocutors-options="trainerOptions" display-role-select :role-options="TRAINER_ROLE_OPTIONS" />
+      :interlocutors-options="trainerOptions" :display-role-select="isSingleCourse"
+      :role-options="TRAINER_ROLE_OPTIONS" />
 
     <interlocutor-modal v-model="trainerRoleModal" v-model:role="tmpTrainerRole"
       @hide="resetInterlocutor(TRAINER)" @submit="updateTrainerRole" :loading="interlocutorModalLoading"
@@ -836,8 +838,8 @@ export default {
 
     const getTrainerRoleLabel = (trainerId) => {
       const roleEntry = (course.value.rolePerTrainer || []).find(rpt => rpt.trainer === trainerId);
-      const option = roleEntry ? TRAINER_ROLE_OPTIONS.find(o => o.value === roleEntry.role) : '';
-      return option.label || '';
+      const option = roleEntry ? TRAINER_ROLE_OPTIONS.find(o => o.value === roleEntry.role) : null;
+      return option ? option.label : '';
     };
 
     const addTrainer = async () => {
