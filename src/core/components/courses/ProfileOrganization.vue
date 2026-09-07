@@ -43,8 +43,8 @@
       </p>
       <div class="interlocutor-container">
         <interlocutor-cell v-for="trainer in course.trainers" :key="trainer._id" :interlocutor="trainer"
-          caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor"
-          :disable="isArchived" clearable interlocutor-is-non-editable @open-modal="openTrainerModal" />
+          caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor" clearable
+          :role-label="getTrainerRoleLabel(trainer._id)" :disable="isArchived" @open-modal="openTrainerModal" />
         <ni-secondary-button v-if="canUpdateInterlocutor" class="button-trainer" label="Ajouter un intervenant"
           @click="() => openTrainerModal({ action: CREATION })" />
       </div>
@@ -139,8 +139,14 @@
       :interlocutors-options="adminUserOptions" :label="interlocutorLabel" />
 
     <interlocutor-modal v-model="trainerModal" v-model:interlocutor="tmpInterlocutorId"
-      @hide="resetInterlocutor(TRAINER)" @submit="addTrainer()" :loading="interlocutorModalLoading"
-      :label="interlocutorLabel" :validations="v$.trainer" :interlocutors-options="trainerOptions" />
+      v-model:role="tmpTrainerRole" @hide="resetInterlocutor(TRAINER)" @submit="addTrainer"
+      :loading="interlocutorModalLoading" :label="interlocutorLabel" :validations="v$.trainer"
+      :interlocutors-options="trainerOptions" display-role-select :role-options="TRAINER_ROLE_OPTIONS" />
+
+    <interlocutor-modal v-model="trainerRoleModal" v-model:role="tmpTrainerRole"
+      @hide="resetInterlocutor(TRAINER)" @submit="updateTrainerRole" :loading="interlocutorModalLoading"
+      :label="interlocutorLabel" display-role-select :role-options="TRAINER_ROLE_OPTIONS"
+      :display-interlocutor-select="false" />
 
     <interlocutor-modal v-model="companyRepresentativeModal" v-model:interlocutor="tmpInterlocutorId"
       @submit="updateInterlocutor(COMPANY_REPRESENTATIVE)" :validations="v$.companyRepresentative"
@@ -223,6 +229,7 @@ import {
   CREATION,
   TUTOR,
   SINGLE,
+  TRAINER_ROLE_OPTIONS,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { composeCourseName } from '@helpers/courses';
@@ -291,11 +298,13 @@ export default {
     const smsLoading = ref(false);
     const smsHistoriesModal = ref(false);
     const tmpInterlocutorId = ref('');
+    const tmpTrainerRole = ref('');
     const tmpCourse = ref({ misc: '', estimateStartDate: '', maxTrainees: 0, hasCertifyingTest: false });
     const operationsRepresentativeEditionModal = ref(false);
     const interlocutorModalLoading = ref(false);
     const interlocutorLabel = ref({ action: '', interlocutor: '' });
     const trainerModal = ref(false);
+    const trainerRoleModal = ref(false);
     const sendSms = ref(false);
     const companyRepresentativeModal = ref(false);
     const contactModalLoading = ref(false);
@@ -825,12 +834,20 @@ export default {
       }
     };
 
+    const getTrainerRoleLabel = (trainerId) => {
+      const roleEntry = (course.value.rolePerTrainer || []).find(rpt => rpt.trainer === trainerId);
+      const option = roleEntry ? TRAINER_ROLE_OPTIONS.find(o => o.value === roleEntry.role) : '';
+      return option.label || '';
+    };
+
     const addTrainer = async () => {
       try {
         v$.value.trainer.$touch();
         if (v$.value.trainer.$error) return NotifyWarning('Champ(s) invalide(s)');
 
-        await Courses.addTrainer(course.value._id, { trainer: tmpInterlocutorId.value });
+        const payload = { trainer: tmpInterlocutorId.value };
+        if (tmpTrainerRole.value) payload.role = tmpTrainerRole.value;
+        await Courses.addTrainer(course.value._id, payload);
 
         trainerModal.value = false;
         await refreshCourse();
@@ -840,6 +857,20 @@ export default {
         if ([409, 403].includes(e.status)) return NotifyNegative(e.data.message);
 
         NotifyNegative('Erreur lors de l\'ajout de l\'intervenant.');
+      }
+    };
+
+    const updateTrainerRole = async () => {
+      try {
+        const payload = tmpTrainerRole.value ? { role: tmpTrainerRole.value } : {};
+        await Courses.updateTrainer(course.value._id, tmpInterlocutorId.value, payload);
+
+        trainerRoleModal.value = false;
+        await refreshCourse();
+        NotifyPositive(tmpTrainerRole.value ? 'Rôle de l\'intervenant mis à jour.' : 'Rôle de l\'intervenant retiré.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la mise à jour du rôle.');
       }
     };
 
@@ -900,6 +931,7 @@ export default {
 
     const resetInterlocutor = (interlocutorType = '') => {
       tmpInterlocutorId.value = '';
+      tmpTrainerRole.value = '';
       interlocutorLabel.value = { action: '', interlocutor: '' };
 
       if (v$.value[interlocutorType]) v$.value[interlocutorType].$reset();
@@ -914,7 +946,7 @@ export default {
 
     const openTrainerModal = (event) => {
       if (isArchived.value) {
-        return NotifyWarning('Vous ne pouvez pas ajouter d’intervenant(e) à une formation archivée.');
+        return NotifyWarning('Vous ne pouvez pas modifier les intervenants d’une formation archivée.');
       }
 
       const { action, interlocutorId: trainerId } = event;
@@ -922,6 +954,17 @@ export default {
       if (action === DELETION) {
         const trainerToRemove = course.value.trainers.find(t => t._id === trainerId);
         openInterlocutorDeletionValidationModal(get(trainerToRemove, 'identity'), TRAINER, trainerId);
+      } else if (action === EDITION) {
+        const trainerToEdit = course.value.trainers.find(t => t._id === trainerId);
+        const roleEntry = (course.value.rolePerTrainer || []).find(rpt => rpt.trainer === trainerId);
+
+        tmpInterlocutorId.value = trainerId;
+        tmpTrainerRole.value = roleEntry ? roleEntry.role : '';
+        interlocutorLabel.value = {
+          action: 'Modifier le rôle de ',
+          interlocutor: formatIdentity(trainerToEdit.identity, 'FL'),
+        };
+        trainerRoleModal.value = true;
       } else {
         tmpInterlocutorId.value = trainerId;
         interlocutorLabel.value = { action: 'Ajouter un ', interlocutor: 'intervenant' };
@@ -1180,10 +1223,15 @@ export default {
       smsHistoryList,
       smsHistoriesModal,
       tmpInterlocutorId,
+      tmpTrainerRole,
+      TRAINER_ROLE_OPTIONS,
+      getTrainerRoleLabel,
+      updateTrainerRole,
       operationsRepresentativeEditionModal,
       interlocutorModalLoading,
       interlocutorLabel,
       trainerModal,
+      trainerRoleModal,
       sendSms,
       companyRepresentativeModal,
       contactModalLoading,

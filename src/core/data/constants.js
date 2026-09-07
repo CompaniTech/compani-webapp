@@ -69,6 +69,16 @@ export const TRAINER = 'trainer';
 // ROLES HOLDING
 export const HOLDING_ADMIN = 'holding_admin';
 
+// TRAINER ROLES (fonction pédagogique sur une formation, distincte des rôles de permission ci-dessus)
+export const VAEI_COACH = 'vaei_coach';
+export const ARCHITECT = 'architect';
+export const CODEV_REPRESENTATIVE = 'codev_representative';
+export const TRAINER_ROLE_OPTIONS = [
+  { label: 'Coach', value: VAEI_COACH },
+  { label: 'Architecte de parcours', value: ARCHITECT },
+  { label: 'Animateur.rice CODEV', value: CODEV_REPRESENTATIVE },
+];
+
 export const AUXILIARY_ROLES = [AUXILIARY, PLANNING_REFERENT, AUXILIARY_WITHOUT_COMPANY];
 export const COACH_ROLES = [CLIENT_ADMIN, COACH];
 export const ROLE_TRANSLATION = {
