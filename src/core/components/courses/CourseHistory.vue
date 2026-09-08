@@ -39,6 +39,8 @@ import {
   COMPANY_DELETION,
   TRAINER_ADDITION,
   TRAINER_DELETION,
+  TRAINER_ROLE_UPDATE,
+  TRAINER_ROLE_OPTIONS,
   COURSE_INTERRUPTION,
   COURSE_RESTART,
   SLOT_RESTRICTION,
@@ -207,6 +209,23 @@ export default {
       infos: `\r\n${formatIdentity(courseHistory.value.trainer.identity, 'FL')}`,
     });
 
+    const getTrainerRoleUpdateTitle = () => {
+      const trainerName = formatIdentity(courseHistory.value.trainer.identity, 'FL');
+
+      if (!courseHistory.value.role) {
+        return { pre: 'Retrait du rôle de l\'intervenant(e) :', infos: `\r\n${trainerName}` };
+      }
+
+      const role = TRAINER_ROLE_OPTIONS.find(option => option.value === courseHistory.value.role);
+
+      return {
+        pre: 'Nouveau rôle',
+        type: get(role, 'label', ''),
+        post: 'pour l\'intervenant(e) :',
+        infos: `\r\n${trainerName}`,
+      };
+    };
+
     const getInterruptionTitle = () => ({ type: 'Mise en pause', post: 'de la formation' });
 
     const getRestartTitle = () => ({ type: 'Reprise', post: 'de la formation' });
@@ -230,6 +249,8 @@ export default {
           return { title: getTrainerAdditionTitle() };
         case TRAINER_DELETION:
           return { title: getTrainerDeletionTitle() };
+        case TRAINER_ROLE_UPDATE:
+          return { title: getTrainerRoleUpdateTitle() };
         case COMPANY_ADDITION:
           return { title: getCompanyAdditionTitle() };
         case COMPANY_DELETION:
