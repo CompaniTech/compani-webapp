@@ -146,7 +146,7 @@
       :role-options="TRAINER_ROLE_OPTIONS" />
 
     <interlocutor-modal v-model="trainerRoleModal" v-model:role="tmpTrainerRole"
-      @hide="resetInterlocutor(TRAINER)" @submit="updateTrainerRole" :loading="interlocutorModalLoading"
+      @hide="resetInterlocutor(TRAINER)" @submit="validateTrainerRoleUpdate" :loading="interlocutorModalLoading"
       :label="interlocutorLabel" display-role-select :role-options="TRAINER_ROLE_OPTIONS"
       :display-interlocutor-select="false" />
 
@@ -876,6 +876,27 @@ export default {
       }
     };
 
+    const hasUnbilledSlotsForTrainer = trainerId => (course.value.slots || []).some(slot => (
+      (slot.trainers || []).some(t => t._id === trainerId) &&
+      !(slot.trainerBillings || []).some(b => b.trainer === trainerId)
+    ));
+
+    const validateTrainerRoleUpdate = () => {
+      if (!hasUnbilledSlotsForTrainer(tmpInterlocutorId.value)) return updateTrainerRole();
+
+      const message = 'Ce formateur a des créneaux non facturés sur cette formation. Si son nouveau rôle ne '
+        + 'correspond plus au tarif de ces étapes, la facturation échouera tant que ce n\'est pas corrigé.'
+        + ' Voulez-vous continuer&nbsp;?';
+
+      return $q.dialog({
+        title: 'Confirmation',
+        message,
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => updateTrainerRole());
+    };
+
     const removeTrainer = async (interlocutorId) => {
       try {
         await Courses.deleteTrainer(course.value._id, interlocutorId);
@@ -1229,6 +1250,7 @@ export default {
       TRAINER_ROLE_OPTIONS,
       getTrainerRoleLabel,
       updateTrainerRole,
+      validateTrainerRoleUpdate,
       operationsRepresentativeEditionModal,
       interlocutorModalLoading,
       interlocutorLabel,
