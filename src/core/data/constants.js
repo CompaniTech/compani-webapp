@@ -112,6 +112,7 @@ export const INVALID_NUMBER = 'Nombre invalide';
 
 // BILLING
 export const BILL = 'bill';
+export const TRAINER_SALARY = 'trainer_salary';
 
 // PAYMENTS
 export const DIRECT_DEBIT = 'direct_debit';
