@@ -172,6 +172,7 @@ import { required, helpers } from '@vuelidate/validators';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import get from 'lodash/get';
 import omit from 'lodash/omit';
+import groupBy from 'lodash/groupBy';
 import SubPrograms from '@api/SubPrograms';
 import Steps from '@api/Steps';
 import Input from '@components/form/Input';
@@ -357,10 +358,18 @@ export default {
     const currentPlanSubProgram = computed(() => (program.value.subPrograms || [])
       .find(sp => sp._id === selectedSubProgramForPlan.value._id) || {});
 
+    const hasConsistentRoles = (prices) => {
+      const pricesByStep = groupBy(prices, 'step');
+      return Object.values(pricesByStep).every(stepPrices => stepPrices.length === 1 || stepPrices.every(p => p.role));
+    };
+
     const rules = computed(() => ({
       program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
       newSubProgramPriceVersion: {
-        prices: { $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }) },
+        prices: {
+          $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }),
+          hasConsistentRoles,
+        },
         effectiveDate: { required },
       },
     }));
