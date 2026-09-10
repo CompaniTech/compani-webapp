@@ -864,6 +864,7 @@ export default {
 
     const updateTrainerRole = async () => {
       try {
+        interlocutorModalLoading.value = true;
         const payload = tmpTrainerRole.value ? { role: tmpTrainerRole.value } : {};
         await Courses.updateTrainer(course.value._id, tmpInterlocutorId.value, payload);
 
@@ -873,6 +874,8 @@ export default {
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la mise à jour du rôle.');
+      } finally {
+        interlocutorModalLoading.value = false;
       }
     };
 
@@ -985,7 +988,7 @@ export default {
         tmpTrainerRole.value = roleEntry ? roleEntry.role : '';
         interlocutorLabel.value = {
           action: 'Modifier le rôle de ',
-          interlocutor: formatIdentity(trainerToEdit.identity, 'FL'),
+          interlocutor: formatIdentity(get(trainerToEdit, 'identity'), 'FL'),
         };
         trainerRoleModal.value = true;
       } else {
