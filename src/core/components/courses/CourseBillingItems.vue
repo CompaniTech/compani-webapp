@@ -91,7 +91,7 @@ import CourseBillingItemsApi from '@api/CourseBillingItems';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import ExpandingTable from '@components/table/ExpandingTable';
 import Button from '@components/Button';
-import { COURSE, REQUIRED_LABEL } from '@data/constants';
+import { COURSE, REQUIRED_LABEL, TRAINER_SALARY } from '@data/constants';
 import BillingPurchaseAdditionModal from 'src/modules/vendor/components/billing/BillingPurchaseAdditionModal';
 import CourseFeeEditionModal from 'src/modules/vendor/components/billing/CourseFeeEditionModal';
 
@@ -300,7 +300,7 @@ export default {
         description: billingPurchase.description || '',
       };
       editedBillingPurchaseTitle.value = get(billingPurchase, 'billingItem.name');
-      disablePriceAndCount.value = get(billingPurchase, 'billingItem.type') !== COURSE;
+      disablePriceAndCount.value = ![COURSE, TRAINER_SALARY].includes(get(billingPurchase, 'billingItem.type'));
       editionModal.value = true;
     };
 

@@ -146,7 +146,7 @@
       :role-options="TRAINER_ROLE_OPTIONS" />
 
     <interlocutor-modal v-model="trainerRoleModal" v-model:role="tmpTrainerRole"
-      @hide="resetInterlocutor(TRAINER)" @submit="updateTrainerRole" :loading="interlocutorModalLoading"
+      @hide="resetInterlocutor(TRAINER)" @submit="validateTrainerRoleUpdate" :loading="interlocutorModalLoading"
       :label="interlocutorLabel" display-role-select :role-options="TRAINER_ROLE_OPTIONS"
       :display-interlocutor-select="false" />
 
@@ -864,6 +864,7 @@ export default {
 
     const updateTrainerRole = async () => {
       try {
+        interlocutorModalLoading.value = true;
         const payload = tmpTrainerRole.value ? { role: tmpTrainerRole.value } : {};
         await Courses.updateTrainer(course.value._id, tmpInterlocutorId.value, payload);
 
@@ -873,7 +874,30 @@ export default {
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de la mise à jour du rôle.');
+      } finally {
+        interlocutorModalLoading.value = false;
       }
+    };
+
+    const hasUnbilledSlotsForTrainer = trainerId => (course.value.slots || []).some(slot => (
+      (slot.trainers || []).some(t => t._id === trainerId) &&
+      !(slot.trainerBillings || []).some(b => b.trainer === trainerId)
+    ));
+
+    const validateTrainerRoleUpdate = () => {
+      if (!hasUnbilledSlotsForTrainer(tmpInterlocutorId.value)) return updateTrainerRole();
+
+      const message = 'Ce formateur a des créneaux non facturés sur cette formation. Si son nouveau rôle ne '
+        + 'correspond plus au tarif de ces étapes, la facturation échouera tant que ce n\'est pas corrigé.'
+        + ' Voulez-vous continuer&nbsp;?';
+
+      return $q.dialog({
+        title: 'Confirmation',
+        message,
+        html: true,
+        ok: true,
+        cancel: 'Annuler',
+      }).onOk(() => updateTrainerRole());
     };
 
     const removeTrainer = async (interlocutorId) => {
@@ -964,7 +988,7 @@ export default {
         tmpTrainerRole.value = roleEntry ? roleEntry.role : '';
         interlocutorLabel.value = {
           action: 'Modifier le rôle de ',
-          interlocutor: formatIdentity(trainerToEdit.identity, 'FL'),
+          interlocutor: formatIdentity(get(trainerToEdit, 'identity'), 'FL'),
         };
         trainerRoleModal.value = true;
       } else {
@@ -1229,6 +1253,7 @@ export default {
       TRAINER_ROLE_OPTIONS,
       getTrainerRoleLabel,
       updateTrainerRole,
+      validateTrainerRoleUpdate,
       operationsRepresentativeEditionModal,
       interlocutorModalLoading,
       interlocutorLabel,

@@ -11,6 +11,7 @@
 
 <script>
 import { toRefs, computed, ref } from 'vue';
+import groupBy from 'lodash/groupBy';
 import CompaniDate from '@helpers/dates/companiDates';
 import { descendingSortBy } from '@helpers/dates/utils';
 import Modal from '@components/modal/Modal';
@@ -40,10 +41,15 @@ export default {
 
     const subProgramPrices = computed(() => (subProgram.value.priceVersions || [])
       .sort(descendingSortBy('effectiveDate'))
-      .map(version => ({
-        effectiveDate: version.effectiveDate,
-        ...Object.fromEntries(version.prices.map(price => [price.step, price.hourlyAmount])),
-      })));
+      .map((version) => {
+        const pricesByStep = groupBy(version.prices, 'step');
+
+        return {
+          effectiveDate: version.effectiveDate,
+          ...Object.fromEntries(Object.entries(pricesByStep)
+            .map(([step, prices]) => [step, prices.map(p => p.hourlyAmount).join(' / ')])),
+        };
+      }));
 
     const subProgramPricesColumns = computed(() => [
       {
