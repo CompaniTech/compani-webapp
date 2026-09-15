@@ -247,7 +247,11 @@ export default {
     const slotsToAdd = ref({ course: course.value._id, step: '', quantity: 1 });
 
     const populateStepInSlot = slots => slots
-      .map(slot => ({ ...slot, step: stepList.value.find(s => s.key === slot.step) }));
+      .map((slot) => {
+        if (slot.step && typeof slot.step === 'object') return slot;
+
+        return { ...slot, step: stepList.value.find(s => s.key === slot.step) };
+      });
 
     const slotsDurationTitle = computed(() => {
       if (!course.value || !course.value.slots) return '0h';
