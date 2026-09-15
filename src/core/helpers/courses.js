@@ -11,7 +11,7 @@ import {
 } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { formatIntervalHourly, getISODuration } from './dates/utils';
+import { formatIntervalHourly, getISODuration, getSlotDurationMultiplier } from './dates/utils';
 
 export const happened = sameDaySlots => CompaniDate().isSameOrAfter(sameDaySlots[sameDaySlots.length - 1].endDate);
 
@@ -32,8 +32,13 @@ export const getStepTypeLabel = (value) => {
   return type ? type.label : '';
 };
 
-export const formatSlotSchedule = slot => `${formatIntervalHourly(slot)} `
-  + `(${CompaniDuration(getISODuration(slot)).format(SHORT_DURATION_H_MM)})`;
+export const formatSlotSchedule = (slot) => {
+  const multiplier = getSlotDurationMultiplier(slot);
+  const multiplierLabel = multiplier > 1 ? ` (x${multiplier})` : '';
+  const duration = CompaniDuration(getISODuration(slot)).format(SHORT_DURATION_H_MM);
+
+  return `${formatIntervalHourly(slot)} (${duration})${multiplierLabel}`;
+};
 
 export const computeDuration = steps => (steps.length
   ? steps.reduce((acc, s) => (s.theoreticalDuration ? acc.add(s.theoreticalDuration) : acc), CompaniDuration()).toISO()
