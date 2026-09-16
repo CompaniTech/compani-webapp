@@ -18,6 +18,10 @@
           @update:model-value="updateTmp($event, 'minutes')" @blur="updateTheoreticalDuration()" />
       </div>
     </q-field>
+    <q-checkbox v-if="editedStep.type !== E_LEARNING" :model-value="!!editedStep.durationCountedPerTrainer"
+      :disable="editedStep.status === PUBLISHED" dense class="q-mb-lg"
+      label="Durée du créneau à décompter par intervenant (co-animation)"
+      @update:model-value="update($event, 'durationCountedPerTrainer')" />
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Éditer l'étape" color="primary" :loading="loading"
         icon-right="add" @click="submit" />
@@ -30,6 +34,7 @@ import { ref, toRefs, watch } from 'vue';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import CompaniDuration from '@helpers/dates/companiDurations';
+import { PUBLISHED, E_LEARNING } from '@data/constants';
 
 export default {
   name: 'StepEditionModal',
@@ -85,6 +90,8 @@ export default {
       // Data
       hours,
       minutes,
+      PUBLISHED,
+      E_LEARNING,
       // Methods
       hide,
       input,

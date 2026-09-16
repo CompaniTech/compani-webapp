@@ -42,9 +42,9 @@
         Aucun intervenant n'est défini pour cette formation.
       </p>
       <div class="interlocutor-container">
-        <interlocutor-cell v-for="trainer in course.trainers" :key="trainer._id" :interlocutor="trainer"
-          caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor" clearable
-          :role-label="getTrainerRoleLabel(trainer._id)" :disable="isArchived" @open-modal="openTrainerModal"
+        <interlocutor-cell v-for="trainer in course.trainers.filter(t => t._id)" :key="trainer._id"
+          :interlocutor="trainer" caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor"
+          clearable :role-label="getTrainerRoleLabel(trainer._id)" :disable="isArchived" @open-modal="openTrainerModal"
           :interlocutor-is-non-editable="!isSingleCourse" />
         <ni-secondary-button v-if="canUpdateInterlocutor" class="button-trainer" label="Ajouter un intervenant"
           @click="() => openTrainerModal({ action: CREATION })" />

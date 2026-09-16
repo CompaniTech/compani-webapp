@@ -51,7 +51,7 @@
                     <div v-for="slot in day[1]" :key="slot._id" @click="openEditionModal(slot)">
                       <div :class="getSlotClass(step)">
                         <div class="column">
-                          <div class="q-mr-md">{{ formatSlotSchedule(slot) }}</div>
+                          <div class="q-mr-md">{{ formatSlotSchedule({ ...slot, step }) }}</div>
                             <span class="text-italic text-12 align-center" v-if="slot.trainers">
                               <q-icon name="emoji_people" />
                               {{ getSlotTrainersName(slot) }}
@@ -246,10 +246,17 @@ export default {
     const course = computed(() => $store.state.course.course);
     const slotsToAdd = ref({ course: course.value._id, step: '', quantity: 1 });
 
+    const populateStepInSlot = slots => slots
+      .map((slot) => {
+        if (slot.step && typeof slot.step === 'object') return slot;
+
+        return { ...slot, step: stepList.value.find(s => s.key === slot.step) };
+      });
+
     const slotsDurationTitle = computed(() => {
       if (!course.value || !course.value.slots) return '0h';
 
-      const totalISO = getISOTotalDuration(course.value.slots);
+      const totalISO = getISOTotalDuration(populateStepInSlot(course.value.slots));
 
       return CompaniDuration(totalISO).format(SHORT_DURATION_H_MM);
     });
@@ -304,6 +311,7 @@ export default {
       name: step.name,
       type: step.type,
       typeLabel: getStepTypeLabel(step.type),
+      durationCountedPerTrainer: step.durationCountedPerTrainer,
     })));
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
@@ -322,7 +330,7 @@ export default {
       const groupedSlotsByStep = groupBy(slotsWithPresence, 'step');
 
       return Object.keys(groupedSlotsByStep).reduce((acc, value) => {
-        const duration = getISOTotalDuration(groupedSlotsByStep[value]);
+        const duration = getISOTotalDuration(populateStepInSlot(groupedSlotsByStep[value]));
         acc[value] = Math.trunc(CompaniDuration(duration).asHours()) === 1
           ? `${CompaniDuration(duration).format(SHORT_DURATION_H_MM)} émargée`
           : `${CompaniDuration(duration).format(SHORT_DURATION_H_MM)} émargées`;
