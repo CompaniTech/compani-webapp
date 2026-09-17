@@ -209,21 +209,33 @@ export default {
       infos: `\r\n${formatIdentity(courseHistory.value.trainer.identity, 'FL')}`,
     });
 
+    const formatRoleLabels = roles => roles
+      .map(role => TRAINER_ROLE_OPTIONS.find(option => option.value === role))
+      .filter(Boolean)
+      .map(option => option.label)
+      .join(', ');
+
     const getTrainerRoleUpdateTitle = () => {
       const trainerName = formatIdentity(courseHistory.value.trainer.identity, 'FL');
 
-      if (!courseHistory.value.role) {
-        return { pre: 'Retrait du rôle de l\'intervenant(e) :', infos: `\r\n${trainerName}` };
+      const { to } = courseHistory.value.roles;
+
+      if (!to.length) {
+        return { pre: 'Retrait du/des rôle(s) de l\'intervenant(e) :', infos: `\r\n${trainerName}` };
       }
 
-      const role = TRAINER_ROLE_OPTIONS.find(option => option.value === courseHistory.value.role);
-
       return {
-        pre: 'Nouveau rôle',
-        type: get(role, 'label', ''),
+        pre: 'Nouveau(x) rôle(s)',
+        type: formatRoleLabels(to),
         post: 'pour l\'intervenant(e) :',
         infos: `\r\n${trainerName}`,
       };
+    };
+
+    const getTrainerRoleUpdateDetails = () => {
+      const { from } = courseHistory.value.roles;
+
+      return from.length ? `Rôle(s) précédent(s) : ${formatRoleLabels(from)}` : '';
     };
 
     const getInterruptionTitle = () => ({ type: 'Mise en pause', post: 'de la formation' });
@@ -250,7 +262,7 @@ export default {
         case TRAINER_DELETION:
           return { title: getTrainerDeletionTitle() };
         case TRAINER_ROLE_UPDATE:
-          return { title: getTrainerRoleUpdateTitle() };
+          return { title: getTrainerRoleUpdateTitle(), details: getTrainerRoleUpdateDetails() };
         case COMPANY_ADDITION:
           return { title: getCompanyAdditionTitle() };
         case COMPANY_DELETION:

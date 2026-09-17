@@ -25,8 +25,8 @@
             @click="openUserCreationModal" />
         </template>
       </ni-select>
-      <ni-select v-if="displayRoleSelect" in-modal :model-value="role" @update:model-value="updateRole"
-        caption="Rôle" :options="roleOptions" class="q-mt-md" clearable />
+      <ni-select v-if="displayRoleSelect" in-modal :model-value="roles" @update:model-value="updateRoles" multiple
+        caption="Rôle(s)" :options="roleOptions" class="q-mt-md" clearable />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" :label="`${label.action}${label.interlocutor}`"
           icon-right="add" color="white" :loading="loading" @click="submit" />
@@ -53,7 +53,7 @@ export default {
     displayNoOptionsSlot: { type: Boolean, default: false },
     displayInterlocutorSelect: { type: Boolean, default: true },
     displayRoleSelect: { type: Boolean, default: false },
-    role: { type: String, default: '' },
+    roles: { type: Array, default: () => [] },
     roleOptions: { type: Array, default: () => [] },
   },
   components: {
@@ -66,7 +66,7 @@ export default {
     'update:model-value',
     'submit',
     'update:interlocutor',
-    'update:role',
+    'update:roles',
     'open-user-creation-modal',
   ],
   setup (_, { emit }) {
@@ -74,7 +74,7 @@ export default {
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
     const updateInterlocutor = event => emit('update:interlocutor', event);
-    const updateRole = event => emit('update:role', event);
+    const updateRoles = event => emit('update:roles', event);
 
     const openUserCreationModal = event => emit('open-user-creation-modal', event);
 
@@ -84,7 +84,7 @@ export default {
       input,
       submit,
       updateInterlocutor,
-      updateRole,
+      updateRoles,
       upperCaseFirstLetter,
       openUserCreationModal,
     };
