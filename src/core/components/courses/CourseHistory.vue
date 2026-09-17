@@ -40,7 +40,6 @@ import {
   TRAINER_ADDITION,
   TRAINER_DELETION,
   TRAINER_ROLE_UPDATE,
-  TRAINER_ROLE_OPTIONS,
   COURSE_INTERRUPTION,
   COURSE_RESTART,
   SLOT_RESTRICTION,
@@ -48,6 +47,7 @@ import {
 import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatIdentity } from '@helpers/utils';
+import { getTrainerRoleLabels } from '@helpers/courses';
 
 export default {
   name: 'CourseHistory',
@@ -209,12 +209,6 @@ export default {
       infos: `\r\n${formatIdentity(courseHistory.value.trainer.identity, 'FL')}`,
     });
 
-    const formatRoleLabels = roles => roles
-      .map(role => TRAINER_ROLE_OPTIONS.find(option => option.value === role))
-      .filter(Boolean)
-      .map(option => option.label)
-      .join(', ');
-
     const getTrainerRoleUpdateTitle = () => {
       const trainerName = formatIdentity(courseHistory.value.trainer.identity, 'FL');
 
@@ -226,7 +220,7 @@ export default {
 
       return {
         pre: 'Nouveau(x) rôle(s)',
-        type: formatRoleLabels(to),
+        type: getTrainerRoleLabels(to).join(', '),
         post: 'pour l\'intervenant(e) :',
         infos: `\r\n${trainerName}`,
       };
@@ -235,7 +229,7 @@ export default {
     const getTrainerRoleUpdateDetails = () => {
       const { from } = courseHistory.value.roles;
 
-      return from.length ? `Rôle(s) précédent(s) : ${formatRoleLabels(from)}` : '';
+      return from.length ? `Rôle(s) précédent(s) : ${getTrainerRoleLabels(from).join(', ')}` : '';
     };
 
     const getInterruptionTitle = () => ({ type: 'Mise en pause', post: 'de la formation' });

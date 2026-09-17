@@ -234,7 +234,7 @@ import {
   TRAINER_ROLE_OPTIONS,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
-import { composeCourseName } from '@helpers/courses';
+import { composeCourseName, getTrainerRoleLabels as getRoleLabels } from '@helpers/courses';
 import {
   formatQuantity,
   formatIdentity,
@@ -839,10 +839,7 @@ export default {
     const getTrainerRoleLabels = (trainerId) => {
       const roleEntry = (course.value.rolesPerTrainer || []).find(rpt => rpt.trainer === trainerId);
 
-      return (roleEntry?.roles || [])
-        .map(role => TRAINER_ROLE_OPTIONS.find(o => o.value === role))
-        .filter(Boolean)
-        .map(option => option.label);
+      return getRoleLabels(roleEntry?.roles);
     };
 
     const addTrainer = async () => {
