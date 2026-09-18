@@ -3,10 +3,9 @@
     <template #title>
         {{ label.action }}<span class="text-weight-bold">{{ label.interlocutor }}</span>
     </template>
-      <ni-select v-if="displayInterlocutorSelect" in-modal :model-value="interlocutor"
-        @update:model-value="updateInterlocutor" :caption="upperCaseFirstLetter(label.interlocutor)"
-        :options="interlocutorsOptions" option-slot :error="validations.$error" @blur="validations.$touch"
-        :clearable="clearable" :required-field="!clearable">
+      <ni-select in-modal :model-value="interlocutor" @update:model-value="updateInterlocutor"
+        :caption="upperCaseFirstLetter(label.interlocutor)" :options="interlocutorsOptions" option-slot
+        :error="validations.$error" @blur="validations.$touch" :clearable="clearable" :required-field="!clearable">
         <template #option="{ scope }">
           <q-item v-bind="scope.itemProps">
             <q-item-section avatar>
@@ -25,8 +24,6 @@
             @click="openUserCreationModal" />
         </template>
       </ni-select>
-      <ni-select v-if="displayRoleSelect" in-modal :model-value="roles" @update:model-value="updateRoles" multiple
-        caption="Rôle(s)" :options="roleOptions" class="q-mt-md" clearable />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" :label="`${label.action}${label.interlocutor}`"
           icon-right="add" color="white" :loading="loading" @click="submit" />
@@ -51,30 +48,18 @@ export default {
     label: { type: Object, default: () => ({}) },
     clearable: { type: Boolean, default: false },
     displayNoOptionsSlot: { type: Boolean, default: false },
-    displayInterlocutorSelect: { type: Boolean, default: true },
-    displayRoleSelect: { type: Boolean, default: false },
-    roles: { type: Array, default: () => [] },
-    roleOptions: { type: Array, default: () => [] },
   },
   components: {
     'ni-modal': Modal,
     'ni-select': Select,
     'ni-button': Button,
   },
-  emits: [
-    'hide',
-    'update:model-value',
-    'submit',
-    'update:interlocutor',
-    'update:roles',
-    'open-user-creation-modal',
-  ],
+  emits: ['hide', 'update:model-value', 'submit', 'update:interlocutor', 'open-user-creation-modal'],
   setup (_, { emit }) {
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
     const submit = () => emit('submit');
     const updateInterlocutor = event => emit('update:interlocutor', event);
-    const updateRoles = event => emit('update:roles', event);
 
     const openUserCreationModal = event => emit('open-user-creation-modal', event);
 
@@ -84,7 +69,6 @@ export default {
       input,
       submit,
       updateInterlocutor,
-      updateRoles,
       upperCaseFirstLetter,
       openUserCreationModal,
     };

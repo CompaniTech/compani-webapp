@@ -39,7 +39,6 @@ import {
   COMPANY_DELETION,
   TRAINER_ADDITION,
   TRAINER_DELETION,
-  TRAINER_ROLE_UPDATE,
   COURSE_INTERRUPTION,
   COURSE_RESTART,
   SLOT_RESTRICTION,
@@ -47,7 +46,6 @@ import {
 import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatIdentity } from '@helpers/utils';
-import { getTrainerRoleLabels } from '@helpers/courses';
 
 export default {
   name: 'CourseHistory',
@@ -209,29 +207,6 @@ export default {
       infos: `\r\n${formatIdentity(courseHistory.value.trainer.identity, 'FL')}`,
     });
 
-    const getTrainerRoleUpdateTitle = () => {
-      const trainerName = formatIdentity(courseHistory.value.trainer.identity, 'FL');
-
-      const { to } = courseHistory.value.roles;
-
-      if (!to.length) {
-        return { pre: 'Retrait du/des rôle(s) de l\'intervenant(e) :', infos: `\r\n${trainerName}` };
-      }
-
-      return {
-        pre: 'Nouveau(x) rôle(s)',
-        type: getTrainerRoleLabels(to).join(', '),
-        post: 'pour l\'intervenant(e) :',
-        infos: `\r\n${trainerName}`,
-      };
-    };
-
-    const getTrainerRoleUpdateDetails = () => {
-      const { from } = courseHistory.value.roles;
-
-      return from.length ? `Rôle(s) précédent(s) : ${getTrainerRoleLabels(from).join(', ')}` : '';
-    };
-
     const getInterruptionTitle = () => ({ type: 'Mise en pause', post: 'de la formation' });
 
     const getRestartTitle = () => ({ type: 'Reprise', post: 'de la formation' });
@@ -255,8 +230,6 @@ export default {
           return { title: getTrainerAdditionTitle() };
         case TRAINER_DELETION:
           return { title: getTrainerDeletionTitle() };
-        case TRAINER_ROLE_UPDATE:
-          return { title: getTrainerRoleUpdateTitle(), details: getTrainerRoleUpdateDetails() };
         case COMPANY_ADDITION:
           return { title: getCompanyAdditionTitle() };
         case COMPANY_DELETION:

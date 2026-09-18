@@ -6,11 +6,6 @@
         <img :src="getAvatar(interlocutor.picture)" class="avatar q-my-sm">
         <div class="q-my-sm q-ml-md infos-container">
           <div class="text-copper-grey-700">{{ formatIdentity(interlocutor.identity, 'FL') }}</div>
-          <div v-if="roleLabels.length" class="role-badges">
-            <span v-for="roleLabel in roleLabels" :key="roleLabel" class="role-badge bg-orange-500 text-14">
-              {{ roleLabel }}
-            </span>
-          </div>
           <div class="text-copper-grey-500 text-14">{{ interlocutor.local.email }}</div>
           <div v-if="get(interlocutor, 'contact.phone')" class="phone">
             {{ formatPhone(interlocutor.contact) }}
@@ -32,8 +27,7 @@
         </div>
       </div>
       <div v-if="canUpdate">
-        <ni-button v-if="!interlocutorIsNonEditable" icon="edit" :disable="disable"
-          @click="openModal(EDITION, interlocutor._id)" />
+        <ni-button v-if="!interlocutorIsNonEditable" icon="edit" :disable="disable" @click="openModal(EDITION)" />
         <ni-button v-if="clearable" icon="delete" :disable="disable" @click="openModal(DELETION, interlocutor._id)" />
       </div>
     </q-card>
@@ -62,7 +56,6 @@ export default {
     clearable: { type: Boolean, default: false },
     interlocutorIsNonEditable: { type: Boolean, default: false },
     displayConnectionInfos: { type: Boolean, default: false },
-    roleLabels: { type: Array, default: () => [] },
   },
   components: {
     'ni-button': Button,
@@ -120,15 +113,6 @@ export default {
   margin-left: -2px
 .dot-orange
   margin: 0px 4px 0px 0px
-.role-badges
-  display: flex
-  flex-wrap: wrap
-  gap: 4px
-.role-badge
-  font-size: 14px
-  border-radius: 15px
-  padding: 3px 6px
-  color: white
 :deep(.dot-container)
   justify-content: flex-start
 :deep(.q-icon)

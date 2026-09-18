@@ -52,10 +52,6 @@ const CompaniDurationFactory = (inputDuration) => {
       return _duration.as('minutes');
     },
 
-    asSeconds () {
-      return _duration.as('seconds');
-    },
-
     toHoursAndMinutesObject () {
       const shiftedDuration = _duration.shiftTo('hours', 'minutes');
       const minutes = shiftedDuration.get('minutes');

@@ -5,7 +5,7 @@ import { required } from '@vuelidate/validators';
 import Steps from '@api/Steps';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import CompaniDuration from '@helpers/dates/companiDurations';
-import { PT0S, PUBLISHED } from '@data/constants';
+import { PT0S } from '@data/constants';
 
 export const useStepEditionModal = (
   isLocked,
@@ -14,7 +14,7 @@ export const useStepEditionModal = (
   modalLoading,
   openNextModalAfterUnlocking
 ) => {
-  const editedStep = ref({ name: '', type: '', theoreticalDuration: PT0S, durationCountedPerTrainer: false });
+  const editedStep = ref({ name: '', theoreticalDuration: PT0S });
   const stepEditionModal = ref(false);
 
   const positiveIntDuration = value => !CompaniDuration(value).isEquivalentTo(PT0S) &&
@@ -31,9 +31,7 @@ export const useStepEditionModal = (
       openNextModalAfterUnlocking.value = () => openStepEditionModal(step);
       openValidateUnlockingEditionModal(step);
     } else {
-      editedStep.value = {
-        ...pick(step, ['_id', 'status', 'type', 'name', 'theoreticalDuration', 'durationCountedPerTrainer']),
-      };
+      editedStep.value = { ...pick(step, ['_id', 'name', 'theoreticalDuration']) };
       stepEditionModal.value = true;
     }
   };
@@ -44,9 +42,7 @@ export const useStepEditionModal = (
       v$.value.$touch();
       if (v$.value.$error) return NotifyWarning('Champ(s) invalide(s)');
 
-      const payload = editedStep.value.status === PUBLISHED
-        ? pick(editedStep.value, ['name', 'theoreticalDuration'])
-        : pick(editedStep.value, ['name', 'theoreticalDuration', 'durationCountedPerTrainer']);
+      const payload = pick(editedStep.value, ['name', 'theoreticalDuration']);
       await Steps.updateById(editedStep.value._id, payload);
       stepEditionModal.value = false;
       await refreshProgram();
@@ -60,7 +56,7 @@ export const useStepEditionModal = (
   };
 
   const resetStepEditionModal = () => {
-    editedStep.value = { name: '', type: '', theoreticalDuration: PT0S, durationCountedPerTrainer: false };
+    editedStep.value = { name: '', theoreticalDuration: PT0S };
     v$.value.$reset();
   };
 
