@@ -44,8 +44,8 @@
       <div class="interlocutor-container">
         <interlocutor-cell v-for="trainer in course.trainers.filter(t => t._id)" :key="trainer._id"
           :interlocutor="trainer" caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor"
-          clearable :role-label="getTrainerRoleLabel(trainer._id)" :disable="isArchived" @open-modal="openTrainerModal"
-          :interlocutor-is-non-editable="!isSingleCourse" />
+          clearable :role-labels="getTrainerRoleLabels(trainer._id)" :disable="isArchived"
+          @open-modal="openTrainerModal" :interlocutor-is-non-editable="!isSingleCourse" />
         <ni-secondary-button v-if="canUpdateInterlocutor" class="button-trainer" label="Ajouter un intervenant"
           @click="() => openTrainerModal({ action: CREATION })" />
       </div>
@@ -140,12 +140,12 @@
       :interlocutors-options="adminUserOptions" :label="interlocutorLabel" />
 
     <interlocutor-modal v-model="trainerModal" v-model:interlocutor="tmpInterlocutorId"
-      v-model:role="tmpTrainerRole" @hide="resetInterlocutor(TRAINER)" @submit="addTrainer"
+      v-model:roles="tmpTrainerRoles" @hide="resetInterlocutor(TRAINER)" @submit="addTrainer"
       :loading="interlocutorModalLoading" :label="interlocutorLabel" :validations="v$.trainer"
       :interlocutors-options="trainerOptions" :display-role-select="isSingleCourse"
       :role-options="TRAINER_ROLE_OPTIONS" />
 
-    <interlocutor-modal v-model="trainerRoleModal" v-model:role="tmpTrainerRole"
+    <interlocutor-modal v-model="trainerRoleModal" v-model:roles="tmpTrainerRoles"
       @hide="resetInterlocutor(TRAINER)" @submit="validateTrainerRoleUpdate" :loading="interlocutorModalLoading"
       :label="interlocutorLabel" display-role-select :role-options="TRAINER_ROLE_OPTIONS"
       :display-interlocutor-select="false" />
@@ -234,7 +234,7 @@ import {
   TRAINER_ROLE_OPTIONS,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
-import { composeCourseName } from '@helpers/courses';
+import { composeCourseName, getTrainerRoleLabels as getRoleLabels } from '@helpers/courses';
 import {
   formatQuantity,
   formatIdentity,
@@ -300,7 +300,7 @@ export default {
     const smsLoading = ref(false);
     const smsHistoriesModal = ref(false);
     const tmpInterlocutorId = ref('');
-    const tmpTrainerRole = ref('');
+    const tmpTrainerRoles = ref([]);
     const tmpCourse = ref({ misc: '', estimateStartDate: '', maxTrainees: 0, hasCertifyingTest: false });
     const operationsRepresentativeEditionModal = ref(false);
     const interlocutorModalLoading = ref(false);
@@ -836,10 +836,10 @@ export default {
       }
     };
 
-    const getTrainerRoleLabel = (trainerId) => {
-      const roleEntry = (course.value.rolePerTrainer || []).find(rpt => rpt.trainer === trainerId);
-      const option = roleEntry ? TRAINER_ROLE_OPTIONS.find(o => o.value === roleEntry.role) : null;
-      return option ? option.label : '';
+    const getTrainerRoleLabels = (trainerId) => {
+      const roleEntry = (course.value.rolesPerTrainer || []).find(rpt => rpt.trainer === trainerId);
+
+      return getRoleLabels(roleEntry?.roles);
     };
 
     const addTrainer = async () => {
@@ -848,7 +848,7 @@ export default {
         if (v$.value.trainer.$error) return NotifyWarning('Champ(s) invalide(s)');
 
         const payload = { trainer: tmpInterlocutorId.value };
-        if (tmpTrainerRole.value) payload.role = tmpTrainerRole.value;
+        if (tmpTrainerRoles.value.length) payload.roles = tmpTrainerRoles.value;
         await Courses.addTrainer(course.value._id, payload);
 
         trainerModal.value = false;
@@ -862,18 +862,20 @@ export default {
       }
     };
 
-    const updateTrainerRole = async () => {
+    const updateTrainerRoles = async () => {
       try {
         interlocutorModalLoading.value = true;
-        const payload = tmpTrainerRole.value ? { role: tmpTrainerRole.value } : {};
-        await Courses.updateTrainer(course.value._id, tmpInterlocutorId.value, payload);
+        await Courses.updateTrainer(course.value._id, tmpInterlocutorId.value, { roles: tmpTrainerRoles.value });
 
         trainerRoleModal.value = false;
         await refreshCourse();
-        NotifyPositive(tmpTrainerRole.value ? 'Rôle de l\'intervenant mis à jour.' : 'Rôle de l\'intervenant retiré.');
+        const message = tmpTrainerRoles.value.length
+          ? 'Rôle(s) de l\'intervenant mis à jour.'
+          : 'Rôle(s) de l\'intervenant retiré(s).';
+        NotifyPositive(message);
       } catch (e) {
         console.error(e);
-        NotifyNegative('Erreur lors de la mise à jour du rôle.');
+        NotifyNegative('Erreur lors de la mise à jour du/des rôle(s).');
       } finally {
         interlocutorModalLoading.value = false;
       }
@@ -885,7 +887,7 @@ export default {
     ));
 
     const validateTrainerRoleUpdate = () => {
-      if (!hasUnbilledSlotsForTrainer(tmpInterlocutorId.value)) return updateTrainerRole();
+      if (!hasUnbilledSlotsForTrainer(tmpInterlocutorId.value)) return updateTrainerRoles();
 
       const message = 'Ce formateur a des créneaux non facturés sur cette formation. Si son nouveau rôle ne '
         + 'correspond plus au tarif de ces étapes, la facturation échouera tant que ce n\'est pas corrigé.'
@@ -897,7 +899,7 @@ export default {
         html: true,
         ok: true,
         cancel: 'Annuler',
-      }).onOk(() => updateTrainerRole());
+      }).onOk(() => updateTrainerRoles());
     };
 
     const removeTrainer = async (interlocutorId) => {
@@ -957,7 +959,7 @@ export default {
 
     const resetInterlocutor = (interlocutorType = '') => {
       tmpInterlocutorId.value = '';
-      tmpTrainerRole.value = '';
+      tmpTrainerRoles.value = [];
       interlocutorLabel.value = { action: '', interlocutor: '' };
 
       if (v$.value[interlocutorType]) v$.value[interlocutorType].$reset();
@@ -982,12 +984,12 @@ export default {
         openInterlocutorDeletionValidationModal(get(trainerToRemove, 'identity'), TRAINER, trainerId);
       } else if (action === EDITION) {
         const trainerToEdit = course.value.trainers.find(t => t._id === trainerId);
-        const roleEntry = (course.value.rolePerTrainer || []).find(rpt => rpt.trainer === trainerId);
+        const roleEntry = (course.value.rolesPerTrainer || []).find(rpt => rpt.trainer === trainerId);
 
         tmpInterlocutorId.value = trainerId;
-        tmpTrainerRole.value = roleEntry ? roleEntry.role : '';
+        tmpTrainerRoles.value = roleEntry ? roleEntry.roles : [];
         interlocutorLabel.value = {
-          action: 'Modifier le rôle de ',
+          action: 'Modifier le(s) rôle(s) de ',
           interlocutor: formatIdentity(get(trainerToEdit, 'identity'), 'FL'),
         };
         trainerRoleModal.value = true;
@@ -1249,10 +1251,10 @@ export default {
       smsHistoryList,
       smsHistoriesModal,
       tmpInterlocutorId,
-      tmpTrainerRole,
+      tmpTrainerRoles,
       TRAINER_ROLE_OPTIONS,
-      getTrainerRoleLabel,
-      updateTrainerRole,
+      getTrainerRoleLabels,
+      updateTrainerRoles,
       validateTrainerRoleUpdate,
       operationsRepresentativeEditionModal,
       interlocutorModalLoading,

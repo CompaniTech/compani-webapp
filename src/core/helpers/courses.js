@@ -8,6 +8,7 @@ import {
   EXPECTATIONS,
   END_OF_COURSE,
   SELF_POSITIONNING,
+  TRAINER_ROLE_OPTIONS,
 } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
@@ -31,6 +32,11 @@ export const getStepTypeLabel = (value) => {
   const type = STEP_TYPES.find(t => t.value === value);
   return type ? type.label : '';
 };
+
+export const getTrainerRoleLabels = roles => (roles || [])
+  .map(role => TRAINER_ROLE_OPTIONS.find(option => option.value === role))
+  .filter(Boolean)
+  .map(option => option.label);
 
 export const formatSlotSchedule = (slot) => {
   const multiplier = getSlotDurationMultiplier(slot);

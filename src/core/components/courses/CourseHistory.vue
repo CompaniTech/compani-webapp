@@ -40,7 +40,6 @@ import {
   TRAINER_ADDITION,
   TRAINER_DELETION,
   TRAINER_ROLE_UPDATE,
-  TRAINER_ROLE_OPTIONS,
   COURSE_INTERRUPTION,
   COURSE_RESTART,
   SLOT_RESTRICTION,
@@ -48,6 +47,7 @@ import {
 import Button from '@components/Button';
 import CompaniDate from '@helpers/dates/companiDates';
 import { formatIdentity } from '@helpers/utils';
+import { getTrainerRoleLabels } from '@helpers/courses';
 
 export default {
   name: 'CourseHistory',
@@ -212,18 +212,24 @@ export default {
     const getTrainerRoleUpdateTitle = () => {
       const trainerName = formatIdentity(courseHistory.value.trainer.identity, 'FL');
 
-      if (!courseHistory.value.role) {
-        return { pre: 'Retrait du rôle de l\'intervenant(e) :', infos: `\r\n${trainerName}` };
+      const { to } = courseHistory.value.roles;
+
+      if (!to.length) {
+        return { pre: 'Retrait du/des rôle(s) de l\'intervenant(e) :', infos: `\r\n${trainerName}` };
       }
 
-      const role = TRAINER_ROLE_OPTIONS.find(option => option.value === courseHistory.value.role);
-
       return {
-        pre: 'Nouveau rôle',
-        type: get(role, 'label', ''),
+        pre: 'Nouveau(x) rôle(s)',
+        type: getTrainerRoleLabels(to).join(', '),
         post: 'pour l\'intervenant(e) :',
         infos: `\r\n${trainerName}`,
       };
+    };
+
+    const getTrainerRoleUpdateDetails = () => {
+      const { from } = courseHistory.value.roles;
+
+      return from.length ? `Rôle(s) précédent(s) : ${getTrainerRoleLabels(from).join(', ')}` : '';
     };
 
     const getInterruptionTitle = () => ({ type: 'Mise en pause', post: 'de la formation' });
@@ -250,7 +256,7 @@ export default {
         case TRAINER_DELETION:
           return { title: getTrainerDeletionTitle() };
         case TRAINER_ROLE_UPDATE:
-          return { title: getTrainerRoleUpdateTitle() };
+          return { title: getTrainerRoleUpdateTitle(), details: getTrainerRoleUpdateDetails() };
         case COMPANY_ADDITION:
           return { title: getCompanyAdditionTitle() };
         case COMPANY_DELETION:
