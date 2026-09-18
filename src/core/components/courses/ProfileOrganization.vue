@@ -42,10 +42,9 @@
         Aucun intervenant n'est défini pour cette formation.
       </p>
       <div class="interlocutor-container">
-        <interlocutor-cell v-for="trainer in course.trainers.filter(t => t._id)" :key="trainer._id"
-          :interlocutor="trainer" caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor"
-          clearable :role-labels="getTrainerRoleLabels(trainer._id)" :disable="isArchived"
-          @open-modal="openTrainerModal" :interlocutor-is-non-editable="!isSingleCourse" />
+        <interlocutor-cell v-for="trainer in course.trainers" :key="trainer._id" :interlocutor="trainer"
+          caption="Intervenant" :contact="course.contact" :can-update="canUpdateInterlocutor"
+          :disable="isArchived" clearable interlocutor-is-non-editable @open-modal="openTrainerModal" />
         <ni-secondary-button v-if="canUpdateInterlocutor" class="button-trainer" label="Ajouter un intervenant"
           @click="() => openTrainerModal({ action: CREATION })" />
       </div>
@@ -140,15 +139,8 @@
       :interlocutors-options="adminUserOptions" :label="interlocutorLabel" />
 
     <interlocutor-modal v-model="trainerModal" v-model:interlocutor="tmpInterlocutorId"
-      v-model:roles="tmpTrainerRoles" @hide="resetInterlocutor(TRAINER)" @submit="addTrainer"
-      :loading="interlocutorModalLoading" :label="interlocutorLabel" :validations="v$.trainer"
-      :interlocutors-options="trainerOptions" :display-role-select="isSingleCourse"
-      :role-options="TRAINER_ROLE_OPTIONS" />
-
-    <interlocutor-modal v-model="trainerRoleModal" v-model:roles="tmpTrainerRoles"
-      @hide="resetInterlocutor(TRAINER)" @submit="validateTrainerRoleUpdate" :loading="interlocutorModalLoading"
-      :label="interlocutorLabel" display-role-select :role-options="TRAINER_ROLE_OPTIONS"
-      :display-interlocutor-select="false" />
+      @hide="resetInterlocutor(TRAINER)" @submit="addTrainer()" :loading="interlocutorModalLoading"
+      :label="interlocutorLabel" :validations="v$.trainer" :interlocutors-options="trainerOptions" />
 
     <interlocutor-modal v-model="companyRepresentativeModal" v-model:interlocutor="tmpInterlocutorId"
       @submit="updateInterlocutor(COMPANY_REPRESENTATIVE)" :validations="v$.companyRepresentative"
@@ -231,10 +223,9 @@ import {
   CREATION,
   TUTOR,
   SINGLE,
-  TRAINER_ROLE_OPTIONS,
 } from '@data/constants';
 import { defineAbilitiesForCourse } from '@helpers/ability';
-import { composeCourseName, getTrainerRoleLabels as getRoleLabels } from '@helpers/courses';
+import { composeCourseName } from '@helpers/courses';
 import {
   formatQuantity,
   formatIdentity,
@@ -300,13 +291,11 @@ export default {
     const smsLoading = ref(false);
     const smsHistoriesModal = ref(false);
     const tmpInterlocutorId = ref('');
-    const tmpTrainerRoles = ref([]);
     const tmpCourse = ref({ misc: '', estimateStartDate: '', maxTrainees: 0, hasCertifyingTest: false });
     const operationsRepresentativeEditionModal = ref(false);
     const interlocutorModalLoading = ref(false);
     const interlocutorLabel = ref({ action: '', interlocutor: '' });
     const trainerModal = ref(false);
-    const trainerRoleModal = ref(false);
     const sendSms = ref(false);
     const companyRepresentativeModal = ref(false);
     const contactModalLoading = ref(false);
@@ -836,20 +825,12 @@ export default {
       }
     };
 
-    const getTrainerRoleLabels = (trainerId) => {
-      const roleEntry = (course.value.rolesPerTrainer || []).find(rpt => rpt.trainer === trainerId);
-
-      return getRoleLabels(roleEntry?.roles);
-    };
-
     const addTrainer = async () => {
       try {
         v$.value.trainer.$touch();
         if (v$.value.trainer.$error) return NotifyWarning('Champ(s) invalide(s)');
 
-        const payload = { trainer: tmpInterlocutorId.value };
-        if (tmpTrainerRoles.value.length) payload.roles = tmpTrainerRoles.value;
-        await Courses.addTrainer(course.value._id, payload);
+        await Courses.addTrainer(course.value._id, { trainer: tmpInterlocutorId.value });
 
         trainerModal.value = false;
         await refreshCourse();
@@ -860,46 +841,6 @@ export default {
 
         NotifyNegative('Erreur lors de l\'ajout de l\'intervenant.');
       }
-    };
-
-    const updateTrainerRoles = async () => {
-      try {
-        interlocutorModalLoading.value = true;
-        await Courses.updateTrainer(course.value._id, tmpInterlocutorId.value, { roles: tmpTrainerRoles.value });
-
-        trainerRoleModal.value = false;
-        await refreshCourse();
-        const message = tmpTrainerRoles.value.length
-          ? 'Rôle(s) de l\'intervenant mis à jour.'
-          : 'Rôle(s) de l\'intervenant retiré(s).';
-        NotifyPositive(message);
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la mise à jour du/des rôle(s).');
-      } finally {
-        interlocutorModalLoading.value = false;
-      }
-    };
-
-    const hasUnbilledSlotsForTrainer = trainerId => (course.value.slots || []).some(slot => (
-      (slot.trainers || []).some(t => t._id === trainerId) &&
-      !(slot.trainerBillings || []).some(b => b.trainer === trainerId)
-    ));
-
-    const validateTrainerRoleUpdate = () => {
-      if (!hasUnbilledSlotsForTrainer(tmpInterlocutorId.value)) return updateTrainerRoles();
-
-      const message = 'Ce formateur a des créneaux non facturés sur cette formation. Si son nouveau rôle ne '
-        + 'correspond plus au tarif de ces étapes, la facturation échouera tant que ce n\'est pas corrigé.'
-        + ' Voulez-vous continuer&nbsp;?';
-
-      return $q.dialog({
-        title: 'Confirmation',
-        message,
-        html: true,
-        ok: true,
-        cancel: 'Annuler',
-      }).onOk(() => updateTrainerRoles());
     };
 
     const removeTrainer = async (interlocutorId) => {
@@ -959,7 +900,6 @@ export default {
 
     const resetInterlocutor = (interlocutorType = '') => {
       tmpInterlocutorId.value = '';
-      tmpTrainerRoles.value = [];
       interlocutorLabel.value = { action: '', interlocutor: '' };
 
       if (v$.value[interlocutorType]) v$.value[interlocutorType].$reset();
@@ -974,7 +914,7 @@ export default {
 
     const openTrainerModal = (event) => {
       if (isArchived.value) {
-        return NotifyWarning('Vous ne pouvez pas modifier les intervenants d’une formation archivée.');
+        return NotifyWarning('Vous ne pouvez pas ajouter d’intervenant(e) à une formation archivée.');
       }
 
       const { action, interlocutorId: trainerId } = event;
@@ -982,17 +922,6 @@ export default {
       if (action === DELETION) {
         const trainerToRemove = course.value.trainers.find(t => t._id === trainerId);
         openInterlocutorDeletionValidationModal(get(trainerToRemove, 'identity'), TRAINER, trainerId);
-      } else if (action === EDITION) {
-        const trainerToEdit = course.value.trainers.find(t => t._id === trainerId);
-        const roleEntry = (course.value.rolesPerTrainer || []).find(rpt => rpt.trainer === trainerId);
-
-        tmpInterlocutorId.value = trainerId;
-        tmpTrainerRoles.value = roleEntry ? roleEntry.roles : [];
-        interlocutorLabel.value = {
-          action: 'Modifier le(s) rôle(s) de ',
-          interlocutor: formatIdentity(get(trainerToEdit, 'identity'), 'FL'),
-        };
-        trainerRoleModal.value = true;
       } else {
         tmpInterlocutorId.value = trainerId;
         interlocutorLabel.value = { action: 'Ajouter un ', interlocutor: 'intervenant' };
@@ -1251,16 +1180,10 @@ export default {
       smsHistoryList,
       smsHistoriesModal,
       tmpInterlocutorId,
-      tmpTrainerRoles,
-      TRAINER_ROLE_OPTIONS,
-      getTrainerRoleLabels,
-      updateTrainerRoles,
-      validateTrainerRoleUpdate,
       operationsRepresentativeEditionModal,
       interlocutorModalLoading,
       interlocutorLabel,
       trainerModal,
-      trainerRoleModal,
       sendSms,
       companyRepresentativeModal,
       contactModalLoading,
