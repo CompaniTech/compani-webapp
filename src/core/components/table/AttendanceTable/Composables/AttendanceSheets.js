@@ -91,11 +91,16 @@ export const useAttendanceSheets = (
   });
 
   const notLinkedSlotOptions = computed(() => {
-    if (!isSingleCourse.value) return [];
+    if (!isSingleCourse.value) return {};
 
-    return course.value.slots
-      .filter(s => attendanceSheets.value.every(as => !get(as, 'slots', []).map(slot => slot._id).includes(s._id)))
-      .map(s => ({ ...s, trainers: (s.trainers || []).map(t => t._id) }));
+    return course.value.trainers.reduce((acc, trainer) => {
+      acc[trainer._id] = course.value.slots
+        .filter(s => (s.trainers || []).map(t => t._id).includes(trainer._id))
+        .filter(s => attendanceSheets.value
+          .every(as => !(as.trainer === trainer._id && get(as, 'slots', []).map(slot => slot._id).includes(s._id))))
+        .map(s => ({ ...s, trainers: (s.trainers || []).map(t => t._id) }));
+      return acc;
+    }, {});
   });
 
   const disableSheetDeletion = attendanceSheet => !get(attendanceSheet, 'file.link') || !!course.value.archivedAt;
@@ -139,7 +144,8 @@ export const useAttendanceSheets = (
     }
     if (!course.value.slots.length) return NotifyWarning('Il n\'y a aucun créneau planifié pour cette formation.');
     if (isSingleCourse.value) {
-      if (!notLinkedSlotOptions.value.length) {
+      const hasAvailableSlot = Object.values(notLinkedSlotOptions.value).some(slots => slots.length);
+      if (!hasAvailableSlot) {
         return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
       }
       newAttendanceSheet.value.slots = [];
@@ -281,7 +287,8 @@ export const useAttendanceSheets = (
       return NotifyWarning(message);
     }
     const linkedSlots = attendanceSheet.slots || [];
-    if (![...linkedSlots, ...notLinkedSlotOptions.value].length) {
+    const trainerNotLinkedSlotOptions = notLinkedSlotOptions.value[attendanceSheet.trainer] || [];
+    if (![...linkedSlots, ...trainerNotLinkedSlotOptions].length) {
       return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
     }
 
@@ -292,7 +299,7 @@ export const useAttendanceSheets = (
       trainer: attendanceSheet.trainer,
     };
 
-    const groupedSlots = groupBy([...linkedSlots, ...notLinkedSlotOptions.value], 'step');
+    const groupedSlots = groupBy([...linkedSlots, ...trainerNotLinkedSlotOptions], 'step');
     editionSlotsGroupedByStep.value = Object.keys(stepsById.value).reduce((acc, step) => {
       if (groupedSlots[step]) acc[step] = groupedSlots[step];
       return acc;
