@@ -114,7 +114,10 @@ export default {
 
     const submit = () => emit('submit');
 
-    const update = (event, prop) => emit('update:new-attendance-sheet', { ...newAttendanceSheet.value, [prop]: event });
+    const update = (event, prop) => emit(
+      'update:new-attendance-sheet',
+      { ...newAttendanceSheet.value, [prop]: event, ...prop === 'trainer' && { slots: [] } }
+    );
 
     return {
       // Data

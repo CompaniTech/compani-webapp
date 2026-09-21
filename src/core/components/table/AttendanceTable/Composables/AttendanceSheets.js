@@ -143,17 +143,20 @@ export const useAttendanceSheets = (
       return NotifyWarning('Au moins un·e stagiaire doit être rattaché·e à la formation.');
     }
     if (!course.value.slots.length) return NotifyWarning('Il n\'y a aucun créneau planifié pour cette formation.');
+
+    const isTrainer = get(loggedUser.value, 'role.vendor.name') === TRAINER;
+    if (isTrainer) newAttendanceSheet.value.trainer = loggedUser.value._id;
+    else if (course.value.trainers.length === 1) newAttendanceSheet.value.trainer = course.value.trainers[0]._id;
     if (isSingleCourse.value) {
-      const hasAvailableSlot = Object.values(notLinkedSlotOptions.value).some(slots => slots.length);
+      const hasAvailableSlot = newAttendanceSheet.value.trainer
+        ? !!(notLinkedSlotOptions.value[newAttendanceSheet.value.trainer] || []).length
+        : Object.values(notLinkedSlotOptions.value).some(slots => slots.length);
       if (!hasAvailableSlot) {
         return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
       }
       newAttendanceSheet.value.slots = [];
       newAttendanceSheet.value.trainee = course.value.trainees[0]._id;
     }
-    if (course.value.trainers.length === 1) newAttendanceSheet.value.trainer = course.value.trainers[0]._id;
-    const isTrainer = get(loggedUser.value, 'role.vendor.name') === TRAINER;
-    if (isTrainer) newAttendanceSheet.value.trainer = loggedUser.value._id;
 
     attendanceSheetAdditionModal.value = true;
   };
