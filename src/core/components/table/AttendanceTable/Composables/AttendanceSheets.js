@@ -224,7 +224,8 @@ export const useAttendanceSheets = (
           const isTraineeConcerned = !s.trainees || s.trainees.includes(attendanceSheet.trainee._id);
           const isTraineePresent = !s.missingAttendances ||
             !s.missingAttendances.some(a => a.trainee === attendanceSheet.trainee._id);
-          return isTraineeConcerned && isTraineePresent;
+          const isTrainerConcerned = (s.trainers || []).map(t => t._id).includes(attendanceSheet.trainer);
+          return isTraineeConcerned && isTraineePresent && isTrainerConcerned;
         });
 
       const noneEmptySlot = courseSlots.every(slot => attendanceSheet.slots.find(s => s._id === slot._id));
