@@ -243,8 +243,14 @@ export const useAttendanceSheets = (
       ? 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
       + 'également supprimées.'
       : 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;?';
+    const hasSlotLinkedToOtherSheet = (attendanceSheet.slots || [])
+      .some(slot => attendanceSheets.value
+        .some(as => as._id !== attendanceSheet._id && (as.slots || []).some(s => s._id === slot._id)));
+    const otherSheetWarning = hasSlotLinkedToOtherSheet
+      ? ' (attention, au moins un des émargements concernés est aussi présent dans une autre feuille d\'émargement)'
+      : '';
     const attendancesMessage = `Supprimer les émargements ${!attendanceSheet.trainee ? '(absences comprises) ' : ''}`
-    + 'associés à cette feuille d\'émargement';
+      + `associés à cette feuille d'émargement${otherSheetWarning}`;
     $q.dialog({
       title: 'Confirmation',
       message,
