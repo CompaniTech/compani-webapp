@@ -318,16 +318,10 @@ export const useAttendanceSheets = (
     attendanceSheetEditionModal.value = true;
   };
 
-  const updateAttendanceSheet = async () => {
+  const submitAttendanceSheetUpdate = async (slots, shouldDeleteAttendances) => {
     try {
-      if (!canUpdate.value) return NotifyNegative('Impossible d\'éditer la feuille d\'émargement.');
-
-      v$.value.editedAttendanceSheet.$touch();
-      if (v$.value.editedAttendanceSheet.$error) return NotifyWarning('Champs(s) invalide(s)');
       modalLoading.value = true;
-
-      const { slots } = editedAttendanceSheet.value;
-      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots });
+      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots, shouldDeleteAttendances });
 
       attendanceSheetEditionModal.value = false;
       NotifyPositive('Feuille d\'émargement modifiée.');
@@ -340,6 +334,45 @@ export const useAttendanceSheets = (
     } finally {
       modalLoading.value = false;
     }
+  };
+
+  const updateAttendanceSheet = () => {
+    if (!canUpdate.value) return NotifyNegative('Impossible d\'éditer la feuille d\'émargement.');
+
+    v$.value.editedAttendanceSheet.$touch();
+    if (v$.value.editedAttendanceSheet.$error) return NotifyWarning('Champs(s) invalide(s)');
+
+    const { slots, _id } = editedAttendanceSheet.value;
+    const savedSheet = attendanceSheets.value.find(as => as._id === _id);
+    const removedSlotIds = (savedSheet?.slots || [])
+      .map(s => s._id)
+      .filter(slotId => !slots.includes(slotId));
+
+    if (!removedSlotIds.length) return submitAttendanceSheetUpdate(slots, false);
+
+    const hasSlotLinkedToOtherSheet = removedSlotIds
+      .some(slotId => attendanceSheets.value
+        .some(as => as._id !== _id && (as.slots || []).some(s => s._id === slotId)));
+    const otherSheetWarning = hasSlotLinkedToOtherSheet
+      ? ' (attention, au moins un des émargements concernés est aussi présent dans une autre feuille d\'émargement)'
+      : '';
+    const attendancesMessage = `Supprimer les émargements associés aux créneaux retirés${otherSheetWarning}`;
+
+    return $q.dialog({
+      title: 'Confirmation',
+      message: 'Êtes-vous sûr(e) de vouloir modifier cette feuille d\'émargement&nbsp;?',
+      html: true,
+      ok: true,
+      options: {
+        type: 'checkbox',
+        model: [],
+        items: [{ label: attendancesMessage, value: true }],
+        size: '32px',
+        class: 'text-14',
+      },
+      cancel: 'Annuler',
+    }).onOk(value => submitAttendanceSheetUpdate(slots, !!value && value[0]))
+      .onCancel(() => NotifyPositive('Modification annulée.'));
   };
 
   const resetAttendanceSheetEditionModal = () => {

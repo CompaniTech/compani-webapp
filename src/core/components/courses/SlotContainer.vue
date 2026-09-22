@@ -346,6 +346,13 @@ export default {
       return ability.can('update', subject('Course', course.value), 'concerned_trainees');
     });
 
+    const canUpdateSlotTrainers = computed(() => {
+      if (!course.value.trainers.length) return false;
+
+      const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
+      return ability.can('update', subject('Course', course.value), 'slot_trainers');
+    });
+
     const rules = computed(() => ({
       editedCourseSlot: {
         address: {
@@ -371,7 +378,7 @@ export default {
             }),
           },
         },
-        ...(isVendorInterface && { trainers: { required } }),
+        trainers: { required },
       },
       slotsToAdd: { quantity: { required, strictPositiveNumber, integerNumber } },
       csv: { required },
@@ -380,13 +387,6 @@ export default {
     const v$ = useVuelidate(rules, { editedCourseSlot, slotsToAdd, csv });
 
     const trainerOptions = computed(() => formatAndSortIdentityOptions(course.value.trainers));
-
-    const canUpdateSlotTrainers = computed(() => {
-      if (!course.value.trainers.length) return false;
-
-      const ability = defineAbilitiesForCourse(pick(loggedUser.value, ['role']));
-      return ability.can('update', subject('Course', course.value), 'slot_trainers');
-    });
 
     const loggedUserIsCourseTrainer = computed(() => course.value.trainers
       .map(t => t._id).includes(loggedUser.value._id));
@@ -430,6 +430,10 @@ export default {
       if (!course.value.trainers.length || !course.value.trainers[0]._id) {
         return NotifyWarning('Vous ne pouvez pas planifier un créneau pour une formation sans intervenant.');
       }
+
+      if (!(slot.trainers || []).length && course.value.trainers.length > 1 && !canUpdateSlotTrainers.value) {
+        return NotifyWarning('Vous ne pouvez pas créer de créneaux sur cette formation.');
+      }
       const isROFOrAdmin = [TRAINING_ORGANISATION_MANAGER, VENDOR_ADMIN]
         .includes(get(loggedUser.value, 'role.vendor.name'));
       const isCourseTrainerAuthorized = (loggedUserIsCourseTrainer.value &&
@@ -456,9 +460,9 @@ export default {
       };
 
       if (slot.trainers) editedCourseSlot.value.trainers = slot.trainers.map(t => t._id);
-      else if (isVendorInterface && course.value.trainers.length === 1 && !!course.value.trainers[0]._id) {
+      else if (course.value.trainers.length === 1 && !!course.value.trainers[0]._id) {
         editedCourseSlot.value.trainers = [course.value.trainers[0]._id];
-      } else if (isVendorInterface && loggedUserIsCourseTrainer.value) {
+      } else if (canUpdateSlotTrainers.value && loggedUserIsCourseTrainer.value) {
         editedCourseSlot.value.trainers = [loggedUser.value._id];
       }
 
@@ -487,6 +491,8 @@ export default {
 
       const startHour = CompaniDate(courseSlot.dates.startHour, 'HH:mm');
       const endHour = CompaniDate(courseSlot.dates.endHour, 'HH:mm');
+      const canEditSlotTrainers = courseSlot.trainers &&
+        (canUpdateSlotTrainers.value || course.value.trainers.length === 1);
 
       return {
         startDate: CompaniDate(courseSlot.dates.startDate).set(startHour.getUnits(['hour', 'minute'])).toISO(),
@@ -494,7 +500,7 @@ export default {
         ...(stepType === ON_SITE && get(courseSlot, 'address.fullAddress') && { address: courseSlot.address }),
         ...(stepType === REMOTE && courseSlot.meetingLink && { meetingLink: courseSlot.meetingLink }),
         ...courseSlot.wholeDay && { wholeDay: true },
-        ...(courseSlot.trainers && isVendorInterface && { trainers: courseSlot.trainers }),
+        ...(canEditSlotTrainers && { trainers: courseSlot.trainers }),
       };
     };
 
