@@ -50,12 +50,15 @@ export const defineAbilitiesFor = (user) => {
 export const defineAbilitiesForCourse = (user) => {
   const isVendorInterface = /\/ad\//.test(router.currentRoute.value.path);
   const { role } = user;
+  const vendorRole = get(role, 'vendor.name');
 
   const { can, rules } = new AbilityBuilder(createMongoAbility);
 
-  if (isVendorInterface) {
-    const vendorRole = get(role, 'vendor.name');
+  if ([VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER, TRAINER].includes(vendorRole)) {
+    can('update', 'Course', 'slot_trainers');
+  }
 
+  if (isVendorInterface) {
     can('read', 'Course', 'all_trainees');
     can('update', 'Course', 'sms');
     can('read', 'Course', 'history');
@@ -75,7 +78,6 @@ export const defineAbilitiesForCourse = (user) => {
       can('update', 'Courses', 'trainer_missions');
       can('read', 'Course', 'sales_representative');
       can('set', 'Course', 'learner_list', { type: { $ne: SINGLE } });
-      can('update', 'Course', 'slot_trainers');
       can('download', 'Course', 'all_documents', { type: { $ne: SINGLE } });
     } else if (vendorRole === TRAINER) can('update', 'Course', 'trainees', { type: { $in: [INTRA, SINGLE] } });
   } else {
