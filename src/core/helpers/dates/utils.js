@@ -1,3 +1,4 @@
+import get from 'lodash/get';
 import { HH_MM } from '@data/constants';
 import { formatQuantity } from '../utils';
 import CompaniDate from './companiDates';
@@ -36,8 +37,18 @@ export const durationAscendingSort = (miscDurationA, miscDurationB) => {
 
 export const getISODuration = timePeriod => CompaniDate(timePeriod.endDate).diff(timePeriod.startDate, 'seconds');
 
+export const getSlotDurationMultiplier = (slot) => {
+  if (!get(slot, 'step.durationCountedPerTrainer')) return 1;
+
+  return get(slot, 'trainers.length') || 1;
+};
+
 export const getISOTotalDuration = timePeriods => timePeriods
-  .reduce((acc, tp) => acc.add(getISODuration(tp)), CompaniDuration())
+  .reduce((acc, tp) => {
+    const multipliedSeconds = CompaniDuration(getISODuration(tp)).asSeconds() * getSlotDurationMultiplier(tp);
+
+    return acc.add(`PT${multipliedSeconds}S`);
+  }, CompaniDuration())
   .toISO();
 
 export const formatIntervalHourly = slot => `${CompaniDate(slot.startDate).format(HH_MM)} - `

@@ -21,7 +21,13 @@ export const useCourseDocumentInfosModal = (course, slots) => {
         .format(SHORT_DURATION_H_MM);
     }
 
-    return CompaniDuration(getISOTotalDuration(course.value.slots)).format(SHORT_DURATION_H_MM);
+    const populatedSlots = course.value.slots.map((slot) => {
+      if (slot.step && typeof slot.step === 'object') return slot;
+
+      return { ...slot, step: course.value.subProgram.steps.find(s => s._id === slot.step) };
+    });
+
+    return CompaniDuration(getISOTotalDuration(populatedSlots)).format(SHORT_DURATION_H_MM);
   });
 
   const dates = computed(() => {
