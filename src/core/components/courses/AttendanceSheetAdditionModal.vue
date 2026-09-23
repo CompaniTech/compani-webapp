@@ -56,13 +56,15 @@ export default {
     course: { type: Object, default: () => ({}) },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
-    slots: { type: Array, default: () => [] },
+    slots: { type: Object, default: () => ({}) },
     stepsById: { type: Object, default: () => ({}) },
     loggedUser: { type: Object, default: () => ({}) },
   },
   emits: ['hide', 'update:model-value', 'update:new-attendance-sheet', 'submit'],
   setup (props, { emit }) {
     const { newAttendanceSheet, course, slots, stepsById, loggedUser } = toRefs(props);
+
+    const trainerSlots = computed(() => slots.value[newAttendanceSheet.value.trainer] || []);
 
     const traineeOptions = computed(() => formatAndSortIdentityOptions(course.value.trainees));
 
@@ -83,7 +85,7 @@ export default {
     });
 
     const slotsGroupedByStep = computed(() => {
-      const groupedSlots = groupBy(slots.value, 'step');
+      const groupedSlots = groupBy(trainerSlots.value, 'step');
 
       return Object.keys(stepsById.value).reduce((acc, step) => {
         if (groupedSlots[step]) acc[step] = groupedSlots[step];
@@ -99,8 +101,7 @@ export default {
             label: `${CompaniDate(s.startDate).format(`${DD_MM_YYYY} ${HH_MM}`)}
               - ${CompaniDate(s.endDate).format(HH_MM)}`,
             value: s._id,
-            disable: !!s.missingAttendances.length ||
-              (isTrainer.value && !(s.trainers || []).includes(loggedUser.value._id)),
+            disable: !!s.missingAttendances.length,
           })))
     ));
 
@@ -113,7 +114,10 @@ export default {
 
     const submit = () => emit('submit');
 
-    const update = (event, prop) => emit('update:new-attendance-sheet', { ...newAttendanceSheet.value, [prop]: event });
+    const update = (event, prop) => emit(
+      'update:new-attendance-sheet',
+      { ...newAttendanceSheet.value, [prop]: event, ...prop === 'trainer' && { slots: [] } }
+    );
 
     return {
       // Data

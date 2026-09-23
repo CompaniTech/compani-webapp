@@ -91,11 +91,16 @@ export const useAttendanceSheets = (
   });
 
   const notLinkedSlotOptions = computed(() => {
-    if (!isSingleCourse.value) return [];
+    if (!isSingleCourse.value) return {};
 
-    return course.value.slots
-      .filter(s => attendanceSheets.value.every(as => !get(as, 'slots', []).map(slot => slot._id).includes(s._id)))
-      .map(s => ({ ...s, trainers: (s.trainers || []).map(t => t._id) }));
+    return course.value.trainers.reduce((acc, trainer) => {
+      acc[trainer._id] = course.value.slots
+        .filter(s => (s.trainers || []).map(t => t._id).includes(trainer._id))
+        .filter(s => attendanceSheets.value
+          .every(as => !(as.trainer === trainer._id && get(as, 'slots', []).map(slot => slot._id).includes(s._id))))
+        .map(s => ({ ...s, trainers: (s.trainers || []).map(t => t._id) }));
+      return acc;
+    }, {});
   });
 
   const disableSheetDeletion = attendanceSheet => !get(attendanceSheet, 'file.link') || !!course.value.archivedAt;
@@ -138,16 +143,20 @@ export const useAttendanceSheets = (
       return NotifyWarning('Au moins un·e stagiaire doit être rattaché·e à la formation.');
     }
     if (!course.value.slots.length) return NotifyWarning('Il n\'y a aucun créneau planifié pour cette formation.');
+
+    const isTrainer = get(loggedUser.value, 'role.vendor.name') === TRAINER;
+    if (isTrainer) newAttendanceSheet.value.trainer = loggedUser.value._id;
+    else if (course.value.trainers.length === 1) newAttendanceSheet.value.trainer = course.value.trainers[0]._id;
     if (isSingleCourse.value) {
-      if (!notLinkedSlotOptions.value.length) {
+      const hasAvailableSlot = newAttendanceSheet.value.trainer
+        ? !!(notLinkedSlotOptions.value[newAttendanceSheet.value.trainer] || []).length
+        : Object.values(notLinkedSlotOptions.value).some(slots => slots.length);
+      if (!hasAvailableSlot) {
         return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
       }
       newAttendanceSheet.value.slots = [];
       newAttendanceSheet.value.trainee = course.value.trainees[0]._id;
     }
-    if (course.value.trainers.length === 1) newAttendanceSheet.value.trainer = course.value.trainers[0]._id;
-    const isTrainer = get(loggedUser.value, 'role.vendor.name') === TRAINER;
-    if (isTrainer) newAttendanceSheet.value.trainer = loggedUser.value._id;
 
     attendanceSheetAdditionModal.value = true;
   };
@@ -218,7 +227,8 @@ export const useAttendanceSheets = (
           const isTraineeConcerned = !s.trainees || s.trainees.includes(attendanceSheet.trainee._id);
           const isTraineePresent = !s.missingAttendances ||
             !s.missingAttendances.some(a => a.trainee === attendanceSheet.trainee._id);
-          return isTraineeConcerned && isTraineePresent;
+          const isTrainerConcerned = (s.trainers || []).map(t => t._id).includes(attendanceSheet.trainer);
+          return isTraineeConcerned && isTraineePresent && isTrainerConcerned;
         });
 
       const noneEmptySlot = courseSlots.every(slot => attendanceSheet.slots.find(s => s._id === slot._id));
@@ -236,8 +246,14 @@ export const useAttendanceSheets = (
       ? 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
       + 'également supprimées.'
       : 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;?';
+    const hasSlotLinkedToOtherSheet = (attendanceSheet.slots || [])
+      .some(slot => attendanceSheets.value
+        .some(as => as._id !== attendanceSheet._id && (as.slots || []).some(s => s._id === slot._id)));
+    const otherSheetWarning = hasSlotLinkedToOtherSheet
+      ? ' (attention, au moins un des émargements concernés est aussi présent dans une autre feuille d\'émargement)'
+      : '';
     const attendancesMessage = `Supprimer les émargements ${!attendanceSheet.trainee ? '(absences comprises) ' : ''}`
-    + 'associés à cette feuille d\'émargement';
+      + `associés à cette feuille d'émargement${otherSheetWarning}`;
     $q.dialog({
       title: 'Confirmation',
       message,
@@ -281,7 +297,8 @@ export const useAttendanceSheets = (
       return NotifyWarning(message);
     }
     const linkedSlots = attendanceSheet.slots || [];
-    if (![...linkedSlots, ...notLinkedSlotOptions.value].length) {
+    const trainerNotLinkedSlotOptions = notLinkedSlotOptions.value[attendanceSheet.trainer] || [];
+    if (![...linkedSlots, ...trainerNotLinkedSlotOptions].length) {
       return NotifyWarning('Tous les créneaux sont déjà rattachés à une feuille d\'émargement.');
     }
 
@@ -292,7 +309,7 @@ export const useAttendanceSheets = (
       trainer: attendanceSheet.trainer,
     };
 
-    const groupedSlots = groupBy([...linkedSlots, ...notLinkedSlotOptions.value], 'step');
+    const groupedSlots = groupBy([...linkedSlots, ...trainerNotLinkedSlotOptions], 'step');
     editionSlotsGroupedByStep.value = Object.keys(stepsById.value).reduce((acc, step) => {
       if (groupedSlots[step]) acc[step] = groupedSlots[step];
       return acc;
@@ -301,16 +318,10 @@ export const useAttendanceSheets = (
     attendanceSheetEditionModal.value = true;
   };
 
-  const updateAttendanceSheet = async () => {
+  const submitAttendanceSheetUpdate = async (slots, shouldDeleteAttendances) => {
     try {
-      if (!canUpdate.value) return NotifyNegative('Impossible d\'éditer la feuille d\'émargement.');
-
-      v$.value.editedAttendanceSheet.$touch();
-      if (v$.value.editedAttendanceSheet.$error) return NotifyWarning('Champs(s) invalide(s)');
       modalLoading.value = true;
-
-      const { slots } = editedAttendanceSheet.value;
-      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots });
+      await AttendanceSheets.update(editedAttendanceSheet.value._id, { slots, shouldDeleteAttendances });
 
       attendanceSheetEditionModal.value = false;
       NotifyPositive('Feuille d\'émargement modifiée.');
@@ -323,6 +334,45 @@ export const useAttendanceSheets = (
     } finally {
       modalLoading.value = false;
     }
+  };
+
+  const updateAttendanceSheet = () => {
+    if (!canUpdate.value) return NotifyNegative('Impossible d\'éditer la feuille d\'émargement.');
+
+    v$.value.editedAttendanceSheet.$touch();
+    if (v$.value.editedAttendanceSheet.$error) return NotifyWarning('Champs(s) invalide(s)');
+
+    const { slots, _id } = editedAttendanceSheet.value;
+    const savedSheet = attendanceSheets.value.find(as => as._id === _id);
+    const removedSlotIds = (savedSheet?.slots || [])
+      .map(s => s._id)
+      .filter(slotId => !slots.includes(slotId));
+
+    if (!removedSlotIds.length) return submitAttendanceSheetUpdate(slots, false);
+
+    const hasSlotLinkedToOtherSheet = removedSlotIds
+      .some(slotId => attendanceSheets.value
+        .some(as => as._id !== _id && (as.slots || []).some(s => s._id === slotId)));
+    const otherSheetWarning = hasSlotLinkedToOtherSheet
+      ? ' (attention, au moins un des émargements concernés est aussi présent dans une autre feuille d\'émargement)'
+      : '';
+    const attendancesMessage = `Supprimer les émargements associés aux créneaux retirés${otherSheetWarning}`;
+
+    return $q.dialog({
+      title: 'Confirmation',
+      message: 'Êtes-vous sûr(e) de vouloir modifier cette feuille d\'émargement&nbsp;?',
+      html: true,
+      ok: true,
+      options: {
+        type: 'checkbox',
+        model: [],
+        items: [{ label: attendancesMessage, value: true }],
+        size: '32px',
+        class: 'text-14',
+      },
+      cancel: 'Annuler',
+    }).onOk(value => submitAttendanceSheetUpdate(slots, !!value && value[0]))
+      .onCancel(() => NotifyPositive('Modification annulée.'));
   };
 
   const resetAttendanceSheetEditionModal = () => {
