@@ -19,14 +19,14 @@ jobs:
         continue-on-error: true
         uses: actions/checkout@v3
         with:
-          repository: 'sophiemoustard/compani-api'
+          repository: 'CompaniTech/compani-api'
           ref: ${{ github.event.pull_request.head.ref }}
           path: 'api'
 
       - if: ${{ steps.checkout_api.outcome != 'success' }}
         uses: actions/checkout@v3
         with:
-          repository: 'sophiemoustard/compani-api'
+          repository: 'CompaniTech/compani-api'
           ref: dev
           path: 'api'
 
