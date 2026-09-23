@@ -100,6 +100,9 @@ export default {
   async deleteTrainer (courseId, trainerId) {
     await alenviAxios.delete(`${process.env.API_HOSTNAME}/courses/${courseId}/trainers/${trainerId}`);
   },
+  async updateTrainer (courseId, trainerId, payload) {
+    await alenviAxios.put(`${process.env.API_HOSTNAME}/courses/${courseId}/trainers/${trainerId}`, payload);
+  },
   async addTutor (courseId, payload) {
     await alenviAxios.put(`${process.env.API_HOSTNAME}/courses/${courseId}/tutors`, payload);
   },
