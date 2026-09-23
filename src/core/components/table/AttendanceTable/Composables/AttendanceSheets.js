@@ -242,6 +242,13 @@ export const useAttendanceSheets = (
   const validateAttendanceSheetDeletion = (attendanceSheet) => {
     if (!canUpdate.value) return NotifyNegative('Impossible de supprimer la feuille d\'émargement.');
 
+    const isTrainer = get(loggedUser.value, 'role.vendor.name') === TRAINER;
+    if (isTrainer && attendanceSheet.trainer !== loggedUser.value._id) {
+      const message = 'Vous ne pouvez pas supprimer cette feuille d\'émargement car vous n\'êtes pas '
+        + 'l\'intervenant lié.';
+      return NotifyWarning(message);
+    }
+
     const message = (attendanceSheet.slots || []).some(s => s.trainerSignature)
       ? 'Êtes-vous sûr(e) de vouloir supprimer cette feuille d\'émargement&nbsp;? <br /> Les signatures seront '
       + 'également supprimées.'
