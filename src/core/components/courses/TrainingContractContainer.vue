@@ -15,14 +15,14 @@
             label="Générer la convention de formation" @click="openTrainingContractGenerationModal" size="16px" />
         </template>
       </div>
-      <template v-if="!isIntraCourse && (isVendorInterface || hasHoldingRole)">
+      <template v-if="!isIntraCourse && (isVendorInterface || hasHoldingRole || isSingleCourse)">
         <q-card>
           <training-contract-table v-if="trainingContracts.length" @delete="validateDocumentDeletion"
             :is-archived="!!course.archivedAt" :training-contracts="trainingContracts" :company-options="companyOptions"
             :show-delete-button="isVendorInterface" :loading="trainingContractTableLoading" />
           <div v-else class="text-center text-italic text-14 q-pa-sm">Aucune convention de formation téléversées</div>
           <q-card-actions v-if="isVendorInterface" align="right" class="q-pa-sm">
-            <ni-button color="primary" icon="file_download" :disable="disableGenerationButton"
+            <ni-button v-if="!isSingleCourse" color="primary" icon="file_download" :disable="disableGenerationButton"
               label="Générer une convention" @click="trainingContractGenerationModal = true" />
             <ni-button label="Téléverser une convention" @click="trainingContractCreationModal = true" color="primary"
               icon="add" :disable="disableUploadButton" />
@@ -71,7 +71,7 @@ import TrainingContractCreationModal from '@components/courses/TrainingContractC
 import TrainingContractTable from '@components/courses/TrainingContractTable';
 import { NotifyWarning, NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { useCourses } from '@composables/courses';
-import { REQUIRED_LABEL, ON_SITE, DOC_EXTENSIONS, E_LEARNING, IMAGE_EXTENSIONS } from '@data/constants';
+import { REQUIRED_LABEL, ON_SITE, DOC_EXTENSIONS, E_LEARNING, IMAGE_EXTENSIONS, SINGLE } from '@data/constants';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { downloadFile } from '@helpers/file';
 import { formatQuantity, formatDownloadName, formatAndSortOptions } from '@helpers/utils';
@@ -103,6 +103,8 @@ export default {
     const $q = useQuasar();
 
     const { pdfLoading, isIntraCourse, isVendorInterface } = useCourses(course);
+
+    const isSingleCourse = computed(() => get(course.value, 'type') === SINGLE);
 
     const newGeneratedTrainingContractInfos = ref({
       price: isIntraCourse.value && get(course.value, 'prices[0].global')
@@ -193,8 +195,11 @@ export default {
     const disableGenerationButton = computed(() => !!missingInfos.value.length || pdfLoading.value ||
       !!course.value.archivedAt);
 
-    const disableUploadButton = computed(() => pdfLoading.value || !!course.value.archivedAt ||
-      trainingContracts.value.length === course.value.companies.length);
+    const disableUploadButton = computed(() => {
+      if (isSingleCourse) return false;
+      const everyCompanyHasTrainingContract = trainingContracts.value.length === course.value.companies.length;
+      return pdfLoading.value || !!course.value.archivedAt || everyCompanyHasTrainingContract;
+    });
 
     const companyPrice = computed(() => {
       if (newGeneratedTrainingContractInfos.value.company) {
@@ -339,6 +344,7 @@ export default {
       formattedOptions,
       isIntraCourse,
       isVendorInterface,
+      isSingleCourse,
       areAllTrainingContractsUploaded,
       disableGenerationButton,
       disableUploadButton,
