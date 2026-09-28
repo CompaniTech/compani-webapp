@@ -50,7 +50,8 @@
 
   <training-contract-creation-modal v-model="trainingContractCreationModal" :company-options="companyOptions"
     v-model:new-training-contract="newTrainingContract" @submit="createTrainingContract" :loading="pdfLoading"
-    @hide="resetNewTrainingContract" :validations="validations.newTrainingContract" />
+    @hide="resetNewTrainingContract" :validations="validations.newTrainingContract"
+    :is-single-course="isSingleCourse" />
 </template>
 
 <script>
@@ -264,11 +265,12 @@ export default {
     };
 
     const formatPayload = () => {
-      const { company, file } = newTrainingContract.value;
+      const { company, file, startDate } = newTrainingContract.value;
       const form = new FormData();
       form.append('course', course.value._id);
       form.append('file', file);
       form.append('company', company);
+      if (startDate) form.append('startDate', startDate);
 
       return form;
     };

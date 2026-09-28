@@ -6,6 +6,8 @@
     <ni-select in-modal :model-value="newTrainingContract.company"
       @update:model-value="update($event, 'company')" caption="Structure" :options="companyOptions" required-field
       :error="validations.company.$error" @blur="validations.company.$touch" />
+    <ni-date-input v-if="isSingleCourse" caption="Date de début de contrat" :model-value="newTrainingContract.startDate"
+      in-modal @update:model-value="update($event, 'startDate')" />
     <ni-input in-modal caption="Convention de formation" type="file" @blur="validations.file.$touch" last required-field
       :model-value="newTrainingContract.file" @update:model-value="update($event, 'file')"
       :extensions="[DOC_EXTENSIONS, IMAGE_EXTENSIONS]" :error="validations.file.$error" />
@@ -23,6 +25,7 @@ import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
 import Input from '@components/form/Input';
 import Select from '@components/form/Select';
+import DateInput from '@components/form/DateInput';
 import { DOC_EXTENSIONS, IMAGE_EXTENSIONS } from '@data/constants';
 
 export default {
@@ -30,6 +33,7 @@ export default {
   props: {
     modelValue: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
+    isSingleCourse: { type: Boolean, default: false },
     validations: { type: Object, default: () => ({}) },
     companyOptions: { type: Array, default: () => [] },
     newTrainingContract: { type: Object, default: () => ({}) },
@@ -39,6 +43,7 @@ export default {
     'ni-button': Button,
     'ni-input': Input,
     'ni-select': Select,
+    'ni-date-input': DateInput,
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:new-training-contract'],
   setup (props, { emit }) {
