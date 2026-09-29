@@ -197,7 +197,7 @@ export default {
       !!course.value.archivedAt);
 
     const disableUploadButton = computed(() => {
-      if (isSingleCourse) return false;
+      if (isSingleCourse.value) return false;
       const everyCompanyHasTrainingContract = trainingContracts.value.length === course.value.companies.length;
       return pdfLoading.value || !!course.value.archivedAt || everyCompanyHasTrainingContract;
     });
