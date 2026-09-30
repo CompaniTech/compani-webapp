@@ -21,6 +21,9 @@
       <div class="col-xs-12 col-md-6">
         <phone-select :contact="userPhone" :validation="v$.userPhone" @update="updatePhone" @blur="onPhoneBlur"
           required-field :error-message="phoneNbrError(v$.userPhone)" />
+        <ni-search-address v-model="userProfile.contact.address" :error-message="addressError"
+          @blur="updateUser('contact.address')" @focus="saveTmp('contact.address.fullAddress')"
+          :error="v$.userProfile.contact.address.$error" />
       </div>
     </div>
     <div class="row gutter-profile q-mb-xl">
@@ -36,12 +39,13 @@ import { computed, ref } from 'vue';
 import { required, email } from '@vuelidate/validators';
 import get from 'lodash/get';
 import Input from '@components/form/Input';
+import SearchAddress from '@components/form/SearchAddress';
 import Button from '@components/Button';
 import PhoneSelect from '@components/form/PhoneSelect';
 import Select from '@components/form/Select';
 import { useUser } from '@composables/user';
 import { TRAINER, CIVILITY_OPTIONS, MR, MRS } from '@data/constants';
-import { frPhoneNumber, countryCode } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode, frAddress } from '@helpers/vuelidateCustomVal';
 import useVuelidate from '@vuelidate/core';
 
 export default {
@@ -51,6 +55,7 @@ export default {
     'phone-select': PhoneSelect,
     'ni-button': Button,
     'ni-select': Select,
+    'ni-search-address': SearchAddress,
   },
   setup () {
     const $store = useStore();
@@ -81,10 +86,17 @@ export default {
       userProfile: {
         identity: { lastname: { required }, title: { required } },
         local: { email: { required, email } },
+        contact: { address: { fullAddress: { frAddress } } },
       },
       userPhone: { phone: { required, frPhoneNumber }, countryCode: { required, countryCode } },
     }));
     const v$ = useVuelidate(rules, { userProfile, userPhone });
+
+    const addressError = computed(() => {
+      const validation = v$.value.userProfile.contact.address.fullAddress;
+      if (get(validation, 'frAddress.$response') === false) return 'Adresse non valide';
+      return '';
+    });
 
     const {
       toggleEmailLock,
@@ -115,6 +127,7 @@ export default {
       // Computed
       userProfile,
       userPhone,
+      addressError,
       // Validations
       v$,
       // Methods
