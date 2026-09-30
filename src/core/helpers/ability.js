@@ -72,7 +72,7 @@ export const defineAbilitiesForCourse = (user) => {
       can('update', 'Course', 'trainees');
       can('access', 'trainee');
       can('read', 'Course', 'certificates');
-      can('read', 'Course', 'training_contracts', { type: { $ne: SINGLE } });
+      can('read', 'Course', 'training_contracts');
       can('read', 'Course', 'interlocutor');
       can('update', 'Course', 'certifying_test');
       can('update', 'Courses', 'trainer_missions');
@@ -89,7 +89,7 @@ export const defineAbilitiesForCourse = (user) => {
     can('update', 'Course', 'sms', { type: { $in: [INTRA, SINGLE] } });
     can('read', 'Course', 'history', { type: { $in: [INTRA, SINGLE] } });
     can('access', 'trainee');
-    can('read', 'Course', 'training_contracts', { type: { $ne: SINGLE } });
+    can('read', 'Course', 'training_contracts');
     can('read', 'Course', 'certificates');
 
     if (clientRole === CLIENT_ADMIN) can('download', 'Course', 'all_documents', { type: { $ne: SINGLE } });
