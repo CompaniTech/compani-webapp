@@ -41,7 +41,8 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
 
   const updateAlenviUser = async (path) => {
     try {
-      const value = get(userProfile.value, path);
+      let value = get(userProfile.value, path);
+      if (path === 'contact.address' && !value.fullAddress) value = '';
       const payload = set({}, path, value);
 
       await Users.updateById(userProfile.value._id, payload);
@@ -54,7 +55,9 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
 
   const updateUser = async (path) => {
     try {
-      if (tmpInput.value && tmpInput.value === get(userProfile.value, path)) {
+      if (path === 'contact.address') {
+        if ((tmpInput.value || '') === get(userProfile.value, 'contact.address.fullAddress') || '') return;
+      } else if (tmpInput.value && tmpInput.value === get(userProfile.value, path)) {
         if (path === 'local.email') emailLock.value = true;
         return;
       }
