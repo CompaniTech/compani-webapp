@@ -56,7 +56,7 @@ export const useUser = (refreshUser, v$, emailLock, tmpInput, userPhone) => {
   const updateUser = async (path) => {
     try {
       if (path === 'contact.address') {
-        if (tmpInput.value && tmpInput.value === get(userProfile.value, 'contact.address.fullAddress')) return;
+        if ((tmpInput.value || '') === get(userProfile.value, 'contact.address.fullAddress') || '') return;
       } else if (tmpInput.value && tmpInput.value === get(userProfile.value, path)) {
         if (path === 'local.email') emailLock.value = true;
         return;
