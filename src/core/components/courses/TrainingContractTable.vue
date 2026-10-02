@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { ref, toRefs } from 'vue';
+import { computed, ref, toRefs } from 'vue';
 import get from 'lodash/get';
 import Button from '@components/Button';
 import ResponsiveTable from '@components/table/ResponsiveTable';
@@ -32,6 +32,7 @@ export default {
     showDeleteButton: { type: Boolean, default: false },
     isArchived: { type: Boolean, default: false },
     companyOptions: { type: Array, default: () => [] },
+    isSingleCourse: { type: Boolean, default: false },
   },
   components: {
     'ni-button': Button,
@@ -39,15 +40,17 @@ export default {
   },
   emits: ['delete', 'download'],
   setup (props, { emit }) {
-    const { companyOptions } = toRefs(props);
+    const { companyOptions, trainingContracts, isSingleCourse } = toRefs(props);
     const pagination = ref({ rowsPerPage: 0, sortBy: 'lastname' });
-    const columns = ref([
+    const columns = computed(() => [
       {
         name: 'company',
-        label: 'Structure',
+        label: isSingleCourse.value ? 'Convention' : 'Structure',
         align: 'left',
         field: 'company',
-        format: value => get(companyOptions.value.find(option => value === option.value), 'label') || '',
+        format: (value, row) => (isSingleCourse.value
+          ? `Convention ${trainingContracts.value.findIndex(tc => tc._id === row._id) + 1}`
+          : get(companyOptions.value.find(option => value === option.value), 'label') || ''),
       },
       { name: 'actions', label: '', align: 'right', field: '' },
     ]);
