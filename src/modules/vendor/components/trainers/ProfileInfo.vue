@@ -18,12 +18,23 @@
           <ni-button :icon="lockIcon" color="copper-grey-500" @click="toggleEmailLock(!emailLock)" />
         </div>
       </div>
+    </div>
+    <div class="row gutter-profile q-mb-lg">
       <div class="col-xs-12 col-md-6">
         <phone-select :contact="userPhone" :validation="v$.userPhone" @update="updatePhone" @blur="onPhoneBlur"
           required-field :error-message="phoneNbrError(v$.userPhone)" />
-        <ni-search-address v-model="userProfile.contact.address" :error-message="addressError"
-          @blur="updateUser('contact.address')" @focus="saveTmp('contact.address.fullAddress')"
-          :error="v$.userProfile.contact.address.$error" />
+      </div>
+      <ni-search-address v-model="userProfile.contact.address" :error-message="addressError"
+        @blur="updateUser('contact.address')" @focus="saveTmp('contact.address.fullAddress')"
+        :error="v$.userProfile.contact.address.$error" />
+    </div>
+    <div class="q-mb-xl">
+      <p class="text-weight-bold">Coordonnées bancaires</p>
+      <div class="row gutter-profile">
+        <ni-input caption="IBAN" v-model="userProfile.iban" :error="v$.userProfile.iban.$error"
+          :error-message="ibanErrorMessage" @focus="saveTmp('iban')" @blur="updateUser('iban')" />
+        <ni-input caption="BIC" v-model="userProfile.bic" :error="v$.userProfile.bic.$error"
+          :error-message="bicErrorMessage" @focus="saveTmp('bic')" @blur="updateUser('bic')" />
       </div>
     </div>
     <div class="row gutter-profile q-mb-xl">
@@ -45,7 +56,7 @@ import PhoneSelect from '@components/form/PhoneSelect';
 import Select from '@components/form/Select';
 import { useUser } from '@composables/user';
 import { TRAINER, CIVILITY_OPTIONS, MR, MRS } from '@data/constants';
-import { frPhoneNumber, countryCode, frAddress } from '@helpers/vuelidateCustomVal';
+import { frPhoneNumber, countryCode, frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import useVuelidate from '@vuelidate/core';
 
 export default {
@@ -87,6 +98,8 @@ export default {
         identity: { lastname: { required }, title: { required } },
         local: { email: { required, email } },
         contact: { address: { fullAddress: { frAddress } } },
+        iban: { iban },
+        bic: { bic },
       },
       userPhone: { phone: { required, frPhoneNumber }, countryCode: { required, countryCode } },
     }));
@@ -95,6 +108,18 @@ export default {
     const addressError = computed(() => {
       const validation = v$.value.userProfile.contact.address.fullAddress;
       if (get(validation, 'frAddress.$response') === false) return 'Adresse non valide';
+      return '';
+    });
+
+    const ibanErrorMessage = computed(() => {
+      const validation = v$.value.userProfile.iban;
+      if (get(validation, 'iban.$response') === false) return 'IBAN non valide';
+      return '';
+    });
+
+    const bicErrorMessage = computed(() => {
+      const validation = v$.value.userProfile.bic;
+      if (get(validation, 'bic.$response') === false) return 'BIC non valide';
       return '';
     });
 
@@ -128,6 +153,8 @@ export default {
       userProfile,
       userPhone,
       addressError,
+      ibanErrorMessage,
+      bicErrorMessage,
       // Validations
       v$,
       // Methods
