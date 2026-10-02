@@ -19,7 +19,8 @@
         <q-card>
           <training-contract-table v-if="trainingContracts.length" @delete="validateDocumentDeletion"
             :is-archived="!!course.archivedAt" :training-contracts="trainingContracts" :company-options="companyOptions"
-            :show-delete-button="isVendorInterface" :loading="trainingContractTableLoading" />
+            :show-delete-button="isVendorInterface" :loading="trainingContractTableLoading"
+            :is-single-course="isSingleCourse" />
           <div v-else class="text-center text-italic text-14 q-pa-sm">Aucune convention de formation téléversées</div>
           <q-card-actions v-if="isVendorInterface" align="right" class="q-pa-sm">
             <ni-button v-if="!isSingleCourse" color="primary" icon="file_download" :disable="disableGenerationButton"
