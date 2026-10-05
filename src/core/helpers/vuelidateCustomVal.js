@@ -24,13 +24,13 @@ export const frZipCode = (value) => {
 };
 
 export const iban = (value) => {
-  if (!value) return false;
+  if (!value) return true;
 
   return isValidIBAN(value.split(' ').join(''));
 };
 
 export const bic = (value) => {
-  if (!value) return false;
+  if (!value) return true;
 
   return isValidBIC(value);
 };
