@@ -362,6 +362,15 @@ const routes = [
         },
       },
       {
+        path: 'ni/billing/trainers-payments',
+        name: 'ni billing trainers payments',
+        component: () => import('src/modules/vendor/pages/ni/billing/TrainerPaymentsDashboard'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'configuration',
+        },
+      },
+      {
         path: 'ni/pedagogy/categories',
         name: 'ni pedagogy categories',
         component: () => import('src/modules/vendor/pages/ni/pedagogy/CategoriesDirectory'),

@@ -15,7 +15,7 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   const slotsLoading = ref(false);
   const trainerBillingInfos = ref({});
   const dateRange = ref({
-    startDate: CompaniDate().subtract('P3M').startOf(MONTH).toISO(),
+    startDate: CompaniDate().subtract('P1M').startOf(MONTH).toISO(),
     endDate: CompaniDate().subtract('P1M').endOf(MONTH).toISO(),
   });
   const maxMonthsPeriod = loggedUserIsTrainer.value ? 3 : 4;
@@ -293,14 +293,14 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
   };
 
   const goToPreviousMonth = () => {
-    const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).subtract('P3M');
-    dateRange.value = { startDate: date.toISO(), endDate: date.add('P2M').endOf(MONTH).toISO() };
+    const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).subtract('P1M');
+    dateRange.value = { startDate: date.toISO(), endDate: date.endOf(MONTH).toISO() };
     input(dateRange.value);
   };
 
   const goToNextMonth = () => {
-    const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).add('P3M');
-    dateRange.value = { startDate: date.toISO(), endDate: date.add('P2M').endOf(MONTH).toISO() };
+    const date = CompaniDate(dateRange.value.startDate).startOf(MONTH).add('P1M');
+    dateRange.value = { startDate: date.toISO(), endDate: date.endOf(MONTH).toISO() };
     input(dateRange.value);
   };
 

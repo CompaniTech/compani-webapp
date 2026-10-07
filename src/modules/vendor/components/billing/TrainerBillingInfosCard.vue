@@ -8,8 +8,6 @@
             <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
             <ni-primary-button v-if="isTrainer" class="q-my-sm" label="Facturer les créneaux"
               @click.stop="openCourseSlotBillModal" :disabled="selectedSlotIds.length === 0" />
-            <ni-primary-button v-else class="q-my-sm" label="Changer le statut des créneaux sélectionnés"
-              @click.stop="openCourseSlotStatusChangeModal" :disabled="selectedSlotIds.length === 0" />
           </div>
           <div class="q-py-sm">
             <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)"
@@ -83,8 +81,8 @@
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox :model-value="areMultipleSlotsSelected(course.rows)" class="q-mr-sm" size="sm"
-                      @update:model-value="selectSlotList($event, course.rows)"
+                    <q-checkbox v-if="isTrainer" :model-value="areMultipleSlotsSelected(course.rows)" class="q-mr-sm"
+                      size="sm" @update:model-value="selectSlotList($event, course.rows)"
                       :disable="course.rows.every(s => !isSlotSelectable(s))" />
                   </template>
                   <template v-else>{{ col.label }}</template>
@@ -93,8 +91,9 @@
               <template #row="{ props }">
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)" dense
-                      @update:model-value="selectSlot($event, props.row)" :disable="!isSlotSelectable(props.row)" />
+                    <q-checkbox v-if="isTrainer" class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)"
+                      @update:model-value="selectSlot($event, props.row)" :disable="!isSlotSelectable(props.row)"
+                      dense />
                   </template>
                   <template v-else>{{ col.value }}</template>
                   </q-td>
@@ -157,10 +156,10 @@
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox :model-value="areMultipleSlotsSelected(trainerInfos.collectiveSlots.slots[day].slots)"
+                    <q-checkbox v-if="isTrainer" class="q-mr-sm" size="sm"
+                        :model-value="areMultipleSlotsSelected(trainerInfos.collectiveSlots.slots[day].slots)"
                     @update:model-value="selectSlotList($event, trainerInfos.collectiveSlots.slots[day].slots, true)"
-                    :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => !isSlotSelectable(s))"
-                    class="q-mr-sm" size="sm" />
+                    :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => !isSlotSelectable(s))" />
                   </template>
                   <template v-else>{{ col.label }}</template>
                 </q-th>
@@ -173,9 +172,9 @@
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions'">
-                    <q-checkbox class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)" dense
-                      @update:model-value="selectSlot($event, props.row, trainerInfos.collectiveSlots.slots[day].slots)"
-                      :disable="!isSlotSelectable(props.row)" />
+                    <q-checkbox v-if="isTrainer" class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)"
+                    @update:model-value="selectSlot($event, props.row, trainerInfos.collectiveSlots.slots[day].slots)"
+                      :disable="!isSlotSelectable(props.row)" dense />
                   </template>
                   <template v-else>{{ col.value }}</template>
                 </q-td>
@@ -186,11 +185,6 @@
       </div>
     </q-expansion-item>
   </q-card>
-
-  <course-slot-status-change-modal v-model="courseSlotStatusChangeModal" :current-status="currentStatus"
-    :new-status="newStatus" :validations="v$.newStatus" :selected-slots="selectedSlots"
-    :loading="statusChangeLoading" @update:new-status="newStatus = $event"
-    @hide="resetCourseSlotStatusChangeModal" @submit="submitStatusChange" />
 
   <course-slot-bill-modal v-model="courseSlotBillModal" :course-slots="selectedSlots"
     :loading="courseSlotBillLoading" :bill="bill" :validations="v$.bill" @hide="resetCourseSlotBillModal"
@@ -211,7 +205,6 @@ import ExpandingTable from '@components/table/ExpandingTable';
 import Banner from '@components/Banner';
 import Button from '@components/PrimaryButton';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
-import CourseSlotStatusChangeModal from 'src/modules/vendor/components/billing/CourseSlotStatusChangeModal';
 import CourseSlotBillModal from 'src/modules/vendor/components/billing/CourseSlotBillModal';
 import TrainerBills from '@api/TrainerBills';
 
@@ -225,7 +218,6 @@ export default {
     'ni-expanding-table': ExpandingTable,
     'ni-banner': Banner,
     'ni-primary-button': Button,
-    'course-slot-status-change-modal': CourseSlotStatusChangeModal,
     'course-slot-bill-modal': CourseSlotBillModal,
   },
   emits: ['refresh'],
@@ -239,16 +231,10 @@ export default {
     const areCourseDetailsVisible = ref({});
     const selectedSlotIds = ref([]);
     const bill = ref({ number: '', file: '' });
-    const courseSlotStatusChangeModal = ref(false);
-    const currentStatus = ref('');
-    const newStatus = ref('');
-    const statusChangeLoading = ref(false);
     const courseSlotBillModal = ref(false);
     const courseSlotBillLoading = ref(false);
 
-    const isSlotSelectable = slot => (isTrainer.value
-      ? slot.status === NOT_INVOICED
-      : slot.status !== NOT_INVOICED && !!slot.trainerBill);
+    const isSlotSelectable = slot => isTrainer.value && slot.status === NOT_INVOICED;
 
     const singleSlotColumns = computed(() => [
       { name: 'stepName', label: 'Étape', field: 'stepName', align: 'left' },
@@ -436,10 +422,9 @@ export default {
 
     const rules = computed(() => ({
       bill: { number: { required }, file: { required } },
-      newStatus: { required },
     }));
 
-    const v$ = useVuelidate(rules, { bill, newStatus });
+    const v$ = useVuelidate(rules, { bill });
 
     const displayDuration = value => value !== '0min';
 
@@ -478,50 +463,6 @@ export default {
     const areMultipleSlotsSelected = (slots) => {
       const selectableSlots = slots.filter(isSlotSelectable);
       return selectableSlots.length > 0 && selectableSlots.every(s => selectedSlotIds.value.includes(s._id));
-    };
-
-    const openCourseSlotStatusChangeModal = () => {
-      const statuses = [...new Set(selectedSlots.value.map(s => s.status))];
-      if (statuses.length > 1) return NotifyWarning('Les créneaux sélectionnés n\'ont pas tous le même statut.');
-
-      currentStatus.value = statuses[0];
-      courseSlotStatusChangeModal.value = true;
-    };
-
-    const resetCourseSlotStatusChangeModal = () => {
-      courseSlotStatusChangeModal.value = false;
-      newStatus.value = '';
-      currentStatus.value = '';
-      v$.value.newStatus.$reset();
-    };
-
-    const submitStatusChange = async () => {
-      try {
-        v$.value.newStatus.$touch();
-        if (v$.value.newStatus.$error) return NotifyWarning('Champ(s) invalide(s).');
-
-        statusChangeLoading.value = true;
-
-        const trainerBillIds = [...new Set(selectedSlots.value.map(s => s.trainerBill).filter(Boolean))];
-
-        if (newStatus.value === NOT_INVOICED) {
-          await Promise.all(trainerBillIds.map(id => TrainerBills.remove(id)));
-        } else {
-          await Promise.all(
-            trainerBillIds.map(id => TrainerBills.update(id, { status: newStatus.value }))
-          );
-        }
-
-        emit('refresh');
-        courseSlotStatusChangeModal.value = false;
-
-        NotifyPositive('Statut des créneaux modifié.');
-      } catch (e) {
-        console.error(e);
-        NotifyNegative('Erreur lors de la modification du statut des créneaux.');
-      } finally {
-        statusChangeLoading.value = false;
-      }
     };
 
     const openCourseSlotBillModal = () => { courseSlotBillModal.value = true; };
@@ -572,10 +513,6 @@ export default {
       areCourseDetailsVisible,
       selectedSlotIds,
       bill,
-      courseSlotStatusChangeModal,
-      currentStatus,
-      newStatus,
-      statusChangeLoading,
       courseSlotBillModal,
       courseSlotBillLoading,
       displayDetails,
@@ -596,9 +533,6 @@ export default {
       areMultipleSlotsSelected,
       selectSlot,
       selectSlotList,
-      openCourseSlotStatusChangeModal,
-      resetCourseSlotStatusChangeModal,
-      submitStatusChange,
       openCourseSlotBillModal,
       resetCourseSlotBillModal,
       submitCourseSlotBill,
