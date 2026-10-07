@@ -34,6 +34,7 @@ export const EMAIL_OPTIONS = [
   { label: 'Mi-formation', value: MIDDLE_COURSE },
   { label: 'Fin de formation', value: END_COURSE },
   { label: 'Relance', value: RESEND },
+  { label: 'Autre', value: OTHER },
 ];
 
 // EVENTS
