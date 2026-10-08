@@ -3,6 +3,16 @@
   margin: 0 0 4px 0
   color: $copper-grey-500
 
+// Quasar >= 2.25 put the field message area in-flow; restore the previous overlay layout
+.q-field--with-bottom
+  padding-bottom: 20px
+.q-field__bottom--animated
+  position: absolute
+  left: 0
+  right: 0
+  bottom: 0
+  transform: translateY(100%)
+
 .margin-input
   margin-bottom: 6px
   &.last
