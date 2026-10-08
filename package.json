@@ -48,10 +48,9 @@
     "webpack": "~5.111.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "~7.28.6",
     "@babel/preset-env": "~7.29.2",
     "@eslint/eslintrc": "~3.3.7",
-    "@eslint/js": "~9.39.1",
+    "@eslint/js": "~10.0.1",
     "@quasar/app-webpack": "~4.4.4",
     "@quasar/cli": "~5.0.9",
     "@quasar/quasar-app-extension-testing-e2e-cypress": "~6.3.0",
@@ -59,8 +58,8 @@
     "airbnb-style": "github:CompaniTech/eslint-config-airbnb-base",
     "baseline-browser-mapping": "~2.11.27",
     "cypress": "~16.1.1",
-    "eslint": "~9.39.1",
-    "eslint-plugin-cypress": "~6.2.0",
+    "eslint": "~10.12.0",
+    "eslint-plugin-cypress": "~7.0.2",
     "eslint-plugin-import": "~2.32.0",
     "eslint-plugin-n": "~18.4.1",
     "eslint-plugin-promise": "~7.3.0",
@@ -72,6 +71,12 @@
   "overrides": {
     "@quasar/quasar-app-extension-testing-e2e-cypress": {
       "cypress": "$cypress"
+    },
+    "eslint-plugin-import": {
+      "eslint": "$eslint"
+    },
+    "@quasar/app-webpack": {
+      "eslint": "$eslint"
     }
   },
   "engines": {

@@ -1,5 +1,4 @@
 import { defineConfig, globalIgnores } from 'eslint/config';
-import babelParser from '@babel/eslint-parser';
 import vueParser from 'vue-eslint-parser';
 import globals from 'globals';
 import path from 'node:path';
@@ -71,11 +70,7 @@ export default defineConfig([
     languageOptions: {
       parser: vueParser,
       sourceType: 'module',
-      parserOptions: {
-        parser: babelParser,
-        ecmaVersion: 2022,
-        babelOptions: { configFile: './babel.config.js' },
-      },
+      parserOptions: { ecmaVersion: 2022 },
       globals: {
         ...globals.browser,
         __statics: true,
@@ -109,12 +104,8 @@ export default defineConfig([
   { // Configuration pour les fichiers .js et .mjs
     files: ['**/*.{js,mjs}'],
     languageOptions: {
-      parser: babelParser,
       sourceType: 'module',
-      parserOptions: {
-        ecmaVersion: 2022,
-        babelOptions: { configFile: './babel.config.js' },
-      },
+      parserOptions: { ecmaVersion: 2022 },
       globals: {
         ...globals.browser,
         __statics: true,
