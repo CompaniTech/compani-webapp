@@ -6,7 +6,7 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
-    <template v-if="!trainerPayments.length">
+    <template v-if="!trainerPayments.length && !tableLoading">
       <span class="text-italic q-pa-lg">Aucun paiement pour les filtres sélectionnés.</span>
     </template>
     <ni-simple-table v-else :data="trainerPayments" :columns="columns" :loading="tableLoading"
