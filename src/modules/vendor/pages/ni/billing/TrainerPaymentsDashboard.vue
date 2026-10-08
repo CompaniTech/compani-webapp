@@ -185,9 +185,9 @@ export default {
         await Promise.all(
           selectedPayments.value.map(id => TrainerPayments.update(id, { status: multipleEditionStatus.value }))
         );
-        await refreshPayments();
 
         NotifyPositive(`${formatQuantity('paiement modifié', selectedPayments.value.length)}.`);
+        await refreshPayments();
 
         multipleEditionModal.value = false;
       } catch (e) {
