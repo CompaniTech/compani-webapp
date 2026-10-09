@@ -478,7 +478,8 @@ export const NOT_INVOICED = 'not_invoiced';
 export const INVOICED = 'invoiced';
 export const PAID = 'paid';
 export const SLOT_STATUS = { [NOT_INVOICED]: 'Non facturé', [INVOICED]: 'Facturé', [PAID]: 'Réglé' };
-export const STATUS_CHANGE_OPTIONS = {
-  [INVOICED]: [{ label: 'Réglé', value: PAID }, { label: 'Non facturé', value: NOT_INVOICED }],
-  [PAID]: [{ label: 'Facturé', value: INVOICED }],
-};
+export const TRAINER_PAYMENT_STATUS_OPTIONS = [
+  { label: 'En attente', value: PENDING },
+  { label: 'Fichier XML associé', value: XML_GENERATED },
+  { label: 'Réglé', value: PAID },
+];

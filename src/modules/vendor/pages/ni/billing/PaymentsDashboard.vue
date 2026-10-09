@@ -75,7 +75,7 @@
     :loading="xmlFileDownloadLoading" :validations="v$.transactionName" @submit="getXmlFile"
     @hide="resetXmlFileDownload" />
 
-  <ni-multiple-course-payment-edition-modal v-model="multipleCoursePaymentEditionModal"
+  <ni-multiple-payment-edition-modal v-model="multipleCoursePaymentEditionModal" :status-options="statusOptions"
     v-model:status="multipleEditionStatus" :loading="multipleCoursePaymentEditionLoading"
     @submit="editPaymentList" @hide="resetMultiplePaymentEditionModal" :validations="v$.multipleEditionStatus" />
 </template>
@@ -101,6 +101,7 @@ import {
   COURSE_TYPES,
   CANCELLED,
   NO_HOLDING,
+  XML_GENERATED,
 } from '@data/constants';
 import CoursePayments from '@api/CoursePayments';
 import XmlSEPAFileInfos from '@api/XmlSEPAFileInfos';
@@ -109,7 +110,7 @@ import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
-import MultipleCoursePaymentEditionModal from 'src/modules/vendor/components/billing/MultipleCoursePaymentEditionModal';
+import MultiplePaymentEditionModal from 'src/modules/vendor/components/billing/MultiplePaymentEditionModal';
 
 export default {
   name: 'PaymentsDashboard',
@@ -119,7 +120,7 @@ export default {
     'ni-simple-table': SimpleTable,
     'ni-button': Button,
     'ni-xml-file-download-modal': XmlFileDownloadModal,
-    'ni-multiple-course-payment-edition-modal': MultipleCoursePaymentEditionModal,
+    'ni-multiple-payment-edition-modal': MultiplePaymentEditionModal,
   },
   setup () {
     const metaInfo = { title: 'Paiements' };
@@ -209,6 +210,8 @@ export default {
       multipleEditionStatus: { required },
     }));
     const v$ = useVuelidate(rules, { transactionName, multipleEditionStatus });
+
+    const statusOptions = PAYMENT_STATUS_OPTIONS.filter(status => status.value !== XML_GENERATED);
 
     const sortedPayments = computed(() => {
       if (!sortBy.value) return paymentList.value;
@@ -455,6 +458,7 @@ export default {
       v$,
       multipleCoursePaymentEditionModal,
       multipleEditionStatus,
+      statusOptions,
       multipleCoursePaymentEditionLoading,
       sortBy,
       sortDesc,
