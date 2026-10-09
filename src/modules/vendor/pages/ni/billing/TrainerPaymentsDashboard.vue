@@ -38,9 +38,9 @@
               {{ col.value }}
             </router-link>
             <template v-else-if="col.name === 'actions'">
-              <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense />
               <ni-button icon="delete" :disable="props.row.status !== PENDING"
                 @click="openDeleteDialog(props.row)" />
+              <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense />
             </template>
             <template v-else>{{ col.value }}</template>
           </q-td>
@@ -116,7 +116,7 @@ export default {
         align: 'left',
       },
       { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status' },
-      { name: 'actions', label: '', field: '', align: 'left' },
+      { name: 'actions', label: '', field: '', align: 'right' },
     ];
 
     const rules = computed(() => ({ multipleEditionStatus: { required } }));
@@ -128,7 +128,7 @@ export default {
       ? selectedPayments.value.length === trainerPayments.value.length
       : false));
 
-    const getItemStatus = status => TRAINER_PAYMENT_STATUS_OPTIONS.find(s => s.value === status).label;
+    const getItemStatus = status => TRAINER_PAYMENT_STATUS_OPTIONS.find(s => s.value === status)?.label || '';
 
     const getStatusClass = (status) => {
       switch (status) {
@@ -182,18 +182,24 @@ export default {
         if (v$.value.multipleEditionStatus.$error) return NotifyWarning('Champ invalide.');
 
         multipleEditionLoading.value = true;
-        await Promise.all(
+        const results = await Promise.allSettled(
           selectedPayments.value.map(id => TrainerPayments.update(id, { status: multipleEditionStatus.value }))
         );
+        const successCount = results.filter(r => r.status === 'fulfilled').length;
+        const failureCount = results.length - successCount;
 
-        NotifyPositive(`${formatQuantity('paiement modifié', selectedPayments.value.length)}.`);
-        await refreshPayments();
+        if (successCount) NotifyPositive(`${formatQuantity('paiement modifié', successCount)}.`);
+        if (failureCount) {
+          results.filter(r => r.status === 'rejected').forEach(r => console.error(r.reason));
+          NotifyNegative('Certains paiements n\'ont pas pu être modifiés.');
+        }
 
-        multipleEditionModal.value = false;
+        if (successCount) multipleEditionModal.value = false;
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de l\'édition des paiements.');
       } finally {
+        await refreshPayments();
         multipleEditionLoading.value = false;
       }
     };
