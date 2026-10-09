@@ -194,12 +194,13 @@ export default {
           NotifyNegative('Certains paiements n\'ont pas pu être modifiés.');
         }
 
+        await refreshPayments();
         if (successCount) multipleEditionModal.value = false;
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de l\'édition des paiements.');
-      } finally {
         await refreshPayments();
+      } finally {
         multipleEditionLoading.value = false;
       }
     };
@@ -224,7 +225,9 @@ export default {
         html: true,
         ok: 'OK',
         cancel: 'Annuler',
-      }).onOk(() => deletePayment(row));
+      })
+        .onOk(() => deletePayment(row))
+        .onCancel(() => NotifyPositive('Suppression du paiement annulé.'));
     };
 
     watch(selectedStatus, refreshPayments);
