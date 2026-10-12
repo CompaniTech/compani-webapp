@@ -33,7 +33,7 @@ export default {
     const { headerInfo } = toRefs(props);
 
     const formattedHeaderInfo = computed(() => headerInfo.value
-      .map(info => ({ labelClass: info.class, iconClass: info.class, ...info })));
+      .map(info => ({ labelClass: info.class || 'text-petrol', iconClass: info.class || 'text-petrol', ...info })));
 
     return {
       // Computed
