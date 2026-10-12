@@ -2,7 +2,7 @@
   <q-card class="card" flat>
     <div class="text-weight-bold">{{ card.question }}</div>
     <div class="q-mb-lg subtitle">{{ subtitle }}</div>
-    <ni-banner v-if="isRofOrVendorAdmin" icon="info_outline" class="bg-bright-orange-10">
+    <ni-banner v-if="isRofOrVendorAdmin" icon="info_outline" class="bg-petrol-10">
       <template #message>
         Moyenne des réponses : <a class="text-weight-bold text-navy-80">{{ average }} / {{ maxLabel }}</a>
       </template>
@@ -11,9 +11,11 @@
       <div class="info-container">
         <div class="bar-container">
           <div v-for="(line, index) in lines" :key="index">
-            <div class="bar bg-bright-orange-10">
-              <div class="bar-fill bg-bright-orange-40" :style="`height: ${line.percentage * 100}%`" />
-              <div class="q-mt-sm bar-label">{{ index + 1 }}</div>
+            <div class="bar bg-petrol-10">
+              <div class="bar-fill bg-petrol" :style="`height: ${line.percentage * 100}%`" />
+              <div :class="['q-mt-sm bar-label', line.percentage > 0.85 ? 'text-white' : 'text-petrol']">
+                {{ index + 1 }}
+              </div>
             </div>
             <div class="percentage">{{ formatPercentage(line.percentage) }}</div>
           </div>

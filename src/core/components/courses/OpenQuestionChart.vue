@@ -9,7 +9,7 @@
     <ni-table-list :data="formattedAnswers" :columns="columns" v-model:pagination="pagination"
       :rows-per-page-options="rowsPerPageOptions" hide-header disabled>
       <template #body="{ col }">
-        <q-item-section class="bg-bright-orange-10 answer">{{ col.value }}</q-item-section>
+        <q-item-section class="bg-petrol-10 answer">{{ col.value }}</q-item-section>
       </template>
     </ni-table-list>
   </q-card>

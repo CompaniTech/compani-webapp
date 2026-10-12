@@ -8,8 +8,8 @@
     <div class="q-mb-lg subtitle">{{ subtitle }}</div>
     <div v-for="(line, index) in lines" :key="index" class="q-mt-sm bar-container">
       <div class="q-mr-sm percentage">{{ formatPercentage(line.percentage) }}</div>
-      <q-linear-progress size="40px" :value="line.percentage" rounded class="text-petrol bg-bright-orange-10">
-        <div class="bar-label">
+      <q-linear-progress size="40px" :value="line.percentage" rounded color="petrol" track-color="petrol-10">
+        <div class="bar-label" :style="{ '--fill': `${line.percentage * 100}%` }">
           <div>{{ line.title }}</div>
           <div><span class="text-weight-bold">{{ line.total }}</span> réponses</div>
         </div>
@@ -18,7 +18,7 @@
     <ni-table-list v-if="otherAnswers.length" :data="otherAnswers" :columns="columns" v-model:pagination="pagination"
       hide-header disabled :rows-per-page-options="rowsPerPageOptions">
       <template #body="{ col }">
-        <q-item-section class="bg-bright-orange-10 answer">{{ col.value }}</q-item-section>
+        <q-item-section class="bg-petrol-10 answer">{{ col.value }}</q-item-section>
       </template>
     </ni-table-list>
   </q-card>
@@ -114,12 +114,14 @@ export default {
   align-items: center
 
 :deep(.q-linear-progress__track)
-  opacity: 0
+  opacity: 1
 
 .bar-label
   font-size: 14px
   position: absolute
-  color: $navy-80
+  color: transparent
+  background: linear-gradient(to right, white var(--fill), $petrol var(--fill))
+  background-clip: text
   display: flex
   justify-content: space-between
   width: 100%
