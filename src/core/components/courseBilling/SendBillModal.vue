@@ -3,7 +3,7 @@
     <template #title>
        Envoyer <span class="text-weight-bold">les factures par email</span>
     </template>
-    <ni-banner class="bg-copper-grey-100 q-ma-md" icon="info_outline">
+    <ni-banner class="bg-turquoise-10 q-ma-md" icon="info_outline">
       <template #message>
         <div v-for="bill of billListInfos.selectedBills" :key="bill._id" class="banner-details">
           <span class="text-bold">
@@ -245,7 +245,7 @@ export default {
 <style lang="sass" scoped>
 .details
   font-size: 14px
-  color: $copper-grey-500
+  color: $petrol-80
 .banner-details
   font-size: 12px
 :deep(.q-option-group)

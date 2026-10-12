@@ -1,7 +1,7 @@
 <template>
   <ni-modal :model-value="modelValue" @update:model-value="input" @hide="hide">
     <template #title>Modifier <span class="text-weight-bold">{{ title }}</span></template>
-    <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+    <ni-banner class="bg-turquoise-10 q-mt-sm" icon="info_outline">
       <template #message>{{ message }}</template>
     </ni-banner>
     <ni-option-group in-modal :model-value="trainees" @update:model-value="update" type="checkbox"

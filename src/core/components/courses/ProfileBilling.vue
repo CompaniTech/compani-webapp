@@ -11,14 +11,14 @@
         Les structures suivantes n'ont pas été facturées : {{ formatName(missingBillsCompanies) }}.
       </template>
     </ni-banner>
-    <q-card v-if="course.companies.length" class="q-mt-sm q-px-md bg-peach-200">
-      <q-item-section @click="showDetails" class="prices cursor-pointer row copper-grey-700">
+    <q-card v-if="course.companies.length" class="q-mt-sm q-px-md bg-petrol-10">
+      <q-item-section @click="showDetails" class="prices cursor-pointer row navy-80">
         {{ showPrices ? 'Masquer' : 'Afficher' }} les prix
-        <q-icon size="xs" :name="showPrices ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
+        <q-icon size="xs" :name="showPrices ? 'expand_less' : 'expand_more'" color="navy-80" />
       </q-item-section>
       <div v-if="showPrices">
         <div v-for="(company, i) of course.companies" :key="company._id">
-          <span v-if="!(isIntraCourse || isSingleCourse)" class="text-weight-regular text-copper-500">
+          <span v-if="!(isIntraCourse || isSingleCourse)" class="text-weight-regular text-petrol">
             {{ company.name }}
           </span>
           <div class="row gutter-profile">
@@ -39,7 +39,7 @@
         </span>
       </div>
     </q-card>
-    <ni-banner v-if="courseBills.length" icon="info_outline" class="q-mt-md bg-peach-200">
+    <ni-banner v-if="courseBills.length" icon="info_outline" class="q-mt-md bg-bright-orange-40">
       <template #message>
         Montant total des factures : <span class="text-weight-bold">{{ formatPrice(totalPrice.billedPrice) }}</span>
         (dont <span class="text-weight-bold">{{ formatPrice(totalPrice.validatedPrice) }}</span> facturés au client)

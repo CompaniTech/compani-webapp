@@ -98,5 +98,5 @@ export default {
     display: none
 
 :deep(.q-field__native), :deep(.q-field__prefix), :deep(.q-field__suffix), :deep(.q-field__input)
-  color: $copper-grey-900
+  color: $petrol
 </style>

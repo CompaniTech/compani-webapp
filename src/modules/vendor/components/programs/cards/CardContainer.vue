@@ -160,14 +160,14 @@ export default {
   &-selected
     justify-content: flex-end
     .card-cell
-      background-color: $copper-400
+      background-color: $petrol-60
   &-locked
     .card-cell
-      background-color: $copper-grey-100
+      background-color: $turquoise-10
   &-locked-selected
     justify-content: flex-end
     .card-cell
-      background-color: $copper-grey-800
+      background-color: $navy
       color: white
   .dot
     margin: 0 0 0 3px
@@ -176,10 +176,10 @@ export default {
   display: flex
   flex-direction: column
 .locked-unselected
-  color: $copper-grey-400
+  color: $petrol-80
 
 .card-cell
-  background-color: $copper-100
+  background-color: $turquoise-40
   border-radius: 4px
   height: fit-content
   width: 85%

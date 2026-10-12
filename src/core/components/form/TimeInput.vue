@@ -9,7 +9,7 @@
       :error-message="errorMessage" :error="error" @blur="onBlur" :rules="['time']" data-cy="time-input"
       :disable="disable && !locked" :class="{ borders: inModal }" :readonly="locked" debounce="500">
       <template #append>
-        <q-icon v-if="!locked" name="far fa-clock" class="cursor-pointer" color="copper-grey-500">
+        <q-icon v-if="!locked" name="far fa-clock" class="cursor-pointer" color="petrol-60">
           <q-menu ref="qTimeMenu" anchor="bottom right" self="top right" @show="scrollOnOpening">
             <q-list ref="qListRef" dense padding>
               <q-item v-for="(hour, index) in hoursOptions" :key="index" clickable @click="select(hour.value)"
@@ -19,7 +19,7 @@
             </q-list>
           </q-menu>
         </q-icon>
-        <q-icon v-else name="lock" class="cursor-pointer" @click="click" color="copper-500" />
+        <q-icon v-else name="lock" class="cursor-pointer" @click="click" color="petrol" />
       </template>
     </q-input>
   </div>
@@ -134,5 +134,5 @@ export default {
   width: 100px
 
 :deep(.q-field__native, .q-field__prefix, .q-field__suffix, .q-field__input)
-  color: $copper-grey-900
+  color: $petrol
 </style>

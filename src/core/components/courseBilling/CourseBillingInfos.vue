@@ -21,7 +21,7 @@
           <template #header="{ props }">
             <q-tr :props="props">
               <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
-                <q-icon v-if="col.name === 'sendingDates'" name="mail" size="18px" color="copper-grey-700" />
+                <q-icon v-if="col.name === 'sendingDates'" name="mail" size="18px" color="navy-80" />
                 <template v-else>{{ col.label }}</template>
               </q-th>
             </q-tr>
@@ -39,19 +39,19 @@
                   </router-link>
                 </div>
                 <div class="row items-center" v-if="props.row.courseCreditNote">
-                  <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
-                  <div class="q-ml-xs text-orange-500">
+                  <q-icon size="12px" name="fas fa-times-circle" color="bright-orange attendance" />
+                  <div class="q-ml-xs text-navy-80">
                     Annulée par avoir -
                     <span class="download-credit-note" @click.stop="downloadCreditNote(props.row.courseCreditNote)">
                       {{ props.row.courseCreditNote.number }}
                     </span>
                   </div>
                 </div>
-                <div v-if="props.row.payer._id !== company._id" class="text-copper-grey-600 text-weight-bold">
+                <div v-if="props.row.payer._id !== company._id" class="text-navy-70 text-weight-bold">
                   Payeur : {{ props.row.payer.name }}
                 </div>
                 <div v-if="!props.row.companies.map(c => c._id).includes(company._id)"
-                  class="text-copper-grey-600 text-weight-bold">
+                  class="text-navy-70 text-weight-bold">
                   {{ formatQuantity('Structure', props.row.companies.length, 's', false) }} :
                   {{ formatName(props.row.companies) }}
                 </div>
@@ -74,7 +74,7 @@
               </template>
               <div v-else-if="col.name === 'sendingDates'">
                 <template v-if="col.value">Envoyée le {{ col.value }}</template>
-                <div v-if="get(props, 'row.pendingCourseBill.length')" class="text-copper-grey-600">
+                <div v-if="get(props, 'row.pendingCourseBill.length')" class="text-navy-70">
                   Programmé le {{ CompaniDate(props.row.pendingCourseBill[0].sendingDate).format(DD_MM_YYYY) }}
                 </div>
               </div>
@@ -113,7 +113,7 @@
                     </div>
                   </div>
                   <div v-if="item.netInclTaxes >=0 && canUpdateBilling" class="edit">
-                    <q-icon size="20px" name="edit" color="copper-grey-500"
+                    <q-icon size="20px" name="edit" color="petrol-60"
                       @click="openCoursePaymentEditionModal(props.row, item)" />
                   </div>
                 </template>
@@ -522,13 +522,13 @@ export default {
     const getStatusClass = (status) => {
       switch (status) {
         case PENDING:
-          return 'orange-chip';
+          return 'cream-chip';
         case RECEIVED:
           return 'green-chip';
         case CANCELLED:
           return 'red-chip';
         default:
-          return 'peach-chip';
+          return 'bright-orange-chip';
       }
     };
 
@@ -824,30 +824,30 @@ export default {
     font-size: 9px
 .program
   flex: 1
-  color: $copper-grey-600
+  color: $navy-70
   height: 1.5em
   overflow: hidden
 .misc
   width: max-content
-  color: $copper-grey-600
+  color: $navy-70
 .course
   display: flex
   max-width: fit-content
 .redirection
   &:hover
     text-decoration: underline
-    text-decoration-color: $copper-grey-600
+    text-decoration-color: $navy-70
 .no-event
   pointer-events: none
 .add-payment
-  background-color: $copper-grey-500
+  background-color: $petrol-60
   width: 20px
   height: 20px
   justify-content: center
 .cell
   padding: 0
   width: 100%
-  background-color: $copper-grey-100
+  background-color: $turquoise-10
 .date
   width: 10%
   padding: 4px
@@ -887,7 +887,7 @@ export default {
 .sending-dates
   width: 10%
   padding: 4px
-  color: $copper-500
+  color: $petrol
 .client-layout
   .payment-without-checkbox
     width: 24%

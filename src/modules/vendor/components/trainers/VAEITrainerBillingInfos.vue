@@ -3,7 +3,7 @@
     <div v-if="loggedUserIsTrainer" class="row justify-end q-mb-md">
       <ni-primary-button label="Facturer des frais annexes" @click="openTrainerFeesBillModal" />
     </div>
-    <ni-banner icon="info_outline" class="bg-peach-200">
+    <ni-banner icon="info_outline" class="bg-bright-orange-40">
       <template #message>
         Veuillez sélectionner la période sur laquelle vous souhaitez afficher les créneaux de formation.
         Seuls les créneaux émargés sont affichés sur cette page.

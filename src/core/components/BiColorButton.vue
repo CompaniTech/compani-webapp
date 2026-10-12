@@ -19,7 +19,7 @@ export default {
     href: { type: String, default: undefined },
     disable: { type: Boolean, default: false },
     type: { type: String, default: '' },
-    labelColor: { type: String, default: 'copper-grey-700' },
+    labelColor: { type: String, default: 'petrol' },
     iconColor: { type: String, default: 'primary' },
   },
   components: {

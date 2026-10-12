@@ -17,7 +17,7 @@
     </div>
     <q-field borderless v-else :error="error" :error-message="errorMessage">
       <q-uploader ref="uploader" flat :bordered="inModal" color="white" :label="label" :url="url" with-credentials
-        text-color="copper-grey-700" @failed="failMsg" :form-fields="additionalFields" :max-file-size="maxFileSize"
+        text-color="navy-80" @failed="failMsg" :form-fields="additionalFields" :max-file-size="maxFileSize"
         @uploaded="documentUploaded" auto-upload :accept="extensions" field-name="file" :multiple="multiple"
         @rejected="rejected" :disable="disable" @start="uploadStarted" @finish="uploadFinished" />
     </q-field>
@@ -145,7 +145,7 @@ export default {
 :deep(.q-uploader)
   width: 100%
   :deep(.q-uploader--bordered)
-    border: 1px solid $copper-grey-300
+    border: 1px solid $navy-20
   .q-uploader__list
     display: none
   .q-uploader__header-content
@@ -157,7 +157,7 @@ export default {
       margin-top: 0
       margin-left: 0
     .q-btn__content
-      color: $copper-grey-400
+      color: $petrol-80
   .q-btn
     margin: 0
     padding: 0

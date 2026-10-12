@@ -28,7 +28,7 @@
         </div>
       </template>
       <template #no-data>
-        <div class="full-width row text-copper-grey-800 justify-center">
+        <div class="full-width row text-navy justify-center">
           <span class="text-italic q-pb-sm" style="font-size: 0.8rem">{{ noDataLabel }}</span>
           <q-separator />
         </div>

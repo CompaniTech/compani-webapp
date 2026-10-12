@@ -3,7 +3,7 @@
     <template #title>
       Facturer les créneaux sélectionnés
     </template>
-    <ni-banner class="bg-copper-grey-100 q-ma-md text-red-800" icon="info_outline">
+    <ni-banner class="bg-turquoise-10 q-ma-md text-red-800" icon="info_outline">
       <template #message>
         Pour facturer ces créneaux à Compani, chargez une facture du montant TTC total indiqué et validez.
         Toute facture d'un montant différent sera refusée.

@@ -2,14 +2,14 @@
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template v-if="sendSms" #title>Envoyer un <span class="text-weight-bold">message</span></template>
     <template v-else #title>Historique des <span class="text-weight-bold">messages</span></template>
-    <ni-banner v-if="sendSms" icon="info_outline" icon-color="copper-500"
-      class="bg-copper-grey-100 text-copper-grey-800">
+    <ni-banner v-if="sendSms" icon="info_outline" icon-color="petrol"
+      class="bg-turquoise-10 text-navy">
       <template #message>Assurez-vous d'éviter les doublons de messages en consultant l'historique ci-dessous</template>
     </ni-banner>
     <div class="q-mb-lg">
       <div v-for="history of smsHistoryList" :key="history._id">
-        <ni-banner v-if="history.missingPhones.length" icon="info_outline" icon-color="orange-700"
-          class="bg-orange-50 text-orange-900">
+        <ni-banner v-if="history.missingPhones.length" icon="info_outline" icon-color="bright-orange"
+          class="bg-cream text-navy-80">
           <template #message>
             Pour cet envoi, il manquait le numéro de téléphone de
             {{ formatQuantity('stagiaire', history.missingPhones.length) }} :

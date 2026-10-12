@@ -41,7 +41,7 @@ export default {
   flex: 1
   align-items: center
 .title
-  color: $copper-grey-700
+  color: $navy-80
   font-weight: bold
   text-align: center
 .img

@@ -1,6 +1,6 @@
 <template>
   <div class="row no-wrap container">
-    <q-linear-progress class="linear-progress bg-copper-100" size="8px" :value="value" color="primary" />
+    <q-linear-progress class="linear-progress bg-turquoise-40" size="8px" :value="value" color="primary" />
     <div class="q-mx-xs percentage">{{ percentage }}</div>
   </div>
 </template>

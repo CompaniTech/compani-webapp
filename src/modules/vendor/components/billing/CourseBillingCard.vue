@@ -2,7 +2,7 @@
   <div>
     <div class="q-mt-lg q-mb-xl">
       <p v-if="![INTRA, SINGLE].includes(course.type) && !isDashboard" class="text-weight-bold">
-        <span v-for="(company, index) of companies" :key="company._id" class="text-weight-regular text-copper-500">
+        <span v-for="(company, index) of companies" :key="company._id" class="text-weight-regular text-petrol">
           <router-link class="redirection cursor-pointer" :to="goToCompany(company._id)">
             {{ company.name }}
           </router-link>
@@ -12,7 +12,7 @@
       <div v-if="courseBills.length">
         <p v-if="[INTRA, SINGLE].includes(course.type) && !isDashboard" class="text-weight-bold">
           Infos de facturation -
-          <span class="text-weight-regular text-copper-500">
+          <span class="text-weight-regular text-petrol">
             <router-link class="redirection cursor-pointer" :to="goToCompany(companies[0]._id)">
               {{ companies[0].name }}
             </router-link>
@@ -32,10 +32,10 @@
                   </div>
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
-                  <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
-                  <div class="q-ml-xs text-orange-500">
+                  <q-icon size="12px" name="fas fa-times-circle" color="bright-orange attendance" />
+                  <div class="q-ml-xs text-navy-80">
                     Annulée par avoir -
-                    <span class="clickable-name text-orange-500" :disable="pdfLoading"
+                    <span class="clickable-name" :disable="pdfLoading"
                       @click.stop="downloadCreditNote(bill.courseCreditNote)">
                       {{ bill.courseCreditNote.number }}
                     </span>
@@ -56,10 +56,10 @@
                   </span>
                 </div>
                 <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
-                  <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
-                  <div class="q-ml-xs text-orange-500">
+                  <q-icon size="12px" name="fas fa-times-circle" color="bright-orange attendance" />
+                  <div class="q-ml-xs text-navy-80">
                     Annulée par avoir -
-                    <span class="clickable-name text-orange-500" :disable="pdfLoading"
+                    <span class="clickable-name" :disable="pdfLoading"
                       @click.stop="downloadCreditNote(bill.courseCreditNote)">
                       {{ bill.courseCreditNote.number }}
                     </span>
@@ -69,7 +69,7 @@
               <div v-if="isPayerAndDateVisible(bill)">
                 <div @click.stop="openCourseBillEditionModal(bill)" class="payer">
                   Payeur : {{ get(bill, 'payer.name') }}
-                  <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="copper-grey-500" />
+                  <q-icon v-if="!isBilled(bill)" size="16px" name="edit" color="petrol-60" />
                 </div>
                 <span v-if="bill.billedAt">
                   {{ `Date de facture: ${CompaniDate(bill.billedAt).format(DD_MM_YYYY)}` }}
@@ -89,11 +89,11 @@
               @update:model-value="updateSelectedBills(bill._id)" class="q-px-sm" />
           </q-card-section>
           <q-card-section class="q-pa-sm">
-            <div class="bg-peach-200 q-pt-sm" v-if="areDetailsVisible[bill._id]">
+            <div class="bg-ice-blue q-pt-sm" v-if="areDetailsVisible[bill._id]">
               <q-card flat class="q-mx-lg q-mb-sm">
                 <q-card-section class="fee">
                   <div class="fee-info">
-                    <div class="text-copper-500">{{ get(course, 'tradeName') }}</div>
+                    <div class="text-petrol">{{ get(course, 'tradeName') }}</div>
                     <div>Prix unitaire : {{ formatPrice(get(bill, 'mainFee.price')) }}</div>
                     <div>
                       Quantité ({{ COUNT_UNIT[get(bill, 'mainFee.countUnit')] }}) : {{ get(bill, 'mainFee.count') }}
@@ -112,7 +112,7 @@
                 <q-card flat class="q-mx-lg q-mb-sm">
                   <q-card-section class="fee">
                     <div class="fee-info">
-                      <div class="text-copper-500">
+                      <div class="text-petrol">
                         {{ getBillingItemName(billingPurchase.billingItem) }}
                       </div>
                       <div>Prix unitaire : {{ formatPrice(billingPurchase.price) }}</div>
@@ -848,7 +848,7 @@ export default {
 .redirection
   &:hover
     text-decoration: underline
-    text-decoration-color: $copper-500
+    text-decoration-color: $petrol
 
 .bill-title
   display: flex

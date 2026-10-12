@@ -10,7 +10,7 @@ import { toRefs, computed } from 'vue';
 export default {
   name: 'NiButton',
   props: {
-    color: { type: String, default: 'copper-500' },
+    color: { type: String, default: 'petrol' },
     disable: { type: Boolean, default: false },
     flat: { type: Boolean, default: true },
     href: { type: String, default: undefined },

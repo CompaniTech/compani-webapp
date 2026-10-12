@@ -411,7 +411,7 @@ export default {
         } else {
           $q.dialog({
             title: 'Définir le format des documents',
-            message: `<div class="text-copper-grey-600 q-mt-sm">
+            message: `<div class="text-navy-70 q-mt-sm">
               Choisir l'extension des documents que vous souhaitez télécharger
               </div>`,
             options: {

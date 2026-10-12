@@ -166,8 +166,8 @@ h6
     grid-template-columns: repeat(auto-fill, 79px)
 
 .card-button
-  background-color: $copper-grey-100
-  color: $copper-grey-800
+  background-color: $turquoise-10
+  color: $navy
   border-radius: 10px
   font-size: 14px
   height: 120px
@@ -195,9 +195,9 @@ h6
         width: 30%
         height: 30px
     .flashcard-right
-      background-color: $copper-grey-400
+      background-color: $petrol-60
     .flashcard-left
-      background-color: $copper-grey-300
+      background-color: $navy-20
 
   .fill-the-gaps
     font-size: 10px

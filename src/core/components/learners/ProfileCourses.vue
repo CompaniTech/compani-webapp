@@ -69,14 +69,14 @@
                     <span class="text-green-600">Présent(e)</span>
                   </div>
                   <div v-else-if="hasSlotAbsences(slot)">
-                    <q-icon size="12px" name="fas fa-times-circle" color="orange-700 attendance" />
-                    <span class="text-orange-700">Absent(e)</span>
+                    <q-icon size="12px" name="fas fa-times-circle" color="bright-orange attendance" />
+                    <span class="text-navy-80">Absent(e)</span>
                   </div>
                   <div v-else-if="CompaniDate().isBefore(slot.endDate)" class="attendance">
-                    <span class="q-mx-sm text-italic text-copper-grey-800">à venir</span>
+                    <span class="q-mx-sm text-italic text-navy">à venir</span>
                   </div>
                   <div v-else>
-                    <span class="q-mx-sm text-italic text-copper-grey-800">non rempli</span>
+                    <span class="q-mx-sm text-italic text-navy">non rempli</span>
                   </div>
                 </div>
               </div>

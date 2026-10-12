@@ -9,7 +9,7 @@
     <ni-table-list :data="formattedAnswers" :columns="columns" v-model:pagination="pagination"
       :rows-per-page-options="rowsPerPageOptions" hide-header disabled>
       <template #body="{ col }">
-        <q-item-section class="bg-peach-100 answer">{{ col.value }}</q-item-section>
+        <q-item-section class="bg-bright-orange-10 answer">{{ col.value }}</q-item-section>
       </template>
     </ni-table-list>
   </q-card>
@@ -75,7 +75,7 @@ export default {
   margin: 8px 0px 0px 0px
 
 .subtitle
-  color: $copper-grey-800
+  color: $navy
   font-size: 14px
   display: inline-block
   margin: 0px 0px 16px 0px
@@ -98,5 +98,5 @@ export default {
       .q-item__section--main
         font-size: 12px
   & .q-btn-toggle
-    background-color: $copper-grey-100
+    background-color: $turquoise-10
 </style>

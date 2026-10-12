@@ -8,7 +8,7 @@ export default {
   name: 'ButtonToggle',
   props: {
     toggleColor: { type: String, default: 'primary' },
-    textColor: { type: String, default: 'copper-grey-700' },
+    textColor: { type: String, default: 'navy-80' },
     modelValue: { type: String, default: '' },
     displayClass: { type: String, default: '' },
     options: { type: Array, default: () => [] },
@@ -38,7 +38,7 @@ export default {
     border-radius: 20px
     margin: 4px
     padding: 0 4px
-    background-color: $copper-grey-300
+    background-color: $navy-20
     .q-btn__wrapper
       padding: 0
 

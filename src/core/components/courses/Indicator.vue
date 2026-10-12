@@ -1,6 +1,6 @@
 <template>
-  <div v-if="!indicator && displayDefaultIndicator" class="indicator text-weight-bold text-copper-500">-</div>
-  <div v-else class="indicator text-weight-bold text-copper-500">{{ isPercentage ? `${indicator} %` : indicator }}</div>
+  <div v-if="!indicator && displayDefaultIndicator" class="indicator text-weight-bold text-petrol">-</div>
+  <div v-else class="indicator text-weight-bold text-petrol">{{ isPercentage ? `${indicator} %` : indicator }}</div>
 </template>
 
 <script>

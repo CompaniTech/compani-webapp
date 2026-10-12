@@ -34,7 +34,7 @@
             <div v-else-if="sortableColumns.includes(col.name)" @click="onSort(col)" class="align-center">
               {{ col.label }}
               <q-icon :name="sortDesc[col.name] ? 'arrow_downward' : 'arrow_upward'" size="14px"
-                class="q-ml-xs" color="copper-grey-500" />
+                class="q-ml-xs" color="petrol-60" />
             </div>
             <template v-else>
               {{ col.label }}
@@ -305,13 +305,13 @@ export default {
     const getStatusClass = (status) => {
       switch (status) {
         case PENDING:
-          return 'orange-chip';
+          return 'cream-chip';
         case RECEIVED:
           return 'green-chip';
         case CANCELLED:
           return 'red-chip';
         default:
-          return 'peach-chip';
+          return 'bright-orange-chip';
       }
     };
 

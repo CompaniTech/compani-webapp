@@ -107,7 +107,7 @@ export default {
 
 .chevron
   background-color: white
-  border: 1px solid $copper-grey-300
+  border: 1px solid $navy-20
   top: 5px
   position: fixed
   z-index: 5000
@@ -119,7 +119,7 @@ export default {
     display: none
 
 .q-btn
-  color: $copper-grey-800
+  color: $navy
   &:hover
     color: $primary
 

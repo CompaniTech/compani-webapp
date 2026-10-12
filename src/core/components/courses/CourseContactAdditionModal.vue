@@ -3,7 +3,7 @@
     <template #title>
        Ajouter un <span class="text-weight-bold">contact pour la formation</span>
     </template>
-    <div class="text-copper-grey-600">
+    <div class="text-navy-70">
       C'est le contact donné aux stagiaires s'ils ont des questions pratiques concernant la formation
     </div>
       <ni-option-group in-modal :model-value="contact" @update:model-value="update" type="radio"

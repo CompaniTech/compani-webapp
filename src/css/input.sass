@@ -1,7 +1,7 @@
 .input-caption
   font-size: 12px
   margin: 0 0 4px 0
-  color: $copper-grey-500
+  color: $petrol-80
 
 .margin-input
   margin-bottom: 6px
@@ -34,19 +34,26 @@
 
 .modal-padding
   .q-field__control
-    border: 1px solid $copper-grey-300
+    border: 1px solid $navy-20
     border-radius: 3px
   &-parent
-    border: 1px solid $copper-grey-300
+    border: 1px solid $navy-20
     border-radius: 3px
 
 .borders
   .q-field__control
-    border: 1px solid $copper-grey-300
+    border: 1px solid $navy-20
     border-radius: 3px
   &-parent
-    border: 1px solid $copper-grey-300
+    border: 1px solid $navy-20
     border-radius: 3px
+
+.q-field__native, .q-field__input, .q-field__prefix, .q-field__suffix
+  color: $petrol
+
+.q-field__native::placeholder, .q-field__input::placeholder
+  color: $navy-70
+  opacity: 1
 
 .no-border > .q-field__inner > .q-field__control
   border: none !important

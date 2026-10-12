@@ -69,7 +69,7 @@ export default {
 div
   white-space: pre-wrap
 .container
-  background-color: $copper-grey-50
+  background-color: $turquoise-10
   margin: 0px 0px 16px 0px
   padding: 8px
   word-break: break-word

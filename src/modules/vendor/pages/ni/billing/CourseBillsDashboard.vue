@@ -15,10 +15,10 @@
         @update="updateSelectedCompany" />
     </div>
     <ni-select v-model="selectedTypes" multiple caption="Type" :options="typeOptions" clearable />
-    <q-card v-if="filteredValidatedBills.length" class="q-px-md q-py-sm bg-peach-200">
-      <q-item-section @click="showDetails(VALIDATED)" class="cursor-pointer details row copper-grey-700">
+    <q-card v-if="filteredValidatedBills.length" class="q-px-md q-py-sm bg-ice-blue">
+      <q-item-section @click="showDetails(VALIDATED)" class="cursor-pointer details row navy-80">
         {{ showValidatedCourseBills ? 'Masquer' : 'Afficher' }} les factures validées
-        <q-icon size="xs" :name="showValidatedCourseBills ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
+        <q-icon size="xs" :name="showValidatedCourseBills ? 'expand_less' : 'expand_more'" color="navy-80" />
       </q-item-section>
       <div v-show="showValidatedCourseBills">
         <div v-for="bill of filteredValidatedBills" :key="bill._id">
@@ -28,11 +28,11 @@
         </div>
       </div>
     </q-card>
-    <q-card v-if="filteredBillsWithoutCourseActions.length" class="q-px-md q-py-sm bg-peach-200 q-mt-md">
-      <q-item-section @click="showDetails(WITHOUT_COURSE_ACTIONS)" class="cursor-pointer details row copper-grey-700">
+    <q-card v-if="filteredBillsWithoutCourseActions.length" class="q-px-md q-py-sm bg-ice-blue q-mt-md">
+      <q-item-section @click="showDetails(WITHOUT_COURSE_ACTIONS)" class="cursor-pointer details row navy-80">
         {{ showCourseBillsWithoutCourseActions ? 'Masquer' : 'Afficher' }} les factures sans action de formation
         <q-icon size="xs" :name="showCourseBillsWithoutCourseActions ? 'expand_less' : 'expand_more'"
-          color="copper-grey-700" />
+          color="navy-80" />
       </q-item-section>
       <div v-show="showCourseBillsWithoutCourseActions">
         <div v-for="bill of filteredBillsWithoutCourseActions" :key="bill._id">
@@ -43,11 +43,11 @@
         </div>
       </div>
     </q-card>
-    <q-card v-if="filteredBillsFromInterruptedCourses.length" class="q-px-md q-py-sm bg-peach-200 q-mt-md">
-      <q-item-section @click="showDetails(INTERRUPTED_COURSES)" class="cursor-pointer details row copper-grey-700">
+    <q-card v-if="filteredBillsFromInterruptedCourses.length" class="q-px-md q-py-sm bg-ice-blue q-mt-md">
+      <q-item-section @click="showDetails(INTERRUPTED_COURSES)" class="cursor-pointer details row navy-80">
         {{ showCourseBillsFromInterruptedCourses ? 'Masquer' : 'Afficher' }} les factures des formations en pause
         <q-icon size="xs" :name="showCourseBillsFromInterruptedCourses ? 'expand_less' : 'expand_more'"
-          color="copper-grey-700" />
+          color="navy-80" />
       </q-item-section>
       <div v-show="showCourseBillsFromInterruptedCourses">
         <div v-for="bill of filteredBillsFromInterruptedCourses" :key="bill._id">

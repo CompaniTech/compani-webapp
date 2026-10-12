@@ -4,14 +4,14 @@
       {{ formatQuantity('Nouvelle', billsQuantity, 's', false) }}
       <span class="text-weight-bold">{{ formatQuantity('facture', billsQuantity, 's', false) }}</span>
     </template>
-    <ni-banner v-if="!get(course, 'trainers', []).some(t => t._id)" class="bg-orange-100" icon="warning">
+    <ni-banner v-if="!get(course, 'trainers', []).some(t => t._id)" class="bg-cream" icon="warning">
       <template #message>
         Les intervenant·e·s ne sont pas renseigné·e·s et ne figureront pas dans la description des factures.
       </template>
     </ni-banner>
     <div>{{ courseName }} </div>
     <div class="course-bill-infos">
-      <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <ni-banner class="bg-turquoise-10 q-mt-sm" icon="info_outline">
         <template #message>Facture pour le compte de {{ companiesName }}</template>
       </ni-banner>
       <div v-if="course.type === INTRA">{{ traineesQuantityInfos }} </div>
@@ -53,7 +53,7 @@
         <ni-date-input caption="Date de 1ère facturation" :model-value="newBill.maturityDate" in-modal required-field
           :error="validations.maturityDate.$error" @blur="validations.maturityDate.$touch"
           @update:model-value="update($event, 'maturityDate')" />
-        <ni-banner v-if="!!newBill.maturityDate" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+        <ni-banner v-if="!!newBill.maturityDate" class="bg-turquoise-10 q-mt-sm" icon="info_outline">
           <template #message>
             Une facture sera créée le {{ CompaniDate(newBill.maturityDate).format('dd') }} de chaque mois, pendant
             {{ billsQuantity }} mois, à compter du {{ CompaniDate(newBill.maturityDate).format(DD_MM_YYYY) }}.

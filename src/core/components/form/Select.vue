@@ -151,7 +151,7 @@ export default {
 :deep(.q-field__inner)
   height: auto
 :deep(.q-chip)
-  background-color: $copper-grey-400
+  background-color: $petrol-60
   padding: 0 8px
   min-height: 26px
   color: white

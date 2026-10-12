@@ -140,7 +140,7 @@ export default {
 <style lang="sass" scoped>
 .datetime-container
   width: 100%
-  border: 1px solid $copper-grey-300
+  border: 1px solid $navy-20
   border-radius: 3px
   @media screen and (min-width: 768px)
     flex-wrap: nowrap
@@ -183,7 +183,7 @@ export default {
 
 .delimiter
   margin: 0
-  color: $copper-grey-700
+  color: $navy-80
   @media screen and (max-width: 767px)
     display: none
 </style>

@@ -3,7 +3,7 @@
     <q-card class="cell-container" flat>
       <q-card-section class="title">{{ title }}</q-card-section>
       <q-card-section>
-        <ni-rating v-if="answer" readonly :model-value="answer" :icon="icon" color="copper-grey-500" :labels="labels" />
+        <ni-rating v-if="answer" readonly :model-value="answer" :icon="icon" color="petrol-60" :labels="labels" />
         <div class="answer" v-else>Pas de note</div>
       </q-card-section>
     </q-card>
@@ -53,15 +53,15 @@ export default {
   flex: 1
   flex-direction: column
   align-items: center
-  background-color: $peach-100
+  background-color: $bright-orange-10
   border-radius: 8px
 .answer
   font-size: 16px
   font-style: italic
-  color: $copper-grey-500
+  color: $petrol-80
   padding: 16px 0px
 .title
-  color: $copper-grey-700
+  color: $navy-80
   font-size: 20px
   padding: 4px 0px
 </style>

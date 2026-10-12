@@ -241,5 +241,5 @@ export default {
   height: 35px
 .border
   @media screen and (min-width: 767px)
-    border-top: 1px solid $copper-grey-200
+    border-top: 1px solid $petrol-10
 </style>

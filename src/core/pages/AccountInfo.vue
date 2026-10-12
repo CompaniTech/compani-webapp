@@ -24,7 +24,7 @@
               :error-message="emailError(v$.userProfile)" v-model.trim="userProfile.local.email" required-field />
           </div>
           <div :class="['col-1', 'row', 'justify-end', { 'cursor-pointer': emailLock }]">
-            <ni-button :icon="lockIcon" @click="toggleEmailLock(!emailLock)" color="copper-grey-500" />
+            <ni-button :icon="lockIcon" @click="toggleEmailLock(!emailLock)" color="petrol-60" />
           </div>
         </div>
         <div class="col-xs-12 col-md-6">
@@ -32,12 +32,12 @@
         </div>
       </div>
       <div class="account-button">
-        <ni-button @click="newPasswordModal = true" color="white" class="bg-copper-500" icon="mdi-lock-reset"
+        <ni-button @click="newPasswordModal = true" color="white" class="bg-petrol" icon="mdi-lock-reset"
           label="Modifier mon mot de passe" />
       </div>
       <q-separator class="q-my-lg" />
       <div class="account-button">
-        <ni-button color="white" class="bg-copper-500 q-mb-md" @click="logout" icon="logout" label="Déconnexion" />
+        <ni-button color="white" class="bg-petrol q-mb-md" @click="logout" icon="logout" label="Déconnexion" />
         <ni-button size="16px" href="https://www.compani.fr/cgu-cgv" label="Conditions générales d’utilisation"
           type="a" />
         <ni-button size="16px" type="a" href="https://www.compani.fr/rgpd" label="Politique RGPD" />

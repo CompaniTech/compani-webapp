@@ -20,7 +20,7 @@
             :disable="emailLock" v-model.trim="userProfile.local.email" @focus="saveTmp('local.email')" />
         </div>
         <div :class="['col-xs-1', 'row', 'justify-end', { 'cursor-pointer': emailLock }]">
-          <ni-button color="copper-grey-500" :icon="lockIcon" @click="toggleEmailLock(!emailLock)" />
+          <ni-button color="petrol-60" :icon="lockIcon" @click="toggleEmailLock(!emailLock)" />
         </div>
       </div>
       <div class="col-xs-12 col-md-6">

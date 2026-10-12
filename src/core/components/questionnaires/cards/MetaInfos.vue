@@ -56,11 +56,11 @@ export default {
   padding: 0 0 16px 0
 .title
   text-align: center
-  color: $copper-grey-700
+  color: $navy-80
   @media screen and (max-width: $breakpoint-md)
     font-size: 20px
 .items-container
-  color: $copper-grey-600
+  color: $navy-70
   display: flex
   flex-direction: row
   justify-content: center
@@ -70,12 +70,12 @@ export default {
   padding: 16px 0px
   text-align: center
   font-weight: bold
-  color: $copper-grey-700
+  color: $navy-80
   @media screen and (max-width: $breakpoint-md)
     font-size: 16px
 .trainee-identity
   font-style: italic
   font-size: 14px
-  color: $copper-grey-500
+  color: $petrol-80
   text-align: center
 </style>

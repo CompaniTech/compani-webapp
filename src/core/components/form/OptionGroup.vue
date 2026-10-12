@@ -142,7 +142,7 @@ export default {
 .required::after
   content: ' *'
 :deep(.q-option-group)
-  color: $copper-grey-700 !important
+  color: $navy-80 !important
   .q-radio
     padding: 10px 0 !important
     .q-radio__label

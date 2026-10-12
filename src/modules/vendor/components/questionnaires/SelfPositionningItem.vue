@@ -106,7 +106,7 @@ export default {
 <style lang="sass" scoped>
 .title
   font-size: 16px
-  color: $copper-grey-700
+  color: $navy-80
 .answers
   display: flex
   flex-direction: row

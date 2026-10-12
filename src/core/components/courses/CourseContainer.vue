@@ -7,8 +7,6 @@
 
 <script>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { CLIENT, VENDOR } from '@data/constants';
 import CourseCell from '@components/courses/CourseCell';
 
 export default {
@@ -21,9 +19,6 @@ export default {
     'course-cell': CourseCell,
   },
   setup () {
-    const $router = useRouter();
-    const interfaceType = /\/ad\//.test($router.currentRoute.value.path) ? VENDOR : CLIENT;
-
     const cellRefs = ref([]);
 
     const courseCounter = computed(() => cellRefs.value
@@ -33,7 +28,7 @@ export default {
 
     return {
       // Data
-      backgroundClass: interfaceType === CLIENT ? 'bg-copper-grey-200' : 'bg-peach-200',
+      backgroundClass: 'bg-petrol-10',
       cellRefs,
       // Computed
       courseCounter,

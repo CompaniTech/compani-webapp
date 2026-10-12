@@ -31,6 +31,6 @@ export default {
 .section-title
   font-size: 24px
   font-weight: bold
-  color: $copper-grey-700
+  color: $navy-80
   margin: 24px 16px
 </style>

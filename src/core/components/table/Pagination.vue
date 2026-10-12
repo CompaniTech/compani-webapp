@@ -1,5 +1,5 @@
 <template>
-  <div class="row justify-between full-width text-copper-grey-600">
+  <div class="row justify-between full-width text-navy-70">
     <div class="row items-center">
       <q-btn-toggle class="on-left no-shadow" :model-value="rowsPerPage" :options="rowsPerPageOptions" dense size="12px"
         toggle-text-color="primary" toggle-color="white" @update:model-value="update($event, 'rowsPerPage')" no-caps />
@@ -84,9 +84,9 @@ export default {
 <style lang="sass" scoped>
 :deep(.q-btn-group)
   & > .q-btn-item:first-child
-    border: 1px solid $copper-grey-300
+    border: 1px solid $navy-20
   & > .q-btn-item:not(:first-child)
-    border: 1px solid $copper-grey-300
+    border: 1px solid $navy-20
     border-left: none
   & > .q-btn-item:last-child
     font-weight: bold

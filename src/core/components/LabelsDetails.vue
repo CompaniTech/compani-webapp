@@ -3,7 +3,7 @@
     <q-card class="container clickable cursor-pointer" flat>
       <q-item-section @click="showDetails()" class="header">
         {{ showLabels ? 'Cacher' : 'Afficher' }} le détail des légendes
-        <q-icon size="xs" :name="iconName" color="copper-grey-700" />
+        <q-icon size="xs" :name="iconName" color="navy-80" />
       </q-item-section>
       <div v-if="showLabels" class="q-pb-md">
         <template v-for="labelKey of Object.keys(labels)" :key="labelKey">
@@ -49,7 +49,7 @@ export default {
   padding: 16px
 .container
   margin: 16px 0px
-  background-color: $copper-grey-100
+  background-color: $turquoise-10
 .header
   display: flex
   flex-direction: row
@@ -58,5 +58,5 @@ export default {
 .label
   padding: 4px 32px
   font-size: 14px
-  color: $copper-grey-500
+  color: $petrol-80
 </style>

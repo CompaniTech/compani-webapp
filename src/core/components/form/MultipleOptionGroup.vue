@@ -7,7 +7,7 @@
       </div>
       <div v-for="(options, index) in optionsGroups" :key="index">
         <div class="group-title">
-          <q-icon v-if="groupTitles[index].icon" :name="groupTitles[index].icon" size="sm" color="copper-grey-500"
+          <q-icon v-if="groupTitles[index].icon" :name="groupTitles[index].icon" size="sm" color="petrol-60"
             class="q-mr-xs" />
           <div class="text-weight-bold">{{ groupTitles[index].label }}</div>
         </div>
@@ -54,7 +54,7 @@ export default {
 .required::after
   content: ' *'
 :deep(.q-option-group)
-  color: $copper-grey-700 !important
+  color: $navy-80 !important
   .q-radio
     padding: 10px 6px !important
     .q-radio__label

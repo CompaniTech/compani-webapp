@@ -4,7 +4,7 @@
       <img v-if="request.user.picture" :src="request.user.picture.link" class="avatar">
       <img v-else :src="DEFAULT_AVATAR" class="default-avatar q-my-sm">
     </div>
-    <p class="text-copper-grey-700 text-weight-bold q-ma-md">
+    <p class="text-navy-80 text-weight-bold q-ma-md">
       {{ formatIdentity(request.user.identity, 'FL') }}
     </p>
     <div class="column q-ma-sm">
@@ -69,7 +69,7 @@ export default {
             <img class="avatar q-mx-md" src="${getAvatar(request.value.user.picture)}"/>
             <div>
               <div>${formatIdentity(request.value.user.identity, 'FL')}</div>
-              <div style="font-size: 14px" class="text-copper-grey-500">${request.value.user.local.email}</div>
+              <div style="font-size: 14px" class="text-petrol-80">${request.value.user.local.email}</div>
             </div>
           </div>
         En l’ajoutant, vous confirmez que vous êtes employeur de cette personne.<br />
@@ -89,7 +89,7 @@ export default {
             <img class="avatar q-mx-md" src="${getAvatar(request.value.user.picture)}"/>
             <div>
               <div>${formatIdentity(request.value.user.identity, 'FL')}</div>
-              <div style="font-size: 14px" class="text-copper-grey-500">${request.value.user.local.email}</div>
+              <div style="font-size: 14px" class="text-petrol-80">${request.value.user.local.email}</div>
             </div>
           </div>
         Vous ne pourrez pas avoir accès à son historique de formation sur Compani.`,
@@ -121,7 +121,7 @@ export default {
   background-color: white
 .avatar-container
   height: 120px
-  background-color: $copper-grey-50
+  background-color: $turquoise-10
   display: flex
   justify-content: center
   border-radius: 8px 8px 0px 0px

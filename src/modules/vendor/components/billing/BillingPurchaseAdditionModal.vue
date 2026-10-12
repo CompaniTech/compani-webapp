@@ -6,7 +6,7 @@
     </template>
     <div class="course-bill-infos">
       <div>{{ courseName }} </div>
-      <ni-banner v-if="!isCourseFee" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <ni-banner v-if="!isCourseFee" class="bg-turquoise-10 q-mt-sm" icon="info_outline">
         <template #message>Facture pour le compte de {{ companiesName }}</template>
       </ni-banner>
     </div>

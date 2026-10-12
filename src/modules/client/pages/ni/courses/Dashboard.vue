@@ -1,8 +1,8 @@
 <template>
   <q-page class="client-background" padding>
     <ni-title-header title="La formation Compani dans ma structure" />
-    <div v-if="linkRequests.length" class="bg-yellow-100 q-my-md q-pa-md">
-      <p class="text-orange-900 text-weight-bold">Demandes de rattachement à ma structure</p>
+    <div v-if="linkRequests.length" class="bg-cream q-my-md q-pa-md">
+      <p class="text-navy-80 text-weight-bold">Demandes de rattachement à ma structure</p>
       <div class="request-container">
         <company-link-request-cell v-for="request in linkRequests" :key="request._id" :request="request"
           @click="refreshCompanyLinkRequests" />
@@ -13,7 +13,7 @@
       <ni-date-range v-model="dates" class="dates" borders />
     </div>
     <q-card flat class="q-pa-md row">
-      <div class="text-weight-bold q-mb-sm col-md-4 col-xs-12 text-copper-grey-700">Le eLearning dans ma structure</div>
+      <div class="text-weight-bold q-mb-sm col-md-4 col-xs-12 text-navy-80">Le eLearning dans ma structure</div>
       <div class="row justify-around col-md-8 col-xs-12">
         <div class="column items-center">
           <ni-indicator :indicator="activeLearners" />
@@ -28,16 +28,16 @@
     <div class="row q-mt-md">
       <div class="col-xs-12 col-md-6 left-card">
         <q-card flat class="fit q-pa-md">
-          <div class="text-weight-bold q-mb-sm text-copper-grey-700">Apprenants les plus assidus</div>
+          <div class="text-weight-bold q-mb-sm text-navy-80">Apprenants les plus assidus</div>
           <div class="row justify-end">
-            <div class="col-4 text-copper-grey-500 text-center">Activités eLearning réalisées</div>
+            <div class="col-4 text-petrol-80 text-center">Activités eLearning réalisées</div>
           </div>
           <div v-for="(learner, index) in learnerList.slice(0, 5)" :key="learner._id"
             class="justify-between items-center row q-my-sm">
             <div class="flex no-wrap items-center col-8">
               <ni-indicator :indicator="index + 1" />
               <img class="q-mx-md avatar" :src="learner.picture ? learner.picture.link : DEFAULT_AVATAR">
-              <div class="text-copper-grey-800">{{ formatIdentity(learner.identity, 'FL') }}</div>
+              <div class="text-navy">{{ formatIdentity(learner.identity, 'FL') }}</div>
             </div>
             <div class="col-4 text-center">{{ learner.activityCount }}</div>
           </div>
@@ -45,15 +45,15 @@
       </div>
       <div class="col-xs-12 col-md-6 right-card">
         <q-card flat class="fit q-pa-md">
-          <div class="text-weight-bold q-mb-sm text-copper-grey-700">Formations les plus suivies</div>
+          <div class="text-weight-bold q-mb-sm text-navy-80">Formations les plus suivies</div>
           <div class="row justify-end">
-            <div class="col-4 text-copper-grey-500 text-center">Nombre d'apprenants actifs</div>
+            <div class="col-4 text-petrol-80 text-center">Nombre d'apprenants actifs</div>
           </div>
           <div v-for="(course, index) in courseList.slice(0, 5)" :key="course.name"
             class="justify-between items-center row q-my-sm">
             <div class="flex no-wrap items-center col-8">
               <ni-indicator :indicator="index + 1" />
-              <div class="q-mx-md text-copper-grey-800">{{ upperCaseFirstLetter(course.name) }}</div>
+              <div class="q-mx-md text-navy">{{ upperCaseFirstLetter(course.name) }}</div>
             </div>
             <div class="col-4 text-center">{{ course.activeTraineesCount }}</div>
           </div>
@@ -225,7 +225,7 @@ export default {
 
 .section-title
   font-size: 24px
-  color: $copper-grey-900
+  color: $navy
 .request-container
   flex-direction: row
   grid-auto-flow: row

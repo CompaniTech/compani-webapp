@@ -101,7 +101,7 @@ export default {
   max-width: 100%
 
 .date-container-borders
-  border: solid 1px $copper-grey-300
+  border: solid 1px $navy-20
   border-radius: 3px
 
 :deep(.q-field__append)
@@ -118,7 +118,7 @@ export default {
   background-color: white
   & .delimiter
     margin: 0
-    color: $copper-grey-700
+    color: $navy-80
   :deep(.q-field__control)
     border: none !important
 

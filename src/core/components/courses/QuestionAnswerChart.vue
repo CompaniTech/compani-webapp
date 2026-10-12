@@ -8,7 +8,7 @@
     <div class="q-mb-lg subtitle">{{ subtitle }}</div>
     <div v-for="(line, index) in lines" :key="index" class="q-mt-sm bar-container">
       <div class="q-mr-sm percentage">{{ formatPercentage(line.percentage) }}</div>
-      <q-linear-progress size="40px" :value="line.percentage" rounded class="text-peach-200 bg-peach-100">
+      <q-linear-progress size="40px" :value="line.percentage" rounded class="text-petrol bg-bright-orange-10">
         <div class="bar-label">
           <div>{{ line.title }}</div>
           <div><span class="text-weight-bold">{{ line.total }}</span> réponses</div>
@@ -18,7 +18,7 @@
     <ni-table-list v-if="otherAnswers.length" :data="otherAnswers" :columns="columns" v-model:pagination="pagination"
       hide-header disabled :rows-per-page-options="rowsPerPageOptions">
       <template #body="{ col }">
-        <q-item-section class="bg-peach-100 answer">{{ col.value }}</q-item-section>
+        <q-item-section class="bg-bright-orange-10 answer">{{ col.value }}</q-item-section>
       </template>
     </ni-table-list>
   </q-card>
@@ -102,7 +102,7 @@ export default {
   margin: 8px 0px 0px 0px
 
 .subtitle
-  color: $copper-grey-800
+  color: $navy
   font-size: 14px
 
 .percentage
@@ -119,7 +119,7 @@ export default {
 .bar-label
   font-size: 14px
   position: absolute
-  color: $copper-grey-700
+  color: $navy-80
   display: flex
   justify-content: space-between
   width: 100%
@@ -140,5 +140,5 @@ export default {
       .q-item__section--main
         font-size: 12px
   & .q-btn-toggle
-    background-color: $copper-grey-100
+    background-color: $turquoise-10
 </style>

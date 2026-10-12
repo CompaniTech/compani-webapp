@@ -62,9 +62,9 @@ export default {
 
 .program
   border-radius: 0
-  background-color: $copper-grey-100
+  background-color: $turquoise-10
 
 .sub-program
   border-radius: 0
-  background-color: $copper-grey-300
+  background-color: $navy-20
 </style>

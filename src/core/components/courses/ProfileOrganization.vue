@@ -22,7 +22,7 @@
       <ni-banner v-if="!get(course, 'contact._id')">
         <template #message>Vous n’avez pas renseigné le contact de la formation.</template>
       </ni-banner>
-      <div v-if="isClientInterface" class="text-italic text-copper-grey-500 q-mb-md">
+      <div v-if="isClientInterface" class="text-italic text-petrol-80 q-mb-md">
         Des questions sur votre parcours de formation ou sur la facturation ? Retrouvez vos contacts Compani sur
         <a class="clickable-name cursor-pointer" @click="goToContactProfile">la page dédiée</a> .
       </div>

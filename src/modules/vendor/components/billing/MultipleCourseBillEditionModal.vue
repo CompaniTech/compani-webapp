@@ -5,11 +5,11 @@
     </template>
     <div class="course-bill-infos">
       <div>{{ courseInfos.courseName }} </div>
-      <ni-banner v-if="severalPayers" class="bg-copper-grey-100 q-mt-sm" icon="warning">
+      <ni-banner v-if="severalPayers" class="bg-turquoise-10 q-mt-sm" icon="warning">
         <template #message>Les payeurs des factures sélectionnées sont différents.</template>
       </ni-banner>
       <div v-for="companies of courseInfos.companiesName" :key="companies">
-        <ni-banner class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+        <ni-banner class="bg-turquoise-10 q-mt-sm" icon="info_outline">
           <template #message>Facture pour le compte de {{ companies }}</template>
         </ni-banner>
       </div>
@@ -27,7 +27,7 @@
           :error-message="getPriceErrorMessage()" />
         <ni-secondary-button v-else label="Éditer le prix" icon="edit" class="full-width modal-btn q-my-sm"
           @click="update('', 'mainFee.price')" />
-        <ni-banner v-if="severalBillsToEdit && maturityDateDiffMessage" class="bg-copper-grey-100 q-mt-sm"
+        <ni-banner v-if="severalBillsToEdit && maturityDateDiffMessage" class="bg-turquoise-10 q-mt-sm"
           icon="info_outline">
           <template #message>{{ maturityDateDiffMessage }}</template>
         </ni-banner>

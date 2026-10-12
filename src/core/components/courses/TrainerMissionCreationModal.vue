@@ -246,7 +246,7 @@ export default {
     min-height: 32px !important
     width: 100% !important
     min-width: 0 !important
-    border: 1px solid $copper-grey-300 !important
+    border: 1px solid $navy-20 !important
     border-radius: 3px !important
     background-color: white
 </style>

@@ -37,7 +37,7 @@ export default {
   border-radius: 8px
 .type
   font-size: 14px
-  color: $copper-grey-800
+  color: $navy
 .name
   word-break: break-word
   height: 48px
@@ -45,6 +45,6 @@ export default {
   border-radius: 8px
   width: 100px
   text-align: center
-  color: $copper-grey-800
-  background-color: $copper-grey-300
+  color: $navy
+  background-color: $navy-20
 </style>

@@ -111,7 +111,7 @@ export default {
 
 .duration-container
   :deep(.q-field__control)
-    border: 1px solid $copper-grey-300 !important
+    border: 1px solid $navy-20 !important
     border-radius: 3px !important
   :deep(.q-field--with-bottom)
     padding: 0

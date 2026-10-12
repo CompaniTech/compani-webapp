@@ -12,10 +12,10 @@
                 {{ col.value }}
               </div>
               <div class="row items-center" v-if="props.row.courseCreditNote">
-                <q-icon size="12px" name="fas fa-times-circle" color="orange-500" />
-                <div class="q-ml-xs text-orange-500">
+                <q-icon size="12px" name="fas fa-times-circle" color="bright-orange" />
+                <div class="q-ml-xs text-navy-80">
                   Annulée par avoir -
-                  <span class="clickable-name text-orange-500 cursor-pointer"
+                  <span class="clickable-name cursor-pointer"
                     @click.stop="downloadCreditNote(props.row.courseCreditNote)">
                     {{ props.row.courseCreditNote.number }}
                   </span>
@@ -156,5 +156,5 @@ export default {
 .sending-dates
   width: 10%
   padding: 4px
-  color: $copper-500
+  color: $petrol
 </style>

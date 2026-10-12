@@ -3,7 +3,7 @@
     <div class="q-mb-xl">
       <q-item class="slot-section-title">
         <q-item-section side>
-          <q-icon color="copper-grey-700" size="xl" :name="formatSlotTitle.icon" flat dense />
+          <q-icon color="navy-80" size="xl" :name="formatSlotTitle.icon" flat dense />
         </q-item-section>
         <q-item-section>
           <div class="text-weight-bold">{{ formatSlotTitle.title }}</div>
@@ -16,15 +16,15 @@
           @blur="updateEstimatedStartDate" :disabled="course.archivedAt" />
       </div>
       <q-card class="q-pa-md">
-        <q-item-section @click="showStepDetails" class="slots cursor-pointer bg-copper-grey-50 copper-grey-700">
+        <q-item-section @click="showStepDetails" class="slots cursor-pointer bg-petrol-10 navy-80">
           {{ showStepList ? 'Masquer' : 'Afficher' }} la liste des étapes de la formation
-          <q-icon size="xs" :name="showStepList ? 'expand_less' : 'expand_more'" color="copper-grey-700" />
+          <q-icon size="xs" :name="showStepList ? 'expand_less' : 'expand_more'" color="navy-80" />
         </q-item-section>
         <div v-if="isRofOrVendorAdmin && isVendorInterface" class="q-px-md q-pt-sm" align="right">
           <ni-button label="Importer des créneaux" color="primary" icon="upload" :disable="loading"
             @click="openSlotsCsvUploadModal" />
         </div>
-        <div v-if="showStepList" class="bg-copper-grey-50 q-px-md">
+        <div v-if="showStepList" class="q-px-md">
           <q-item-section v-for="(step, index) in stepList" :key="step.key" class="q-pb-sm flex">
             <div :class="getStepClass(step)">
               <div v-if="isStepToPlan(step) && !isEmptyStep(step)" class="to-plan-header">Créneaux à programmer</div>
@@ -65,7 +65,7 @@
                           {{ !slot.meetingLink ? 'Lien vers la visio non renseigné' : '' }}
                         </div>
                         <div class="items-center">
-                          <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
+                          <q-icon v-if="canEdit" name="edit" size="12px" color="petrol-60" />
                         </div>
                       </div>
                       <div v-if="slot.trainees" class="text-italic text-12 q-mb-md">
@@ -79,13 +79,13 @@
                   class="q-mx-md">
                   <div @click="openEditionModal(get(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY)[0])"
                     :class="['to-plan-slot q-mb-sm', canEdit && 'to-plan-slot-container cursor-pointer hover-orange']">
-                    <div class="clickable-name text-orange-500 q-mr-md">créneau à planifier</div>
-                    <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
+                    <div class="clickable-name q-mr-md">créneau à planifier</div>
+                    <q-icon v-if="canEdit" name="edit" size="12px" color="petrol-60" />
                   </div>
                   <div v-if="get(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY).length - 1"
-                    class="q-mx-lg bg-peach-100">
+                    class="q-mx-lg bg-bright-orange-10">
                     <q-item-section @click="() => showSlotToPlanDetails(step.key)" class="slots cursor-pointer">
-                      <span class="text-orange-500">
+                      <span class="text-navy-80">
                         {{ showSlotToPlan[step.key] ? 'Masquer' : 'Afficher' }} les autres créneaux à planifier
                         ({{ get(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY).length - 1 }})
                       </span>
@@ -96,8 +96,8 @@
                       <div v-for="slot in tail(get(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY))" :key="slot._id"
                         :class="['to-plan-slot', canEdit && 'cursor-pointer hover-orange']"
                         @click="openEditionModal(slot)">
-                        <div class="clickable-name text-orange-500 q-mr-md">créneau à planifier</div>
-                        <q-icon v-if="canEdit" name="edit" size="12px" color="copper-grey-500" />
+                        <div class="clickable-name q-mr-md">créneau à planifier</div>
+                        <q-icon v-if="canEdit" name="edit" size="12px" color="petrol-60" />
                       </div>
                     </div>
                   </div>
@@ -789,29 +789,29 @@ export default {
     @media screen and (max-width: 767px)
       font-size: 13px
 .type
-  background-color: $copper-grey-100
+  background-color: $turquoise-10
   border-radius: 15px
   padding: 2px 6px
   width: fit-content
 .planned
-  background-color: $copper-100
+  background-color: $turquoise-40
   border-radius: 15px
   padding-bottom: 16px
 .to-plan
-  background-color: $orange-100
+  background-color: $cream
   border-radius: 15px
   padding-bottom: 16px
 .to-plan-header
-  background-color: $orange-200
+  background-color: $bright-orange-10
   padding: 8px 16px
   border-radius: 15px 15px 0px 0px
-  color: $orange-900
+  color: $navy-80
 .slots
   flex-direction: row
   justify-content: space-between
   padding: 16px
 .index
-  background-color: $copper-500
+  background-color: $petrol
   border-radius: 50%
   width: 20px
   height: 20px
@@ -822,10 +822,10 @@ export default {
   font-size: 12px
 .hover-orange
   &:hover
-    background-color: rgba(192, 86, 33, 0.1)
+    background-color: $bright-orange-10
 .hover-blue
   &:hover
-    background-color: rgba(69, 165, 173, 0.1)
+    background-color: $turquoise-10
 .slots-container
    @media screen and (min-width: 767px)
     margin-left: 32px

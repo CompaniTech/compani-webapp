@@ -46,18 +46,18 @@
                 <div class="text-primary date">{{ col.month }}</div>
                 <div class="number">{{ col.day }}</div>
                 <div class="text-weight-bold date">{{ col.weekDay }}</div>
-                <div class="text-copper-grey-400">
+                <div class="text-petrol-80">
                   <div>{{ col.startHour }}</div>
                   <div>{{ col.endHour }}</div>
                 </div>
-                <div class="text-copper-grey-800">
+                <div class="text-navy">
                   <q-icon name="supervisor_account" />
                   {{ traineesCount(col.slot) }}
                 </div>
                 <template v-if="slotCheckboxValue(col.slot, col.trainees, MISSING)">
                   <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="true" dense size="sm"
                     @update:model-value="updateSlotCheckbox(col.slot, col.trainees)" :disable="disableCheckbox"
-                    checked-icon="mdi-alert-box" color="orange-500" />
+                    checked-icon="mdi-alert-box" color="bright-orange" />
                 </template>
                 <template v-else>
                   <q-checkbox v-if="canUpdate && course.trainees.length" :disable="disableCheckbox"
@@ -86,7 +86,7 @@
               <q-checkbox v-else-if="attendanceCheckboxValue(col.value, col.slot, MISSING)" :model-value="true" dense
                 size="sm" @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
                 :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)"
-                checked-icon="mdi-alert-box" color="orange-500" />
+                checked-icon="mdi-alert-box" color="bright-orange" />
               <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot, PRESENT)" dense size="sm"
                 @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
                 :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)" />
@@ -105,7 +105,7 @@
         @click="openTraineeAttendanceAdditionModal" />
       <div class="q-pa-md text-14">
         <span><q-icon name="mdi-checkbox-marked" color="primary" class="q-py-xs" />1 clic : présent / </span>
-        <span><q-icon name="mdi-alert-box" color="orange-500" class="q-py-xs" /> 2 clics : absent / </span>
+        <span><q-icon name="mdi-alert-box" color="bright-orange" class="q-py-xs" /> 2 clics : absent / </span>
         <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
       </div>
     </q-card>
@@ -503,17 +503,17 @@ export default {
   td:first-child
     background-color: white
   th
-    border-right: 1px solid $copper-grey-200
+    border-right: 1px solid $petrol-10
   tr:first-child
     td:first-child
       .rows
-        border-top: 1px solid $copper-grey-200
+        border-top: 1px solid $petrol-10
         padding-top: 8px
         margin-right: 16px
   tr:last-child
     td:first-child
       .rows
-        border-bottom: 1px solid $copper-grey-200
+        border-bottom: 1px solid $petrol-10
         padding-bottom: 8px
         margin-right: 16px
   td:first-child, th:first-child
@@ -522,14 +522,15 @@ export default {
     z-index: 1
 
 .unsubscribed
-  color: $secondary
+  color: $navy-80
+  font-style: italic
   line-height: 1
   font-size: 11px
   font-style: italic
   padding-top: 3px
 
 .unsubscribed-delimiter
-  border-top: 1px solid $copper-grey-200
+  border-top: 1px solid $petrol-10
   padding-top: 16px
 
 .last-subscribed-interline

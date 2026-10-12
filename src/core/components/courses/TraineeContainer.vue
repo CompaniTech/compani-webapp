@@ -522,7 +522,7 @@ export default {
   width: fit-content
   cursor: default
 .company
-  border-top: 1px solid $copper-grey-200
+  border-top: 1px solid $petrol-10
   width: 100vw
   padding-top: 8px
 .no-data

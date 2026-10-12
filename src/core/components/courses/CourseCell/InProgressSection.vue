@@ -49,7 +49,7 @@ export default {
 .slots
   height: 10px
   flex: 1
-  background-color: $copper-300
+  background-color: $turquoise
   &-happened
     background-color: $primary
   &-to-plan

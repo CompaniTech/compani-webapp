@@ -1,5 +1,5 @@
 <template>
-  <q-btn no-caps color="primary" :class="buttonClass" :label="label" :icon="buttonIcon" :icon-right="iconRight"
+  <q-btn no-caps color="petrol" :class="buttonClass" :label="label" :icon="buttonIcon" :icon-right="iconRight"
     @click="click" :rounded="floatingButton" :disable="disable" :loading="loading" :unelevated="!floatingButton" />
 </template>
 

@@ -141,7 +141,7 @@ export default {
 .step-prices-block
   padding-bottom: 16px
   margin-bottom: 16px
-  border-bottom: 1px solid $copper-grey-200
+  border-bottom: 1px solid $petrol-10
   &:last-child
     border-bottom: none
     margin-bottom: 0

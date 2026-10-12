@@ -17,7 +17,7 @@
         </div>
       </div>
       <div class="name ellipsis-2-lines">{{ questionnaire.name }}</div>
-      <q-separator class="bg-copper-grey-200" />
+      <q-separator class="bg-petrol-10" />
       <div class="q-my-sm q-pa-xs answers">
         {{ formatQuantity('réponse', questionnaire.historiesCount) }}
       </div>
@@ -56,7 +56,7 @@ export default {
     cursor: pointer
 .version
   font-size: 14px
-  color: $copper-grey-800
+  color: $navy
 .draft
   font-size: 12px
 .published
@@ -70,6 +70,6 @@ export default {
   border-radius: 8px
   width: 100px
   text-align: center
-  color: $copper-grey-800
-  background-color: $copper-grey-300
+  color: $navy
+  background-color: $navy-20
 </style>

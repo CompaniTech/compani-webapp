@@ -5,18 +5,19 @@
       <template #header>
         <div class="full-width items-center">
           <div class="trainerInfosContainer">
-            <span v-if="isDashboard" class="text-copper-500">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+            <span v-if="isDashboard" class="text-petrol">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
             <ni-primary-button v-if="isTrainer" class="q-my-sm" label="Facturer les créneaux"
               @click.stop="openCourseSlotBillModal" :disabled="selectedSlotIds.length === 0" />
           </div>
           <div class="q-py-sm">
             <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)"
-              class="text-weight-bold text-orange-400">
+              class="text-weight-bold text-navy-80">
+              <q-icon size="10px" name="circle" color="bright-orange" />
               Non facturé : {{ formattedTrainerDurations.notInvoiced }} -
               {{ formattedTrainerDurations.notInvoicedAmount }}
               &nbsp;(dont {{ formattedTrainerDurations.notInvoicedAbsence }} d'absence)
             </span>
-            <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold text-copper-500">
+            <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold text-petrol">
               <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)">&nbsp;/ </span>Facturé :
               {{ formattedTrainerDurations.invoiced }} - {{ formattedTrainerDurations.invoicedAmount }} (dont
               &nbsp;{{ formattedTrainerDurations.invoicedAbsence }} d'absence)
@@ -30,22 +31,23 @@
           </div>
         </div>
       </template>
-      <div class="q-pa-sm bg-peach-200">
+      <div class="q-pa-sm bg-ice-blue">
         <q-expansion-item v-for="course of coursesWithFormattedData" :key="course._id" class="q-ma-sm bg-white"
           v-model="areCourseDetailsVisible[course._id]">
           <template #header>
             <div class="full-width">
               <router-link :to="goToCourse(course._id)" @click.stop>
-                <span class="text-weight-bold text-copper-600 clickable-name">{{ course.name }}</span>
+                <span class="text-weight-bold text-petrol clickable-name">{{ course.name }}</span>
               </router-link>
               <span v-if="displayDuration(course.notInvoicedSingleSlotsDuration)"
-                class="text-weight-bold text-orange-400">
-                  <br> Non facturé : {{ course.notInvoicedSingleSlotsDuration }} -
+                class="text-weight-bold text-navy-80">
+                  <br><q-icon size="10px" name="circle" color="bright-orange" />
+                  Non facturé : {{ course.notInvoicedSingleSlotsDuration }} -
                   {{ course.notInvoicedSingleSlotsAmount }} (dont
                   &nbsp;{{ course.notInvoicedSingleSlotsAbsenceDuration }} d'absence)
                 </span>
                 <span v-if="displayDuration(course.invoicedSingleSlotsDuration)"
-                  class="text-copper-500 text-weight-bold">
+                  class="text-petrol text-weight-bold">
                   &nbsp;/&nbsp;Facturé : {{ course.invoicedSingleSlotsDuration }} -
                   {{ course.invoicedSingleSlotsAmount }} (dont
                   &nbsp;{{ course.invoicedSingleSlotsAbsenceDuration }} d'absence)
@@ -60,8 +62,9 @@
             <div v-for="stepName of Object.keys(course.singleTraineeSlots)" :key="stepName" class="q-pa-sm q-pl-md">
               <span class="text-italic">{{ stepName }}</span>
               &nbsp;:&nbsp;
-              <span class="text-orange-400"
+              <span class="text-navy-80"
                 v-if="displayDuration(course.singleTraineeSlots[stepName].notInvoicedDuration)">
+                <q-icon size="10px" name="circle" color="bright-orange" />
                 {{ course.singleTraineeSlots[stepName].notInvoicedDuration }} non facturées
                 &nbsp;({{ course.singleTraineeSlots[stepName].notInvoicedAmount }})
               </span>
@@ -104,15 +107,16 @@
         <q-expansion-item class="q-ma-sm bg-white" v-if="Object.keys(trainerInfos.collectiveSlots.slots).length">
           <template #header>
             <div class="full-width align-center">
-              <span class="text-weight-bold text-copper-600"> Sessions collectives</span>
+              <span class="text-weight-bold text-petrol"> Sessions collectives</span>
               <span v-if="displayDuration(formattedCollectiveSlots.notInvoiced)"
-                class="text-weight-bold text-orange-400 q-ma-md">
-                <br> Non facturé : {{ formattedCollectiveSlots.notInvoiced }} -
+                class="text-weight-bold text-navy-80 q-ma-md">
+                <br><q-icon size="10px" name="circle" color="bright-orange" />
+                Non facturé : {{ formattedCollectiveSlots.notInvoiced }} -
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedAbsence }} d'absence)
               </span>
               <span v-if="displayDuration(formattedCollectiveSlots.invoiced)"
-                class="text-weight-bold text-copper-500 q-ma-md">
+                class="text-weight-bold text-petrol q-ma-md">
                 &nbsp;/ Facturé : {{ formattedCollectiveSlots.invoiced }} -
                 &nbsp;{{ formattedCollectiveSlots.invoicedCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.invoicedAbsence }} d'absence)
@@ -124,7 +128,7 @@
               </span>
             </div>
           </template>
-          <ni-banner class="bg-copper-grey-100 q-pa-lg" icon="info_outline">
+          <ni-banner class="bg-turquoise-10 q-pa-lg" icon="info_outline">
               <template #message>
                 <span>
                   Attention, les créneaux qui n'ont pas les mêmes horaires de début et de fin sont comptés séparément.
@@ -136,11 +140,12 @@
             <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">
               Session du {{ day }}
               <span v-if="displayDuration(formattedCollectiveSlots.slots[day].notInvoicedDuration)"
-                class="text-orange-400 q-ma-md">
+                class="text-navy-80 q-ma-md">
+                <q-icon size="10px" name="circle" color="bright-orange" />
                 &nbsp;Non facturé : {{ formattedCollectiveSlots.slots[day].notInvoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].notInvoicedAmount }})
               </span>
-              <span class="text-copper-500 q-ma-md"
+              <span class="text-petrol q-ma-md"
                 v-if="displayDuration(formattedCollectiveSlots.slots[day].invoicedDuration)">
                 &nbsp;/ Facturé : {{ formattedCollectiveSlots.slots[day].invoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].invoicedAmount }})
@@ -168,7 +173,7 @@
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'traineeName'">
                     <router-link :to="goToCourse(props.row.courseId)" @click.stop>
-                      <span class="text-weight-bold text-copper-600 clickable-name">{{ col.value }}</span>
+                      <span class="text-weight-bold text-petrol clickable-name">{{ col.value }}</span>
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions'">

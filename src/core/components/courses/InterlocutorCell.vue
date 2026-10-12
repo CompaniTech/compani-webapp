@@ -5,19 +5,19 @@
       <div class="row details-container">
         <img :src="getAvatar(interlocutor.picture)" class="avatar q-my-sm">
         <div class="q-my-sm q-ml-md infos-container">
-          <div class="text-copper-grey-700">{{ formatIdentity(interlocutor.identity, 'FL') }}</div>
+          <div class="text-navy-80">{{ formatIdentity(interlocutor.identity, 'FL') }}</div>
           <div v-if="roleLabels.length" class="role-badges">
-            <span v-for="roleLabel in roleLabels" :key="roleLabel" class="role-badge bg-orange-500 text-14">
+            <span v-for="roleLabel in roleLabels" :key="roleLabel" class="role-badge bg-bright-orange text-14">
               {{ roleLabel }}
             </span>
           </div>
-          <div class="text-copper-grey-500 text-14">{{ interlocutor.local.email }}</div>
+          <div class="text-petrol-80 text-14">{{ interlocutor.local.email }}</div>
           <div v-if="get(interlocutor, 'contact.phone')" class="phone">
             {{ formatPhone(interlocutor.contact) }}
           </div>
           <div v-else class="row items-center text-14">
             <div class="dot dot-orange" />
-            <div class="text-orange-500">numéro manquant</div>
+            <div class="text-navy-80">numéro manquant</div>
           </div>
           <div v-if="contact._id === interlocutor._id" class="contact">
             <q-icon size="xxs" name="person" class="q-mr-xs" />
@@ -109,10 +109,10 @@ export default {
   border-radius: 50%
   vertical-align: middle
 .phone
-  color: $copper-grey-500
+  color: $petrol-80
   font-size: 14px
 .contact
-  color: $copper-grey-500
+  color: $petrol-80
   font-size: 12px
   margin-top: 4px
   display: flex

@@ -9,7 +9,7 @@
       <div class="align-items-center">
         <span class="text-weight-bold">Sous-programme {{ index + 1 }}</span>
         <span class="published-sub-program bg-green-600" v-if="isPublished(subProgram)">Publié</span>
-        <span class="archived-sub-program bg-copper-grey-300" v-if="!!subProgram.archivedAt">Archivé</span>
+        <span class="archived-sub-program bg-navy-20" v-if="!!subProgram.archivedAt">Archivé</span>
         <ni-button class="q-ml-sm" :flat="false" :label="!!subProgram.archivedAt ? 'Désarchiver' : 'Archiver'"
           :disable="isArchived || modalLoading || !isPublished(subProgram)"
           @click="validateSubProgramArchive(subProgram)" />
@@ -44,7 +44,7 @@
               'cursor-pointer': step.type === E_LEARNING }">
               <div class="step-info" @click="showActivities(step._id, step.type)">
                 <q-item-section side>
-                  <q-icon :name="getStepTypeIcon(step.type)" size="sm" color="copper-grey-500" />
+                  <q-icon :name="getStepTypeIcon(step.type)" size="sm" color="petrol-60" />
                 </q-item-section>
                 <q-item-section>
                   <div class="flex-direction row step-title">
@@ -64,7 +64,7 @@
                   :disable="isPublished(subProgram) || !!subProgram.archivedAt" />
               </div>
             </q-card-section>
-            <div class="bg-peach-200 activity-container" v-if="areActivitiesVisible[step._id]">
+            <div class="bg-bright-orange-40 activity-container" v-if="areActivitiesVisible[step._id]">
               <draggable v-model="step.activities"
                 :disabled="$q.platform.is.mobile || isPublishedOrLocked(step) || !!subProgram.archivedAt"
                 class="activity-draggable" ghost-class="ghost" @change="dropActivity(subProgram._id, step._id)"
@@ -866,7 +866,7 @@ export default {
   &-subtitle
     font-size: 13px
   &-lock
-    background-color: $copper-grey-100
+    background-color: $turquoise-10
   &-title
     min-height: 28px
 
@@ -905,7 +905,7 @@ export default {
       padding-right: 10px
 
 .no-activity
-  color: $copper-grey-700
+  color: $navy-80
   font-size: 14px
   margin: 10px
 

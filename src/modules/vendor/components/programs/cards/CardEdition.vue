@@ -1,5 +1,5 @@
 <template>
-  <div :class="['q-ml-md', 'card-edition', 'bg-peach-200', { 'edition-disabled': disableEdition }]">
+  <div :class="['q-ml-md', 'card-edition', 'bg-bright-orange-40', { 'edition-disabled': disableEdition }]">
     <q-scroll-area :thumb-style="{ width: '6px', 'border-radius': '10px' }"
       :content-style="{ display:'flex', 'flex-direction': 'column', 'padding-top': '30px' }"
       :content-active-style="{ display:'flex', 'flex-direction': 'column', 'padding-top': '30px' }">

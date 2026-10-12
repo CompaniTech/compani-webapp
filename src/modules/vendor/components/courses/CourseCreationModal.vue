@@ -262,5 +262,5 @@ export default {
 <style lang="sass" scoped>
 .details
   font-size: 14px
-  color: $copper-grey-500
+  color: $petrol-80
 </style>

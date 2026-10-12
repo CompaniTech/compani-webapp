@@ -260,16 +260,16 @@ export default {
 <style lang="sass" scoped>
 .title-text
   font-size: 14px
-  color: $copper-grey-700
+  color: $navy-80
 .items-container
   display: flex
   flex-wrap: wrap
   font-size: 12px
-  color: $copper-grey-600
+  color: $navy-70
 .item-section-container
   min-width: 0
 .infos-course-nearest-date
-  color: $copper-grey-900 !important
+  color: $navy !important
   font-size: 14px
 .label
   display: inline-block
