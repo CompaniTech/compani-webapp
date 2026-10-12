@@ -6,17 +6,24 @@
           :model-value="selectedStatus" @update:model-value="updateSelectedStatus" class="selector" />
       </template>
     </ni-profile-header>
-    <template v-if="!trainerPayments.length && !tableLoading">
+    <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
+    <ni-select caption="Intervenant·e" :options="trainerOptions" :model-value="selectedTrainer"
+      @update:model-value="updateSelectedTrainer" clearable class="selector" />
+    <div>
+      <ni-button v-if="filteredPayments.length" label="Télécharger le fichier de virements SEPA"
+        @click="openXmlFileModal" :disable="!selectedPayments.length" />
+    </div>
+    <template v-if="!filteredPayments.length && !tableLoading">
       <span class="text-italic q-pa-lg">Aucun paiement pour les filtres sélectionnés.</span>
     </template>
-    <ni-simple-table v-else :data="trainerPayments" :columns="columns" :loading="tableLoading"
+    <ni-simple-table v-else :data="filteredPayments" :columns="columns" :loading="tableLoading"
       :pagination="{ rowsPerPage: 0 }" hide-bottom virtual-scroll>
       <template #header="{ props }">
         <q-tr :props="props">
           <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
             <div v-if="col.name === 'actions'">
               <q-checkbox class="q-mr-md" :model-value="multipleSelection" @update:model-value="selectPaymentList"
-                dense :disable="!trainerPayments.length" />
+                dense :disable="!filteredPayments.length" />
             </div>
             <template v-else>{{ col.label }}</template>
           </q-th>
@@ -53,6 +60,10 @@
     </div>
   </q-page>
 
+  <ni-xml-file-download-modal v-model="xmlFileDownloadModal" v-model:transaction-name="transactionName"
+    title="fichier de virements SEPA" caption="Nom du lot de virements" :loading="xmlFileDownloadLoading"
+    :validations="v$.transactionName" @submit="getXmlFile" @hide="resetXmlFileDownload" />
+
   <ni-multiple-payment-edition-modal v-model="multipleEditionModal" v-model:status="multipleEditionStatus"
     :status-options="statusOptions" :loading="multipleEditionLoading" @submit="editPaymentList"
     @hide="resetMultipleEditionModal" :validations="v$.multipleEditionStatus" />
@@ -60,10 +71,11 @@
 
 <script>
 import get from 'lodash/get';
+import uniqBy from 'lodash/uniqBy';
 import { useMeta, useQuasar } from 'quasar';
 import { ref, watch, computed } from 'vue';
 import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
+import { required, maxLength } from '@vuelidate/validators';
 import ProfileHeader from '@components/ProfileHeader';
 import Select from '@components/form/Select';
 import SimpleTable from '@components/table/SimpleTable';
@@ -71,9 +83,12 @@ import Button from '@components/Button';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import { DD_MM_YYYY, PENDING, PAID, XML_GENERATED, TRAINER_PAYMENT_STATUS_OPTIONS } from '@data/constants';
 import TrainerPayments from '@api/TrainerPayments';
-import { formatIdentity, formatPrice, formatQuantity } from '@helpers/utils';
+import TrainerPaymentsXmlFileInfos from '@api/TrainerPaymentsXmlFileInfos';
+import { formatIdentity, formatPrice, formatQuantity, formatAndSortIdentityOptions } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
+import { downloadFile } from '@helpers/file';
 import MultiplePaymentEditionModal from 'src/modules/vendor/components/billing/MultiplePaymentEditionModal';
+import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
 export default {
   name: 'TrainerPaymentsDashboard',
@@ -83,6 +98,7 @@ export default {
     'ni-simple-table': SimpleTable,
     'ni-button': Button,
     'ni-multiple-payment-edition-modal': MultiplePaymentEditionModal,
+    'ni-xml-file-download-modal': XmlFileDownloadModal,
   },
   setup () {
     const metaInfo = { title: 'Paiements Intervenants' };
@@ -97,6 +113,10 @@ export default {
     const multipleEditionModal = ref(false);
     const multipleEditionStatus = ref('');
     const multipleEditionLoading = ref(false);
+    const selectedTrainer = ref('');
+    const xmlFileDownloadModal = ref(false);
+    const transactionName = ref('');
+    const xmlFileDownloadLoading = ref(false);
     const columns = [
       {
         name: 'date',
@@ -116,16 +136,37 @@ export default {
         align: 'left',
       },
       { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status' },
+      {
+        name: 'trainerPaymentsXmlFileInfosName',
+        label: 'Nom de lot',
+        align: 'center',
+        field: row => get(row, 'trainerPaymentsXmlFileInfos.name', ''),
+      },
       { name: 'actions', label: '', field: '', align: 'right' },
     ];
 
-    const rules = computed(() => ({ multipleEditionStatus: { required } }));
-    const v$ = useVuelidate(rules, { multipleEditionStatus });
+    const TRANSACTION_NAME_MAX_LENGTH = 140;
+    const rules = computed(() => ({
+      transactionName: { required, maxLength: maxLength(TRANSACTION_NAME_MAX_LENGTH) },
+      multipleEditionStatus: { required },
+    }));
+    const v$ = useVuelidate(rules, { multipleEditionStatus, transactionName });
 
     const statusOptions = TRAINER_PAYMENT_STATUS_OPTIONS.filter(({ value }) => value !== XML_GENERATED);
 
-    const multipleSelection = computed(() => (trainerPayments.value.length
-      ? selectedPayments.value.length === trainerPayments.value.length
+    const trainerOptions = computed(() => [
+      { label: 'Tous les intervenant·es', value: '' },
+      ...formatAndSortIdentityOptions(
+        uniqBy(trainerPayments.value.map(p => get(p, 'trainerBill.trainer')), '_id')
+      ),
+    ]);
+
+    const filteredPayments = computed(() => (selectedTrainer.value
+      ? trainerPayments.value.filter(p => selectedTrainer.value === get(p, 'trainerBill.trainer._id'))
+      : trainerPayments.value));
+
+    const multipleSelection = computed(() => (filteredPayments.value.length
+      ? selectedPayments.value.length === filteredPayments.value.length
       : false));
 
     const getItemStatus = status => TRAINER_PAYMENT_STATUS_OPTIONS.find(s => s.value === status)?.label || '';
@@ -165,7 +206,50 @@ export default {
     });
 
     const selectPaymentList = (value) => {
-      selectedPayments.value = value ? trainerPayments.value.map(p => p._id) : [];
+      selectedPayments.value = value ? filteredPayments.value.map(p => p._id) : [];
+    };
+
+    const updateSelectedTrainer = (trainerId) => {
+      selectedTrainer.value = trainerId;
+      selectedPayments.value = [];
+    };
+
+    const resetFilters = () => { updateSelectedTrainer(''); };
+
+    const openXmlFileModal = () => { xmlFileDownloadModal.value = true; };
+
+    const getXmlFile = async () => {
+      try {
+        xmlFileDownloadLoading.value = true;
+        v$.value.transactionName.$touch();
+        if (v$.value.transactionName.$error) return NotifyWarning('Champ invalide.');
+
+        const file = await TrainerPaymentsXmlFileInfos
+          .create({ payments: selectedPayments.value, name: transactionName.value });
+        const fileName = `Virements_SEPA_${transactionName.value.replace(/ /g, '')}.xml`;
+        await downloadFile(file, fileName);
+
+        await refreshPayments();
+
+        xmlFileDownloadModal.value = false;
+      } catch (e) {
+        console.error(e);
+        if (e.data instanceof Blob) {
+          const text = await e.data.text();
+          const error = JSON.parse(text);
+          if ([409, 404, 403].includes(error.statusCode) && error.message) return NotifyNegative(error.message);
+        }
+        NotifyNegative('Erreur lors du téléchargement du fichier des virements SEPA.');
+      } finally {
+        xmlFileDownloadLoading.value = false;
+      }
+    };
+
+    const resetXmlFileDownload = () => {
+      xmlFileDownloadModal.value = false;
+      xmlFileDownloadLoading.value = false;
+      transactionName.value = '';
+      v$.value.transactionName.$reset();
     };
 
     const openMultipleEditionModal = () => { multipleEditionModal.value = true; };
@@ -247,19 +331,30 @@ export default {
       multipleEditionModal,
       multipleEditionStatus,
       multipleEditionLoading,
+      selectedTrainer,
+      xmlFileDownloadModal,
+      transactionName,
+      xmlFileDownloadLoading,
       v$,
       // Computed
       multipleSelection,
+      trainerOptions,
+      filteredPayments,
       // Methods
       updateSelectedStatus,
       goToTrainer,
       getItemStatus,
       getStatusClass,
       selectPaymentList,
+      updateSelectedTrainer,
+      resetFilters,
       openMultipleEditionModal,
       resetMultipleEditionModal,
       editPaymentList,
       openDeleteDialog,
+      openXmlFileModal,
+      getXmlFile,
+      resetXmlFileDownload,
     };
   },
 };
