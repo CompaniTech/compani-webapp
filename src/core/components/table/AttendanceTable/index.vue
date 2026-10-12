@@ -116,6 +116,17 @@
         <span><q-icon name="mdi-alert-box" color="orange-500" class="q-py-xs" /> 2 clics : absent / </span>
         <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
       </div>
+      <div v-if="isSingleCourse" class="q-px-md q-pb-md text-14">
+        <span><q-icon name="mdi-checkbox-marked" color="green" class="q-py-xs" />
+          feuille d'émargement complète /
+        </span>
+        <span><q-icon name="mdi-checkbox-marked" color="orange-500" class="q-py-xs" />
+          feuille d'émargement en attente de signature /
+        </span>
+        <span><q-icon name="mdi-alert-box" color="red" class="q-py-xs" />
+          pas de feuille d'émargement
+        </span>
+      </div>
     </q-card>
 
     <ni-simple-table :data="formattedAttendanceSheets" :columns="attendanceSheetColumns"
