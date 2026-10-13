@@ -55,9 +55,8 @@ export default {
 .profile-tabs
   :deep(.q-tab--active)
     & > .q-tab__indicator
-      color: $primary
+      color: $secondary
   :deep(.q-tab__indicator)
-    color: $navy-20
     opacity: 1
   .q-tab-panels
     background-color: inherit
@@ -97,9 +96,9 @@ export default {
       & :not(.q-tab--active)
         & .q-tab__content
           & .q-tab__label
-            color: $navy
+            color: $primary
       & .q-tab--active
         & .q-tab__content
           & .q-tab__label
-            color: $primary
+            color: $secondary
 </style>
