@@ -28,7 +28,7 @@ export default {
 
     return {
       // Data
-      backgroundClass: 'bg-petrol-10',
+      backgroundClass: 'bg-petrol text-cream',
       cellRefs,
       // Computed
       courseCounter,

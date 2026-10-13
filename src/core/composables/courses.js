@@ -102,11 +102,12 @@ export const useCourses = (course) => {
         ? [{
           icon: 'circle',
           label: course.value.isAbandoned ? 'Archivée (abandon)' : 'Archivée',
-          iconClass: 'info-archived',
+          iconClass: 'text-secondary',
+          class: 'text-secondary',
         }]
         : []),
       ...(isCourseInterrupted && !course.value.archivedAt
-        ? [{ icon: 'circle', label: 'En pause', iconClass: 'info-warning', class: 'text-orange' }]
+        ? [{ icon: 'circle', label: 'En pause', iconClass: 'text-secondary', class: 'text-secondary' }]
         : []
       ),
       ...(course.value.interruptionDates ? [{ icon: 'pause', label: interruptedLabel }] : []),

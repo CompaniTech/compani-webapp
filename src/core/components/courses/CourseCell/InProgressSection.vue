@@ -51,7 +51,7 @@ export default {
   flex: 1
   background-color: $turquoise
   &-happened
-    background-color: $primary
+    background-color: $petrol-80
   &-to-plan
     background-color: $secondary
 

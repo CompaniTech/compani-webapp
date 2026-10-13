@@ -21,12 +21,12 @@
       :path="path">
       <template #body="{ col }">
         <q-item v-if="col.name === 'status'" class="items-center">
-          <div v-if="Object.keys(col.value).includes('archivedAt') && !!col.value.archivedAt">
-            <q-icon size="12px" name="circle" class="info-archived" />
+          <div v-if="Object.keys(col.value).includes('archivedAt') && !!col.value.archivedAt" class="text-secondary">
+            <q-icon size="12px" name="circle" class="q-mr-xs" />
             Archivée
           </div>
-          <div v-else-if="col.value.isCourseInterrupted">
-            <q-icon size="12px" name="circle" class="info-warning" />
+          <div v-else-if="col.value.isCourseInterrupted" class="text-secondary">
+            <q-icon size="12px" name="circle" class="q-mr-xs" />
             En&nbsp;pause
           </div>
         </q-item>

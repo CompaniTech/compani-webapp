@@ -9,7 +9,7 @@
             <q-item-section side>
               <q-icon size="12px" :name="info.icon" :class="info.iconClass" />
             </q-item-section>
-            <q-item-section class="label">{{ info.label }}</q-item-section>
+            <q-item-section :class="['label', info.class]">{{ info.label }}</q-item-section>
           </q-item>
         </div>
         <forthcoming-section v-if="course.status === FORTHCOMING" :course="course" />
@@ -258,19 +258,21 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.course-card:hover
+  background: linear-gradient($petrol-10, $petrol-10), white
 .title-text
   font-size: 14px
-  color: $navy-80
+  color: $primary
 .items-container
   display: flex
   flex-wrap: wrap
   font-size: 12px
-  color: $navy-70
 .item-section-container
   min-width: 0
+  color: $navy-80 !important
 .infos-course-nearest-date
-  color: $navy !important
   font-size: 14px
+  color: $secondary !important
 .label
   display: inline-block
   max-width: 20em
