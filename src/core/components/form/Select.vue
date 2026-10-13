@@ -10,7 +10,7 @@
       :display-value="displayedValue" :hide-selected="!multiple" fill-input :input-debounce="0" :emit-value="!multiple"
       ref="selectInput" :option-disable="optionDisable" :data-cy="dataCy" :hide-dropdown-icon="!!icon"
       :error-message="errorMessage" :multiple="multiple" :use-chips="multiple" new-value-mode="add"
-      @new-value="addNewValue">
+      @new-value="addNewValue" options-selected-class="text-secondary">
       <template #append>
         <ni-button v-if="modelValue && !disable && clearable" icon="close" @click.stop="resetValue" size="sm" />
         <ni-button v-if="icon" :icon="icon" class="select-icon primary-icon"

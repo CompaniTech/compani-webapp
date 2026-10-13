@@ -11,7 +11,7 @@
         <q-icon name="event" class="cursor-pointer" @click="openDateMenu" color="petrol-60">
           <q-menu ref="qDateMenu" anchor="bottom right" self="top right" @hide="closeDateMenu">
             <q-date minimal :model-value="date" @update:model-value="select" :options="dateOptions"
-              :disable="disable" />
+              :disable="disable" color="secondary" />
           </q-menu>
         </q-icon>
       </template>

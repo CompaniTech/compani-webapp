@@ -13,7 +13,8 @@
           <q-menu ref="qTimeMenu" anchor="bottom right" self="top right" @show="scrollOnOpening">
             <q-list ref="qListRef" dense padding>
               <q-item v-for="(hour, index) in hoursOptions" :key="index" clickable @click="select(hour.value)"
-                :disable="hour.disable" :data-time="hour.value">
+                :disable="hour.disable" :data-time="hour.value" :active="hour.value === displayValue"
+                active-class="text-secondary">
                 <q-item-section>{{ hour.label }}</q-item-section>
               </q-item>
             </q-list>
