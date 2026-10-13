@@ -7,7 +7,7 @@
 export default {
   name: 'ButtonToggle',
   props: {
-    toggleColor: { type: String, default: 'primary' },
+    toggleColor: { type: String, default: 'secondary' },
     textColor: { type: String, default: 'navy-80' },
     modelValue: { type: String, default: '' },
     displayClass: { type: String, default: '' },

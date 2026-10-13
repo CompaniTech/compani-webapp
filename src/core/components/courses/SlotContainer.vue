@@ -79,8 +79,8 @@
                   class="q-mx-md">
                   <div @click="openEditionModal(get(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY)[0])"
                     :class="['to-plan-slot q-mb-sm', canEdit && 'to-plan-slot-container cursor-pointer hover-orange']">
-                    <div class="clickable-name q-mr-md">créneau à planifier</div>
-                    <q-icon v-if="canEdit" name="edit" size="12px" color="petrol-60" />
+                    <div class="clickable-name q-mr-md text-secondary">créneau à planifier</div>
+                    <q-icon v-if="canEdit" name="edit" size="12px" color="secondary" />
                   </div>
                   <div v-if="get(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY).length - 1"
                     class="q-mx-lg bg-bright-orange-10">
@@ -96,8 +96,8 @@
                       <div v-for="slot in tail(get(courseSlotsByStepAndDate[step.key], TO_PLAN_KEY))" :key="slot._id"
                         :class="['to-plan-slot', canEdit && 'cursor-pointer hover-orange']"
                         @click="openEditionModal(slot)">
-                        <div class="clickable-name q-mr-md">créneau à planifier</div>
-                        <q-icon v-if="canEdit" name="edit" size="12px" color="petrol-60" />
+                        <div class="clickable-name q-mr-md text-secondary">créneau à planifier</div>
+                        <q-icon v-if="canEdit" name="edit" size="12px" color="secondary" />
                       </div>
                     </div>
                   </div>
