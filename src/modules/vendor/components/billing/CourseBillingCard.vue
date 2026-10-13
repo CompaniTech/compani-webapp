@@ -18,8 +18,9 @@
             </router-link>
           </span>
         </p>
-        <q-card v-for="bill of courseBills" :key="bill._id" flat class="q-mb-md">
-          <q-card-section class="cursor-pointer row items-center" :id="bill._id" @click="showDetails(bill._id)">
+        <q-card v-for="bill of courseBills" :key="bill._id" flat class="q-mb-md text-primary">
+          <q-card-section class="cursor-pointer row items-center bill-header" :id="bill._id"
+            @click="showDetails(bill._id)">
             <q-item-section>
               <div class="flex" v-if="!isDashboard">
                 <div v-if="bill.number" class="text-weight-bold clickable-name" @click.stop="downloadBill(bill)"
@@ -86,10 +87,10 @@
             </q-item-section>
             <q-icon size="24px" :name="areDetailsVisible[bill._id] ? 'expand_less' : 'expand_more'" />
             <q-checkbox v-if="!bill.billedAt" :model-value="billCheckboxValue(bill._id)" dense size="sm"
-              @update:model-value="updateSelectedBills(bill._id)" class="q-px-sm" />
+              @update:model-value="updateSelectedBills(bill._id)" class="q-px-sm" color="secondary" />
           </q-card-section>
           <q-card-section class="q-pa-sm">
-            <div class="bg-ice-blue q-pt-sm" v-if="areDetailsVisible[bill._id]">
+            <div class="bg-petrol-10 q-pt-sm" v-if="areDetailsVisible[bill._id]">
               <q-card flat class="q-mx-lg q-mb-sm">
                 <q-card-section class="fee">
                   <div class="fee-info">
@@ -865,6 +866,9 @@ export default {
   flex-shrink: 0
   white-space: nowrap
 
+.bill-header:hover
+  background: $petrol-10
+
 .missing-info
-  color: red
+  color: $secondary
 </style>

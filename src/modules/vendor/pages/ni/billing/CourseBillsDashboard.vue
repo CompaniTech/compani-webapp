@@ -1,6 +1,6 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
-     <ni-profile-header title="A facturer">
+     <ni-profile-header title="À facturer">
       <template #title>
         <ni-button icon="chevron_left" class="no-shadow" @click="goToPreviousMonth" />
         <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange" :error="v$.dateRange.$error"
@@ -15,10 +15,10 @@
         @update="updateSelectedCompany" />
     </div>
     <ni-select v-model="selectedTypes" multiple caption="Type" :options="typeOptions" clearable />
-    <q-card v-if="filteredValidatedBills.length" class="q-px-md q-py-sm bg-ice-blue">
-      <q-item-section @click="showDetails(VALIDATED)" class="cursor-pointer details row navy-80">
+    <q-card v-if="filteredValidatedBills.length" class="q-px-md q-py-sm bg-primary">
+      <q-item-section @click="showDetails(VALIDATED)" class="cursor-pointer details row text-cream">
         {{ showValidatedCourseBills ? 'Masquer' : 'Afficher' }} les factures validées
-        <q-icon size="xs" :name="showValidatedCourseBills ? 'expand_less' : 'expand_more'" color="navy-80" />
+        <q-icon size="xs" :name="showValidatedCourseBills ? 'expand_less' : 'expand_more'" color="cream" />
       </q-item-section>
       <div v-show="showValidatedCourseBills">
         <div v-for="bill of filteredValidatedBills" :key="bill._id">
@@ -28,11 +28,11 @@
         </div>
       </div>
     </q-card>
-    <q-card v-if="filteredBillsWithoutCourseActions.length" class="q-px-md q-py-sm bg-ice-blue q-mt-md">
-      <q-item-section @click="showDetails(WITHOUT_COURSE_ACTIONS)" class="cursor-pointer details row navy-80">
+    <q-card v-if="filteredBillsWithoutCourseActions.length" class="q-px-md q-py-sm bg-primary q-mt-md">
+      <q-item-section @click="showDetails(WITHOUT_COURSE_ACTIONS)" class="cursor-pointer details row text-cream">
         {{ showCourseBillsWithoutCourseActions ? 'Masquer' : 'Afficher' }} les factures sans action de formation
         <q-icon size="xs" :name="showCourseBillsWithoutCourseActions ? 'expand_less' : 'expand_more'"
-          color="navy-80" />
+          color="cream" />
       </q-item-section>
       <div v-show="showCourseBillsWithoutCourseActions">
         <div v-for="bill of filteredBillsWithoutCourseActions" :key="bill._id">
@@ -43,11 +43,11 @@
         </div>
       </div>
     </q-card>
-    <q-card v-if="filteredBillsFromInterruptedCourses.length" class="q-px-md q-py-sm bg-ice-blue q-mt-md">
-      <q-item-section @click="showDetails(INTERRUPTED_COURSES)" class="cursor-pointer details row navy-80">
+    <q-card v-if="filteredBillsFromInterruptedCourses.length" class="q-px-md q-py-sm bg-primary q-mt-md">
+      <q-item-section @click="showDetails(INTERRUPTED_COURSES)" class="cursor-pointer details row text-cream">
         {{ showCourseBillsFromInterruptedCourses ? 'Masquer' : 'Afficher' }} les factures des formations en pause
         <q-icon size="xs" :name="showCourseBillsFromInterruptedCourses ? 'expand_less' : 'expand_more'"
-          color="navy-80" />
+          color="cream" />
       </q-item-section>
       <div v-show="showCourseBillsFromInterruptedCourses">
         <div v-for="bill of filteredBillsFromInterruptedCourses" :key="bill._id">
@@ -69,7 +69,7 @@
     </div>
     <div v-if="!filteredBillsToValidate.length && !filteredValidatedBills.length &&
       !filteredBillsWithoutCourseActions.length && !filteredBillsFromInterruptedCourses.length && !billsLoading"
-      class="text-italic flex justify-center">
+      class="text-italic text-primary flex justify-center">
       Aucune facture ne correspond à votre recherche
     </div>
     <q-inner-loading v-if="billsLoading" :showing="billsLoading">
@@ -486,6 +486,7 @@ export default {
 
 <style lang="sass" scoped>
 .details
+  font-weight: bold
   flex-direction: row
   justify-content: space-between
   padding: 16px 0px
