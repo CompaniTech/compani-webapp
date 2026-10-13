@@ -1,7 +1,8 @@
 <template>
   <q-card class="relative-position table-spinner-container" flat>
-    <q-table v-if="!loading" :columns="columns" :class="tableClass" :pagination="pagination" :row-key="rowKey"
-      :hide-bottom="hideBottom" :visible-columns="formattedVisibleColumns" binary-state-sort :hide-header="hideHeader"
+    <q-table v-if="!loading" :columns="columns" :class="['table-colors', tableClass]" :pagination="pagination"
+      :row-key="rowKey" :hide-bottom="hideBottom" :visible-columns="formattedVisibleColumns" binary-state-sort
+      :hide-header="hideHeader"
       :expanded="expanded" @update:pagination="$emit('update:pagination', $event)" :separator="separator" :rows="data"
       @update:expanded="$emit('update:expanded', $event)">
       <template #header="props">

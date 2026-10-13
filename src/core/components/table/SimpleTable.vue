@@ -4,7 +4,7 @@
       :rows="data" :separator="separator" :selected="selected" @update:expanded="$emit('update:expanded', $event)"
       :visible-columns="formattedVisibleColumns" :hide-bottom="shouldHideBottom" @row-click="$emit('row-click', $event)"
       @update:pagination="$emit('update:pagination', $event)" @update:selected="$emit('update:selected', $event)"
-      :class="['q-pa-sm large-table sticky-header', isClientInterface ? 'client-header' : 'vendor-header']"
+      class="q-pa-sm large-table sticky-header table-colors"
       :row-key="rowKey" :virtual-scroll="virtualScroll">
       <template #header="props">
         <slot name="header" :props="props">
@@ -68,13 +68,6 @@ export default {
   emits: ['update:pagination', 'update:selected', 'row-click', 'update:expanded'],
   components: {
     'ni-pagination': Pagination,
-  },
-  data () {
-    const isClientInterface = !/\/ad\//.test(this.$route.path);
-
-    return {
-      isClientInterface,
-    };
   },
   computed: {
     shouldHideBottom () {

@@ -2,7 +2,7 @@
   <div class="relative-position table-spinner-container">
     <q-table v-if="!loading" :rows="data" :columns="columns" :row-key="rowKey" :pagination="pagination"
       binary-state-sort :visible-columns="formattedVisibleColumns" flat :separator="data.length ? separator : 'none'"
-      :hide-bottom="shouldHideBottom" class="table-responsive q-pa-sm"
+      :hide-bottom="shouldHideBottom" class="table-responsive table-colors q-pa-sm"
       @update:pagination="$emit('update:pagination', $event)" @row-click="$emit('row-click')" :hide-header="hideHeader">
       <template #header="props">
         <slot name="header" :props="props">

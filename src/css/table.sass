@@ -253,17 +253,18 @@
     max-width: 230px
     width: 25%
 
-.client-header
+.table-colors
   thead tr th
-    background-color: $petrol
-    font-weight: bold
+    background-color: $primary
     color: $cream
+    font-weight: bold
+  tbody td
+    background: $petrol-10
+    color: $primary
 
-.vendor-header
-  thead tr th
-    background-color: $petrol
-    color: $cream
-    font-weight: bold
+.large-table
+  tbody tr:hover td:before
+    content: none !important
 
 .sticky-header
   max-height: 85vh
