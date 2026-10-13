@@ -133,11 +133,11 @@ export default {
     const getStatusClass = (status) => {
       switch (status) {
         case PENDING:
-          return 'orange-chip';
+          return 'cream-chip';
         case PAID:
           return 'green-chip';
         default:
-          return 'peach-chip';
+          return 'bright-orange-chip';
       }
     };
 
