@@ -21,7 +21,7 @@
       <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
         :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" />
     </div>
-    <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période</div>
+    <div v-else class="text-italic text-primary">Pas de créneaux correspondants aux filtres sur la période</div>
   </q-page>
 </template>
 <script>

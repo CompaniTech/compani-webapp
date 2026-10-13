@@ -1,23 +1,23 @@
 <template>
   <q-card v-if="trainerInfos.courses.length || Object.keys(trainerInfos.collectiveSlots.slots).length"
-    class="container clickable cursor-pointer" flat>
+    class="container clickable cursor-pointer bg-primary text-cream" flat>
     <q-expansion-item class="q-my-md" v-model="displayDetails">
       <template #header>
         <div class="full-width items-center">
           <div class="trainerInfosContainer">
-            <span v-if="isDashboard" class="text-petrol">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
-            <ni-primary-button v-if="isTrainer" class="q-my-sm" label="Facturer les créneaux"
+            <span v-if="isDashboard" class="text-weight-bold">{{ formatIdentity(trainerInfos.identity, 'FL') }}</span>
+            <ni-primary-button v-if="isTrainer" class="q-my-sm" label="Facturer les créneaux" color="secondary"
               @click.stop="openCourseSlotBillModal" :disabled="selectedSlotIds.length === 0" />
           </div>
           <div class="q-py-sm">
             <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)"
-              class="text-weight-bold text-navy-80">
+              class="text-weight-bold text-secondary">
               <q-icon size="10px" name="circle" color="bright-orange" />
               Non facturé : {{ formattedTrainerDurations.notInvoiced }} -
               {{ formattedTrainerDurations.notInvoicedAmount }}
               &nbsp;(dont {{ formattedTrainerDurations.notInvoicedAbsence }} d'absence)
             </span>
-            <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold text-petrol">
+            <span v-if="displayDuration(formattedTrainerDurations.invoiced)" class="text-weight-bold">
               <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)">&nbsp;/ </span>Facturé :
               {{ formattedTrainerDurations.invoiced }} - {{ formattedTrainerDurations.invoicedAmount }} (dont
               &nbsp;{{ formattedTrainerDurations.invoicedAbsence }} d'absence)
@@ -31,7 +31,7 @@
           </div>
         </div>
       </template>
-      <div class="q-pa-sm bg-ice-blue">
+      <div class="q-pa-sm bg-petrol-10 text-primary">
         <q-expansion-item v-for="course of coursesWithFormattedData" :key="course._id" class="q-ma-sm bg-white"
           v-model="areCourseDetailsVisible[course._id]">
           <template #header>
@@ -40,7 +40,7 @@
                 <span class="text-weight-bold text-petrol clickable-name">{{ course.name }}</span>
               </router-link>
               <span v-if="displayDuration(course.notInvoicedSingleSlotsDuration)"
-                class="text-weight-bold text-navy-80">
+                class="text-weight-bold text-secondary">
                   <br><q-icon size="10px" name="circle" color="bright-orange" />
                   Non facturé : {{ course.notInvoicedSingleSlotsDuration }} -
                   {{ course.notInvoicedSingleSlotsAmount }} (dont
@@ -62,7 +62,7 @@
             <div v-for="stepName of Object.keys(course.singleTraineeSlots)" :key="stepName" class="q-pa-sm q-pl-md">
               <span class="text-italic">{{ stepName }}</span>
               &nbsp;:&nbsp;
-              <span class="text-navy-80"
+              <span class="text-secondary"
                 v-if="displayDuration(course.singleTraineeSlots[stepName].notInvoicedDuration)">
                 <q-icon size="10px" name="circle" color="bright-orange" />
                 {{ course.singleTraineeSlots[stepName].notInvoicedDuration }} non facturées
@@ -85,7 +85,7 @@
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
                     <q-checkbox v-if="isTrainer" :model-value="areMultipleSlotsSelected(course.rows)" class="q-mr-sm"
-                      size="sm" @update:model-value="selectSlotList($event, course.rows)"
+                      color="secondary" size="sm" @update:model-value="selectSlotList($event, course.rows)"
                       :disable="course.rows.every(s => !isSlotSelectable(s))" />
                   </template>
                   <template v-else>{{ col.label }}</template>
@@ -95,8 +95,8 @@
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'actions'">
                     <q-checkbox v-if="isTrainer" class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)"
-                      @update:model-value="selectSlot($event, props.row)" :disable="!isSlotSelectable(props.row)"
-                      dense />
+                      color="secondary" @update:model-value="selectSlot($event, props.row)"
+                      :disable="!isSlotSelectable(props.row)" dense />
                   </template>
                   <template v-else>{{ col.value }}</template>
                   </q-td>
@@ -109,7 +109,7 @@
             <div class="full-width align-center">
               <span class="text-weight-bold text-petrol"> Sessions collectives</span>
               <span v-if="displayDuration(formattedCollectiveSlots.notInvoiced)"
-                class="text-weight-bold text-navy-80 q-ma-md">
+                class="text-weight-bold text-secondary q-ma-md">
                 <br><q-icon size="10px" name="circle" color="bright-orange" />
                 Non facturé : {{ formattedCollectiveSlots.notInvoiced }} -
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedCollectiveSlotsAmount }} (dont
@@ -140,7 +140,7 @@
             <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">
               Session du {{ day }}
               <span v-if="displayDuration(formattedCollectiveSlots.slots[day].notInvoicedDuration)"
-                class="text-navy-80 q-ma-md">
+                class="text-secondary q-ma-md">
                 <q-icon size="10px" name="circle" color="bright-orange" />
                 &nbsp;Non facturé : {{ formattedCollectiveSlots.slots[day].notInvoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].notInvoicedAmount }})
@@ -161,10 +161,11 @@
               <template #header="{ props }">
                 <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
                   <template v-if="col.name === 'actions'">
-                    <q-checkbox v-if="isTrainer" class="q-mr-sm" size="sm"
-                        :model-value="areMultipleSlotsSelected(trainerInfos.collectiveSlots.slots[day].slots)"
-                    @update:model-value="selectSlotList($event, trainerInfos.collectiveSlots.slots[day].slots, true)"
-                    :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => !isSlotSelectable(s))" />
+                    <q-checkbox v-if="isTrainer"
+                      :model-value="areMultipleSlotsSelected(trainerInfos.collectiveSlots.slots[day].slots)"
+                      @update:model-value="selectSlotList($event, trainerInfos.collectiveSlots.slots[day].slots, true)"
+                      :disable="trainerInfos.collectiveSlots.slots[day].slots.every(s => !isSlotSelectable(s))"
+                      class="q-mr-sm" size="sm" color="secondary" />
                   </template>
                   <template v-else>{{ col.label }}</template>
                 </q-th>
@@ -178,8 +179,8 @@
                   </template>
                   <template v-else-if="col.name === 'actions'">
                     <q-checkbox v-if="isTrainer" class="q-mr-md" :model-value="selectedSlotIds.includes(props.row._id)"
-                    @update:model-value="selectSlot($event, props.row, trainerInfos.collectiveSlots.slots[day].slots)"
-                      :disable="!isSlotSelectable(props.row)" dense />
+                      @update:model-value="selectSlot($event, props.row, trainerInfos.collectiveSlots.slots[day].slots)"
+                      color="secondary" :disable="!isSlotSelectable(props.row)" dense />
                   </template>
                   <template v-else>{{ col.value }}</template>
                 </q-td>

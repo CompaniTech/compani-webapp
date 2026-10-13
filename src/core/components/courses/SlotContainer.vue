@@ -16,7 +16,7 @@
           @blur="updateEstimatedStartDate" :disabled="course.archivedAt" />
       </div>
       <q-card class="q-pa-md">
-        <q-item-section @click="showStepDetails" class="slots cursor-pointer bg-petrol-10 navy-80">
+        <q-item-section @click="showStepDetails" class="slots cursor-pointer bg-petrol-10 navy-80 q-mb-sm">
           {{ showStepList ? 'Masquer' : 'Afficher' }} la liste des étapes de la formation
           <q-icon size="xs" :name="showStepList ? 'expand_less' : 'expand_more'" color="navy-80" />
         </q-item-section>
