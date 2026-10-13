@@ -34,7 +34,7 @@
                 </div>
                 <div class="q-ml-lg bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="bright-orange attendance" />
-                  <div class="q-ml-xs text-navy-80">
+                  <div class="q-ml-xs text-secondary">
                     Annulée par avoir -
                     <span class="clickable-name" :disable="pdfLoading"
                       @click.stop="downloadCreditNote(bill.courseCreditNote)">
@@ -58,7 +58,7 @@
                 </div>
                 <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="bright-orange attendance" />
-                  <div class="q-ml-xs text-navy-80">
+                  <div class="q-ml-xs text-secondary">
                     Annulée par avoir -
                     <span class="clickable-name" :disable="pdfLoading"
                       @click.stop="downloadCreditNote(bill.courseCreditNote)">

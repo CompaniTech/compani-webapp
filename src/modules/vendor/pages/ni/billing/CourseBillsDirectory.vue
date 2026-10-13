@@ -13,7 +13,7 @@
               </div>
               <div class="row items-center" v-if="props.row.courseCreditNote">
                 <q-icon size="12px" name="fas fa-times-circle" color="bright-orange" />
-                <div class="q-ml-xs text-navy-80">
+                <div class="q-ml-xs text-secondary">
                   Annulée par avoir -
                   <span class="clickable-name cursor-pointer"
                     @click.stop="downloadCreditNote(props.row.courseCreditNote)">
