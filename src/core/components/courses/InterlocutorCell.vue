@@ -17,7 +17,7 @@
           </div>
           <div v-else class="row items-center text-14">
             <div class="dot dot-orange" />
-            <div class="text-navy-80">numéro manquant</div>
+            <div class="text-bright-orange">numéro manquant</div>
           </div>
           <div v-if="contact._id === interlocutor._id" class="contact">
             <q-icon size="xxs" name="person" class="q-mr-xs" />
