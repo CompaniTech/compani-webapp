@@ -64,7 +64,7 @@
                   :disable="isPublished(subProgram) || !!subProgram.archivedAt" />
               </div>
             </q-card-section>
-            <div class="bg-bright-orange-40 activity-container" v-if="areActivitiesVisible[step._id]">
+            <div class="bg-petrol-10 activity-container" v-if="areActivitiesVisible[step._id]">
               <draggable v-model="step.activities"
                 :disabled="$q.platform.is.mobile || isPublishedOrLocked(step) || !!subProgram.archivedAt"
                 class="activity-draggable" ghost-class="ghost" @change="dropActivity(subProgram._id, step._id)"

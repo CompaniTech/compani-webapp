@@ -53,7 +53,7 @@ export default {
   flex: 1
   flex-direction: column
   align-items: center
-  background-color: $bright-orange-10
+  background-color: $petrol-10
   border-radius: 8px
 .answer
   font-size: 16px
