@@ -48,8 +48,8 @@
                     class="q-py-xs" />
                   <q-icon v-else-if="slotInAttendanceSheet[col.slot] === IN_PROGRESS" name="mdi-checkbox-marked"
                     color="orange-500" class="q-py-xs" />
-                  <q-icon v-else-if="slotInAttendanceSheet[col.slot] === MISSING" name="mdi-alert-box" color="red"
-                    class="q-py-xs" />
+                  <q-icon v-else :class="{ invisible: slotInAttendanceSheet[col.slot] !== MISSING }"
+                    name="mdi-alert-box" color="red" class="q-py-xs" />
                 </span>
                 <div class="text-primary date">{{ col.month }}</div>
                 <div class="number">{{ col.day }}</div>
