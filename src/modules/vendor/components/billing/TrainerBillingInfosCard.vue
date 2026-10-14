@@ -11,7 +11,7 @@
           </div>
           <div class="q-py-sm">
             <span v-if="displayDuration(formattedTrainerDurations.notInvoiced)"
-              class="text-weight-bold text-orange-400">
+              class="text-weight-bold text-orange-500">
               Non facturé : {{ formattedTrainerDurations.notInvoiced }} -
               {{ formattedTrainerDurations.notInvoicedAmount }}
               &nbsp;(dont {{ formattedTrainerDurations.notInvoicedAbsence }} d'absence)
@@ -39,7 +39,7 @@
                 <span class="text-weight-bold text-copper-500 clickable-name">{{ course.name }}</span>
               </router-link>
               <span v-if="displayDuration(course.notInvoicedSingleSlotsDuration)"
-                class="text-weight-bold text-orange-400">
+                class="text-weight-bold text-orange-500">
                   <br> Non facturé : {{ course.notInvoicedSingleSlotsDuration }} -
                   {{ course.notInvoicedSingleSlotsAmount }} (dont
                   &nbsp;{{ course.notInvoicedSingleSlotsAbsenceDuration }} d'absence)
@@ -60,7 +60,7 @@
             <div v-for="stepName of Object.keys(course.singleTraineeSlots)" :key="stepName" class="q-pa-sm q-pl-md">
               <span class="text-italic">{{ stepName }}</span>
               &nbsp;:&nbsp;
-              <span class="text-orange-400"
+              <span class="text-orange-500"
                 v-if="displayDuration(course.singleTraineeSlots[stepName].notInvoicedDuration)">
                 {{ course.singleTraineeSlots[stepName].notInvoicedDuration }} non facturées
                 &nbsp;({{ course.singleTraineeSlots[stepName].notInvoicedAmount }})
@@ -106,7 +106,7 @@
             <div class="full-width align-center">
               <span class="text-weight-bold text-copper-500"> Sessions collectives</span>
               <span v-if="displayDuration(formattedCollectiveSlots.notInvoiced)"
-                class="text-weight-bold text-orange-400 q-ma-md">
+                class="text-weight-bold text-orange-500 q-ma-md">
                 <br> Non facturé : {{ formattedCollectiveSlots.notInvoiced }} -
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedCollectiveSlotsAmount }} (dont
                 &nbsp;{{ formattedCollectiveSlots.notInvoicedAbsence }} d'absence)
@@ -136,7 +136,7 @@
             <q-item-label class="q-pl-lg text-weight-bold q-pt-lg">
               Session du {{ day }}
               <span v-if="displayDuration(formattedCollectiveSlots.slots[day].notInvoicedDuration)"
-                class="text-orange-400 q-ma-md">
+                class="text-orange-500 q-ma-md">
                 &nbsp;Non facturé : {{ formattedCollectiveSlots.slots[day].notInvoicedDuration }}
                 ({{ formattedCollectiveSlots.slots[day].notInvoicedAmount }})
               </span>

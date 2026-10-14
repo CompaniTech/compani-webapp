@@ -176,7 +176,7 @@ export default {
 
 .input-file-container
   padding: 6px 10px
-  color: $copper-500
+  color: $primary
   cursor: pointer
   .input-file-empty
     font-size: 14px

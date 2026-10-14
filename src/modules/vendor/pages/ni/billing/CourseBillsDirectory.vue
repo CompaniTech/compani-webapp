@@ -12,7 +12,7 @@
                 {{ col.value }}
               </div>
               <div class="row items-center" v-if="props.row.courseCreditNote">
-                <q-icon size="12px" name="fas fa-times-circle" color="orange-500" />
+                <q-icon size="12px" name="fas fa-times-circle" color="secondary" />
                 <div class="q-ml-xs text-orange-500">
                   Annulée par avoir -
                   <span class="clickable-name text-orange-500 cursor-pointer"

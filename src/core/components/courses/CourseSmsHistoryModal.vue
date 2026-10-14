@@ -8,7 +8,7 @@
     </ni-banner>
     <div class="q-mb-lg">
       <div v-for="history of smsHistoryList" :key="history._id">
-        <ni-banner v-if="history.missingPhones.length" icon="info_outline" icon-color="orange-500"
+        <ni-banner v-if="history.missingPhones.length" icon="info_outline" icon-color="secondary"
           class="bg-orange-100 text-orange-500">
           <template #message>
             Pour cet envoi, il manquait le numéro de téléphone de
