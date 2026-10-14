@@ -274,8 +274,13 @@ export default {
 
         if (successCount) NotifyPositive(`${formatQuantity('paiement modifié', successCount)}.`);
         if (failureCount) {
-          results.filter(r => r.status === 'rejected').forEach(r => console.error(r.reason));
-          NotifyNegative('Certains paiements n\'ont pas pu être modifiés.');
+          const errorMessage = [];
+          results.filter(r => r.status === 'rejected').forEach((r) => {
+            console.error(r.reason);
+            if (get(r.reason, 'data.message')) errorMessage.push(r.reason.data.message);
+          });
+          if (errorMessage.length) [...new Set(errorMessage)].forEach(m => NotifyNegative(m));
+          else NotifyNegative('Certains paiements n\'ont pas pu être modifiés.');
         }
 
         await refreshPayments();
