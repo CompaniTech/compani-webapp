@@ -848,7 +848,7 @@ export default {
 .redirection
   &:hover
     text-decoration: underline
-    text-decoration-color: $copper-500
+    text-decoration-color: $primary
 
 .bill-title
   display: flex

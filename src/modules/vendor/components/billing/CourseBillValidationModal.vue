@@ -78,5 +78,5 @@ export default {
 <style lang="sass" scoped>
 .banner
   background-color: $orange-100
-  color: $orange-500
+  color: $secondary
 </style>

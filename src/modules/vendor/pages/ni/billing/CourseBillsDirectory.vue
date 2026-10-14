@@ -156,5 +156,5 @@ export default {
 .sending-dates
   width: 10%
   padding: 4px
-  color: $copper-500
+  color: $primary
 </style>
