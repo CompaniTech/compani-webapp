@@ -283,8 +283,10 @@ export default {
           else NotifyNegative('Certains paiements n\'ont pas pu être modifiés.');
         }
 
-        await refreshPayments();
-        if (successCount) multipleEditionModal.value = false;
+        if (successCount) {
+          await refreshPayments();
+          multipleEditionModal.value = false;
+        }
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de l\'édition des paiements.');
