@@ -9,7 +9,7 @@
     <div>
       <span class="text-weight-bold">Fonction : </span>
       <span v-if="trainer.identity.title">{{ trainerGender }}</span>
-      <span v-else class="text-orange-700">Civilité manquante</span>
+      <span v-else class="text-orange-500">Civilité manquante</span>
     </div>
     <div><span class="text-weight-bold">Nom du programme :</span> {{ courses[0].subProgram.program.name }}</div>
     <div>

@@ -805,7 +805,7 @@ export default {
   background-color: $orange-200
   padding: 8px 16px
   border-radius: 15px 15px 0px 0px
-  color: $orange-900
+  color: $orange-500
 .slots
   flex-direction: row
   justify-content: space-between

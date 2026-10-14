@@ -11,7 +11,7 @@
               <q-td v-for="col in props.cols" :key="col.name" :data-label="col.label" :props="props"
                 :style="col.style" :class="[{ 'border': props.rowIndex === 0 }]">
                 <template v-if="col.name === 'actions'">
-                  <div v-if="props.row.cancelledAt" class="text-orange-700 q-mr-md">Annulé</div>
+                  <div v-if="props.row.cancelledAt" class="text-orange-500 q-mr-md">Annulé</div>
                   <div v-else>
                     <ni-button icon="file_download" color="primary" type="a" :href="props.row.file.link"
                       :disable="!props.row.file.link" />
