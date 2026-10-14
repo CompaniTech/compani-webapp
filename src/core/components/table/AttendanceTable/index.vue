@@ -43,6 +43,14 @@
           <q-tr :props="props">
             <q-th v-for="col in props.cols" :key="col.name" :props="props">
               <div v-if="/(slot)/.test(col.name)">
+                <span v-if="isSingleCourse">
+                  <q-icon v-if="slotInAttendanceSheet[col.slot] === COMPLETED" name="mdi-checkbox-marked" color="green"
+                    class="q-py-xs" />
+                  <q-icon v-else-if="slotInAttendanceSheet[col.slot] === IN_PROGRESS" name="mdi-checkbox-marked"
+                    color="orange-500" class="q-py-xs" />
+                  <q-icon v-else-if="slotInAttendanceSheet[col.slot] === MISSING" name="mdi-alert-box" color="red"
+                    class="q-py-xs" />
+                </span>
                 <div class="text-primary date">{{ col.month }}</div>
                 <div class="number">{{ col.day }}</div>
                 <div class="text-weight-bold date">{{ col.weekDay }}</div>
@@ -107,6 +115,17 @@
         <span><q-icon name="mdi-checkbox-marked" color="primary" class="q-py-xs" />1 clic : présent / </span>
         <span><q-icon name="mdi-alert-box" color="orange-500" class="q-py-xs" /> 2 clics : absent / </span>
         <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
+      </div>
+      <div v-if="isSingleCourse" class="q-px-md q-pb-md text-14">
+        <span><q-icon name="mdi-checkbox-marked" color="green" class="q-py-xs" />
+          feuille d'émargement complète /
+        </span>
+        <span><q-icon name="mdi-checkbox-marked" color="orange-500" class="q-py-xs" />
+          feuille d'émargement en attente de signature /
+        </span>
+        <span><q-icon name="mdi-alert-box" color="red" class="q-py-xs" />
+          feuille d'émargement manquante
+        </span>
       </div>
     </q-card>
 
@@ -191,6 +210,8 @@ import {
   INTRA_HOLDING,
   PRESENT,
   MISSING,
+  COMPLETED,
+  IN_PROGRESS,
 } from '@data/constants';
 import { defineAbilitiesFor, defineAbilitiesForCourse } from '@helpers/ability';
 import { descendingSortBy } from '@helpers/dates/utils';
@@ -362,6 +383,23 @@ export default {
       attendanceSheetValidations,
     } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading, refreshAttendances);
 
+    const slotInAttendanceSheet = computed(() => {
+      if (!isSingleCourse.value) return {};
+      const slotIds = course.value.slots
+        .filter(s => s.startDate && CompaniDate(s.startDate).isBefore(CompaniDate()) && !s.missingAttendances.length)
+        .map(s => s._id);
+      return slotIds.reduce((acc, value) => {
+        const slotSignatures = formattedAttendanceSheets.value
+          .filter(as => as.slots && as.slots.some(s => s._id === value))
+          .map(as => as.slots.find(s => s._id === value));
+        if (!slotSignatures.length) acc[value] = MISSING;
+        else if (slotSignatures.every(s => !s.trainerSignature) || slotSignatures.every(s => s.traineesSignature)) {
+          acc[value] = COMPLETED;
+        } else acc[value] = IN_PROGRESS;
+        return acc;
+      }, {});
+    });
+
     const getDelimiterClass = (index) => {
       if (index === course.value.trainees.length) return 'unsubscribed-delimiter';
       if (index === course.value.trainees.length - 1) return 'last-subscribed-interline';
@@ -413,6 +451,8 @@ export default {
       INTRA_HOLDING,
       MISSING,
       PRESENT,
+      COMPLETED,
+      IN_PROGRESS,
       loading,
       modalLoading,
       attendanceSheetTableLoading,
@@ -447,6 +487,7 @@ export default {
       editionSlotsGroupedByStep,
       isSingleCourse,
       loggedUser,
+      slotInAttendanceSheet,
       // Methods
       get,
       attendanceCheckboxValue,
