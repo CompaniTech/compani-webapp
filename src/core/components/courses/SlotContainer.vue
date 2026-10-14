@@ -811,7 +811,7 @@ export default {
   justify-content: space-between
   padding: 16px
 .index
-  background-color: $copper-500
+  background-color: $primary
   border-radius: 50%
   width: 20px
   height: 20px

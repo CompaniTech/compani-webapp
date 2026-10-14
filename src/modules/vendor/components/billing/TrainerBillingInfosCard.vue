@@ -36,7 +36,7 @@
           <template #header>
             <div class="full-width">
               <router-link :to="goToCourse(course._id)" @click.stop>
-                <span class="text-weight-bold text-copper-600 clickable-name">{{ course.name }}</span>
+                <span class="text-weight-bold text-copper-500 clickable-name">{{ course.name }}</span>
               </router-link>
               <span v-if="displayDuration(course.notInvoicedSingleSlotsDuration)"
                 class="text-weight-bold text-orange-400">
@@ -104,7 +104,7 @@
         <q-expansion-item class="q-ma-sm bg-white" v-if="Object.keys(trainerInfos.collectiveSlots.slots).length">
           <template #header>
             <div class="full-width align-center">
-              <span class="text-weight-bold text-copper-600"> Sessions collectives</span>
+              <span class="text-weight-bold text-copper-500"> Sessions collectives</span>
               <span v-if="displayDuration(formattedCollectiveSlots.notInvoiced)"
                 class="text-weight-bold text-orange-400 q-ma-md">
                 <br> Non facturé : {{ formattedCollectiveSlots.notInvoiced }} -
@@ -168,7 +168,7 @@
                 <q-td v-for="col in props.cols" :key="col.name" :props="props">
                   <template v-if="col.name === 'traineeName'">
                     <router-link :to="goToCourse(props.row.courseId)" @click.stop>
-                      <span class="text-weight-bold text-copper-600 clickable-name">{{ col.value }}</span>
+                      <span class="text-weight-bold text-copper-500 clickable-name">{{ col.value }}</span>
                     </router-link>
                   </template>
                   <template v-else-if="col.name === 'actions'">

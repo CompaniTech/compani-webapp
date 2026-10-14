@@ -2,7 +2,7 @@
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input" container-class="modal-container-md">
     <template v-if="sendSms" #title>Envoyer un <span class="text-weight-bold">message</span></template>
     <template v-else #title>Historique des <span class="text-weight-bold">messages</span></template>
-    <ni-banner v-if="sendSms" icon="info_outline" icon-color="copper-500"
+    <ni-banner v-if="sendSms" icon="info_outline" icon-color="primary"
       class="bg-copper-grey-100 text-copper-grey-800">
       <template #message>Assurez-vous d'éviter les doublons de messages en consultant l'historique ci-dessous</template>
     </ni-banner>

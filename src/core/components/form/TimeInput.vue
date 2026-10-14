@@ -19,7 +19,7 @@
             </q-list>
           </q-menu>
         </q-icon>
-        <q-icon v-else name="lock" class="cursor-pointer" @click="click" color="copper-500" />
+        <q-icon v-else name="lock" class="cursor-pointer" @click="click" color="primary" />
       </template>
     </q-input>
   </div>
