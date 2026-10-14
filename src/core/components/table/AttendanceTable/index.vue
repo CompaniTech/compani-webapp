@@ -124,7 +124,7 @@
           feuille d'émargement en attente de signature /
         </span>
         <span><q-icon name="mdi-alert-box" color="red" class="q-py-xs" />
-          pas de feuille d'émargement
+          feuille d'émargement manquante
         </span>
       </div>
     </q-card>
