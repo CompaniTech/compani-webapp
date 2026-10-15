@@ -375,6 +375,7 @@ export const COURSE_SLOT = 'course_slot';
 export const SINGLE_COURSE_SLOT = 'single_course_slot';
 export const COURSE_BILL = 'course_bill';
 export const COURSE_PAYMENT = 'course_payment';
+export const TRAINER_PAYMENT = 'trainer_payment';
 export const DRAFT_COURSE_BILL = 'draft_course_bill';
 export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Formations de groupe', value: COURSE },
@@ -384,7 +385,8 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Questionnaires de satisfaction', value: END_OF_COURSE },
   { label: 'Factures et avoirs', value: COURSE_BILL },
   { label: 'Factures à venir', value: DRAFT_COURSE_BILL },
-  { label: 'Paiements et remboursements', value: COURSE_PAYMENT },
+  { label: 'Paiements et remboursements clients', value: COURSE_PAYMENT },
+  { label: 'Paiements et remboursements intervenants', value: TRAINER_PAYMENT },
   { label: 'Questionnaires d\'auto-positionnement par groupe', value: SELF_POSITIONNING },
 
 ];
