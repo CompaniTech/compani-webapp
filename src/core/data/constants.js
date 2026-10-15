@@ -386,7 +386,7 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Factures et avoirs', value: COURSE_BILL },
   { label: 'Factures à venir', value: DRAFT_COURSE_BILL },
   { label: 'Paiements et remboursements clients', value: COURSE_PAYMENT },
-  { label: 'Paiements et remboursements intervenants', value: TRAINER_PAYMENT },
+  { label: 'Paiements intervenants', value: TRAINER_PAYMENT },
   { label: 'Questionnaires d\'auto-positionnement par groupe', value: SELF_POSITIONNING },
 
 ];
