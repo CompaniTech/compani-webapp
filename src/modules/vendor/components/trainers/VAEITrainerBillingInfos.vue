@@ -142,7 +142,7 @@ export default {
         await TrainerBills.create(form);
         trainerFeesBillModal.value = false;
 
-        NotifyPositive('Facture envoyée.');
+        NotifyPositive('Facture transmise.');
       } catch (e) {
         console.error(e);
         NotifyNegative('Erreur lors de l\'envoi de la facture.');
