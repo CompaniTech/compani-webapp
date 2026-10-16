@@ -16,7 +16,7 @@
           @update:model-value="selectPlan">
           <template #label="opt">
             <q-expansion-item dense dense-toggle icon="calendar_month" :label="opt.label">
-              <q-card class="bg-copper-grey-100 q-pa-sm">
+              <q-card class="q-pa-sm">
                 <div v-for="(price, j) of opt.prices" :key="j" class="text-caption q-py-xs">
                   Mois {{ j + 1 }} : {{ formatPrice(price) }}
                 </div>
