@@ -145,6 +145,7 @@ export default {
         NotifyPositive('Facture transmise.');
       } catch (e) {
         console.error(e);
+        if (e.data && e.data.statusCode === 409 && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de l\'envoi de la facture.');
       } finally {
         trainerFeesBillLoading.value = false;
