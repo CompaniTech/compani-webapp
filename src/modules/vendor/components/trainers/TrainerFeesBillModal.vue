@@ -6,7 +6,9 @@
     <ni-input type="file" in-modal caption="Facture (PDF)" v-model="bill.file" @blur="validations.file.$touch"
       :error="validations.file.$error" :extensions="[DOC_EXTENSIONS]" required-field />
     <ni-input caption="Numéro de facture" in-modal v-model="bill.number" @blur="validations.number.$touch"
-      :error="validations.number.$error" last required-field />
+      :error="validations.number.$error" required-field />
+    <ni-input caption="Montant" suffix="€" type="number" in-modal v-model="bill.amount" last required-field
+      @blur="validations.amount.$touch" :error="validations.amount.$error" :error-message="amountErrorMessage" />
     <template #footer>
       <ni-button class="full-width modal-btn bg-primary" label="Soumettre ma facture" :loading="loading" color="white"
         @click="submit" />
@@ -15,10 +17,12 @@
 </template>
 
 <script>
+import { computed } from 'vue';
+import get from 'lodash/get';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
-import { DOC_EXTENSIONS } from '@data/constants';
+import { DOC_EXTENSIONS, REQUIRED_LABEL } from '@data/constants';
 
 export default {
   name: 'TrainerFeesBillModal',
@@ -41,9 +45,15 @@ export default {
 
     const submit = () => emit('submit');
 
+    const amountErrorMessage = computed(() => (
+      get(props.validations, 'amount.required.$response') === false ? REQUIRED_LABEL : 'Montant non valide'
+    ));
+
     return {
       // Data
       DOC_EXTENSIONS,
+      // Computed
+      amountErrorMessage,
       // Methods
       hide,
       input,
