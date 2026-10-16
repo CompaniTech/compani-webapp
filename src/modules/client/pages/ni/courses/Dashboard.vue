@@ -1,8 +1,8 @@
 <template>
   <q-page class="client-background" padding>
     <ni-title-header title="La formation Compani dans ma structure" />
-    <div v-if="linkRequests.length" class="bg-yellow-100 q-my-md q-pa-md">
-      <p class="text-orange-900 text-weight-bold">Demandes de rattachement à ma structure</p>
+    <div v-if="linkRequests.length" class="bg-orange-100 q-my-md q-pa-md">
+      <p class="text-orange-500 text-weight-bold">Demandes de rattachement à ma structure</p>
       <div class="request-container">
         <company-link-request-cell v-for="request in linkRequests" :key="request._id" :request="request"
           @click="refreshCompanyLinkRequests" />
@@ -225,7 +225,7 @@ export default {
 
 .section-title
   font-size: 24px
-  color: $copper-grey-900
+  color: $copper-grey-800
 .request-container
   flex-direction: row
   grid-auto-flow: row

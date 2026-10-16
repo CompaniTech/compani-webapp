@@ -47,7 +47,7 @@
                   <q-icon v-if="slotInAttendanceSheet[col.slot] === COMPLETED" name="mdi-checkbox-marked" color="green"
                     class="q-py-xs" />
                   <q-icon v-else-if="slotInAttendanceSheet[col.slot] === IN_PROGRESS" name="mdi-checkbox-marked"
-                    color="orange-500" class="q-py-xs" />
+                    color="secondary" class="q-py-xs" />
                   <q-icon v-else :class="{ invisible: slotInAttendanceSheet[col.slot] !== MISSING }"
                     name="mdi-alert-box" color="red" class="q-py-xs" />
                 </span>
@@ -65,7 +65,7 @@
                 <template v-if="slotCheckboxValue(col.slot, col.trainees, MISSING)">
                   <q-checkbox v-if="canUpdate && course.trainees.length" :model-value="true" dense size="sm"
                     @update:model-value="updateSlotCheckbox(col.slot, col.trainees)" :disable="disableCheckbox"
-                    checked-icon="mdi-alert-box" color="orange-500" />
+                    checked-icon="mdi-alert-box" color="secondary" />
                 </template>
                 <template v-else>
                   <q-checkbox v-if="canUpdate && course.trainees.length" :disable="disableCheckbox"
@@ -94,7 +94,7 @@
               <q-checkbox v-else-if="attendanceCheckboxValue(col.value, col.slot, MISSING)" :model-value="true" dense
                 size="sm" @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
                 :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)"
-                checked-icon="mdi-alert-box" color="orange-500" />
+                checked-icon="mdi-alert-box" color="secondary" />
               <q-checkbox v-else :model-value="attendanceCheckboxValue(col.value, col.slot, PRESENT)" dense size="sm"
                 @update:model-value="updateAttendanceCheckbox(col.value, col.slot, props.row.external)"
                 :disable="disableCheckbox || !isTraineeConcerned(col.trainees, props.row)" />
@@ -113,14 +113,14 @@
         @click="openTraineeAttendanceAdditionModal" />
       <div class="q-pa-md text-14">
         <span><q-icon name="mdi-checkbox-marked" color="primary" class="q-py-xs" />1 clic : présent / </span>
-        <span><q-icon name="mdi-alert-box" color="orange-500" class="q-py-xs" /> 2 clics : absent / </span>
+        <span><q-icon name="mdi-alert-box" color="secondary" class="q-py-xs" /> 2 clics : absent / </span>
         <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
       </div>
       <div v-if="isSingleCourse" class="q-px-md q-pb-md text-14">
         <span><q-icon name="mdi-checkbox-marked" color="green" class="q-py-xs" />
           feuille d'émargement complète /
         </span>
-        <span><q-icon name="mdi-checkbox-marked" color="orange-500" class="q-py-xs" />
+        <span><q-icon name="mdi-checkbox-marked" color="secondary" class="q-py-xs" />
           feuille d'émargement en attente de signature /
         </span>
         <span><q-icon name="mdi-alert-box" color="red" class="q-py-xs" />
