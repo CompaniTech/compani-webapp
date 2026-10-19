@@ -158,8 +158,6 @@ export default {
       border-radius: 0
       @media screen and (min-width: $breakpoint-sm-min)
         min-width: 300px
-    .q-field__bottom
-      display: none
     .q-field__native
       padding-bottom: 20px
 

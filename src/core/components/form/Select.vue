@@ -142,13 +142,12 @@ export default {
 
 <style lang="sass" scoped>
 .no-bottom
-  padding-bottom: 0
   :deep(.q-field__bottom)
     display: none
 .select-icon
   margin: 0
 
-:deep(.q-field__inner)
+:deep(.q-field__control)
   height: auto
 :deep(.q-chip)
   background-color: $copper-grey-400

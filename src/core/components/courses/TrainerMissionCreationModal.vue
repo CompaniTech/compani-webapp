@@ -239,8 +239,6 @@ export default {
   flex-shrink: 1
   :deep(.input-caption)
     display: none
-  :deep(.q-field__bottom)
-    display: block !important
   :deep(.q-field__control)
     height: 32px !important
     min-height: 32px !important
