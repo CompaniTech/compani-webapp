@@ -805,13 +805,13 @@ export default {
   background-color: $orange-200
   padding: 8px 16px
   border-radius: 15px 15px 0px 0px
-  color: $orange-900
+  color: $secondary
 .slots
   flex-direction: row
   justify-content: space-between
   padding: 16px
 .index
-  background-color: $copper-500
+  background-color: $primary
   border-radius: 50%
   width: 20px
   height: 20px

@@ -11,7 +11,7 @@
         </ni-banner>
       </div>
       <ni-banner v-if="!info.traineesQuantity && ![INTRA, SINGLE].includes(info.courseType)" icon="info_outline"
-        icon-color="orange-700" class="bg-orange-50 text-orange-900">
+        icon-color="secondary" class="bg-orange-100 text-orange-500">
         <template #message>Aucun stagiaire des structures sélectionnées n'est inscrit à la formation</template>
       </ni-banner>
     </div>
@@ -77,6 +77,6 @@ export default {
 
 <style lang="sass" scoped>
 .banner
-  background-color: $orange-50
-  color: $orange-900
+  background-color: $orange-100
+  color: $secondary
 </style>

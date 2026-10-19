@@ -19,7 +19,7 @@
             </q-list>
           </q-menu>
         </q-icon>
-        <q-icon v-else name="lock" class="cursor-pointer" @click="click" color="copper-500" />
+        <q-icon v-else name="lock" class="cursor-pointer" @click="click" color="primary" />
       </template>
     </q-input>
   </div>
@@ -134,5 +134,5 @@ export default {
   width: 100px
 
 :deep(.q-field__native, .q-field__prefix, .q-field__suffix, .q-field__input)
-  color: $copper-grey-900
+  color: $copper-grey-800
 </style>

@@ -16,10 +16,9 @@
 import Modal from '@components/modal/Modal';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
-import { PAYMENT_STATUS_OPTIONS, XML_GENERATED } from '@data/constants';
 
 export default {
-  name: 'MultipleCoursePaymentEditionModal',
+  name: 'MultiplePaymentEditionModal',
   components: {
     'ni-modal': Modal,
     'ni-select': Select,
@@ -28,13 +27,12 @@ export default {
   props: {
     modelValue: { type: Boolean, default: false },
     status: { type: String, default: '' },
+    statusOptions: { type: Array, required: true },
     loading: { type: Boolean, default: false },
     validations: { type: Object, default: () => ({}) },
   },
   emits: ['submit', 'hide', 'update:model-value', 'update:status'],
   setup (_, { emit }) {
-    const statusOptions = PAYMENT_STATUS_OPTIONS.filter(status => status.value !== XML_GENERATED);
-
     const submit = () => emit('submit');
 
     const hide = () => emit('hide');
@@ -44,8 +42,6 @@ export default {
     const updateStatus = event => emit('update:status', event);
 
     return {
-      // Data
-      statusOptions,
       // Methods
       hide,
       submit,

@@ -1,9 +1,9 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input">
     <template #title>
-        Télécharger le <span class="text-weight-bold">fichier de prélèvements SEPA</span>
+        Télécharger le <span class="text-weight-bold">{{ title }}</span>
       </template>
-      <ni-input :model-value="transactionName" caption="Nom du lot de prélèvements" required-field
+      <ni-input :model-value="transactionName" :caption="caption" required-field
         @update:model-value="update($event)" :error="validations.$error" :error-message="errorMessage" />
       <template #footer>
         <ni-button class="bg-primary full-width modal-btn" label="Télécharger" icon-right="add" color="white"
@@ -32,6 +32,8 @@ export default {
     modelValue: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
     validations: { type: Object, default: () => ({}) },
+    title: { type: String, default: 'fichier de prélèvements SEPA' },
+    caption: { type: String, default: 'Nom du lot de prélèvements' },
   },
   emits: ['submit', 'hide', 'update:model-value', 'update:transaction-name'],
   setup (props, { emit }) {

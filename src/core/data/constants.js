@@ -34,6 +34,7 @@ export const EMAIL_OPTIONS = [
   { label: 'Mi-formation', value: MIDDLE_COURSE },
   { label: 'Fin de formation', value: END_COURSE },
   { label: 'Relance', value: RESEND },
+  { label: 'Autre', value: OTHER },
 ];
 
 // EVENTS
@@ -374,6 +375,7 @@ export const COURSE_SLOT = 'course_slot';
 export const SINGLE_COURSE_SLOT = 'single_course_slot';
 export const COURSE_BILL = 'course_bill';
 export const COURSE_PAYMENT = 'course_payment';
+export const TRAINER_PAYMENT = 'trainer_payment';
 export const DRAFT_COURSE_BILL = 'draft_course_bill';
 export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Formations de groupe', value: COURSE },
@@ -383,7 +385,8 @@ export const VENDOR_EXPORT_HISTORY_TYPES = [
   { label: 'Questionnaires de satisfaction', value: END_OF_COURSE },
   { label: 'Factures et avoirs', value: COURSE_BILL },
   { label: 'Factures à venir', value: DRAFT_COURSE_BILL },
-  { label: 'Paiements et remboursements', value: COURSE_PAYMENT },
+  { label: 'Paiements et remboursements clients', value: COURSE_PAYMENT },
+  { label: 'Paiements intervenants', value: TRAINER_PAYMENT },
   { label: 'Questionnaires d\'auto-positionnement par groupe', value: SELF_POSITIONNING },
 
 ];
@@ -477,7 +480,8 @@ export const NOT_INVOICED = 'not_invoiced';
 export const INVOICED = 'invoiced';
 export const PAID = 'paid';
 export const SLOT_STATUS = { [NOT_INVOICED]: 'Non facturé', [INVOICED]: 'Facturé', [PAID]: 'Réglé' };
-export const STATUS_CHANGE_OPTIONS = {
-  [INVOICED]: [{ label: 'Réglé', value: PAID }, { label: 'Non facturé', value: NOT_INVOICED }],
-  [PAID]: [{ label: 'Facturé', value: INVOICED }],
-};
+export const TRAINER_PAYMENT_STATUS_OPTIONS = [
+  { label: 'En attente', value: PENDING },
+  { label: 'Fichier XML associé', value: XML_GENERATED },
+  { label: 'Réglé', value: PAID },
+];

@@ -17,22 +17,22 @@ jobs:
       # Check out the repository
       - id: checkout_api
         continue-on-error: true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           repository: 'CompaniTech/compani-api'
           ref: ${{ github.event.pull_request.head.ref }}
           path: 'api'
 
       - if: ${{ steps.checkout_api.outcome != 'success' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           repository: 'CompaniTech/compani-api'
           ref: dev
           path: 'api'
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22.20.0
+          node-version: 24.21.0
 
       - run: cd api && yarn install
         env:
@@ -41,14 +41,14 @@ jobs:
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           ALENVI_TOKEN: ${{ secrets.ALENVI_TOKEN }}
           REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           path: 'webapp'
       - run: cd webapp && npm ci
       # Install NPM dependencies, cache them correctly
       # and run all Cypress tests
       - name: Cypress run
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v7
         with:
           working-directory: ./webapp
           start: npm run start:workflow:api, npm run start:workflow:webapp

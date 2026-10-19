@@ -63,8 +63,9 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
           label: 'Certificats réalisation mensuels',
         },
         { name: 'ni billing dashboard', icon: 'credit_card', label: 'A facturer' },
-        { name: 'ni billing directory', icon: 'receipt', label: 'Factures' },
-        { name: 'ni billing payments', icon: 'mdi-bank', label: 'Paiements' },
+        { name: 'ni billing directory', icon: 'receipt', label: 'Factures clients' },
+        { name: 'ni billing payments', icon: 'mdi-bank', label: 'Paiements clients' },
+        { name: 'ni billing trainers payments', icon: 'mdi-account-cash-outline', label: 'Paiements Intervenants' },
         {
           name: 'ni billing trainers follow up',
           icon: 'mdi-account-arrow-right-outline',

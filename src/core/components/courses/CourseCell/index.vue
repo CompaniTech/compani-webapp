@@ -269,7 +269,7 @@ export default {
 .item-section-container
   min-width: 0
 .infos-course-nearest-date
-  color: $copper-grey-900 !important
+  color: $copper-grey-800 !important
   font-size: 14px
 .label
   display: inline-block

@@ -39,7 +39,7 @@
                   </router-link>
                 </div>
                 <div class="row items-center" v-if="props.row.courseCreditNote">
-                  <q-icon size="12px" name="fas fa-times-circle" color="orange-500 attendance" />
+                  <q-icon size="12px" name="fas fa-times-circle" color="secondary attendance" />
                   <div class="q-ml-xs text-orange-500">
                     Annulée par avoir -
                     <span class="download-credit-note" @click.stop="downloadCreditNote(props.row.courseCreditNote)">
@@ -887,7 +887,7 @@ export default {
 .sending-dates
   width: 10%
   padding: 4px
-  color: $copper-500
+  color: $primary
 .client-layout
   .payment-without-checkbox
     width: 24%

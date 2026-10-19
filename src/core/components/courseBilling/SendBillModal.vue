@@ -249,6 +249,9 @@ export default {
 .banner-details
   font-size: 12px
 :deep(.q-option-group)
+  display: grid
+  grid-template-columns: repeat(3, 1fr)
+  width: 100%
   .q-radio
     .q-radio__label
       font-size: 12px
