@@ -3,22 +3,12 @@
   margin: 0 0 4px 0
   color: $copper-grey-500
 
-// Quasar >= 2.25 put the field message area in-flow; restore the previous overlay layout
-.q-field--with-bottom
-  padding-bottom: 20px
-.q-field__bottom--animated
-  position: absolute
-  left: 0
-  right: 0
-  bottom: 0
-  transform: translateY(100%)
-
 .margin-input
   margin-bottom: 6px
   &.last
     margin-bottom: 24px
-  & .q-field--with-bottom
-    padding-bottom: 12px
+  & .q-field__bottom
+    min-height: 15px
 
 .q-uploader .q-input-target
   visibility: hidden
@@ -69,7 +59,7 @@
     border-radius: 3px
 
 .q-select
-  .q-field__inner
+  .q-field__control
     height: 40px
 
 .q-select, .q-input
@@ -80,9 +70,8 @@
     border-radius: 3px
 
 .q-field__inner
-  .q-field__append
-    .text-negative
-      display: none
+  .q-field__append:has(.text-negative)
+    display: none
   .q-field__bottom
     color: $secondary
     padding-top: 3px

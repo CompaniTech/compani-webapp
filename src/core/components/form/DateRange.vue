@@ -104,14 +104,6 @@ export default {
   border: solid 1px $copper-grey-300
   border-radius: 3px
 
-:deep(.q-field__append)
-  .text-negative
-    display: none
-
-:deep(.q-field__bottom)
-  color: $secondary
-  padding-top: 3px
-
 .date-container
   width: 100%
   border-radius: 3px
@@ -125,8 +117,6 @@ export default {
 .date-item
   :deep(.q-field__native)
     text-align: center
-  :deep(.q-field--with-bottom)
-    padding-bottom: 0px
   :deep(.q-field__bottom)
     display: none
 </style>

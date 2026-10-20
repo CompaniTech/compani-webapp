@@ -156,8 +156,6 @@ export default {
     width: 26%
   @media screen and (max-width: 767px)
     width: 60%
-  :deep(.q-field--with-bottom)
-    padding: 0
   :deep(.q-field__control)
     min-height: 35px
   :deep(.q-field__native)
@@ -171,8 +169,6 @@ export default {
     width: 18%
   @media screen and (max-width: 767px)
     width: 40%
-  :deep(.q-field--with-bottom)
-    padding: 0
   :deep(.q-field__inner)
     .q-field__bottom
       display: none
