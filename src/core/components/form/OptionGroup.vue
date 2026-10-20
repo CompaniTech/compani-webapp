@@ -1,9 +1,9 @@
 <template>
   <div :class="['row', 'margin-input', { last: last }]">
     <div class="col-12">
-      <div v-if="displayCaption" class="row justify-between">
+      <div v-if="displayCaption" class="row justify-between relative-position">
         <p :class="['input-caption', { required: requiredField }]">{{ caption }}</p>
-        <q-icon v-if="error" name="error_outline" color="secondary" />
+        <q-icon v-if="error" name="error_outline" color="secondary" class="error-icon" />
       </div>
       <q-field dense borderless :error="error" :error-message="errorMessage" class="col-12">
         <q-option-group :model-value="groupValue" :options="computedOptions" :readonly="readOnly" :type="type"
@@ -141,6 +141,10 @@ export default {
 <style lang="sass" scoped>
 .required::after
   content: ' *'
+.error-icon
+  position: absolute
+  top: 0
+  right: 0
 :deep(.q-option-group)
   color: $copper-grey-700 !important
   .q-radio

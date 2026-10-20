@@ -70,9 +70,8 @@
     border-radius: 3px
 
 .q-field__inner
-  .q-field__append
-    .text-negative
-      display: none
+  .q-field__append:has(.text-negative)
+    display: none
   .q-field__bottom
     color: $secondary
     padding-top: 3px
