@@ -25,6 +25,11 @@
               <q-checkbox class="q-mr-md" :model-value="multipleSelection" @update:model-value="selectPaymentList"
                 dense :disable="!filteredPayments.length" />
             </div>
+            <div v-else-if="sortableColumns.includes(col.name)" @click="onSort(col)" class="align-center">
+              {{ col.label }}
+              <q-icon :name="sortDesc[col.name] ? 'arrow_downward' : 'arrow_upward'" size="14px"
+                class="q-ml-xs" color="copper-grey-500" />
+            </div>
             <template v-else>{{ col.label }}</template>
           </q-th>
         </q-tr>
@@ -84,7 +89,8 @@ import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup
 import { DD_MM_YYYY, PENDING, PAID, XML_GENERATED, TRAINER_PAYMENT_STATUS_OPTIONS } from '@data/constants';
 import TrainerPayments from '@api/TrainerPayments';
 import TrainerPaymentsXmlFileInfos from '@api/TrainerPaymentsXmlFileInfos';
-import { formatIdentity, formatPrice, formatQuantity, formatAndSortIdentityOptions } from '@helpers/utils';
+import { formatIdentity, formatPrice, formatQuantity, formatAndSortIdentityOptions, sortStrings } from '@helpers/utils';
+import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
 import MultiplePaymentEditionModal from 'src/modules/vendor/components/billing/MultiplePaymentEditionModal';
@@ -117,6 +123,15 @@ export default {
     const xmlFileDownloadModal = ref(false);
     const transactionName = ref('');
     const xmlFileDownloadLoading = ref(false);
+    const sortableColumns = ['date', 'number', 'trainerBillNumber', 'trainer', 'trainerPaymentsXmlFileInfosName'];
+    const sortBy = ref(null);
+    const sortDesc = ref({
+      date: false,
+      number: false,
+      trainerBillNumber: false,
+      trainer: false,
+      trainerPaymentsXmlFileInfosName: false,
+    });
     const columns = [
       {
         name: 'date',
@@ -161,9 +176,51 @@ export default {
       ),
     ]);
 
+    const sortedPayments = computed(() => {
+      if (!sortBy.value) return trainerPayments.value;
+
+      switch (sortBy.value) {
+        case 'number': {
+          const sortDir = sortDesc.value.number ? -1 : 1;
+          return [...trainerPayments.value].sort((a, b) => sortStrings(a.number, b.number) * sortDir);
+        }
+        case 'trainerBillNumber': {
+          const sortDir = sortDesc.value.trainerBillNumber ? -1 : 1;
+          return [...trainerPayments.value]
+            .sort((a, b) => sortStrings(get(a, 'trainerBill.number', ''), get(b, 'trainerBill.number', '')) * sortDir);
+        }
+        case 'trainer': {
+          const sortDir = sortDesc.value.trainer ? -1 : 1;
+          return [...trainerPayments.value].sort((a, b) => {
+            const valueA = formatIdentity(get(a, 'trainerBill.trainer.identity', {}), 'FL');
+            const valueB = formatIdentity(get(b, 'trainerBill.trainer.identity', {}), 'FL');
+            return sortStrings(valueA, valueB) * sortDir;
+          });
+        }
+        case 'trainerPaymentsXmlFileInfosName': {
+          const sortDir = sortDesc.value.trainerPaymentsXmlFileInfosName ? -1 : 1;
+          return [...trainerPayments.value]
+            .sort((a, b) => {
+              const valueA = get(a, 'trainerPaymentsXmlFileInfos.name', '');
+              const valueB = get(b, 'trainerPaymentsXmlFileInfos.name', '');
+
+              return sortStrings(valueA, valueB) * sortDir;
+            });
+        }
+        case 'date':
+          return [...trainerPayments.value]
+            .sort((a, b) => (sortDesc.value.date
+              ? ascendingSort(CompaniDate(a.date), CompaniDate(b.date))
+              : ascendingSort(CompaniDate(b.date), CompaniDate(a.date))
+            ));
+        default:
+          return trainerPayments.value;
+      }
+    });
+
     const filteredPayments = computed(() => (selectedTrainer.value
-      ? trainerPayments.value.filter(p => selectedTrainer.value === get(p, 'trainerBill.trainer._id'))
-      : trainerPayments.value));
+      ? sortedPayments.value.filter(p => selectedTrainer.value === get(p, 'trainerBill.trainer._id'))
+      : sortedPayments.value));
 
     const multipleSelection = computed(() => (filteredPayments.value.length
       ? selectedPayments.value.length === filteredPayments.value.length
@@ -204,6 +261,11 @@ export default {
       params: { trainerId: trainer._id },
       query: { defaultTab: 'vaeiTrainerBillingInfos' },
     });
+
+    const onSort = (col) => {
+      sortBy.value = col.name;
+      sortDesc.value[col.name] = !sortDesc.value[col.name];
+    };
 
     const selectPaymentList = (value) => {
       selectedPayments.value = value ? filteredPayments.value.map(p => p._id) : [];
@@ -342,6 +404,9 @@ export default {
       xmlFileDownloadModal,
       transactionName,
       xmlFileDownloadLoading,
+      sortableColumns,
+      sortBy,
+      sortDesc,
       v$,
       // Computed
       multipleSelection,
@@ -352,6 +417,7 @@ export default {
       goToTrainer,
       getItemStatus,
       getStatusClass,
+      onSort,
       selectPaymentList,
       updateSelectedTrainer,
       resetFilters,
