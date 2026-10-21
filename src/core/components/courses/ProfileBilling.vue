@@ -187,7 +187,7 @@ export default {
 
     const totalPriceToBill = ref({ global: 0, trainerFees: 0 });
 
-    const { isIntraCourse, isSingleCourse } = useCourses(course);
+    const { isIntraCourse, isSingleCourse, isConsultingCourse } = useCourses(course);
 
     const paymentPlans = computed(() => {
       if (!isSingleCourse.value) return [];
@@ -257,12 +257,17 @@ export default {
           : CompaniDate(slots[slots.length - 1].startDate).format(DD_MM_YYYY);
         const location = uniq(slots.map(s => get(s, 'address.city'))).join(', ');
 
-        return 'Actions pour le développement des compétences \r\n'
-        + `Formation pour ${traineesQuantity.value} salarié-es\r\n`
-        + `Durée : ${liveDuration} présentiel${eLearningSteps.length ? `, ${eLearningDuration} eLearning` : ''}\r\n`
+        const skillsDevelopmentInfos = isConsultingCourse.value
+          ? ''
+          : 'Actions pour le développement des compétences \r\n'
+            + `Formation pour ${traineesQuantity.value} salarié-es\r\n`;
+        const eLearningInfos = eLearningSteps.length ? `, ${eLearningDuration} eLearning` : '';
+        const miscInfos = course.value.misc ? `\r\nInformations complémentaires : ${course.value.misc}` : '';
+
+        return `${skillsDevelopmentInfos}Durée : ${liveDuration} présentiel${eLearningInfos}\r\n`
         + `Dates : du ${startDate} au ${endDate} \r\n`
         + `Lieu : ${location} \r\n`
-        + `Nom du / des intervenant·es : ${trainersName}`;
+        + `Nom du / des intervenant·es : ${trainersName}${miscInfos}`;
       }
       const traineeName = course.value.trainees.length
         ? formatIdentity(get(course.value.trainees[0], 'identity'), 'FL')
