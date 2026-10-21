@@ -257,10 +257,10 @@ export default {
           : CompaniDate(slots[slots.length - 1].startDate).format(DD_MM_YYYY);
         const location = uniq(slots.map(s => get(s, 'address.city'))).join(', ');
 
-        const skillsDevelopmentInfos = isConsultingCourse.value
-          ? ''
-          : 'Actions pour le développement des compétences \r\n'
-            + `Formation pour ${traineesQuantity.value} salarié-es\r\n`;
+        const skillsDevelopmentInfos = !isConsultingCourse.value
+          ? 'Actions pour le développement des compétences \r\n'
+          + `Formation pour ${traineesQuantity.value} salarié-es\r\n`
+          : '';
         const eLearningInfos = eLearningSteps.length ? `, ${eLearningDuration} eLearning` : '';
         const miscInfos = course.value.misc ? `\r\nInformations complémentaires : ${course.value.misc}` : '';
 
