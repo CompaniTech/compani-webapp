@@ -54,6 +54,7 @@
                   <span :class="{ 'missing-info': !bill.netExclTaxes }">
                     &nbsp;{{ formatPrice(bill.netExclTaxes) }}
                   </span>
+                  <span v-if="bill.rank">&nbsp; ({{ bill.rank.index }}/{{ bill.rank.billsCount }})</span>
                 </div>
                 <div class="q-ml-lg bill-infos bill-cancel" v-if="bill.courseCreditNote">
                   <q-icon size="12px" name="fas fa-times-circle" color="secondary attendance" />
