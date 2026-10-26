@@ -39,7 +39,7 @@ export default {
     const input = (event) => { emit('update:model-value', event); };
     const submit = () => { emit('submit'); };
 
-    const subProgramPrices = computed(() => (subProgram.value.priceVersions || [])
+    const subProgramPrices = computed(() => (subProgram.value.trainerPriceVersions || [])
       .sort(descendingSortBy('effectiveDate'))
       .map((version) => {
         const pricesByStep = groupBy(version.prices, 'step');

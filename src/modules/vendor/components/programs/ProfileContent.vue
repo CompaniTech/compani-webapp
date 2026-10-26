@@ -379,7 +379,7 @@ export default {
     // SubProgram price version creation
     const openPriceVersionCreationModal = (subProgram) => {
       const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
-      const lastSubProgramPriceVersion = getLastVersion(subProgram.priceVersions || [], 'effectiveDate');
+      const lastSubProgramPriceVersion = getLastVersion(subProgram.trainerPriceVersions || [], 'effectiveDate');
 
       newSubProgramPriceVersion.value = {
         subProgram: { _id: subProgram._id, steps },
