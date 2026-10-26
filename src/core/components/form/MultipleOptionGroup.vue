@@ -1,9 +1,9 @@
 <template>
   <div :class="'row margin-input'">
     <div class="col-12">
-      <div class="row justify-between">
+      <div class="row justify-between relative-position">
         <p :class="'input-caption required'">{{ caption }}</p>
-        <q-icon v-if="error" name="error_outline" color="secondary" />
+        <q-icon v-if="error" name="error_outline" color="secondary" class="error-icon" />
       </div>
       <div v-for="(options, index) in optionsGroups" :key="index">
         <div class="group-title">
@@ -46,13 +46,18 @@ export default {
 
 <style lang="sass" scoped>
 .error-field
-  height: 0px
+  :deep(.q-field__control)
+    display: none
 .group-title
   display: flex
   flex: 1
   margin: 16px 0px 2px
 .required::after
   content: ' *'
+.error-icon
+  position: absolute
+  top: 0
+  right: 0
 :deep(.q-option-group)
   color: $copper-grey-700 !important
   .q-radio

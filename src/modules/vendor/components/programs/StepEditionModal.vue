@@ -113,6 +113,6 @@ export default {
   :deep(.q-field__control)
     border: 1px solid $copper-grey-300 !important
     border-radius: 3px !important
-  :deep(.q-field--with-bottom)
-    padding: 0
+  :deep(.q-field__bottom)
+    display: none
 </style>

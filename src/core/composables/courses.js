@@ -78,6 +78,10 @@ export const useCourses = (course) => {
     return canReadSalesRepresentative && get(course.value, 'salesRepresentative._id');
   });
 
+  const isConsultingCourse = computed(() => process.env.CONSULTING_PROGRAM_IDS
+    .split(',')
+    .includes(get(course.value, 'subProgram.program._id')));
+
   const headerInfo = computed(() => {
     const isCourseInterrupted = isInterrupted(course.value.interruptionDates);
 
@@ -91,8 +95,6 @@ export const useCourses = (course) => {
       })
       .join(',')
     }`;
-    const isConsultingCourse = process.env.CONSULTING_PROGRAM_IDS.split(',')
-      .includes(get(course.value, 'subProgram.program._id'));
 
     return [
       { icon: 'bookmark_border', label: courseType.value },
@@ -110,7 +112,7 @@ export const useCourses = (course) => {
         : []
       ),
       ...(course.value.interruptionDates ? [{ icon: 'pause', label: interruptedLabel }] : []),
-      ...(isConsultingCourse
+      ...(isConsultingCourse.value
         ? [{ icon: 'mdi-account-tie', label: 'Action de conseil' }]
         : [{ icon: 'mdi-human-male-board', label: 'Action de formation' }]
       ),
@@ -158,6 +160,7 @@ export const useCourses = (course) => {
     isInterCourse,
     isIntraHoldingCourse,
     isSingleCourse,
+    isConsultingCourse,
     headerInfo,
     vendorRole,
     disableAttendanceSheetDownload,

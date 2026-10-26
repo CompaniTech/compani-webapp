@@ -1,9 +1,9 @@
 <template>
   <div v-if="!hidden" :class="{ 'col-xs-12 col-md-6': !inModal, 'margin-input full-width': inModal, last: last }"
-    class="input">
-    <div class="row justify-between">
+    class="input relative-position">
+    <div class="row justify-between relative-position">
       <p :class="['input-caption', { required: requiredField }]">{{ caption }}</p>
-      <q-icon v-if="error" name="error_outline" color="secondary" size="1rem" class="q-mb-xs" />
+      <q-icon v-if="error" name="error_outline" color="secondary" size="1rem" class="error-icon" />
     </div>
     <template v-if="type === 'file'">
       <div class="row input-file-container" :class="{'borders-parent': inModal}">
@@ -129,6 +129,10 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.error-icon
+  position: absolute
+  top: 0
+  right: 0
 .input-file-container
   padding: 6px 10px
   overflow-wrap: break-word
@@ -141,6 +145,9 @@ export default {
     width: 100%
     font-size: 0
 .file-error
+  position: absolute
+  top: 100%
+  left: 0
   color: $secondary
   line-height: 1
   font-size: 11px

@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 
-export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourseTrainer) => {
+export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourseTrainer, isVendorAdmin) => {
   const adminActiveRoutes = ref({
     management: { open: true },
     users: { open: false },
@@ -56,7 +56,7 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
       ref: 'facturation',
       label: 'Facturation',
       children: [
-        { name: 'ni billing config', icon: 'settings', label: 'Configuration' },
+        ...isVendorAdmin.value ? [{ name: 'ni billing config', icon: 'settings', label: 'Configuration' }] : [],
         {
           name: 'ni billing completion certificates',
           icon: 'picture_as_pdf',

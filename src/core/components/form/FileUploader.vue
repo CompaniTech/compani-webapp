@@ -138,9 +138,6 @@ export default {
 
 :deep(.q-field__append)
   display: none
-:deep(.q-field__bottom)
-  color: $secondary
-  padding-top: 3px
 
 :deep(.q-uploader)
   width: 100%

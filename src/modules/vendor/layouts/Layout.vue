@@ -57,13 +57,21 @@ export default {
 
     const isAdmin = computed(() => [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
 
+    const isVendorAdmin = computed(() => vendorRole.value === VENDOR_ADMIN);
+
     const isTrainer = computed(() => vendorRole.value === TRAINER);
 
     const isSingleCourseTrainer = computed(() => isTrainer.value && !!loggedUser.value.isSingleCourseTrainer);
 
     const isProgramEditor = computed(() => loggedUser.value.isProgramEditor || false);
 
-    const { routes, activeRoutes } = useMenuItems(isAdmin, isTrainer, isProgramEditor, isSingleCourseTrainer);
+    const { routes, activeRoutes } = useMenuItems(
+      isAdmin,
+      isTrainer,
+      isProgramEditor,
+      isSingleCourseTrainer,
+      isVendorAdmin
+    );
 
     const {
       userFirstname,
