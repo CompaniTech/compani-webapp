@@ -23,9 +23,10 @@
           <q-th v-for="col in props.cols" :key="col.name" :props="props" :style="col.style">
             <div v-if="col.name === 'actions'">
               <q-checkbox class="q-mr-md" :model-value="multipleSelection" @update:model-value="selectPaymentList"
-                dense :disable="!filteredPayments.length" />
+                dense :disable="!selectableTrainerPayments.length" />
             </div>
-            <div v-else-if="sortableColumns.includes(col.name)" @click="onSort(col)" class="align-center">
+            <div v-else-if="sortableColumns.includes(col.name)" @click="onSort(col)"
+              class="row no-wrap items-center cursor-pointer">
               {{ col.label }}
               <q-icon :name="sortDesc[col.name] ? 'arrow_downward' : 'arrow_upward'" size="14px"
                 class="q-ml-xs" color="copper-grey-500" />
@@ -48,11 +49,19 @@
             <router-link v-else-if="col.name === 'trainer'" :to="goToTrainer(props.row.trainerBill.trainer)"
               class="clickable-name cursor-pointer">
               {{ col.value }}
+              <q-tooltip v-if="col.value">{{ col.value }}</q-tooltip>
             </router-link>
             <template v-else-if="col.name === 'actions'">
-              <ni-button icon="delete" :disable="props.row.status !== PENDING"
-                @click="openDeleteDialog(props.row)" />
-              <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense />
+              <div class="row no-wrap items-center justify-end">
+                <ni-button icon="delete" :disable="props.row.status !== PENDING"
+                  @click="openDeleteDialog(props.row)" />
+                <q-checkbox class="q-mr-md" v-model="selectedPayments" :val="props.row._id" dense
+                  :disable="!isTrainerSelectable(props.row.trainerBill.trainer)" />
+              </div>
+            </template>
+            <template v-else-if="['trainerBillNumber', 'trainerPaymentsXmlFileInfosName'].includes(col.name)">
+              {{ col.value }}
+              <q-tooltip v-if="col.value">{{ col.value }}</q-tooltip>
             </template>
             <template v-else>{{ col.value }}</template>
           </q-td>
@@ -139,25 +148,47 @@ export default {
         field: 'date',
         format: value => CompaniDate(value).format(DD_MM_YYYY),
         align: 'left',
+        style: { width: '10%' },
       },
-      { name: 'number', label: 'Numéro', field: 'number', align: 'left' },
-      { name: 'amount', label: 'Montant', field: 'amount', format: formatPrice, align: 'left' },
-      { name: 'trainerBillNumber', label: 'Facture', field: row => get(row, 'trainerBill.number', ''), align: 'left' },
-      { name: 'file', label: 'Lien', field: row => get(row, 'trainerBill.file.link', ''), align: 'left' },
+      { name: 'number', label: 'Numéro', field: 'number', align: 'left', style: { width: '10%' } },
+      {
+        name: 'amount',
+        label: 'Montant',
+        field: 'amount',
+        format: formatPrice,
+        align: 'left',
+        style: { width: '10%' },
+      },
+      {
+        name: 'trainerBillNumber',
+        label: 'Facture',
+        field: row => get(row, 'trainerBill.number', ''),
+        align: 'left',
+        style: { width: '15%' },
+      },
+      {
+        name: 'file',
+        label: 'Lien',
+        field: row => get(row, 'trainerBill.file.link', ''),
+        align: 'left',
+        style: { width: '5%' },
+      },
       {
         name: 'trainer',
         label: 'Intervenant·e',
         field: row => formatIdentity(get(row, 'trainerBill.trainer.identity', {}), 'FL'),
         align: 'left',
+        style: { width: '15%' },
       },
-      { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status' },
+      { name: 'status', label: 'Statut', field: 'status', align: 'center', class: 'status', style: { width: '15%' } },
       {
         name: 'trainerPaymentsXmlFileInfosName',
         label: 'Nom de lot',
         align: 'center',
         field: row => get(row, 'trainerPaymentsXmlFileInfos.name', ''),
+        style: { width: '10%' },
       },
-      { name: 'actions', label: '', field: '', align: 'right' },
+      { name: 'actions', label: '', field: '', align: 'right', style: { width: '10%' } },
     ];
 
     const TRANSACTION_NAME_MAX_LENGTH = 140;
@@ -222,8 +253,14 @@ export default {
       ? sortedPayments.value.filter(p => selectedTrainer.value === get(p, 'trainerBill.trainer._id'))
       : sortedPayments.value));
 
-    const multipleSelection = computed(() => (filteredPayments.value.length
-      ? selectedPayments.value.length === filteredPayments.value.length
+    const isTrainerSelectable = trainer => !!(trainer.iban && trainer.bic);
+
+    const selectableTrainerPayments = computed(() => filteredPayments.value
+      .filter(p => isTrainerSelectable(p.trainerBill.trainer))
+      .map(p => p._id));
+
+    const multipleSelection = computed(() => (selectableTrainerPayments.value.length
+      ? selectedPayments.value.length === selectableTrainerPayments.value.length
       : false));
 
     const getItemStatus = status => TRAINER_PAYMENT_STATUS_OPTIONS.find(s => s.value === status)?.label || '';
@@ -268,7 +305,7 @@ export default {
     };
 
     const selectPaymentList = (value) => {
-      selectedPayments.value = value ? filteredPayments.value.map(p => p._id) : [];
+      selectedPayments.value = value ? selectableTrainerPayments.value : [];
     };
 
     const updateSelectedTrainer = (trainerId) => {
@@ -412,12 +449,14 @@ export default {
       multipleSelection,
       trainerOptions,
       filteredPayments,
+      selectableTrainerPayments,
       // Methods
       updateSelectedStatus,
       goToTrainer,
       getItemStatus,
       getStatusClass,
       onSort,
+      isTrainerSelectable,
       selectPaymentList,
       updateSelectedTrainer,
       resetFilters,
@@ -436,9 +475,15 @@ export default {
 <style lang="sass" scoped>
 .selector
   width: 50%
-.status
-  width: 15%
 .chip-container
   display: flex
   justify-content: center
+:deep(table)
+  table-layout: fixed
+:deep(.trainerBillNumber),
+:deep(.trainer),
+:deep(.trainerPaymentsXmlFileInfosName)
+  overflow: hidden
+  text-overflow: ellipsis
+  white-space: nowrap
 </style>
