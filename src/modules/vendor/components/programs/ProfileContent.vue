@@ -173,7 +173,7 @@
       v-model:edited-payment-plan="editedPaymentPlan" :validations="paymentPlanValidations.editedPaymentPlan"
       @hide="resetPaymentPlanEditionModal" @submit="editPaymentPlan" />
 
-    <payment-plan-list-modal v-model="paymentPlanListModal" :sub-program="currentPlanSubProgram"
+    <payment-plan-list-modal v-model="paymentPlanListModal" :sub-program="selectedSubProgramForPlan"
       @edit="openPaymentPlanEditionModal" @delete="deletePaymentPlan" />
 
     <hourly-payment-plan-modal v-model="hourlyPaymentPlanAdditionModal" :loading="modalLoading"
@@ -184,7 +184,7 @@
       v-model:plan="editedHourlyPaymentPlan" :validations="hourlyPaymentPlanValidations.editedHourlyPaymentPlan"
       @hide="resetHourlyPaymentPlanEditionModal" @submit="editHourlyPaymentPlan" />
 
-    <hourly-payment-plan-list-modal v-model="hourlyPaymentPlanListModal" :sub-program="currentHourlyPlanSubProgram"
+    <hourly-payment-plan-list-modal v-model="hourlyPaymentPlanListModal" :sub-program="selectedSubProgramForHourlyPlan"
       @edit="openHourlyPaymentPlanEditionModal" @delete="deleteHourlyPaymentPlan" />
   </div>
 </template>
@@ -406,12 +406,6 @@ export default {
       editHourlyPaymentPlan,
       deleteHourlyPaymentPlan,
     } = useHourlyPaymentPlan(modalLoading, refreshProgram, program);
-
-    const currentHourlyPlanSubProgram = computed(() => (program.value.subPrograms || [])
-      .find(sp => sp._id === selectedSubProgramForHourlyPlan.value._id) || {});
-
-    const currentPlanSubProgram = computed(() => (program.value.subPrograms || [])
-      .find(sp => sp._id === selectedSubProgramForPlan.value._id) || {});
 
     const hasConsistentRoles = (prices) => {
       const pricesByStep = groupBy(prices, 'step');
@@ -878,10 +872,10 @@ export default {
       newPaymentPlan,
       editedPaymentPlan,
       paymentPlanValidations,
-      currentPlanSubProgram,
+      selectedSubProgramForPlan,
       showPricing,
       togglePricing,
-      currentHourlyPlanSubProgram,
+      selectedSubProgramForHourlyPlan,
       hourlyPaymentPlanAdditionModal,
       hourlyPaymentPlanEditionModal,
       hourlyPaymentPlanListModal,
