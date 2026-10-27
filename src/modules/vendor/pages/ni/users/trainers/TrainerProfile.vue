@@ -16,7 +16,7 @@ import ProfileHeader from '@components/ProfileHeader';
 import ProfileTabs from '@components/ProfileTabs';
 import ProfileInfo from 'src/modules/vendor/components/trainers/ProfileInfo';
 import ProfileContract from 'src/modules/vendor/components/trainers/ProfileContract';
-import VAEITrainerBillingInfos from 'src/modules/vendor/components/trainers/VAEITrainerBillingInfos';
+import SingleTrainerBillingInfos from 'src/modules/vendor/components/trainers/SingleTrainerBillingInfos';
 import { formatIdentity } from '@helpers/utils';
 import { TRAINER } from '@data/constants';
 
@@ -57,7 +57,7 @@ export default {
             label: 'Suivi des heures/ facturation',
             name: 'vaeiTrainerBillingInfos',
             default: defaultTab.value === 'vaeiTrainerBillingInfos',
-            component: VAEITrainerBillingInfos,
+            component: SingleTrainerBillingInfos,
           }]
           : [],
       ];

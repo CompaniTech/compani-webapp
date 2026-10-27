@@ -1,8 +1,5 @@
 <template>
   <q-page padding class="vendor-background q-pb-xl">
-    <div v-if="loggedUserIsTrainer" class="row justify-end q-mb-md">
-      <ni-button label="Facturer des frais annexes" @click="openTrainerFeesBillModal" />
-    </div>
     <ni-banner icon="info_outline" class="bg-peach-200">
       <template #message>
         Veuillez sélectionner la période sur laquelle vous souhaitez afficher les créneaux de formation.
@@ -27,34 +24,24 @@
     <trainer-billing-infos-card v-else-if="displaySlots" :trainer-infos="filteredData[trainer._id]"
       @refresh="refreshCourseSlots" :is-trainer="loggedUserIsTrainer" />
     <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période</div>
-
-    <trainer-fees-bill-modal v-model="trainerFeesBillModal" :bill="trainerFeesBill" :loading="trainerFeesBillLoading"
-      :validations="validations.trainerFeesBill" @hide="resetTrainerFeesBillModal" @submit="validateTrainerFeesBill" />
   </q-page>
 </template>
 
 <script>
-import { useMeta, useQuasar } from 'quasar';
+import { useMeta } from 'quasar';
 import { useStore } from 'vuex';
-import { computed, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import get from 'lodash/get';
-import { required } from '@vuelidate/validators';
-import useVuelidate from '@vuelidate/core';
-import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import ProfileHeader from '@components/ProfileHeader';
 import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
 import Banner from '@components/Banner';
-import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
-import { formatPrice } from '@helpers/utils';
 import { useTrainerBillingInfos } from '@composables/trainerBillingInfos';
 import TrainerBillingInfosCard from 'src/modules/vendor/components/billing/TrainerBillingInfosCard';
-import TrainerFeesBillModal from 'src/modules/vendor/components/trainers/TrainerFeesBillModal';
-import TrainerBills from '@api/TrainerBills';
 
 export default {
-  name: 'VAEITrainerBillingInfos',
+  name: 'SingleTrainerBillingInfos',
   components: {
     'ni-profile-header': ProfileHeader,
     'ni-date-range': DateRange,
@@ -62,23 +49,12 @@ export default {
     'ni-button': Button,
     'ni-banner': Banner,
     'trainer-billing-infos-card': TrainerBillingInfosCard,
-    'trainer-fees-bill-modal': TrainerFeesBillModal,
   },
   setup () {
     const metaInfo = { title: 'Suivi de la facturation' };
     useMeta(metaInfo);
 
     const $store = useStore();
-    const $q = useQuasar();
-
-    const trainerFeesBillModal = ref(false);
-    const trainerFeesBillLoading = ref(false);
-    const trainerFeesBill = ref({ number: '', file: '', amount: '' });
-
-    const rules = computed(() => ({
-      trainerFeesBill: { number: { required }, file: { required }, amount: { required, strictPositiveNumber } },
-    }));
-    const validations = useVuelidate(rules, { trainerFeesBill });
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
 
@@ -122,50 +98,6 @@ export default {
       selectedProgram.value = '';
     };
 
-    const openTrainerFeesBillModal = () => { trainerFeesBillModal.value = true; };
-
-    const resetTrainerFeesBillModal = () => {
-      trainerFeesBillModal.value = false;
-      trainerFeesBill.value = { number: '', file: '', amount: '' };
-      validations.value.trainerFeesBill.$reset();
-    };
-
-    const submitTrainerFeesBill = async () => {
-      try {
-        trainerFeesBillLoading.value = true;
-
-        const form = new FormData();
-        form.append('number', trainerFeesBill.value.number);
-        form.append('file', trainerFeesBill.value.file);
-        form.append('amount', trainerFeesBill.value.amount);
-
-        await TrainerBills.create(form);
-        trainerFeesBillModal.value = false;
-
-        NotifyPositive('Facture transmise.');
-      } catch (e) {
-        console.error(e);
-        if (e.data && e.data.statusCode === 409 && e.data.message) return NotifyNegative(e.data.message);
-        NotifyNegative('Erreur lors de l\'envoi de la facture.');
-      } finally {
-        trainerFeesBillLoading.value = false;
-      }
-    };
-
-    const validateTrainerFeesBill = () => {
-      validations.value.trainerFeesBill.$touch();
-      if (validations.value.trainerFeesBill.$error) return NotifyWarning('Champ(s) invalide(s).');
-
-      $q.dialog({
-        title: 'Confirmation',
-        message: 'Vous allez soumettre une facture d\'un montant de'
-          + ` ${formatPrice(Number(trainerFeesBill.value.amount))}. Confirmez-vous ce montant&nbsp;?`,
-        html: true,
-        ok: 'Oui',
-        cancel: 'Non',
-      }).onOk(() => submitTrainerFeesBill());
-    };
-
     watch(dateRange, async () => {
       await refreshCourseSlots();
       resetFilters();
@@ -192,20 +124,12 @@ export default {
       loggedUserIsTrainer,
       programOptions,
       displaySlots,
-      trainerFeesBillModal,
-      trainerFeesBillLoading,
-      trainerFeesBill,
-      validations,
       // Methods
       input,
       resetFilters,
       goToPreviousMonth,
       goToNextMonth,
       refreshCourseSlots,
-      openTrainerFeesBillModal,
-      resetTrainerFeesBillModal,
-      submitTrainerFeesBill,
-      validateTrainerFeesBill,
     };
   },
 };
