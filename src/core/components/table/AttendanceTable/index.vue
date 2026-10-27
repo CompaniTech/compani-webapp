@@ -43,7 +43,7 @@
           <q-tr :props="props">
             <q-th v-for="col in props.cols" :key="col.name" :props="props">
               <div v-if="/(slot)/.test(col.name)">
-                <span v-if="isSingleCourse">
+                <span v-if="isSingleCourse && !isClientInterface">
                   <q-icon v-if="slotInAttendanceSheet[col.slot] === COMPLETED" name="mdi-checkbox-marked" color="green"
                     class="q-py-xs" />
                   <q-icon v-else-if="slotInAttendanceSheet[col.slot] === IN_PROGRESS" name="mdi-checkbox-marked"
@@ -116,7 +116,7 @@
         <span><q-icon name="mdi-alert-box" color="secondary" class="q-py-xs" /> 2 clics : absent / </span>
         <span><q-icon name="mdi-checkbox-blank-outline" class="q-py-xs" /> par défaut : émargement non rempli</span>
       </div>
-      <div v-if="isSingleCourse" class="q-px-md q-pb-md text-14">
+      <div v-if="isSingleCourse && !isClientInterface" class="q-px-md q-pb-md text-14">
         <span><q-icon name="mdi-checkbox-marked" color="green" class="q-py-xs" />
           feuille d'émargement complète /
         </span>
@@ -384,7 +384,7 @@ export default {
     } = useAttendanceSheets(course, isClientInterface, canUpdate, loggedUser, modalLoading, refreshAttendances);
 
     const slotInAttendanceSheet = computed(() => {
-      if (!isSingleCourse.value) return {};
+      if (!isSingleCourse.value || isClientInterface) return {};
       const slotIds = course.value.slots
         .filter(s => s.startDate && CompaniDate(s.startDate).isBefore(CompaniDate()) && !s.missingAttendances.length)
         .map(s => s._id);
@@ -488,6 +488,7 @@ export default {
       isSingleCourse,
       loggedUser,
       slotInAttendanceSheet,
+      isClientInterface,
       // Methods
       get,
       attendanceCheckboxValue,
