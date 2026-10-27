@@ -77,6 +77,7 @@ const trainerRoutes = [
   { name: 'trainers info' },
   { name: 'trainers contracts' },
   { name: 'trainers billing' },
+  { name: 'trainers billing history' },
   { name: 'account vendor' },
   { name: 'trainers questionnaire answers' },
   { name: 'ni pedagogy questionnaire answers' },

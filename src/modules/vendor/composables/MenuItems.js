@@ -13,6 +13,7 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
     administrative: { open: false },
     management: { open: true },
     pedagogy: { open: false },
+    billing: { open: false },
   });
 
   const adminRoutes = computed(() => [
@@ -93,9 +94,14 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
       children: [
         { name: 'trainers info', icon: 'person', label: 'Infos personnelles' },
         { name: 'trainers contracts', icon: 'description', label: 'Ordres de mission' },
-        ...isSingleCourseTrainer.value
-          ? [{ name: 'trainers billing', icon: 'mdi-account-arrow-right-outline', label: 'Facturation' }]
-          : [],
+      ],
+    },
+    {
+      ref: 'billing',
+      label: 'Facturation',
+      children: [
+        { name: 'trainers billing', icon: 'mdi-account-arrow-right-outline', label: 'Facturer' },
+        { name: 'trainers billing history', icon: 'history', label: 'Historique' },
       ],
     },
     ...isProgramEditor.value
