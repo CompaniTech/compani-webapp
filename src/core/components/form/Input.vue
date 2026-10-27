@@ -1,11 +1,11 @@
 <template>
-  <div v-if="!hidden" :class="{ 'col-xs-12 col-md-6': !inModal, 'margin-input full-width': inModal, last: last }"
-    class="input relative-position">
+  <div v-if="!hidden" class="input relative-position"
+    :class="{ 'col-xs-12 col-md-6': !inModal, 'margin-input full-width': inModal, last, 'input-file-bottom': isFile }">
     <div class="row justify-between relative-position">
       <p :class="['input-caption', { required: requiredField }]">{{ caption }}</p>
       <q-icon v-if="error" name="error_outline" color="secondary" size="1rem" class="error-icon" />
     </div>
-    <template v-if="type === 'file'">
+    <template v-if="isFile">
       <div class="row input-file-container" :class="{'borders-parent': inModal}">
         <div class="col full-width">
           <span class="input-file-empty" v-if="!modelValue">Pas de document</span>
@@ -80,6 +80,9 @@ export default {
     };
   },
   computed: {
+    isFile () {
+      return this.type === 'file';
+    },
     isPassword () {
       return this.type === 'password';
     },
@@ -144,9 +147,12 @@ export default {
     height: 100%
     width: 100%
     font-size: 0
+// Same bottom space as q-input (.q-field--with-bottom), so file and text inputs are evenly spaced
+.input-file-bottom
+  padding-bottom: 20px
 .file-error
   position: absolute
-  top: 100%
+  top: calc(100% - 20px)
   left: 0
   color: $secondary
   line-height: 1
