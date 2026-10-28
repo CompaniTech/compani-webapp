@@ -35,8 +35,8 @@
           <template #label="opt">
             <q-expansion-item dense dense-toggle icon="schedule" :label="opt.label">
               <q-card class="q-pa-sm">
-                <div v-for="price of opt.prices" :key="price.step" class="text-caption q-py-xs">
-                  {{ price.name }} : {{ formatPrice(price.hourlyAmount) }} / h
+                <div v-for="price of opt.prices" :key="price.step._id" class="text-caption q-py-xs">
+                  {{ price.step.name }} : {{ formatPrice(price.hourlyAmount) }} / h
                 </div>
                 <div v-if="opt.elearningPrice" class="text-caption q-py-xs">
                   E-learning : {{ formatPrice(opt.elearningPrice) }}

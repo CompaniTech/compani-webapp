@@ -197,16 +197,9 @@ export default {
       return get(course.value, 'subProgram.paymentPlans', []);
     });
 
-    const hourlyPaymentPlans = computed(() => {
-      if (!isSingleCourse.value) return [];
-
-      const { hourlyPaymentPlans: plans = [], steps = [] } = get(course.value, 'subProgram', {});
-
-      return plans.map(plan => ({
-        ...plan,
-        prices: plan.prices.map(price => ({ ...price, name: get(steps.find(s => s._id === price.step), 'name', '') })),
-      }));
-    });
+    const hourlyPaymentPlans = computed(() => (
+      isSingleCourse.value ? get(course.value, 'subProgram.hourlyPaymentPlans', []) : []
+    ));
 
     const rules = computed(() => ({
       course: {
