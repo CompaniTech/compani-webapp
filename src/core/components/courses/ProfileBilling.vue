@@ -8,6 +8,7 @@
     </div>
     <ni-banner v-else-if="missingBillsCompanies.length" icon="info_outline">
       <template #message>
+        PP ceci est un test
         Les structures suivantes n'ont pas été facturées : {{ formatName(missingBillsCompanies) }}.
       </template>
     </ni-banner>
