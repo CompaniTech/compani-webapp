@@ -253,7 +253,7 @@ export default {
       ? sortedPayments.value.filter(p => selectedTrainer.value === get(p, 'trainerBill.trainer._id'))
       : sortedPayments.value));
 
-    const isTrainerSelectable = trainer => !!(trainer.iban && trainer.bic);
+    const isTrainerSelectable = trainer => trainer.hasBankDetails;
 
     const selectableTrainerPayments = computed(() => filteredPayments.value
       .filter(p => isTrainerSelectable(p.trainerBill.trainer))
