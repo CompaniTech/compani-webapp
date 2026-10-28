@@ -133,12 +133,7 @@ export default {
       return 'Nombre invalide.';
     });
 
-    const hide = () => {
-      emit('update:mode', MANUAL);
-      emit('update:selected-plan-id', null);
-      emit('update:selected-hourly-plan-id', null);
-      emit('hide');
-    };
+    const hide = () => { emit('hide'); };
 
     const input = event => emit('update:model-value', event);
 

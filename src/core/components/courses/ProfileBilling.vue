@@ -489,6 +489,11 @@ export default {
         if (v$.value.newBillsQuantity.$error || v$.value.selectedHourlyPlanId.$error) {
           return NotifyWarning('Champ invalide.');
         }
+
+        const { hourlyPaymentPlan } = course.value;
+        if (hourlyPaymentPlan && hourlyPaymentPlan !== selectedHourlyPlanId.value) {
+          return NotifyWarning('Une autre tarification au réel est déjà utilisée pour cette formation.');
+        }
       }
 
       const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
