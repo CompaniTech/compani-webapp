@@ -24,26 +24,33 @@
             color="copper-grey-700" />
         </q-item-section>
         <q-slide-transition>
-          <div v-show="showPricing[subProgram._id]" class="row q-pb-md justify-between">
-            <div class="row">
-              <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
-                :disable="!!subProgram.archivedAt" @click="openPriceVersionCreationModal(subProgram)" />
-              <ni-bi-color-button class="button-history" icon="history" label="Historique"
-                @click="openHistoryModal(subProgram)" />
+          <div v-show="showPricing[subProgram._id]" class="q-pb-md" :class="$q.screen.gt.md ? 'row' : 'column'">
+            <div class="col">
+              <span class="text-bold">Tarification intervenants</span>
+              <div class="row no-wrap q-mt-sm">
+                <ni-secondary-button class="q-mr-md pricing-btn" label="Éditer les tarifs des intervenants"
+                  :disable="!!subProgram.archivedAt" @click="openPriceVersionCreationModal(subProgram)" />
+                <ni-bi-color-button v-if="subProgram.trainerPriceVersions?.length" class="button-history"
+                  icon="history" @click="openHistoryModal(subProgram)" />
+              </div>
             </div>
-            <div class="row">
-              <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
-                :disable="!!subProgram.archivedAt || !!(subProgram.hourlyPaymentPlans || []).length"
-                @click="openPaymentPlanAdditionModal(subProgram)" />
-              <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
-                @click="openPaymentPlanListModal(subProgram)" />
-            </div>
-            <div class="row q-mt-md">
-              <ni-secondary-button class="q-mr-md" label="Ajouter une tarification au réel"
-                :disable="!!subProgram.archivedAt || !!(subProgram.paymentPlans || []).length"
-                @click="openHourlyPaymentPlanAdditionModal(subProgram)" />
-              <ni-bi-color-button class="button-history" icon="visibility" label="Afficher la tarification au réel"
-                @click="openHourlyPaymentPlanListModal(subProgram)" />
+            <q-separator :vertical="$q.screen.gt.md" :class="$q.screen.gt.md ? 'q-mx-md' : 'q-my-md'" />
+            <div class="col">
+              <span class="text-bold">Facturation client</span>
+              <div class="row no-wrap q-mt-sm">
+                <ni-secondary-button class="q-mr-md pricing-btn" label="Ajouter un échéancier"
+                  :disable="!!subProgram.archivedAt || !!(subProgram.hourlyPaymentPlans || []).length"
+                  @click="openPaymentPlanAdditionModal(subProgram)" />
+                <ni-bi-color-button v-if="subProgram.paymentPlans?.length" class="button-history" icon="visibility"
+                  @click="openPaymentPlanListModal(subProgram)" />
+              </div>
+              <div class="row no-wrap q-mt-sm">
+                <ni-secondary-button class="q-mr-md pricing-btn" label="Ajouter une tarification au réel"
+                  :disable="!!subProgram.archivedAt || !!(subProgram.paymentPlans || []).length"
+                  @click="openHourlyPaymentPlanAdditionModal(subProgram)" />
+                <ni-bi-color-button v-if="subProgram.hourlyPaymentPlans?.length" class="button-history"
+                  icon="visibility" @click="openHourlyPaymentPlanListModal(subProgram)" />
+              </div>
             </div>
           </div>
         </q-slide-transition>
@@ -904,6 +911,17 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.pricing-btn
+  // flex: 0 0 320px
+  // width: 320px
+  min-width: 320px
+  // max-width: 100%
+  @media screen and (max-width: 767px)
+    flex: 0 1 260px
+    width: 260px
+    min-width: 0
+    font-size: 11px
+    // margin-right: 8px
 .pricing-toggle
   flex-direction: row
   align-items: center
