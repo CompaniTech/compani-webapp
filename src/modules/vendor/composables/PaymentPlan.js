@@ -27,7 +27,7 @@ export const usePaymentPlan = (modalLoading, refreshProgram, program) => {
 
   const openPaymentPlanAdditionModal = (subProgram) => {
     selectedSubProgramForPlan.value = subProgram;
-    newPaymentPlan.value = { priceLines: [{ amount: null }] };
+    newPaymentPlan.value = { priceLines: [{ amount: null }], paymentPlansCount: subProgram.paymentPlans?.length };
     paymentPlanAdditionModal.value = true;
   };
 
