@@ -110,6 +110,8 @@ export const formatPhone = contact => (contact.phone
     .replace(/^(\d{1})(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5')}`
   : '');
 
+export const isMaskedBankDetail = value => /^.{2}\*+.{2}$/.test(value);
+
 export const formatPhoneForPayload = phoneNumber => (phoneNumber
   ? phoneNumber.replace(/[\s\-.]/g, '')
   : '');

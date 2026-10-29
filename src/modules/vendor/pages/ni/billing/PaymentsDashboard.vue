@@ -273,7 +273,7 @@ export default {
     });
 
     const isPayerSelectable = (payer) => {
-      if (!(payer.iban && payer.bic)) return false;
+      if (!payer.hasBankDetails) return false;
       const lastMandate = getLastVersion(payer.debitMandates, 'createdAt');
       return get(lastMandate, 'signedAt') && get(lastMandate, 'file.link');
     };
