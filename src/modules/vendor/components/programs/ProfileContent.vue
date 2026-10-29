@@ -439,7 +439,7 @@ export default {
       const lastSubProgramTrainerPriceVersion = getLastVersion(subProgram.trainerPriceVersions || [], 'effectiveDate');
 
       newSubProgramTrainerPriceVersion.value = {
-        subProgram: { _id: subProgram._id, steps },
+        subProgram: { _id: subProgram._id, steps, trainerPriceVersionsCount: subProgram.trainerPriceVersions?.length },
         prices: lastSubProgramTrainerPriceVersion
           ? lastSubProgramTrainerPriceVersion.prices
           : steps.map(s => ({ step: s._id, hourlyAmount: 100 })),

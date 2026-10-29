@@ -3,6 +3,11 @@
     <template #title>
       Créer une nouvelle <span class="text-weight-bold">version des tarifs des intervenants</span>
     </template>
+    <ni-banner v-if="trainerPriceVersionsCount" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <template #message>
+        Il existe {{ formatQuantity('version',trainerPriceVersionsCount) }} des tarifs des intervenants.
+      </template>
+    </ni-banner>
     <div v-for="step in newSubProgramTrainerPriceVersion.subProgram.steps" :key="step._id" class="step-prices-block">
       <p class="text-weight-bold">{{ step.name }}</p>
       <div v-for="price in getStepPrices(step._id)" :key="price.globalIndex" class="price-row">
@@ -31,14 +36,16 @@
 </template>
 
 <script>
-import { toRefs } from 'vue';
+import { toRefs, computed } from 'vue';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Select from '@components/form/Select';
+import Banner from '@components/Banner';
 import Button from '@components/Button';
 import SecondaryButton from '@components/SecondaryButton';
 import DateInput from '@components/form/DateInput';
 import { REQUIRED_LABEL, TRAINER_ROLE_OPTIONS } from '@data/constants';
+import { formatQuantity } from '@helpers/utils';
 
 export default {
   name: 'SubProgramTrainerPriceVersionCreationModal',
@@ -52,6 +59,7 @@ export default {
     'ni-input': Input,
     'ni-select': Select,
     'ni-button': Button,
+    'ni-banner': Banner,
     'ni-secondary-button': SecondaryButton,
     'ni-modal': Modal,
     'ni-date-input': DateInput,
@@ -59,6 +67,9 @@ export default {
   emits: ['hide', 'update:model-value', 'update:new-sub-program-trainer-price-version', 'submit'],
   setup (props, { emit }) {
     const { newSubProgramTrainerPriceVersion, validations } = toRefs(props);
+
+    const trainerPriceVersionsCount = computed(() => newSubProgramTrainerPriceVersion.value.subProgram
+      .trainerPriceVersionsCount);
 
     const hide = () => { emit('hide'); };
     const input = (event) => { emit('update:model-value', event); };
@@ -123,6 +134,8 @@ export default {
     };
 
     return {
+      // Computed
+      trainerPriceVersionsCount,
       // methods
       hide,
       input,
@@ -136,6 +149,7 @@ export default {
       canAddRole,
       getAmountError,
       getRoleError,
+      formatQuantity,
     };
   },
 };

@@ -3,6 +3,11 @@
     <template #title>
       {{ isEdition ? 'Éditer' : 'Ajouter' }} une <span class="text-weight-bold">tarification au réel</span>
     </template>
+    <ni-banner v-if="!isEdition && hourlyPaymentPlansCount" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <template #message>
+        Il existe déjà {{ formatQuantity('tarification', hourlyPaymentPlansCount) }} au réel.
+      </template>
+    </ni-banner>
     <div v-for="(price, index) in plan.prices" :key="price.step" class="q-mb-md">
       <p class="text-weight-bold q-mb-none">{{ getStepName(price.step) }}</p>
       <ni-input in-modal type="number" :model-value="price.hourlyAmount" suffix="€ / h" required-field
@@ -11,7 +16,7 @@
     </div>
     <div v-if="plan.hasELearning" class="q-mb-md">
       <p class="text-weight-bold q-mb-none">E-learning</p>
-      <ni-input in-modal type="number" :model-value="plan.elearningPrice" suffix="€" required-field
+      <ni-input in-modal type="number" :model-value="plan.elearningPrice" suffix="€ / h" required-field
         caption="Tarif e-learning" :error-message="getElearningPriceError()" :error="!!getElearningPriceError()"
         @update:model-value="updateElearningPrice" />
     </div>
@@ -23,10 +28,12 @@
 </template>
 
 <script>
-import { toRefs, ref } from 'vue';
+import { toRefs, ref, computed } from 'vue';
 import { REQUIRED_LABEL } from '@data/constants';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
+import Banner from '@components/Banner';
+import { formatQuantity } from '@helpers/utils';
 
 export default {
   name: 'HourlyPaymentPlanModal',
@@ -40,11 +47,13 @@ export default {
   components: {
     'ni-modal': Modal,
     'ni-input': Input,
+    'ni-banner': Banner,
   },
   emits: ['hide', 'update:model-value', 'update:plan', 'submit'],
   setup (props, { emit }) {
     const { plan, validations } = toRefs(props);
     const showErrors = ref(false);
+    const hourlyPaymentPlansCount = computed(() => plan.value.subProgram.hourlyPaymentPlansCount);
 
     const hide = () => {
       showErrors.value = false;
@@ -83,7 +92,10 @@ export default {
     };
 
     return {
+      // Computed
+      hourlyPaymentPlansCount,
       // Methods
+      formatQuantity,
       hide,
       input,
       submit,

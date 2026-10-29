@@ -51,7 +51,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
 
     selectedSubProgramForHourlyPlan.value = subProgram;
     newHourlyPaymentPlan.value = {
-      subProgram: { _id: subProgram._id, steps },
+      subProgram: { _id: subProgram._id, steps, hourlyPaymentPlansCount: subProgram.hourlyPaymentPlans?.length },
       prices: steps.map(s => ({ step: s._id, hourlyAmount: 0 })),
       hasELearning,
       ...hasELearning && { elearningPrice: 0 },
