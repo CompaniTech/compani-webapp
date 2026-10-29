@@ -3,7 +3,7 @@
     <template #title>
       Créer une nouvelle <span class="text-weight-bold">version des tarifs des intervenants</span>
     </template>
-    <div v-for="step in newSubProgramPriceVersion.subProgram.steps" :key="step._id" class="step-prices-block">
+    <div v-for="step in newSubProgramTrainerPriceVersion.subProgram.steps" :key="step._id" class="step-prices-block">
       <p class="text-weight-bold">{{ step.name }}</p>
       <div v-for="price in getStepPrices(step._id)" :key="price.globalIndex" class="price-row">
         <ni-button v-if="getStepPrices(step._id).length > 1" icon="delete" class="delete-price-btn"
@@ -20,8 +20,9 @@
       <ni-button v-if="canAddRole(step._id)" label="Ajouter un tarif" icon="add" @click="addPrice(step._id)"
         class="add-price-btn" />
     </div>
-    <ni-date-input caption="Date d'effet" v-model="newSubProgramPriceVersion.effectiveDate"
-      class="date-item" :error="validations.effectiveDate.$error" :min="newSubProgramPriceVersion.minEffectiveDate" />
+    <ni-date-input caption="Date d'effet" v-model="newSubProgramTrainerPriceVersion.effectiveDate"
+      class="date-item" :error="validations.effectiveDate.$error"
+      :min="newSubProgramTrainerPriceVersion.minEffectiveDate" />
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" label="Créer la nouvelle version de tarifs des intervenants"
         color="primary" icon-right="add" @click="submit" :loading="loading" />
@@ -40,10 +41,10 @@ import DateInput from '@components/form/DateInput';
 import { REQUIRED_LABEL, TRAINER_ROLE_OPTIONS } from '@data/constants';
 
 export default {
-  name: 'SubProgramPriceVersionCreationModal',
+  name: 'SubProgramTrainerPriceVersionCreationModal',
   props: {
     modelValue: { type: Boolean, default: false },
-    newSubProgramPriceVersion: { type: Object, default: () => ({}) },
+    newSubProgramTrainerPriceVersion: { type: Object, default: () => ({}) },
     validations: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
   },
@@ -55,49 +56,52 @@ export default {
     'ni-modal': Modal,
     'ni-date-input': DateInput,
   },
-  emits: ['hide', 'update:model-value', 'update:new-sub-program-price-version', 'submit'],
+  emits: ['hide', 'update:model-value', 'update:new-sub-program-trainer-price-version', 'submit'],
   setup (props, { emit }) {
-    const { newSubProgramPriceVersion, validations } = toRefs(props);
+    const { newSubProgramTrainerPriceVersion, validations } = toRefs(props);
 
     const hide = () => { emit('hide'); };
     const input = (event) => { emit('update:model-value', event); };
-    const submit = () => { emit('submit', newSubProgramPriceVersion.value.subProgram._id); };
+    const submit = () => { emit('submit', newSubProgramTrainerPriceVersion.value.subProgram._id); };
 
     const emitPrices = (prices) => {
-      emit('update:new-sub-program-price-version', { ...newSubProgramPriceVersion.value, prices });
+      emit('update:new-sub-program-trainer-price-version', { ...newSubProgramTrainerPriceVersion.value, prices });
     };
 
-    const getStepPrices = stepId => newSubProgramPriceVersion.value.prices
+    const getStepPrices = stepId => newSubProgramTrainerPriceVersion.value.prices
       .reduce((acc, price, globalIndex) => {
         if (price.step === stepId) acc.push({ ...price, globalIndex });
         return acc;
       }, []);
 
     const updateHourlyAmount = (value, index) => {
-      const prices = newSubProgramPriceVersion.value.prices
+      const prices = newSubProgramTrainerPriceVersion.value.prices
         .map((p, i) => (i === index ? { ...p, hourlyAmount: Number(value) } : p));
       emitPrices(prices);
     };
 
     const updateRole = (value, index) => {
-      const prices = newSubProgramPriceVersion.value.prices
+      const prices = newSubProgramTrainerPriceVersion.value.prices
         .map((p, i) => (i === index ? { ...p, role: value || undefined } : p));
       emitPrices(prices);
     };
 
     const addPrice = (stepId) => {
-      const prices = [...newSubProgramPriceVersion.value.prices, { step: stepId, role: undefined, hourlyAmount: 0 }];
+      const prices = [
+        ...newSubProgramTrainerPriceVersion.value.prices,
+        { step: stepId, role: undefined, hourlyAmount: 0 },
+      ];
       emitPrices(prices);
     };
 
     const removePrice = (index) => {
-      const prices = newSubProgramPriceVersion.value.prices.filter((_, i) => i !== index);
+      const prices = newSubProgramTrainerPriceVersion.value.prices.filter((_, i) => i !== index);
       emitPrices(prices);
     };
 
     const availableRoleOptions = (stepId, currentRole) => TRAINER_ROLE_OPTIONS.filter(option => (
       option.value === currentRole ||
-      !newSubProgramPriceVersion.value.prices.some(p => p.step === stepId && p.role === option.value)
+      !newSubProgramTrainerPriceVersion.value.prices.some(p => p.step === stepId && p.role === option.value)
     ));
 
     const canAddRole = stepId => getStepPrices(stepId).length < TRAINER_ROLE_OPTIONS.length;

@@ -29,7 +29,7 @@
               <span class="text-bold">Tarification intervenants</span>
               <div class="row no-wrap q-mt-sm">
                 <ni-secondary-button class="q-mr-md pricing-btn" label="Éditer les tarifs des intervenants"
-                  :disable="!!subProgram.archivedAt" @click="openPriceVersionCreationModal(subProgram)" />
+                  :disable="!!subProgram.archivedAt" @click="openTrainerPriceVersionCreationModal(subProgram)" />
                 <ni-bi-color-button v-if="subProgram.trainerPriceVersions?.length" class="button-history"
                   icon="history" @click="openHistoryModal(subProgram)" />
               </div>
@@ -165,11 +165,12 @@
       :sub-programs-grouped-by-program="subProgramsReusingStepToBeUnlocked" @hide="resetValidateUnlockingEditionModal"
       @confirm="confirmUnlocking" :is-step-published="stepToBeUnlocked.status === PUBLISHED" />
 
-    <sub-program-price-version-creation-modal v-model="subProgramPriceVersionCreationModal"
-      :validations="v$.newSubProgramPriceVersion" v-model:new-sub-program-price-version="newSubProgramPriceVersion"
-      @submit="addSubProgramPriceVersion" @hide="resetSubProgramPriceVersionCreationModal" :loading="modalLoading" />
+    <sub-program-trainer-price-version-creation-modal v-model="subProgramTrainerPriceVersionCreationModal"
+      :validations="v$.newSubProgramTrainerPriceVersion" :loading="modalLoading"
+      v-model:new-sub-program-trainer-price-version="newSubProgramTrainerPriceVersion"
+      @submit="addSubProgramTrainerPriceVersion" @hide="resetSubProgramTrainerPriceVersionCreationModal" />
 
-    <sub-program-price-version-history-modal v-model="subProgramPriceVersionHistoryModal"
+    <sub-program-trainer-price-version-history-modal v-model="subProgramTrainerPriceVersionHistoryModal"
       :sub-program="selectedSubProgram" />
 
     <payment-plan-addition-modal v-model="paymentPlanAdditionModal" :loading="modalLoading"
@@ -234,10 +235,10 @@ import { formatQuantity, getLastVersion } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
 import SubProgramCreationModal from 'src/modules/vendor/components/programs/SubProgramCreationModal';
-import SubProgramPriceVersionCreationModal from
-  'src/modules/vendor/components/programs/SubProgramPriceVersionCreationModal';
-import SubProgramPriceVersionHistoryModal from
-  'src/modules/vendor/components/programs/SubProgramPriceVersionHistoryModal';
+import SubProgramTrainerPriceVersionCreationModal from
+  'src/modules/vendor/components/programs/SubProgramTrainerPriceVersionCreationModal';
+import SubProgramTrainerPriceVersionHistoryModal from
+  'src/modules/vendor/components/programs/SubProgramTrainerPriceVersionHistoryModal';
 import PaymentPlanAdditionModal from 'src/modules/vendor/components/programs/PaymentPlanAdditionModal';
 import PaymentPlanEditionModal from 'src/modules/vendor/components/programs/PaymentPlanEditionModal';
 import PaymentPlanListModal from 'src/modules/vendor/components/programs/PaymentPlanListModal';
@@ -280,8 +281,8 @@ export default {
     'published-dot': PublishedDot,
     'ni-secondary-button': SecondaryButton,
     'ni-bi-color-button': BiColorButton,
-    'sub-program-price-version-creation-modal': SubProgramPriceVersionCreationModal,
-    'sub-program-price-version-history-modal': SubProgramPriceVersionHistoryModal,
+    'sub-program-trainer-price-version-creation-modal': SubProgramTrainerPriceVersionCreationModal,
+    'sub-program-trainer-price-version-history-modal': SubProgramTrainerPriceVersionHistoryModal,
     'payment-plan-addition-modal': PaymentPlanAdditionModal,
     'payment-plan-edition-modal': PaymentPlanEditionModal,
     'payment-plan-list-modal': PaymentPlanListModal,
@@ -300,9 +301,9 @@ export default {
     const showPricing = ref({});
     const areStepsLocked = ref({});
     const currentStepId = ref('');
-    const newSubProgramPriceVersion = ref({ prices: [], subProgram: {}, effectiveDate: '' });
-    const subProgramPriceVersionCreationModal = ref(false);
-    const subProgramPriceVersionHistoryModal = ref(false);
+    const newSubProgramTrainerPriceVersion = ref({ prices: [], subProgram: {}, effectiveDate: '' });
+    const subProgramTrainerPriceVersionCreationModal = ref(false);
+    const subProgramTrainerPriceVersionHistoryModal = ref(false);
     const selectedSubProgram = ref({});
 
     // SubProgram Creation
@@ -421,7 +422,7 @@ export default {
 
     const rules = computed(() => ({
       program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
-      newSubProgramPriceVersion: {
+      newSubProgramTrainerPriceVersion: {
         prices: {
           $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }),
           hasConsistentRoles,
@@ -430,42 +431,42 @@ export default {
       },
     }));
 
-    const v$ = useVuelidate(rules, { program, newSubProgramPriceVersion });
+    const v$ = useVuelidate(rules, { program, newSubProgramTrainerPriceVersion });
 
     // SubProgram price version creation
-    const openPriceVersionCreationModal = (subProgram) => {
+    const openTrainerPriceVersionCreationModal = (subProgram) => {
       const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
-      const lastSubProgramPriceVersion = getLastVersion(subProgram.trainerPriceVersions || [], 'effectiveDate');
+      const lastSubProgramTrainerPriceVersion = getLastVersion(subProgram.trainerPriceVersions || [], 'effectiveDate');
 
-      newSubProgramPriceVersion.value = {
+      newSubProgramTrainerPriceVersion.value = {
         subProgram: { _id: subProgram._id, steps },
-        prices: lastSubProgramPriceVersion
-          ? lastSubProgramPriceVersion.prices
+        prices: lastSubProgramTrainerPriceVersion
+          ? lastSubProgramTrainerPriceVersion.prices
           : steps.map(s => ({ step: s._id, hourlyAmount: 100 })),
         effectiveDate: CompaniDate().startOf(DAY).toISO(),
-        minEffectiveDate: lastSubProgramPriceVersion
-          ? CompaniDate(lastSubProgramPriceVersion.effectiveDate).add('P1D').toISO()
+        minEffectiveDate: lastSubProgramTrainerPriceVersion
+          ? CompaniDate(lastSubProgramTrainerPriceVersion.effectiveDate).add('P1D').toISO()
           : '',
       };
-      subProgramPriceVersionCreationModal.value = true;
+      subProgramTrainerPriceVersionCreationModal.value = true;
     };
 
-    const resetSubProgramPriceVersionCreationModal = () => {
-      newSubProgramPriceVersion.value = { prices: [], subProgram: {}, effectiveDate: '' };
-      v$.value.newSubProgramPriceVersion.$reset();
+    const resetSubProgramTrainerPriceVersionCreationModal = () => {
+      newSubProgramTrainerPriceVersion.value = { prices: [], subProgram: {}, effectiveDate: '' };
+      v$.value.newSubProgramTrainerPriceVersion.$reset();
     };
 
-    const addSubProgramPriceVersion = async (subProgramId) => {
+    const addSubProgramTrainerPriceVersion = async (subProgramId) => {
       try {
         modalLoading.value = true;
-        v$.value.newSubProgramPriceVersion.$touch();
-        if (v$.value.newSubProgramPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
+        v$.value.newSubProgramTrainerPriceVersion.$touch();
+        if (v$.value.newSubProgramTrainerPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         await SubPrograms.update(
           subProgramId,
-          { ...omit(newSubProgramPriceVersion.value, ['subProgram', 'minEffectiveDate']) }
+          { ...omit(newSubProgramTrainerPriceVersion.value, ['subProgram', 'minEffectiveDate']) }
         );
-        subProgramPriceVersionCreationModal.value = false;
+        subProgramTrainerPriceVersionCreationModal.value = false;
       } catch (e) {
         console.error(e);
         if (e.data.statusCode === 403 && e.data.message) return NotifyWarning(e.data.message);
@@ -479,7 +480,7 @@ export default {
     // SubProgram price version history
     const openHistoryModal = (subProgram) => {
       selectedSubProgram.value = subProgram;
-      subProgramPriceVersionHistoryModal.value = true;
+      subProgramTrainerPriceVersionHistoryModal.value = true;
     };
 
     // Unlocking step validation
@@ -810,9 +811,9 @@ export default {
       validateUnlockingEditionModal,
       subProgramsReusingStepToBeUnlocked,
       stepToBeUnlocked,
-      subProgramPriceVersionCreationModal,
-      newSubProgramPriceVersion,
-      subProgramPriceVersionHistoryModal,
+      subProgramTrainerPriceVersionCreationModal,
+      newSubProgramTrainerPriceVersion,
+      subProgramTrainerPriceVersionHistoryModal,
       selectedSubProgram,
       // Computed
       v$,
@@ -869,9 +870,9 @@ export default {
       getStepTypeIcon,
       CompaniDuration,
       getStepSubTitle,
-      openPriceVersionCreationModal,
-      resetSubProgramPriceVersionCreationModal,
-      addSubProgramPriceVersion,
+      openTrainerPriceVersionCreationModal,
+      resetSubProgramTrainerPriceVersionCreationModal,
+      addSubProgramTrainerPriceVersion,
       openHistoryModal,
       paymentPlanAdditionModal,
       paymentPlanEditionModal,
