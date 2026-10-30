@@ -27,7 +27,7 @@
       </div>
       <div v-else class="q-mt-md">
         <ni-input caption="Nombre de factures à créer" type="number" in-modal required-field
-          :model-value="newBillsQuantity" @update:model-value="update($event)"
+          :model-value="newBillsQuantity" @update:model-value="update($event)" :disable="isGlobalCertificationCourse"
           :error="validations.newBillsQuantity.$error" :error-message="quantityErrorMessage" />
         <ni-option-group :model-value="selectedHourlyPlanId" :options="hourlyPlanOptions" type="radio" required-field
           :error="validations.selectedHourlyPlanId.$error" error-message="Veuillez sélectionner une tarification"
@@ -86,6 +86,7 @@ export default {
     newPrices: { type: Array, default: () => [] },
     selectedPlanId: { type: String, default: null },
     selectedHourlyPlanId: { type: String, default: null },
+    isGlobalCertificationCourse: { type: Boolean, default: false },
     mode: { type: String, default: MANUAL },
   },
   emits: [
