@@ -24,6 +24,7 @@ import ProfileTabs from '@components/ProfileTabs';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { formatPrice } from '@helpers/utils';
 import TrainerBills from '@api/TrainerBills';
+import CollectiveTrainerBillingInfos from 'src/modules/vendor/components/trainers/CollectiveTrainerBillingInfos';
 import SingleTrainerBillingInfos from 'src/modules/vendor/components/trainers/SingleTrainerBillingInfos';
 import TrainerFeesBillModal from 'src/modules/vendor/components/trainers/TrainerFeesBillModal';
 
@@ -42,16 +43,6 @@ export default {
     const $store = useStore();
     const $q = useQuasar();
 
-    const tabsContent = [
-      {
-        label: 'Formations individuelles',
-        name: 'trainerSingleSlots',
-        default: true,
-        component: SingleTrainerBillingInfos,
-      },
-      { label: 'Formations collectives', name: 'trainerCollectiveSlots' },
-    ];
-
     const trainerFeesBillModal = ref(false);
     const trainerFeesBillLoading = ref(false);
     const trainerFeesBill = ref({ number: '', file: '', amount: '' });
@@ -62,6 +53,25 @@ export default {
     const validations = useVuelidate(rules, { trainerFeesBill });
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
+
+    const tabsContent = computed(() => [
+      ...loggedUser.value.isSingleCourseTrainer
+        ? [{
+          label: 'Formations individuelles',
+          name: 'trainerSingleSlots',
+          default: true,
+          component: SingleTrainerBillingInfos,
+        }]
+        : [],
+      ...loggedUser.value.isCollectiveCourseTrainer
+        ? [{
+          label: 'Formations collectives',
+          name: 'trainerCollectiveSlots',
+          default: !loggedUser.value.isSingleCourseTrainer,
+          component: CollectiveTrainerBillingInfos,
+        }]
+        : [],
+    ]);
 
     const openTrainerFeesBillModal = () => { trainerFeesBillModal.value = true; };
 
