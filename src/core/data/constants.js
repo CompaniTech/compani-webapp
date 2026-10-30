@@ -479,6 +479,13 @@ export const MISSING = 'missing';
 export const NOT_INVOICED = 'not_invoiced';
 export const INVOICED = 'invoiced';
 export const PAID = 'paid';
+export const PARTIALLY_INVOICED = 'partially_invoiced';
+export const TRAINER_COURSE_BILLING_STATUS = {
+  [NOT_INVOICED]: 'Non facturé',
+  [PARTIALLY_INVOICED]: 'Partiellement facturé',
+  [INVOICED]: 'Facturé',
+  [PAID]: 'Réglé',
+};
 export const SLOT_STATUS = { [NOT_INVOICED]: 'Non facturé', [INVOICED]: 'Facturé', [PAID]: 'Réglé' };
 export const TRAINER_PAYMENT_STATUS_OPTIONS = [
   { label: 'En attente', value: PENDING },
