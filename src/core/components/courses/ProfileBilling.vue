@@ -78,6 +78,7 @@
       v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity" v-model:new-prices="newPrices"
       :payment-plan-options="paymentPlans" v-model:selected-plan-id="selectedPlanId" v-model:mode="mode"
       :hourly-payment-plan-options="hourlyPaymentPlans" v-model:selected-hourly-plan-id="selectedHourlyPlanId"
+      :is-global-certification-course="isGlobalCertificationCourse"
       :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
@@ -202,6 +203,8 @@ export default {
     const hourlyPaymentPlans = computed(() => (
       isSingleCourse.value ? get(course.value, 'subProgram.hourlyPaymentPlans', []) : []
     ));
+
+    const isGlobalCertificationCourse = computed(() => course.value.certificateGenerationMode === GLOBAL);
 
     const isGlobalCertificationCourseWithPriceFromDuration = computed(() => !!selectedHourlyPlanId.value &&
       course.value.certificateGenerationMode === GLOBAL);
@@ -521,7 +524,7 @@ export default {
         resetCompaniesSelectionModal();
       } catch (e) {
         console.error(e);
-        if (e.status === 409) return NotifyNegative(e.data.message);
+        if ([403, 409].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la création de la facture.');
       } finally {
         billCreationLoading.value = false;
@@ -755,7 +758,7 @@ export default {
       if (newMode === MANUAL) {
         selectedPlanId.value = null;
         selectedHourlyPlanId.value = null;
-      } else if (newMode === PAYMENT_PLAN) {
+      } else if (newMode === PAYMENT_PLAN || (newMode === HOURLY_PAYMENT_PLAN && isGlobalCertificationCourse.value)) {
         newBillsQuantity.value = 1;
       }
     });
@@ -788,6 +791,7 @@ export default {
       mode,
       paymentPlans,
       hourlyPaymentPlans,
+      isGlobalCertificationCourse,
       isGlobalCertificationCourseWithPriceFromDuration,
       // Validation
       v$,
