@@ -22,7 +22,10 @@
       :options="countUnitOptions" type="radio" @update:model-value="update($event, 'mainFee.countUnit')"
       :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
     <div v-if="billsQuantity === 1">
-      <ni-input v-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
+      <div v-if="billsQuantity === 1 && isGlobalCertificationCourseWithPriceFromDuration" class="q-mb-md text-italic">
+        Le prix sera calculé automatiquement à partir de la tarification au réel.
+      </div>
+      <ni-input v-else-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
         :error="validations.mainFee.price.$error" type="number" :model-value="newBill.mainFee.price"
         @blur="validations.mainFee.price.$touch" suffix="€" required-field :error-message="errorMessages.price"
         @update:model-value="update($event, 'mainFee.price')" />
@@ -101,6 +104,7 @@ export default {
     companiesToBill: { type: Array, default: () => [] },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
     billsQuantity: { type: Number, required: true },
+    isGlobalCertificationCourseWithPriceFromDuration: { type: Boolean, default: false },
   },
   components: {
     'ni-modal': Modal,
