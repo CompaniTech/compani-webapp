@@ -71,12 +71,15 @@
       @submit="validateBillCreation" :validations="v$.newBill" @hide="resetBillCreationModal"
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
-      :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity" />
+      :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity"
+      :is-global-certification-course-with-price-from-duration="isGlobalCertificationCourseWithPriceFromDuration"
+      :has-payment-plan="!!newPrices.length" />
 
     <ni-multiple-course-bill-creation-modal :validations="v$"
       v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity" v-model:new-prices="newPrices"
       :payment-plan-options="paymentPlans" v-model:selected-plan-id="selectedPlanId" v-model:mode="mode"
       :hourly-payment-plan-options="hourlyPaymentPlans" v-model:selected-hourly-plan-id="selectedHourlyPlanId"
+      :is-global-certification-course="isGlobalCertificationCourse"
       :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
@@ -130,6 +133,7 @@ import {
   MANUAL,
   PAYMENT_PLAN,
   HOURLY_PAYMENT_PLAN,
+  GLOBAL,
 } from '@data/constants';
 import CourseBillingCard from 'src/modules/vendor/components/billing/CourseBillingCard';
 import BillCreationModal from 'src/modules/vendor/components/billing/CourseBillCreationModal';
@@ -201,6 +205,11 @@ export default {
       isSingleCourse.value ? get(course.value, 'subProgram.hourlyPaymentPlans', []) : []
     ));
 
+    const isGlobalCertificationCourse = computed(() => course.value.certificateGenerationMode === GLOBAL);
+
+    const isGlobalCertificationCourseWithPriceFromDuration = computed(() => !!selectedHourlyPlanId.value &&
+      course.value.certificateGenerationMode === GLOBAL);
+
     const rules = computed(() => ({
       course: {
         expectedBillsCount: {
@@ -219,7 +228,8 @@ export default {
       newBill: {
         payer: { required },
         mainFee: {
-          ...(newBillsQuantity.value === 1 && { price: { strictPositiveNumber, required } }),
+          ...(newBillsQuantity.value === 1 && !isGlobalCertificationCourseWithPriceFromDuration.value &&
+            !newPrices.value.length && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
             ...(newBillsQuantity.value === 1 &&
@@ -433,7 +443,7 @@ export default {
       mainFee: {
         ...isSingleCourse.value && newBillsQuantity.value > 1
           ? omit(newBill.value.mainFee, 'description')
-          : newBill.value.mainFee,
+          : omit(newBill.value.mainFee, isGlobalCertificationCourseWithPriceFromDuration.value ? ['price'] : []),
         ...(newPrices.value.length && { price: newPrices.value }),
       },
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
@@ -515,7 +525,7 @@ export default {
         resetCompaniesSelectionModal();
       } catch (e) {
         console.error(e);
-        if (e.status === 409) return NotifyNegative(e.data.message);
+        if ([403, 409].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la création de la facture.');
       } finally {
         billCreationLoading.value = false;
@@ -749,7 +759,7 @@ export default {
       if (newMode === MANUAL) {
         selectedPlanId.value = null;
         selectedHourlyPlanId.value = null;
-      } else if (newMode === PAYMENT_PLAN) {
+      } else if (newMode === PAYMENT_PLAN || (newMode === HOURLY_PAYMENT_PLAN && isGlobalCertificationCourse.value)) {
         newBillsQuantity.value = 1;
       }
     });
@@ -782,6 +792,8 @@ export default {
       mode,
       paymentPlans,
       hourlyPaymentPlans,
+      isGlobalCertificationCourse,
+      isGlobalCertificationCourseWithPriceFromDuration,
       // Validation
       v$,
       // Data

@@ -516,9 +516,12 @@ export default {
 
     const validateCompletionCertificateDeletion = async (completionCertificateId) => {
       try {
+        const hourlyPaymentPlanMessage = course.value.hourlyPaymentPlan
+          ? '<br />Si il y a une facture brouillon sur le mois, elle sera remise à 0.'
+          : '';
         $q.dialog({
           title: 'Confirmation',
-          message: 'Êtes-vous sûr(e) de vouloir supprimer ce document&nbsp;?',
+          message: `Êtes-vous sûr(e) de vouloir supprimer ce document&nbsp;?${hourlyPaymentPlanMessage}`,
           html: true,
           ok: true,
           cancel: 'Annuler',
