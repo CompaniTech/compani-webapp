@@ -72,7 +72,8 @@
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
       :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity"
-      :is-global-certification-course-with-price-from-duration="isGlobalCertificationCourseWithPriceFromDuration" />
+      :is-global-certification-course-with-price-from-duration="isGlobalCertificationCourseWithPriceFromDuration"
+      :has-payment-plan="!!newPrices.length" />
 
     <ni-multiple-course-bill-creation-modal :validations="v$"
       v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity" v-model:new-prices="newPrices"
@@ -228,7 +229,7 @@ export default {
         payer: { required },
         mainFee: {
           ...(newBillsQuantity.value === 1 && !isGlobalCertificationCourseWithPriceFromDuration.value &&
-            { price: { strictPositiveNumber, required } }),
+            !newPrices.value.length && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
             ...(newBillsQuantity.value === 1 &&
