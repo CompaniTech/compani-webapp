@@ -57,7 +57,6 @@ export default {
     const $q = useQuasar();
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
-    const trainer = loggedUser;
 
     const {
       trainerCourses,
@@ -69,7 +68,7 @@ export default {
       programOptions,
       refreshCourses,
       resetFilters,
-    } = useTrainerCollectiveCoursesBillingInfos(trainer);
+    } = useTrainerCollectiveCoursesBillingInfos(loggedUser);
 
     const totals = computed(() => trainerCourses.value.reduce((acc, course) => ({
       plannedSalary: add(acc.plannedSalary, course.plannedSalary || 0),

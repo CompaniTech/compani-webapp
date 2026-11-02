@@ -31,6 +31,7 @@ import Input from '@components/form/Input';
 import Button from '@components/Button';
 import { composeCourseName } from '@helpers/courses';
 import { formatPrice } from '@helpers/utils';
+import { add, isGreaterThan } from '@helpers/numbers';
 import { DOC_EXTENSIONS, REQUIRED_LABEL } from '@data/constants';
 
 export default {
@@ -62,11 +63,11 @@ export default {
       ? `Facturer le groupe ${courseName.value}`
       : 'Facturer des frais annexes'));
 
-    const hasPlannedSalary = computed(() => !!course.value && ![undefined, null].includes(course.value.plannedSalary));
+    const hasPlannedSalary = computed(() => !!course.value?.plannedSalary);
 
     const amountExceedsPlannedSalaryMessage = computed(() => {
       const amountExceedsPlannedSalary = hasPlannedSalary.value &&
-      Number(bill.value.amount) + course.value.invoicedAmount > course.value.plannedSalary;
+      isGreaterThan(add(bill.value.amount || 0, course.value.invoicedAmount), course.value.plannedSalary);
 
       return amountExceedsPlannedSalary ? 'Le montant total facturé dépasse les honoraires prévus pour ce groupe.' : '';
     });

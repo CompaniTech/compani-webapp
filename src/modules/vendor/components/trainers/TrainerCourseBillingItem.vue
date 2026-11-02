@@ -7,7 +7,9 @@
         </router-link>
         <div>Honoraires prévus : {{ plannedSalary }}</div>
         <div>Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}</div>
-        <div class="text-weight-bold">{{ TRAINER_COURSE_BILLING_STATUS[course.status] }}</div>
+        <div :class="['text-weight-bold', TRAINER_COURSE_BILLING_STATUS_COLORS[course.status]]">
+          {{ TRAINER_COURSE_BILLING_STATUS[course.status] }}
+        </div>
       </div>
       <ni-primary-button label="Facturer le groupe" :disabled="isBilled" @click="$emit('bill', course)" />
     </div>
@@ -19,7 +21,7 @@ import { computed, toRefs } from 'vue';
 import PrimaryButton from '@components/PrimaryButton';
 import { composeCourseName } from '@helpers/courses';
 import { formatPrice } from '@helpers/utils';
-import { TRAINER_COURSE_BILLING_STATUS, INVOICED, PAID } from '@data/constants';
+import { TRAINER_COURSE_BILLING_STATUS, INVOICED, PAID, NOT_INVOICED, PARTIALLY_INVOICED } from '@data/constants';
 
 export default {
   name: 'TrainerCourseBillingItem',
@@ -29,11 +31,16 @@ export default {
   setup (props) {
     const { course } = toRefs(props);
 
+    const TRAINER_COURSE_BILLING_STATUS_COLORS = {
+      [NOT_INVOICED]: 'text-orange-500',
+      [PARTIALLY_INVOICED]: 'text-orange-500',
+      [INVOICED]: 'text-copper-500',
+      [PAID]: 'text-green-600',
+    };
+
     const courseName = computed(() => composeCourseName(course.value));
 
-    const plannedSalary = computed(() => ([undefined, null].includes(course.value.plannedSalary)
-      ? '-'
-      : formatPrice(course.value.plannedSalary)));
+    const plannedSalary = computed(() => (course.value.plannedSalary ? formatPrice(course.value.plannedSalary) : '-'));
 
     const isBilled = computed(() => [INVOICED, PAID].includes(course.value.status));
 
@@ -46,6 +53,7 @@ export default {
     return {
       // Data
       TRAINER_COURSE_BILLING_STATUS,
+      TRAINER_COURSE_BILLING_STATUS_COLORS,
       // Computed
       courseName,
       plannedSalary,
