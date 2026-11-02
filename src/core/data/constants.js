@@ -472,6 +472,7 @@ export const NO_DATA = 'Aucune donnée';
 // MULTIPLE COURSE BILL CREATION MODES
 export const MANUAL = 'manual';
 export const PAYMENT_PLAN = 'paymentPlan';
+export const HOURLY_PAYMENT_PLAN = 'hourlyPaymentPlan';
 
 // COURSE SLOT STATUS
 export const PRESENT = 'present';
