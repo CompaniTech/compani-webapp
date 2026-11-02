@@ -135,6 +135,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
       hourlyPaymentPlanListModal.value = false;
     } catch (e) {
       console.error(e);
+      if (e.data && e.data.statusCode === 403 && e.data.message) return NotifyWarning(e.data.message);
       NotifyNegative('Erreur lors de la suppression de la tarification au réel.');
     } finally {
       await refreshProgram();
