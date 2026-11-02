@@ -3,6 +3,7 @@ import { helpers, email } from '@vuelidate/validators';
 import { isValidIBAN, isValidBIC } from 'ibantools';
 import { FILL_THE_GAPS_MAX_GAPS_COUNT } from '@data/constants';
 import { isGreaterThan, isGreaterThanOrEqual } from '@helpers/numbers';
+import { isMaskedBankDetail } from '@helpers/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 
 export const frPhoneNumber = (value) => {
@@ -24,13 +25,13 @@ export const frZipCode = (value) => {
 };
 
 export const iban = (value) => {
-  if (!value) return true;
+  if (!value || isMaskedBankDetail(value)) return true;
 
   return isValidIBAN(value.split(' ').join(''));
 };
 
 export const bic = (value) => {
-  if (!value) return true;
+  if (!value || isMaskedBankDetail(value)) return true;
 
   return isValidBIC(value);
 };

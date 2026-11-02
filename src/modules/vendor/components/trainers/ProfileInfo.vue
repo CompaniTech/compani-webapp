@@ -31,10 +31,14 @@
     <div class="q-mb-xl">
       <p class="text-weight-bold">Coordonnées bancaires</p>
       <div class="row gutter-profile">
-        <ni-input caption="IBAN" v-model="userProfile.iban" :error="v$.userProfile.iban.$error"
-          :error-message="ibanErrorMessage" @focus="saveTmp('iban')" @blur="updateUser('iban')" />
-        <ni-input caption="BIC" v-model="userProfile.bic" :error="v$.userProfile.bic.$error"
-          :error-message="bicErrorMessage" @focus="saveTmp('bic')" @blur="updateUser('bic')" />
+        <ni-bank-detail-input caption="IBAN" name="ibanInput" v-model="userProfile.iban" deletable
+          :error="v$.userProfile.iban.$error" :error-message="ibanErrorMessage" @focus="saveTmp('iban')"
+          @update:locked="updateBankInfoLock('iban', $event)" @save="updateUser('iban')"
+          @delete="validateBankDetailDeletion('iban')" />
+        <ni-bank-detail-input caption="BIC" name="bicInput" v-model="userProfile.bic" deletable
+          :error="v$.userProfile.bic.$error" :error-message="bicErrorMessage" @focus="saveTmp('bic')"
+          @update:locked="updateBankInfoLock('bic', $event)" @save="updateUser('bic')"
+          @delete="validateBankDetailDeletion('bic')" />
       </div>
     </div>
     <div class="row gutter-profile q-mb-xl">
@@ -46,16 +50,20 @@
 
 <script>
 import { useStore } from 'vuex';
+import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
-import { required, email } from '@vuelidate/validators';
+import { required, requiredIf, email } from '@vuelidate/validators';
 import get from 'lodash/get';
 import Input from '@components/form/Input';
+import BankDetailInput from '@components/form/BankDetailInput';
 import SearchAddress from '@components/form/SearchAddress';
 import Button from '@components/Button';
 import PhoneSelect from '@components/form/PhoneSelect';
 import Select from '@components/form/Select';
+import Users from '@api/Users';
+import { NotifyNegative, NotifyPositive } from '@components/popup/notify';
 import { useUser } from '@composables/user';
-import { TRAINER, CIVILITY_OPTIONS, MR, MRS } from '@data/constants';
+import { TRAINER, CIVILITY_OPTIONS, MR, MRS, REQUIRED_LABEL } from '@data/constants';
 import { frPhoneNumber, countryCode, frAddress, iban, bic } from '@helpers/vuelidateCustomVal';
 import useVuelidate from '@vuelidate/core';
 
@@ -63,6 +71,7 @@ export default {
   name: 'ProfileInfo',
   components: {
     'ni-input': Input,
+    'ni-bank-detail-input': BankDetailInput,
     'phone-select': PhoneSelect,
     'ni-button': Button,
     'ni-select': Select,
@@ -70,9 +79,11 @@ export default {
   },
   setup () {
     const $store = useStore();
+    const $q = useQuasar();
 
     const tmpInput = ref('');
     const emailLock = ref(true);
+    const bankInfoLocked = ref({ iban: true, bic: true });
     const civilityOptions = CIVILITY_OPTIONS.filter(opt => [MR, MRS].includes(opt.value));
 
     const userProfile = computed(() => (
@@ -98,12 +109,17 @@ export default {
         identity: { lastname: { required }, title: { required } },
         local: { email: { required, email } },
         contact: { address: { fullAddress: { frAddress } } },
-        iban: { iban },
-        bic: { bic },
+        iban: { required: requiredIf(() => !bankInfoLocked.value.iban), iban },
+        bic: { required: requiredIf(() => !bankInfoLocked.value.bic), bic },
       },
       userPhone: { phone: { required, frPhoneNumber }, countryCode: { required, countryCode } },
     }));
     const v$ = useVuelidate(rules, { userProfile, userPhone });
+
+    const updateBankInfoLock = (path, isLocked) => {
+      bankInfoLocked.value[path] = isLocked;
+      if (!isLocked) v$.value.userProfile[path].$reset();
+    };
 
     const addressError = computed(() => {
       const validation = v$.value.userProfile.contact.address.fullAddress;
@@ -113,12 +129,14 @@ export default {
 
     const ibanErrorMessage = computed(() => {
       const validation = v$.value.userProfile.iban;
+      if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
       if (get(validation, 'iban.$response') === false) return 'IBAN non valide';
       return '';
     });
 
     const bicErrorMessage = computed(() => {
       const validation = v$.value.userProfile.bic;
+      if (get(validation, 'required.$response') === false) return REQUIRED_LABEL;
       if (get(validation, 'bic.$response') === false) return 'BIC non valide';
       return '';
     });
@@ -132,6 +150,28 @@ export default {
       updatePhone,
       phoneNbrError,
     } = useUser(refreshUser, v$, emailLock, tmpInput, userPhone);
+
+    const deleteBankDetail = async (path) => {
+      try {
+        await Users.updateById(userProfile.value._id, { [path]: '' });
+        await refreshUser();
+        NotifyPositive('Modification enregistrée.');
+      } catch (e) {
+        console.error(e);
+        NotifyNegative('Erreur lors de la modification.');
+      }
+    };
+
+    const validateBankDetailDeletion = (path) => {
+      $q.dialog({
+        title: 'Confirmation',
+        message: `Êtes-vous sûr(e) de vouloir supprimer ${path === 'iban' ? 'l\'IBAN' : 'le BIC'}&nbsp;?`,
+        html: true,
+        ok: 'Oui',
+        cancel: 'Non',
+      }).onOk(() => deleteBankDetail(path))
+        .onCancel(() => NotifyPositive('Suppression annulée.'));
+    };
 
     const created = async () => {
       v$.value.userProfile.$touch();
@@ -161,6 +201,8 @@ export default {
       saveTmp,
       updateUser,
       refreshUser,
+      validateBankDetailDeletion,
+      updateBankInfoLock,
       emailError,
       toggleEmailLock,
       onPhoneBlur,
