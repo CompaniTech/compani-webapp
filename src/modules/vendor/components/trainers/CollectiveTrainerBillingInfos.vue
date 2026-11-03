@@ -16,7 +16,7 @@
     </q-inner-loading>
     <template v-else-if="filteredData.length">
       <trainer-course-billing-item v-for="course of filteredData" :key="course._id" :course="course"
-        @bill="openBillModal" />
+        :is-trainer="loggedUserIsTrainer" @bill="openBillModal" />
     </template>
     <div v-else class="text-italic">Pas de groupes de formation correspondant aux filtres</div>
 
@@ -29,6 +29,7 @@
 import { useMeta, useQuasar } from 'quasar';
 import { useStore } from 'vuex';
 import { computed, ref } from 'vue';
+import get from 'lodash/get';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
 import Select from '@components/form/Select';
@@ -57,6 +58,11 @@ export default {
     const $q = useQuasar();
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
+    const userProfile = computed(() => $store.state.userProfile.userProfile);
+
+    const trainer = computed(() => (get(userProfile.value, '_id') ? userProfile.value : loggedUser.value));
+
+    const loggedUserIsTrainer = computed(() => trainer.value._id === loggedUser.value._id);
 
     const {
       trainerCourses,
@@ -68,7 +74,7 @@ export default {
       programOptions,
       refreshCourses,
       resetFilters,
-    } = useTrainerCollectiveCoursesBillingInfos(loggedUser);
+    } = useTrainerCollectiveCoursesBillingInfos(trainer);
 
     const totals = computed(() => trainerCourses.value.reduce((acc, course) => ({
       plannedSalary: add(acc.plannedSalary, course.plannedSalary || 0),
@@ -155,6 +161,7 @@ export default {
       filteredData,
       programOptions,
       totals,
+      loggedUserIsTrainer,
       // Methods
       formatPrice,
       resetFilters,

@@ -11,7 +11,8 @@
           {{ TRAINER_COURSE_BILLING_STATUS[course.status] }}
         </div>
       </div>
-      <ni-primary-button label="Facturer le groupe" :disabled="isBilled" @click="$emit('bill', course)" />
+      <ni-primary-button v-if="isTrainer" label="Facturer le groupe" :disabled="isBilled"
+        @click="$emit('bill', course)" />
     </div>
   </q-card>
 </template>
@@ -26,10 +27,13 @@ import { TRAINER_COURSE_BILLING_STATUS, INVOICED, PAID, NOT_INVOICED, PARTIALLY_
 export default {
   name: 'TrainerCourseBillingItem',
   components: { 'ni-primary-button': PrimaryButton },
-  props: { course: { type: Object, required: true } },
+  props: {
+    course: { type: Object, required: true },
+    isTrainer: { type: Boolean, default: false },
+  },
   emits: ['bill'],
   setup (props) {
-    const { course } = toRefs(props);
+    const { course, isTrainer } = toRefs(props);
 
     const TRAINER_COURSE_BILLING_STATUS_COLORS = {
       [NOT_INVOICED]: 'text-orange-500',
@@ -45,9 +49,8 @@ export default {
     const isBilled = computed(() => [INVOICED, PAID].includes(course.value.status));
 
     const goToCourse = computed(() => ({
-      name: 'trainers courses info',
+      name: isTrainer.value ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId: course.value._id },
-      query: { defaultTab: 'traineeFollowUp' },
     }));
 
     return {

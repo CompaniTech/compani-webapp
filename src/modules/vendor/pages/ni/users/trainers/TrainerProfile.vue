@@ -16,7 +16,7 @@ import ProfileHeader from '@components/ProfileHeader';
 import ProfileTabs from '@components/ProfileTabs';
 import ProfileInfo from 'src/modules/vendor/components/trainers/ProfileInfo';
 import ProfileContract from 'src/modules/vendor/components/trainers/ProfileContract';
-import SingleTrainerBillingInfos from 'src/modules/vendor/components/trainers/SingleTrainerBillingInfos';
+import TrainerBillingInfos from 'src/modules/vendor/components/trainers/TrainerBillingInfos';
 import { formatIdentity } from '@helpers/utils';
 import { TRAINER } from '@data/constants';
 
@@ -37,7 +37,7 @@ export default {
 
     const userIdentity = ref('');
     const tabsContent = computed(() => {
-      const { isSingleCourseTrainer } = userProfile.value;
+      const { isSingleCourseTrainer, isCollectiveCourseTrainer } = userProfile.value;
       return [
         {
           label: 'Infos personnelles',
@@ -52,12 +52,12 @@ export default {
           default: defaultTab.value === 'contracts',
           component: ProfileContract,
         },
-        ...isSingleCourseTrainer
+        ...(isSingleCourseTrainer || isCollectiveCourseTrainer)
           ? [{
             label: 'Suivi des heures/ facturation',
             name: 'vaeiTrainerBillingInfos',
             default: defaultTab.value === 'vaeiTrainerBillingInfos',
-            component: SingleTrainerBillingInfos,
+            component: TrainerBillingInfos,
           }]
           : [],
       ];
