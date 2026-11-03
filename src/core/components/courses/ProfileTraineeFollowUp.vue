@@ -516,8 +516,8 @@ export default {
 
     const validateCompletionCertificateDeletion = async (completionCertificateId) => {
       try {
-        const hourlyPaymentPlanMessage = course.value.hourlyPaymentPlan
-          ? '<br />Si il y a une facture brouillon sur le mois, elle sera remise à 0.'
+        const hourlyPaymentPlanMessage = get(course.value, 'subProgram.hourlyPaymentPlans.length')
+          ? '<br />Si il y a une facture brouillon facturée au réel sur le mois, elle sera remise à 0.'
           : '';
         $q.dialog({
           title: 'Confirmation',

@@ -210,6 +210,9 @@ export default {
     const isGlobalCertificationCourseWithPriceFromDuration = computed(() => !!selectedHourlyPlanId.value &&
       course.value.certificateGenerationMode === GLOBAL);
 
+    const hasOtherHourlyPaymentPlan = computed(() => !!selectedHourlyPlanId.value && courseBills.value
+      .some(bill => bill.hourlyPaymentPlan && bill.hourlyPaymentPlan !== selectedHourlyPlanId.value));
+
     const rules = computed(() => ({
       course: {
         expectedBillsCount: {
@@ -474,6 +477,16 @@ export default {
             billCreationModal.value = false;
             companiesSelectionModal.value = true;
           });
+      } else if (hasOtherHourlyPaymentPlan.value) {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Une autre tarification au réel est déjà utilisée sur une facture de cette formation, '
+            + 'souhaitez-vous continuer&nbsp;?',
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+          persistent: true,
+        }).onOk(() => addBill());
       } else {
         await addBill();
       }
@@ -491,11 +504,6 @@ export default {
         v$.value.selectedHourlyPlanId.$touch();
         if (v$.value.newBillsQuantity.$error || v$.value.selectedHourlyPlanId.$error) {
           return NotifyWarning('Champ invalide.');
-        }
-
-        const { hourlyPaymentPlan } = course.value;
-        if (hourlyPaymentPlan && hourlyPaymentPlan !== selectedHourlyPlanId.value) {
-          return NotifyWarning('Une autre tarification au réel est déjà utilisée pour cette formation.');
         }
       }
 
