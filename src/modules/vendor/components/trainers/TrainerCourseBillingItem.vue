@@ -7,6 +7,7 @@
         </router-link>
         <div>Honoraires prévus : {{ plannedSalary }}</div>
         <div>Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}</div>
+        <div>Montant réglé : {{ formatPrice(course.paidAmount) }}</div>
         <div :class="['text-weight-bold', TRAINER_COURSE_BILLING_STATUS_COLORS[course.status]]">
           {{ TRAINER_COURSE_BILLING_STATUS[course.status] }}
         </div>
