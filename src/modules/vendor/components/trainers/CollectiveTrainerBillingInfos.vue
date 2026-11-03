@@ -14,8 +14,8 @@
     <q-inner-loading v-if="coursesLoading" :showing="coursesLoading">
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
-    <template v-else-if="filteredData.length">
-      <trainer-course-billing-item v-for="course of filteredData" :key="course._id" :course="course"
+    <template v-else-if="filteredCourses.length">
+      <trainer-course-billing-item v-for="course of filteredCourses" :key="course._id" :course="course"
         :is-trainer="loggedUserIsTrainer" @bill="openBillModal" />
     </template>
     <div v-else class="text-italic">Pas de groupes de formation correspondant aux filtres</div>
@@ -75,6 +75,8 @@ export default {
       refreshCourses,
       resetFilters,
     } = useTrainerCollectiveCoursesBillingInfos(trainer);
+
+    const filteredCourses = computed(() => get(filteredData.value, '[0].courses') || []);
 
     const totals = computed(() => trainerCourses.value.reduce((acc, course) => ({
       plannedSalary: add(acc.plannedSalary, course.plannedSalary || 0),
@@ -158,7 +160,7 @@ export default {
       bill,
       validations,
       // Computed
-      filteredData,
+      filteredCourses,
       programOptions,
       totals,
       loggedUserIsTrainer,
