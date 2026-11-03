@@ -296,7 +296,7 @@ export default {
     const goToTrainer = trainer => ({
       name: 'ni users trainers info',
       params: { trainerId: trainer._id },
-      query: { defaultTab: 'vaeiTrainerBillingInfos' },
+      // query: { defaultTab: 'vaeiTrainerBillingInfos' }, à remettre quand on aura créer l'onglet collectif
     });
 
     const onSort = (col) => {
