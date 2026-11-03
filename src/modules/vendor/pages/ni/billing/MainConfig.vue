@@ -18,10 +18,11 @@
             :error="validations.vendorCompany.activityDeclarationNumber.$error" required-field />
           <ni-bank-detail-input caption="IBAN" name="ibanInput" v-model="vendorCompany.iban" required-field
             @save="updateVendorCompany('iban')" :error="validations.vendorCompany.iban.$error"
-            :error-message="ibanErrorMessage" @focus="saveTmp('iban')" />
-          <ni-bank-detail-input caption="BIC" name="bicInput" v-model="vendorCompany.bic" @focus="saveTmp('bic')"
+            :error-message="ibanErrorMessage" @update:locked="resetBankInfoValidation('iban', $event)" />
+          <ni-bank-detail-input caption="BIC" name="bicInput" v-model="vendorCompany.bic"
             @save="updateVendorCompany('bic')" :error="validations.vendorCompany.bic.$error"
-            :error-message="bicErrorMessage" required-field />
+            :error-message="bicErrorMessage" required-field
+            @update:locked="resetBankInfoValidation('bic', $event)" />
           <ni-input caption="Capital social" v-model="vendorCompany.shareCapital" @focus="saveTmp('shareCapital')"
             @blur="updateVendorCompany('shareCapital')" :error="validations.vendorCompany.shareCapital.$error"
             :error-message="shareCapitalErrorMessage" required-field />
@@ -293,12 +294,17 @@ export default {
       tmpInput.value = get(vendorCompany.value, path);
     };
 
+    const resetBankInfoValidation = (path, isLocked) => {
+      if (!isLocked) validations.value.vendorCompany[path].$reset();
+    };
+
     const updateVendorCompany = async (path) => {
       try {
         if (path === 'address' && tmpInput.value === get(vendorCompany.value, 'address.fullAddress')) return;
-        if (tmpInput.value === get(vendorCompany.value, path)) return;
+        if (!['iban', 'bic'].includes(path) && tmpInput.value === get(vendorCompany.value, path)) return;
 
         if (get(validations.value.vendorCompany, path)) {
+          get(validations.value.vendorCompany, path).$touch();
           const isValid = await waitForValidation(validations.value.vendorCompany, path);
           if (!isValid) return NotifyWarning('Champ(s) invalide(s)');
         }
@@ -548,6 +554,7 @@ export default {
       openItemCreationModal,
       saveTmp,
       updateVendorCompany,
+      resetBankInfoValidation,
       openBillingRepresentativeModal,
       resetBillingRepresentative,
       templateUploaded,
