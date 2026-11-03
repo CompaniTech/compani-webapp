@@ -79,7 +79,7 @@ export default {
     const billModal = ref(false);
     const billLoading = ref(false);
     const selectedCourse = ref(null);
-    const bill = ref({ number: '', file: '', amount: '' });
+    const bill = ref({ number: '', file: '', amount: 0 });
 
     const rules = computed(() => ({
       bill: { number: { required }, file: { required }, amount: { required, strictPositiveNumber } },
@@ -94,7 +94,7 @@ export default {
     const resetBillModal = () => {
       billModal.value = false;
       selectedCourse.value = null;
-      bill.value = { number: '', file: '', amount: '' };
+      bill.value = { number: '', file: '', amount: 0 };
       validations.value.bill.$reset();
     };
 

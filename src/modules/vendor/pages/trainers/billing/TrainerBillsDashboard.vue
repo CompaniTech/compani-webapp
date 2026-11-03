@@ -45,7 +45,7 @@ export default {
 
     const trainerFeesBillModal = ref(false);
     const trainerFeesBillLoading = ref(false);
-    const trainerFeesBill = ref({ number: '', file: '', amount: '' });
+    const trainerFeesBill = ref({ number: '', file: '', amount: 0 });
 
     const rules = computed(() => ({
       trainerFeesBill: { number: { required }, file: { required }, amount: { required, strictPositiveNumber } },
@@ -77,7 +77,7 @@ export default {
 
     const resetTrainerFeesBillModal = () => {
       trainerFeesBillModal.value = false;
-      trainerFeesBill.value = { number: '', file: '', amount: '' };
+      trainerFeesBill.value = { number: '', file: '', amount: 0 };
       validations.value.trainerFeesBill.$reset();
     };
 

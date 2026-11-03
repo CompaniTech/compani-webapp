@@ -67,7 +67,7 @@ export default {
 
     const amountExceedsPlannedSalaryMessage = computed(() => {
       const amountExceedsPlannedSalary = hasPlannedSalary.value &&
-      isGreaterThan(add(bill.value.amount || 0, course.value.invoicedAmount), course.value.plannedSalary);
+      isGreaterThan(add(bill.value.amount, course.value.invoicedAmount), course.value.plannedSalary);
 
       return amountExceedsPlannedSalary ? 'Le montant total facturé dépasse les honoraires prévus pour ce groupe.' : '';
     });
