@@ -20,7 +20,7 @@
         </p>
         <q-card v-for="bill of courseBills" :key="bill._id" flat class="q-mb-md">
           <div v-if="bill.hourlyPaymentPlan" class="q-px-md q-pt-sm text-italic text-copper-500">
-            Formation facturée au réel
+            Facture au réel
           </div>
           <q-card-section class="cursor-pointer row items-center" :id="bill._id" @click="showDetails(bill._id)">
             <q-item-section>

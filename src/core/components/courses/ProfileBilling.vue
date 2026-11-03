@@ -72,8 +72,7 @@
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
       :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity"
-      :is-global-certification-course-with-price-from-duration="isGlobalCertificationCourseWithPriceFromDuration"
-      :has-payment-plan="!!newPrices.length" />
+      :has-hourly-payment-plan="!!selectedHourlyPlanId" :has-payment-plan="!!newPrices.length" />
 
     <ni-multiple-course-bill-creation-modal :validations="v$"
       v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity" v-model:new-prices="newPrices"
@@ -207,9 +206,6 @@ export default {
 
     const isGlobalCertificationCourse = computed(() => course.value.certificateGenerationMode === GLOBAL);
 
-    const isGlobalCertificationCourseWithPriceFromDuration = computed(() => !!selectedHourlyPlanId.value &&
-      course.value.certificateGenerationMode === GLOBAL);
-
     const hasOtherHourlyPaymentPlan = computed(() => !!selectedHourlyPlanId.value && courseBills.value
       .some(bill => bill.hourlyPaymentPlan && bill.hourlyPaymentPlan !== selectedHourlyPlanId.value));
 
@@ -231,7 +227,7 @@ export default {
       newBill: {
         payer: { required },
         mainFee: {
-          ...(newBillsQuantity.value === 1 && !isGlobalCertificationCourseWithPriceFromDuration.value &&
+          ...(newBillsQuantity.value === 1 && !selectedHourlyPlanId.value &&
             !newPrices.value.length && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
@@ -446,7 +442,7 @@ export default {
       mainFee: {
         ...isSingleCourse.value && newBillsQuantity.value > 1
           ? omit(newBill.value.mainFee, 'description')
-          : omit(newBill.value.mainFee, isGlobalCertificationCourseWithPriceFromDuration.value ? ['price'] : []),
+          : omit(newBill.value.mainFee, selectedHourlyPlanId.value ? ['price'] : []),
         ...(newPrices.value.length && { price: newPrices.value }),
       },
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
@@ -801,7 +797,6 @@ export default {
       paymentPlans,
       hourlyPaymentPlans,
       isGlobalCertificationCourse,
-      isGlobalCertificationCourseWithPriceFromDuration,
       // Validation
       v$,
       // Data
