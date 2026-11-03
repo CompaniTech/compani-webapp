@@ -10,6 +10,7 @@
               <template v-if="hasMissingPlannedSalary">&nbsp;(honoraires manquants)</template>
             </span>
             <span class="text-weight-bold text-copper-500">&nbsp;/ Facturé : {{ formatPrice(totals.invoiced) }}</span>
+            <span class="text-weight-bold text-green-600">&nbsp;/ Réglé : {{ formatPrice(totals.paid) }}</span>
           </div>
         </div>
       </template>
@@ -40,16 +41,17 @@ export default {
     const displayDetails = ref(false);
 
     const totals = computed(() => {
-      const { invoiced, notInvoiced } = (trainer.value.courses || []).reduce((acc, course) => {
+      const { invoiced, notInvoiced, paid } = (trainer.value.courses || []).reduce((acc, course) => {
         const remaining = subtract(course.plannedSalary || 0, course.invoicedAmount);
 
         return {
           invoiced: add(acc.invoiced, course.invoicedAmount),
           notInvoiced: isGreaterThan(remaining, 0) ? add(acc.notInvoiced, remaining) : acc.notInvoiced,
+          paid: add(acc.paid, course.paidAmount),
         };
-      }, { invoiced: 0, notInvoiced: 0 });
+      }, { invoiced: 0, notInvoiced: 0, paid: 0 });
 
-      return { invoiced: toNumber(invoiced), notInvoiced: toNumber(notInvoiced) };
+      return { invoiced: toNumber(invoiced), notInvoiced: toNumber(notInvoiced), paid: toNumber(paid) };
     });
 
     const hasMissingPlannedSalary = computed(() => (trainer.value.courses || []).some(c => !c.plannedSalary));

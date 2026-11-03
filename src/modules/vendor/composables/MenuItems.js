@@ -66,11 +66,11 @@ export const useMenuItems = (isAdmin, isTrainer, isProgramEditor, isSingleCourse
         { name: 'ni billing dashboard', icon: 'credit_card', label: 'A facturer' },
         { name: 'ni billing directory', icon: 'receipt', label: 'Factures clients' },
         { name: 'ni billing payments', icon: 'mdi-bank', label: 'Paiements clients' },
-        { name: 'ni billing trainers payments', icon: 'mdi-account-cash-outline', label: 'Paiements Intervenants' },
+        { name: 'ni billing trainers payments', icon: 'mdi-account-cash-outline', label: 'Paiements intervenants' },
         {
           name: 'ni billing trainers follow up',
           icon: 'mdi-account-arrow-right-outline',
-          label: 'Suivi des coachs',
+          label: 'Facturation intervenants',
         },
       ],
     },

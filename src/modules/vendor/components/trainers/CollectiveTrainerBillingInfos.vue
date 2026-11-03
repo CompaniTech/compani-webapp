@@ -2,8 +2,8 @@
   <q-page padding class="vendor-background q-pb-xl">
     <ni-banner icon="info_outline" class="bg-peach-200">
       <template #message>
-        Honoraires prévus : {{ formatPrice(totals.plannedSalary) }} / Facturé : {{ formatPrice(totals.invoiced) }} /
-        Réglé : {{ formatPrice(totals.paid) }}
+        Honoraires prévus : {{ formatStringToPrice(totals.plannedSalary) }} /
+        Facturé : {{ formatStringToPrice(totals.invoiced) }} / Réglé : {{ formatStringToPrice(totals.paid) }}
       </template>
     </ni-banner>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
@@ -36,7 +36,7 @@ import Select from '@components/form/Select';
 import Banner from '@components/Banner';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import TrainerBills from '@api/TrainerBills';
-import { formatPrice } from '@helpers/utils';
+import { formatPrice, formatStringToPrice } from '@helpers/utils';
 import { add } from '@helpers/numbers';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { useTrainerCollectiveCoursesBillingInfos } from '@composables/trainerCollectiveCoursesBillingInfos';
@@ -166,6 +166,7 @@ export default {
       loggedUserIsTrainer,
       // Methods
       formatPrice,
+      formatStringToPrice,
       resetFilters,
       openBillModal,
       resetBillModal,
