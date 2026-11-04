@@ -24,8 +24,8 @@ import ProfileTabs from '@components/ProfileTabs';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { formatPrice } from '@helpers/utils';
 import TrainerBills from '@api/TrainerBills';
-import CollectiveTrainerBillingInfos from 'src/modules/vendor/components/trainers/CollectiveTrainerBillingInfos';
-import SingleTrainerBillingInfos from 'src/modules/vendor/components/trainers/SingleTrainerBillingInfos';
+import TrainerCollectiveCoursesBilling from 'src/modules/vendor/components/trainers/TrainerCollectiveCoursesBilling';
+import TrainerSingleCoursesBilling from 'src/modules/vendor/components/trainers/TrainerSingleCoursesBilling';
 import TrainerFeesBillModal from 'src/modules/vendor/components/trainers/TrainerFeesBillModal';
 
 export default {
@@ -60,7 +60,7 @@ export default {
           label: 'Formations individuelles',
           name: 'trainerSingleSlots',
           default: true,
-          component: SingleTrainerBillingInfos,
+          component: TrainerSingleCoursesBilling,
         }]
         : [],
       ...loggedUser.value.isCollectiveCourseTrainer
@@ -68,7 +68,7 @@ export default {
           label: 'Formations collectives',
           name: 'trainerCollectiveSlots',
           default: !loggedUser.value.isSingleCourseTrainer,
-          component: CollectiveTrainerBillingInfos,
+          component: TrainerCollectiveCoursesBilling,
         }]
         : [],
     ]);

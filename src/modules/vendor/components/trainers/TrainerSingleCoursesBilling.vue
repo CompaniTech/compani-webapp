@@ -21,7 +21,7 @@
     <q-inner-loading v-if="slotsLoading" :showing="slotsLoading">
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
-    <trainer-billing-infos-card v-else-if="displaySlots" :trainer-infos="filteredData[trainer._id]"
+    <single-courses-billing-card v-else-if="displaySlots" :trainer-infos="filteredData[trainer._id]"
       @refresh="refreshCourseSlots" :is-trainer="loggedUserIsTrainer" />
     <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période</div>
   </q-page>
@@ -37,18 +37,18 @@ import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
 import Banner from '@components/Banner';
-import { useTrainerBillingInfos } from '@composables/trainerBillingInfos';
-import TrainerBillingInfosCard from 'src/modules/vendor/components/billing/TrainerBillingInfosCard';
+import { useTrainerSingleCoursesBillingInfos } from '@composables/trainerSingleCoursesBillingInfos';
+import SingleCoursesBillingCard from 'src/modules/vendor/components/billing/SingleCoursesBillingCard';
 
 export default {
-  name: 'SingleTrainerBillingInfos',
+  name: 'TrainerSingleCoursesBilling',
   components: {
     'ni-profile-header': ProfileHeader,
     'ni-date-range': DateRange,
     'ni-select': Select,
     'ni-button': Button,
     'ni-banner': Banner,
-    'trainer-billing-infos-card': TrainerBillingInfosCard,
+    'single-courses-billing-card': SingleCoursesBillingCard,
   },
   setup () {
     const metaInfo = { title: 'Suivi de la facturation' };
@@ -78,7 +78,7 @@ export default {
       goToNextMonth,
       refreshCourseSlots,
       slotsLoading,
-    } = useTrainerBillingInfos(trainer, loggedUserIsTrainer);
+    } = useTrainerSingleCoursesBillingInfos(trainer, loggedUserIsTrainer);
 
     const displaySlots = computed(() => {
       const trainerInfos = filteredData.value[trainer.value._id];

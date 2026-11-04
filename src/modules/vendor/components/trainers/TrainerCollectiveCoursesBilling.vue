@@ -16,7 +16,7 @@
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
     <template v-else-if="filteredCourses.length">
-      <trainer-course-billing-item v-for="course of filteredCourses" :key="course._id" :course="course"
+      <collective-course-billing-item v-for="course of filteredCourses" :key="course._id" :course="course"
         :is-trainer="loggedUserIsTrainer" @bill="openBillModal" />
     </template>
     <div v-else class="text-italic">Pas de groupes de formation correspondant aux filtres</div>
@@ -41,15 +41,15 @@ import { formatPrice, formatStringToPrice } from '@helpers/utils';
 import { add } from '@helpers/numbers';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { useTrainerCollectiveCoursesBillingInfos } from '@composables/trainerCollectiveCoursesBillingInfos';
-import TrainerCourseBillingItem from 'src/modules/vendor/components/trainers/TrainerCourseBillingItem';
+import CollectiveCourseBillingItem from 'src/modules/vendor/components/billing/CollectiveCourseBillingItem';
 import TrainerFeesBillModal from 'src/modules/vendor/components/trainers/TrainerFeesBillModal';
 
 export default {
-  name: 'CollectiveTrainerBillingInfos',
+  name: 'TrainerCollectiveCoursesBilling',
   components: {
     'ni-banner': Banner,
     'ni-select': Select,
-    'trainer-course-billing-item': TrainerCourseBillingItem,
+    'collective-course-billing-item': CollectiveCourseBillingItem,
     'trainer-fees-bill-modal': TrainerFeesBillModal,
   },
   setup () {

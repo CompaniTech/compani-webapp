@@ -17,7 +17,7 @@
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
     <div v-else-if="filteredData.length">
-      <trainer-courses-billing-card v-for="trainer of filteredData" :key="trainer._id" :trainer="trainer" />
+      <collective-courses-billing-card v-for="trainer of filteredData" :key="trainer._id" :trainer="trainer" />
     </div>
     <div v-else class="text-italic">Pas de groupes de formation correspondant aux filtres sur la période</div>
   </div>
@@ -34,7 +34,7 @@ import { MONTH } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
 import { useTrainerCollectiveCoursesBillingInfos } from '@composables/trainerCollectiveCoursesBillingInfos';
-import TrainerCoursesBillingInfosCard from 'src/modules/vendor/components/billing/TrainerCoursesBillingInfosCard';
+import CollectiveCoursesBillingCard from 'src/modules/vendor/components/billing/CollectiveCoursesBillingCard';
 
 export default {
   name: 'TrainersCollectiveCoursesBillingFollowUp',
@@ -42,7 +42,7 @@ export default {
     'ni-date-range': DateRange,
     'ni-select': Select,
     'ni-button': Button,
-    'trainer-courses-billing-card': TrainerCoursesBillingInfosCard,
+    'collective-courses-billing-card': CollectiveCoursesBillingCard,
   },
   setup () {
     const maxMonthsPeriod = 4;

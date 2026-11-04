@@ -16,7 +16,7 @@
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
     <div v-else-if="displaySlots">
-      <trainer-billing-infos-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
+      <single-courses-billing-card v-for="trainerId of Object.keys(filteredData)" :key="trainerId"
         :trainer-infos="filteredData[trainerId]" @refresh="refreshCourseSlots" />
     </div>
     <div v-else class="text-italic">Pas de créneaux correspondants aux filtres sur la période</div>
@@ -27,8 +27,8 @@ import { watch, computed } from 'vue';
 import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
-import { useTrainerBillingInfos } from '@composables/trainerBillingInfos';
-import TrainerBillingInfosCard from 'src/modules/vendor/components/billing/TrainerBillingInfosCard';
+import { useTrainerSingleCoursesBillingInfos } from '@composables/trainerSingleCoursesBillingInfos';
+import SingleCoursesBillingCard from 'src/modules/vendor/components/billing/SingleCoursesBillingCard';
 
 export default {
   name: 'TrainersSingleCoursesBillingFollowUp',
@@ -36,7 +36,7 @@ export default {
     'ni-date-range': DateRange,
     'ni-select': Select,
     'ni-button': Button,
-    'trainer-billing-infos-card': TrainerBillingInfosCard,
+    'single-courses-billing-card': SingleCoursesBillingCard,
   },
   setup () {
     const {
@@ -45,6 +45,7 @@ export default {
       selectedStatus,
       selectedProgram,
       filteredData,
+      resetFilters,
       statusOptions,
       trainerOptions,
       programOptions,
@@ -55,7 +56,7 @@ export default {
       goToNextMonth,
       refreshCourseSlots,
       slotsLoading,
-    } = useTrainerBillingInfos();
+    } = useTrainerSingleCoursesBillingInfos();
 
     const displaySlots = computed(() => {
       if (filteredData.value) {
@@ -65,14 +66,6 @@ export default {
 
       return false;
     });
-
-    const updateSelectedTrainer = (value) => { selectedTrainer.value = value; };
-
-    const resetFilters = () => {
-      selectedTrainer.value = '';
-      selectedStatus.value = '';
-      selectedProgram.value = '';
-    };
 
     watch(dateRange, async () => {
       await refreshCourseSlots();
@@ -102,7 +95,6 @@ export default {
       displaySlots,
       // Methods
       input,
-      updateSelectedTrainer,
       resetFilters,
       goToPreviousMonth,
       goToNextMonth,

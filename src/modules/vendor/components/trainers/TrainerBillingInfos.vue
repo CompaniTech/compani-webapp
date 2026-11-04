@@ -7,8 +7,8 @@ import { computed } from 'vue';
 import { useStore } from 'vuex';
 import get from 'lodash/get';
 import ProfileTabs from '@components/ProfileTabs';
-import CollectiveTrainerBillingInfos from 'src/modules/vendor/components/trainers/CollectiveTrainerBillingInfos';
-import SingleTrainerBillingInfos from 'src/modules/vendor/components/trainers/SingleTrainerBillingInfos';
+import TrainerCollectiveCoursesBilling from 'src/modules/vendor/components/trainers/TrainerCollectiveCoursesBilling';
+import TrainerSingleCoursesBilling from 'src/modules/vendor/components/trainers/TrainerSingleCoursesBilling';
 
 export default {
   name: 'TrainerBillingInfos',
@@ -32,7 +32,7 @@ export default {
           label: 'Formations individuelles',
           name: 'trainerSingleSlots',
           default: true,
-          component: SingleTrainerBillingInfos,
+          component: TrainerSingleCoursesBilling,
         }]
         : [],
       ...trainer.value.isCollectiveCourseTrainer
@@ -40,7 +40,7 @@ export default {
           label: 'Formations collectives',
           name: 'trainerCollectiveSlots',
           default: !trainer.value.isSingleCourseTrainer,
-          component: CollectiveTrainerBillingInfos,
+          component: TrainerCollectiveCoursesBilling,
         }]
         : [],
     ]);

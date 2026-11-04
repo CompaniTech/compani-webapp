@@ -11,7 +11,7 @@ import CompaniDuration from '@helpers/dates/companiDurations';
 import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
 import { add } from '@helpers/numbers';
 
-export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: false }) => {
+export const useTrainerSingleCoursesBillingInfos = (trainer, loggedUserIsTrainer = { value: false }) => {
   const slotsLoading = ref(false);
   const trainerBillingInfos = ref({});
   const dateRange = ref({

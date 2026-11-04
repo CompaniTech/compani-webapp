@@ -15,7 +15,7 @@
         </div>
       </template>
       <div class="q-pa-sm bg-peach-200">
-        <trainer-course-billing-item v-for="course of trainer.courses" :key="course._id" :course="course" />
+        <collective-course-billing-item v-for="course of trainer.courses" :key="course._id" :course="course" />
       </div>
     </q-expansion-item>
   </q-card>
@@ -25,15 +25,15 @@
 import { computed, ref, toRefs } from 'vue';
 import { formatIdentity, formatPrice } from '@helpers/utils';
 import { add, subtract, isGreaterThan, toNumber } from '@helpers/numbers';
-import TrainerCourseBillingItem from 'src/modules/vendor/components/trainers/TrainerCourseBillingItem';
+import CollectiveCourseBillingItem from 'src/modules/vendor/components/billing/CollectiveCourseBillingItem';
 
 export default {
-  name: 'TrainerCoursesBillingInfosCard',
+  name: 'CollectiveCoursesBillingCard',
   props: {
     trainer: { type: Object, default: () => ({}) },
   },
   components: {
-    'trainer-course-billing-item': TrainerCourseBillingItem,
+    'collective-course-billing-item': CollectiveCourseBillingItem,
   },
   setup (props) {
     const { trainer } = toRefs(props);

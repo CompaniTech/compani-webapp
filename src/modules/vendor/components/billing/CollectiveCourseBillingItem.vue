@@ -26,7 +26,7 @@ import { formatPrice } from '@helpers/utils';
 import { TRAINER_COURSE_BILLING_STATUS, INVOICED, PAID, NOT_INVOICED, PARTIALLY_INVOICED } from '@data/constants';
 
 export default {
-  name: 'TrainerCourseBillingItem',
+  name: 'CollectiveCourseBillingItem',
   components: { 'ni-primary-button': PrimaryButton },
   props: {
     course: { type: Object, required: true },
