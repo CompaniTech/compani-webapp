@@ -36,7 +36,7 @@
         </q-tr>
       </template>
       <template #body="{ props }">
-        <q-tr :props="props">
+        <q-tr :props="props" :class="{ 'text-red-800': isAmountGreaterthanPlannedSalary(props.row) }">
           <q-td v-for="col in props.cols" :key="col.name" :props="props" :class="col.name" :style="col.style">
             <template v-if="col.name === 'status'">
               <div class="chip-container">
@@ -102,6 +102,7 @@ import { formatIdentity, formatPrice, formatQuantity, formatAndSortIdentityOptio
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
+import { isGreaterThan } from '@helpers/numbers';
 import MultiplePaymentEditionModal from 'src/modules/vendor/components/billing/MultiplePaymentEditionModal';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
@@ -148,16 +149,18 @@ export default {
         field: 'date',
         format: value => CompaniDate(value).format(DD_MM_YYYY),
         align: 'left',
-        style: { width: '10%' },
+        style: { width: '7%' },
       },
-      { name: 'number', label: 'Numéro', field: 'number', align: 'left', style: { width: '10%' } },
+      { name: 'number', label: 'Numéro', field: 'number', align: 'left', style: { width: '8%' } },
       {
         name: 'amount',
-        label: 'Montant',
+        label: 'Montant TTC ( / Montant TTC prévu)',
         field: 'amount',
-        format: formatPrice,
+        format: (value, row) => (get(row, 'trainerBill.course')
+          ? `${formatPrice(value)} ( / ${formatPrice(row.trainerBill.course.plannedSalary)})`
+          : formatPrice(value)),
         align: 'left',
-        style: { width: '10%' },
+        style: { width: '15%' },
       },
       {
         name: 'trainerBillNumber',
@@ -254,6 +257,9 @@ export default {
       : sortedPayments.value));
 
     const isTrainerSelectable = trainer => trainer.hasBankDetails;
+
+    const isAmountGreaterthanPlannedSalary = row => !!get(row, 'trainerBill.course') &&
+      isGreaterThan(row.amount, row.trainerBill.course.plannedSalary);
 
     const selectableTrainerPayments = computed(() => filteredPayments.value
       .filter(p => isTrainerSelectable(p.trainerBill.trainer))
@@ -457,6 +463,7 @@ export default {
       getStatusClass,
       onSort,
       isTrainerSelectable,
+      isAmountGreaterthanPlannedSalary,
       selectPaymentList,
       updateSelectedTrainer,
       resetFilters,
