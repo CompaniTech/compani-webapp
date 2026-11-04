@@ -5,7 +5,7 @@ import { NotifyNegative } from '@components/popup/notify';
 import { TRAINER_COURSE_BILLING_STATUS } from '@data/constants';
 import { formatAndSortIdentityOptions } from '@helpers/utils';
 
-export const useTrainerCollectiveCoursesBillingInfos = (trainer = null) => {
+export const useTrainerCollectiveCoursesBillingInfos = () => {
   const trainers = ref([]);
   const coursesLoading = ref(false);
   const selectedTrainer = ref('');
@@ -34,10 +34,10 @@ export const useTrainerCollectiveCoursesBillingInfos = (trainer = null) => {
     ];
   });
 
-  const refreshCourses = async () => {
+  const refreshCourses = async (query = {}) => {
     try {
       coursesLoading.value = true;
-      trainers.value = await Courses.listTrainersBilling(trainer ? { trainer: trainer.value._id } : {});
+      trainers.value = await Courses.listTrainersBilling(query);
     } catch (e) {
       console.error(e);
       NotifyNegative('Erreur lors de la récupération des formations de l\'intervenant·e.');

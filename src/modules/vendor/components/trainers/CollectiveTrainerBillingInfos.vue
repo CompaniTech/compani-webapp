@@ -74,7 +74,7 @@ export default {
       programOptions,
       refreshCourses,
       resetFilters,
-    } = useTrainerCollectiveCoursesBillingInfos(trainer);
+    } = useTrainerCollectiveCoursesBillingInfos();
 
     const filteredCourses = computed(() => get(filteredData.value, '[0].courses') || []);
 
@@ -118,7 +118,7 @@ export default {
 
         await TrainerBills.create(form);
         resetBillModal();
-        await refreshCourses();
+        await refreshCourses({ trainer: trainer.value._id });
 
         NotifyPositive('Facture transmise.');
       } catch (e) {
@@ -144,7 +144,7 @@ export default {
       }).onOk(() => submitBill());
     };
 
-    const created = async () => { await refreshCourses(); };
+    const created = async () => { await refreshCourses({ trainer: trainer.value._id }); };
 
     created();
 
