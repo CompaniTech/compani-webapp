@@ -38,7 +38,7 @@ export default {
   setup (props, { emit }) {
     const { modelValue, name } = toRefs(props);
     const bankDetailInput = ref(null);
-    const locked = ref(true);
+    const locked = ref(!!modelValue.value);
     const lockIcon = computed(() => (locked.value ? 'lock' : 'lock_open'));
 
     const unlock = async () => {
@@ -58,6 +58,7 @@ export default {
 
     watch(() => modelValue.value, (value) => {
       if (isMaskedBankDetail(value)) locked.value = true;
+      else if (!value) locked.value = false;
     });
 
     return {
