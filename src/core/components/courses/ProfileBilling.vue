@@ -72,7 +72,7 @@
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
       :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity"
-      :has-hourly-payment-plan="!!selectedHourlyPlanId" :has-payment-plan="!!newPrices.length" />
+      :has-hourly-payment-plan="!!selectedHourlyPlanId" :has-payment-plan="!!selectedPlanId" />
 
     <ni-multiple-course-bill-creation-modal :validations="v$"
       v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity" v-model:new-prices="newPrices"
@@ -228,7 +228,7 @@ export default {
         payer: { required },
         mainFee: {
           ...(newBillsQuantity.value === 1 && !selectedHourlyPlanId.value &&
-            !newPrices.value.length && { price: { strictPositiveNumber, required } }),
+            !selectedPlanId.value && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
             ...(newBillsQuantity.value === 1 &&

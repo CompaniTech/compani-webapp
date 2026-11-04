@@ -147,6 +147,7 @@ import {
   END_COURSE,
   MONTHLY,
   MM_YYYY,
+  MONTH,
 } from '@data/constants';
 import CompletionCertificateAdditionModal
   from 'src/modules/vendor/components/courses/CompletionCertificateAdditionModal';
@@ -514,9 +515,15 @@ export default {
       }
     };
 
-    const validateCompletionCertificateDeletion = async (completionCertificateId) => {
+    const validateCompletionCertificateDeletion = async (completionCertificate) => {
       try {
-        const hourlyPaymentPlanMessage = get(course.value, 'subProgram.hourlyPaymentPlans.length')
+        const { _id: completionCertificateId, month } = completionCertificate;
+        const startOfMonth = CompaniDate(month, MM_YYYY).startOf(MONTH).toISO();
+        const endOfMonth = CompaniDate(month, MM_YYYY).endOf(MONTH).toISO();
+        const hourlyPaymentPlanMessage = (course.value.bills || [])
+          .filter(bill => bill.maturityDate && CompaniDate(bill.maturityDate).isSameOrBefore(endOfMonth) &&
+            CompaniDate(bill.maturityDate).isSameOrAfter(startOfMonth))
+          .some(bill => bill.hourlyPaymentPlan)
           ? '<br />Si il y a une facture brouillon facturée au réel sur le mois, elle sera remise à 0.'
           : '';
         $q.dialog({
