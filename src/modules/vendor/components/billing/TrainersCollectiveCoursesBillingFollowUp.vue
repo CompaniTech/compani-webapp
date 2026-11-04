@@ -10,8 +10,9 @@
     <div class="filters-container">
       <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
       <ni-select caption="Intervenant·e" clearable :options="trainerOptions" v-model="selectedTrainer" />
-      <ni-select caption="Statut des groupes" clearable :options="statusOptions" v-model="selectedStatus" />
     </div>
+    <ni-select caption="Statut des groupes" multiple :options="statusOptions" :model-value="selectedStatus"
+      @update:model-value="updateSelectedStatus" :blur-on-selection="false" />
     <q-inner-loading v-if="coursesLoading" :showing="coursesLoading">
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
@@ -70,6 +71,7 @@ export default {
       trainerOptions,
       programOptions,
       refreshCourses,
+      updateSelectedStatus,
       resetFilters,
     } = useTrainerCollectiveCoursesBillingInfos();
 
@@ -137,6 +139,7 @@ export default {
       goToPreviousMonth,
       goToNextMonth,
       resetFilters,
+      updateSelectedStatus,
     };
   },
 };

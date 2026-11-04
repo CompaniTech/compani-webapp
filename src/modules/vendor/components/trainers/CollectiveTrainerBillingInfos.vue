@@ -8,9 +8,10 @@
     </ni-banner>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
-      <ni-select caption="Statut des groupes" clearable :options="statusOptions" v-model="selectedStatus" />
       <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
     </div>
+    <ni-select caption="Statut des groupes" multiple :options="statusOptions" :model-value="selectedStatus"
+      @update:model-value="updateSelectedStatus" :blur-on-selection="false" />
     <q-inner-loading v-if="coursesLoading" :showing="coursesLoading">
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
@@ -73,6 +74,7 @@ export default {
       filteredData,
       programOptions,
       refreshCourses,
+      updateSelectedStatus,
       resetFilters,
     } = useTrainerCollectiveCoursesBillingInfos();
 
@@ -168,6 +170,7 @@ export default {
       formatPrice,
       formatStringToPrice,
       resetFilters,
+      updateSelectedStatus,
       openBillModal,
       resetBillModal,
       validateBill,

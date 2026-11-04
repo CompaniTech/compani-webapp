@@ -1,15 +1,28 @@
 import { ref, computed } from 'vue';
+import { useStore } from 'vuex';
 import get from 'lodash/get';
 import Courses from '@api/Courses';
 import { NotifyNegative } from '@components/popup/notify';
-import { TRAINER_COURSE_BILLING_STATUS } from '@data/constants';
+import {
+  TRAINER_COURSE_BILLING_STATUS,
+  TRAINER,
+  NOT_INVOICED,
+  PARTIALLY_INVOICED,
+  INVOICED,
+} from '@data/constants';
 import { formatAndSortIdentityOptions } from '@helpers/utils';
 
 export const useTrainerCollectiveCoursesBillingInfos = () => {
+  const $store = useStore();
+
+  const loggedUser = computed(() => $store.state.main.loggedUser);
+  const loggedUserIsTrainer = computed(() => get(loggedUser.value, 'role.vendor.name') === TRAINER);
+  const defaultStatus = loggedUserIsTrainer.value ? [NOT_INVOICED, PARTIALLY_INVOICED] : [INVOICED];
+
   const trainers = ref([]);
   const coursesLoading = ref(false);
   const selectedTrainer = ref('');
-  const selectedStatus = ref('');
+  const selectedStatus = ref([...defaultStatus]);
   const selectedProgram = ref('');
 
   const trainerCourses = computed(() => trainers.value.flatMap(t => t.courses));
@@ -47,7 +60,8 @@ export const useTrainerCollectiveCoursesBillingInfos = () => {
   };
 
   const isCourseDisplayed = (course) => {
-    if (selectedStatus.value && course.status !== selectedStatus.value) return false;
+    const isAllStatuses = !selectedStatus.value.length || selectedStatus.value.includes('');
+    if (!isAllStatuses && !selectedStatus.value.includes(course.status)) return false;
     if (selectedProgram.value && get(course, 'subProgram.program.name') !== selectedProgram.value) return false;
     return true;
   };
@@ -57,9 +71,14 @@ export const useTrainerCollectiveCoursesBillingInfos = () => {
     .map(t => ({ ...t, courses: t.courses.filter(isCourseDisplayed) }))
     .filter(t => t.courses.length));
 
+  const updateSelectedStatus = (value) => {
+    const isAllStatusesAdded = value.includes('') && !selectedStatus.value.includes('');
+    selectedStatus.value = isAllStatusesAdded ? [''] : value.filter(v => v !== '');
+  };
+
   const resetFilters = () => {
     selectedTrainer.value = '';
-    selectedStatus.value = '';
+    selectedStatus.value = [...defaultStatus];
     selectedProgram.value = '';
   };
 
@@ -77,6 +96,7 @@ export const useTrainerCollectiveCoursesBillingInfos = () => {
     programOptions,
     // Methods
     refreshCourses,
+    updateSelectedStatus,
     resetFilters,
   };
 };
