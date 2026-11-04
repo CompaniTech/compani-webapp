@@ -27,7 +27,7 @@ export const frZipCode = (value) => {
 export const iban = (value) => {
   if (!value || isMaskedBankDetail(value)) return true;
 
-  return isValidIBAN(value.split(' ').join(''));
+  return isValidIBAN(value);
 };
 
 export const bic = (value) => {
