@@ -55,8 +55,8 @@ export default {
         ...(isSingleCourseTrainer || isCollectiveCourseTrainer)
           ? [{
             label: 'Suivi des heures/ facturation',
-            name: 'vaeiTrainerBillingInfos',
-            default: defaultTab.value === 'vaeiTrainerBillingInfos',
+            name: 'trainerBillingInfos',
+            default: defaultTab.value === 'trainerBillingInfos',
             component: TrainerBillingInfos,
           }]
           : [],
