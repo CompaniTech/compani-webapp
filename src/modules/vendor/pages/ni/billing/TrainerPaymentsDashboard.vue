@@ -102,7 +102,7 @@ import { formatIdentity, formatPrice, formatQuantity, formatAndSortIdentityOptio
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
-import { isGreaterThan } from '@helpers/numbers';
+import { add, isGreaterThan } from '@helpers/numbers';
 import MultiplePaymentEditionModal from 'src/modules/vendor/components/billing/MultiplePaymentEditionModal';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
@@ -258,8 +258,16 @@ export default {
 
     const isTrainerSelectable = trainer => trainer.hasBankDetails;
 
-    const isAmountGreaterthanPlannedSalary = row => !!get(row, 'trainerBill.course') &&
-      isGreaterThan(row.amount, row.trainerBill.course.plannedSalary);
+    const isAmountGreaterthanPlannedSalary = (row) => {
+      const { course, trainer } = row.trainerBill;
+      if (!course) return false;
+
+      const paidAmount = trainerPayments.value
+        .filter(p => get(p, 'trainerBill.course._id') === course._id && p.trainerBill.trainer._id === trainer._id)
+        .reduce((acc, p) => add(acc, p.amount), 0);
+
+      return isGreaterThan(paidAmount, course.plannedSalary);
+    };
 
     const selectableTrainerPayments = computed(() => filteredPayments.value
       .filter(p => isTrainerSelectable(p.trainerBill.trainer))
