@@ -73,7 +73,7 @@ export default {
     });
 
     const created = async () => {
-      await Promise.all([refreshCourseSlots()]);
+      await refreshCourseSlots();
     };
 
     created();
@@ -103,10 +103,3 @@ export default {
   },
 };
 </script>
-
-<style lang="sass" scoped>
-.details
-  flex-direction: row
-  justify-content: space-between
-  padding: 16px 0px
-</style>

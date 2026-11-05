@@ -304,6 +304,12 @@ export const useTrainerSingleCoursesBillingInfos = (trainer, loggedUserIsTrainer
     input(dateRange.value);
   };
 
+  const resetFilters = () => {
+    selectedTrainer.value = '';
+    selectedStatus.value = '';
+    selectedProgram.value = '';
+  };
+
   return {
     // Data
     dateRange,
@@ -323,5 +329,6 @@ export const useTrainerSingleCoursesBillingInfos = (trainer, loggedUserIsTrainer
     input,
     goToPreviousMonth,
     goToNextMonth,
+    resetFilters,
   };
 };

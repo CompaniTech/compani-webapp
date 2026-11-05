@@ -78,6 +78,7 @@ export default {
       goToNextMonth,
       refreshCourseSlots,
       slotsLoading,
+      resetFilters,
     } = useTrainerSingleCoursesBillingInfos(trainer, loggedUserIsTrainer);
 
     const displaySlots = computed(() => {
@@ -92,11 +93,6 @@ export default {
 
       return false;
     });
-
-    const resetFilters = () => {
-      selectedStatus.value = '';
-      selectedProgram.value = '';
-    };
 
     watch(dateRange, async () => {
       await refreshCourseSlots();
