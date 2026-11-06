@@ -5,7 +5,7 @@
         <router-link :to="goToCourse" @click.stop>
           <span class="text-weight-bold text-copper-500 clickable-name">{{ courseName }}</span>
         </router-link>
-        <div>Honoraires prévus : {{ plannedSalary }}</div>
+        <div v-if="hasPlannedSalary">Honoraires prévus : {{ formatPrice(course.plannedSalary) }}</div>
         <div>Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}</div>
         <div>Montant réglé : {{ formatPrice(course.paidAmount) }}</div>
         <div :class="['text-weight-bold', TRAINER_COURSE_BILLING_STATUS_COLORS[course.status]]">
@@ -45,7 +45,7 @@ export default {
 
     const courseName = computed(() => composeCourseName(course.value));
 
-    const plannedSalary = computed(() => (course.value.plannedSalary ? formatPrice(course.value.plannedSalary) : '-'));
+    const hasPlannedSalary = computed(() => !!course.value.plannedSalary);
 
     const isBilled = computed(() => [INVOICED, PAID].includes(course.value.status));
 
@@ -60,7 +60,7 @@ export default {
       TRAINER_COURSE_BILLING_STATUS_COLORS,
       // Computed
       courseName,
-      plannedSalary,
+      hasPlannedSalary,
       isBilled,
       goToCourse,
       // Methods
