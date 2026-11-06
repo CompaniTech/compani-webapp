@@ -19,8 +19,9 @@
           </span>
         </p>
         <q-card v-for="bill of courseBills" :key="bill._id" flat class="q-mb-md">
-          <div v-if="course.hourlyPaymentPlan" class="q-px-md q-pt-sm text-italic text-copper-500">
-            Formation facturée au réel
+          <div v-if="bill.hourlyPaymentPlan" class="q-px-md q-pt-sm text-italic text-copper-500">
+            <div>Facture au réel</div>
+            <div class="text-caption">{{ getHourlyPaymentPlanDetail(bill) }}</div>
           </div>
           <q-card-section class="cursor-pointer row items-center" :id="bill._id" @click="showDetails(bill._id)">
             <q-item-section>
@@ -256,6 +257,17 @@ export default {
       isDashboard,
     } = toRefs(props);
     const billEditionLoading = ref(false);
+
+    const getHourlyPaymentPlanDetail = (bill) => {
+      const plan = get(course.value, 'subProgram.hourlyPaymentPlans', [])
+        .find(hpp => hpp._id === bill.hourlyPaymentPlan);
+      if (!plan) return '';
+
+      const stepPrices = plan.prices.map(p => `${get(p, 'step.name', '')} : ${formatPrice(p.hourlyAmount)}/h`);
+      const eLearningPrice = plan.elearningPrice ? [`E-learning : ${formatPrice(plan.elearningPrice)}/h`] : [];
+
+      return [...stepPrices, ...eLearningPrice].join(' - ');
+    };
     const billingPurchaseCreationLoading = ref(false);
     const billingPurchaseEditionLoading = ref(false);
     const billValidationLoading = ref(false);
@@ -825,6 +837,7 @@ export default {
       omit,
       pickBy,
       formatPrice,
+      getHourlyPaymentPlanDetail,
       CompaniDate,
       isTrainerFeesWithPercentage,
       updateSelectedBills,

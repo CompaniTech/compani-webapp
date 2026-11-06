@@ -3,7 +3,7 @@
     <div class="col-xs-10">
       <ni-input ref="bankDetailInput" :name="name" :caption="caption" :model-value="modelValue" :disable="locked"
         :error="error" :error-message="errorMessage" :required-field="requiredField"
-        @update:model-value="$emit('update:model-value', $event)" @focus="$emit('focus')" />
+        @update:model-value="update" @focus="$emit('focus')" />
     </div>
     <div class="col-xs-2 row no-wrap justify-start">
       <ni-button :icon="lockIcon" color="copper-grey-500" @click="toggleLock" />
@@ -54,6 +54,8 @@ export default {
       emit('save');
     };
 
+    const update = value => emit('update:model-value', (value || '').replace(/\s/g, ''));
+
     watch(locked, value => emit('update:locked', value), { immediate: true });
 
     watch(() => modelValue.value, (value) => {
@@ -69,6 +71,7 @@ export default {
       lockIcon,
       // Methods
       toggleLock,
+      update,
     };
   },
 };

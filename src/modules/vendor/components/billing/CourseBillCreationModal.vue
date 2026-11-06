@@ -23,7 +23,7 @@
       :error="validations.mainFee.countUnit.$error" caption="Unité" inline required-field />
     <div v-if="billsQuantity === 1">
       <template v-if="!hasPaymentPlan">
-        <div v-if="billsQuantity === 1 && isGlobalCertificationCourseWithPriceFromDuration" class="q-mb-md text-italic">
+        <div v-if="hasHourlyPaymentPlan" class="q-mb-md text-italic">
           Le prix sera calculé automatiquement à partir de la tarification au réel.
         </div>
         <ni-input v-else-if="course.type === SINGLE || !totalPriceToBill.global" in-modal :caption="priceCaption"
@@ -106,7 +106,7 @@ export default {
     companiesToBill: { type: Array, default: () => [] },
     totalPriceToBill: { type: Object, default: () => ({ global: 0, trainerFees: 0 }) },
     billsQuantity: { type: Number, required: true },
-    isGlobalCertificationCourseWithPriceFromDuration: { type: Boolean, default: false },
+    hasHourlyPaymentPlan: { type: Boolean, default: false },
     hasPaymentPlan: { type: Boolean, default: false },
   },
   components: {
