@@ -5,13 +5,15 @@
         <router-link :to="goToCourse" @click.stop>
           <span class="text-weight-bold text-copper-500 clickable-name">{{ courseName }}</span>
         </router-link>
-        <div>Honoraires prévus : {{ plannedSalary }}</div>
+        <div v-if="hasPlannedSalary">Honoraires prévus : {{ formatPrice(course.plannedSalary) }}</div>
         <div>Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}</div>
+        <div>Montant réglé : {{ formatPrice(course.paidAmount) }}</div>
         <div :class="['text-weight-bold', TRAINER_COURSE_BILLING_STATUS_COLORS[course.status]]">
           {{ TRAINER_COURSE_BILLING_STATUS[course.status] }}
         </div>
       </div>
-      <ni-primary-button label="Facturer le groupe" :disabled="isBilled" @click="$emit('bill', course)" />
+      <ni-primary-button v-if="isTrainer" label="Facturer le groupe" :disabled="isBilled"
+        @click="$emit('bill', course)" />
     </div>
   </q-card>
 </template>
@@ -24,12 +26,15 @@ import { formatPrice } from '@helpers/utils';
 import { TRAINER_COURSE_BILLING_STATUS, INVOICED, PAID, NOT_INVOICED, PARTIALLY_INVOICED } from '@data/constants';
 
 export default {
-  name: 'TrainerCourseBillingItem',
+  name: 'CollectiveCourseBillingItem',
   components: { 'ni-primary-button': PrimaryButton },
-  props: { course: { type: Object, required: true } },
+  props: {
+    course: { type: Object, required: true },
+    isTrainer: { type: Boolean, default: false },
+  },
   emits: ['bill'],
   setup (props) {
-    const { course } = toRefs(props);
+    const { course, isTrainer } = toRefs(props);
 
     const TRAINER_COURSE_BILLING_STATUS_COLORS = {
       [NOT_INVOICED]: 'text-orange-500',
@@ -40,12 +45,12 @@ export default {
 
     const courseName = computed(() => composeCourseName(course.value));
 
-    const plannedSalary = computed(() => (course.value.plannedSalary ? formatPrice(course.value.plannedSalary) : '-'));
+    const hasPlannedSalary = computed(() => !!course.value.plannedSalary);
 
-    const isBilled = computed(() => [INVOICED, PAID].includes(course.value.status));
+    const isBilled = computed(() => hasPlannedSalary.value && [INVOICED, PAID].includes(course.value.status));
 
     const goToCourse = computed(() => ({
-      name: 'trainers courses info',
+      name: isTrainer.value ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId: course.value._id },
       query: { defaultTab: 'traineeFollowUp' },
     }));
@@ -56,7 +61,7 @@ export default {
       TRAINER_COURSE_BILLING_STATUS_COLORS,
       // Computed
       courseName,
-      plannedSalary,
+      hasPlannedSalary,
       isBilled,
       goToCourse,
       // Methods

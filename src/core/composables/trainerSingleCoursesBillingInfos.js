@@ -11,7 +11,7 @@ import CompaniDuration from '@helpers/dates/companiDurations';
 import { minDate, maxDate } from '@helpers/vuelidateCustomVal';
 import { add } from '@helpers/numbers';
 
-export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: false }) => {
+export const useTrainerSingleCoursesBillingInfos = (trainer, loggedUserIsTrainer = { value: false }) => {
   const slotsLoading = ref(false);
   const trainerBillingInfos = ref({});
   const dateRange = ref({
@@ -304,6 +304,12 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     input(dateRange.value);
   };
 
+  const resetFilters = () => {
+    selectedTrainer.value = '';
+    selectedStatus.value = '';
+    selectedProgram.value = '';
+  };
+
   return {
     // Data
     dateRange,
@@ -323,5 +329,6 @@ export const useTrainerBillingInfos = (trainer, loggedUserIsTrainer = { value: f
     input,
     goToPreviousMonth,
     goToNextMonth,
+    resetFilters,
   };
 };

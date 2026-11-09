@@ -2,21 +2,22 @@
   <q-page padding class="vendor-background q-pb-xl">
     <ni-banner icon="info_outline" class="bg-peach-200">
       <template #message>
-        Honoraires prévus : {{ formatPrice(totals.plannedSalary) }} / Facturé : {{ formatPrice(totals.invoiced) }} /
-        Réglé : {{ formatPrice(totals.paid) }}
+        Honoraires prévus : {{ formatStringToPrice(totals.plannedSalary) }} /
+        Facturé : {{ formatStringToPrice(totals.invoiced) }} / Réglé : {{ formatStringToPrice(totals.paid) }}
       </template>
     </ni-banner>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
-      <ni-select caption="Statut des groupes" clearable :options="statusOptions" v-model="selectedStatus" />
       <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
     </div>
+    <ni-select caption="Statut des groupes" multiple :options="statusOptions" :model-value="selectedStatus"
+      @update:model-value="updateSelectedStatus" :blur-on-selection="false" />
     <q-inner-loading v-if="coursesLoading" :showing="coursesLoading">
       <q-spinner-facebook size="30px" color="primary" />
     </q-inner-loading>
-    <template v-else-if="filteredData.length">
-      <trainer-course-billing-item v-for="course of filteredData" :key="course._id" :course="course"
-        @bill="openBillModal" />
+    <template v-else-if="filteredCourses.length">
+      <collective-course-billing-item v-for="course of filteredCourses" :key="course._id" :course="course"
+        :is-trainer="loggedUserIsTrainer" @bill="openBillModal" />
     </template>
     <div v-else class="text-italic">Pas de groupes de formation correspondant aux filtres</div>
 
@@ -29,25 +30,26 @@
 import { useMeta, useQuasar } from 'quasar';
 import { useStore } from 'vuex';
 import { computed, ref } from 'vue';
+import get from 'lodash/get';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
 import Select from '@components/form/Select';
 import Banner from '@components/Banner';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import TrainerBills from '@api/TrainerBills';
-import { formatPrice } from '@helpers/utils';
+import { formatPrice, formatStringToPrice } from '@helpers/utils';
 import { add } from '@helpers/numbers';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { useTrainerCollectiveCoursesBillingInfos } from '@composables/trainerCollectiveCoursesBillingInfos';
-import TrainerCourseBillingItem from 'src/modules/vendor/components/trainers/TrainerCourseBillingItem';
+import CollectiveCourseBillingItem from 'src/modules/vendor/components/billing/CollectiveCourseBillingItem';
 import TrainerFeesBillModal from 'src/modules/vendor/components/trainers/TrainerFeesBillModal';
 
 export default {
-  name: 'CollectiveTrainerBillingInfos',
+  name: 'TrainerCollectiveCoursesBilling',
   components: {
     'ni-banner': Banner,
     'ni-select': Select,
-    'trainer-course-billing-item': TrainerCourseBillingItem,
+    'collective-course-billing-item': CollectiveCourseBillingItem,
     'trainer-fees-bill-modal': TrainerFeesBillModal,
   },
   setup () {
@@ -57,6 +59,11 @@ export default {
     const $q = useQuasar();
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
+    const userProfile = computed(() => $store.state.userProfile.userProfile);
+
+    const trainer = computed(() => (get(userProfile.value, '_id') ? userProfile.value : loggedUser.value));
+
+    const loggedUserIsTrainer = computed(() => trainer.value._id === loggedUser.value._id);
 
     const {
       trainerCourses,
@@ -67,8 +74,11 @@ export default {
       filteredData,
       programOptions,
       refreshCourses,
+      updateSelectedStatus,
       resetFilters,
-    } = useTrainerCollectiveCoursesBillingInfos(loggedUser);
+    } = useTrainerCollectiveCoursesBillingInfos();
+
+    const filteredCourses = computed(() => get(filteredData.value, '[0].courses') || []);
 
     const totals = computed(() => trainerCourses.value.reduce((acc, course) => ({
       plannedSalary: add(acc.plannedSalary, course.plannedSalary || 0),
@@ -110,7 +120,7 @@ export default {
 
         await TrainerBills.create(form);
         resetBillModal();
-        await refreshCourses();
+        await refreshCourses({ trainer: trainer.value._id });
 
         NotifyPositive('Facture transmise.');
       } catch (e) {
@@ -136,7 +146,7 @@ export default {
       }).onOk(() => submitBill());
     };
 
-    const created = async () => { await refreshCourses(); };
+    const created = async () => { await refreshCourses({ trainer: trainer.value._id }); };
 
     created();
 
@@ -152,12 +162,15 @@ export default {
       bill,
       validations,
       // Computed
-      filteredData,
+      filteredCourses,
       programOptions,
       totals,
+      loggedUserIsTrainer,
       // Methods
       formatPrice,
+      formatStringToPrice,
       resetFilters,
+      updateSelectedStatus,
       openBillModal,
       resetBillModal,
       validateBill,

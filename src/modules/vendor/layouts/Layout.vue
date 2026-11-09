@@ -61,7 +61,8 @@ export default {
 
     const isTrainer = computed(() => vendorRole.value === TRAINER);
 
-    const isSingleCourseTrainer = computed(() => isTrainer.value && !!loggedUser.value.isSingleCourseTrainer);
+    const isCourseTrainer = computed(() => isTrainer.value &&
+      !!(loggedUser.value.isSingleCourseTrainer || loggedUser.value.isCollectiveCourseTrainer));
 
     const isProgramEditor = computed(() => loggedUser.value.isProgramEditor || false);
 
@@ -69,7 +70,7 @@ export default {
       isAdmin,
       isTrainer,
       isProgramEditor,
-      isSingleCourseTrainer,
+      isCourseTrainer,
       isVendorAdmin
     );
 
