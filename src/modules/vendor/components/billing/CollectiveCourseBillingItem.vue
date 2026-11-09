@@ -47,11 +47,12 @@ export default {
 
     const hasPlannedSalary = computed(() => !!course.value.plannedSalary);
 
-    const isBilled = computed(() => [INVOICED, PAID].includes(course.value.status));
+    const isBilled = computed(() => hasPlannedSalary.value && [INVOICED, PAID].includes(course.value.status));
 
     const goToCourse = computed(() => ({
       name: isTrainer.value ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId: course.value._id },
+      query: { defaultTab: 'traineeFollowUp' },
     }));
 
     return {
