@@ -154,10 +154,10 @@ export default {
       { name: 'number', label: 'Numéro', field: 'number', align: 'left', style: { width: '8%' } },
       {
         name: 'amount',
-        label: 'Montant TTC ( / Montant TTC prévu)',
+        label: 'Montant TTC / Montant TTC prévu',
         field: 'amount',
-        format: (value, row) => (get(row, 'trainerBill.course')
-          ? `${formatPrice(value)} ( / ${formatPrice(row.trainerBill.course.plannedSalary)})`
+        format: (value, row) => (get(row, 'trainerBill.course.plannedSalary')
+          ? `${formatPrice(value)} / ${formatPrice(row.trainerBill.course.plannedSalary)}`
           : formatPrice(value)),
         align: 'left',
         style: { width: '15%' },
@@ -260,7 +260,7 @@ export default {
 
     const isAmountGreaterthanPlannedSalary = (row) => {
       const { course, trainer } = row.trainerBill;
-      if (!course) return false;
+      if (!course?.plannedSalary) return false;
 
       const paidAmount = trainerPayments.value
         .filter(p => get(p, 'trainerBill.course._id') === course._id && p.trainerBill.trainer._id === trainer._id)
