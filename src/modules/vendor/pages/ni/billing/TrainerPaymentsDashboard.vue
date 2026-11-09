@@ -46,7 +46,7 @@
             <a v-else-if="col.name === 'file' && col.value" :href="col.value" target="_blank" rel="noopener">
               Voir la facture
             </a>
-            <router-link v-else-if="col.name === 'trainer'" :to="goToTrainer(props.row.trainerBill.trainer)"
+            <router-link v-else-if="col.name === 'trainer'" :to="goToTrainer(props.row)"
               class="clickable-name cursor-pointer">
               {{ col.value }}
               <q-tooltip v-if="col.value">{{ col.value }}</q-tooltip>
@@ -307,10 +307,13 @@ export default {
 
     const updateSelectedStatus = (status) => { selectedStatus.value = status; };
 
-    const goToTrainer = trainer => ({
+    const goToTrainer = row => ({
       name: 'ni users trainers info',
-      params: { trainerId: trainer._id },
-      query: { defaultTab: 'trainerBillingInfos' },
+      params: { trainerId: row.trainerBill.trainer._id },
+      query: {
+        defaultTab: 'trainerBillingInfos',
+        ...(get(row, 'trainerBill.course') && { defaultSubTab: 'trainerCollectiveSlots' }),
+      },
     });
 
     const onSort = (col) => {

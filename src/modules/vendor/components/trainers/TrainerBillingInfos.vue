@@ -5,6 +5,7 @@
 <script>
 import { computed } from 'vue';
 import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 import get from 'lodash/get';
 import ProfileTabs from '@components/ProfileTabs';
 import TrainerCollectiveCoursesBilling from 'src/modules/vendor/components/trainers/TrainerCollectiveCoursesBilling';
@@ -20,18 +21,22 @@ export default {
   },
   setup () {
     const $store = useStore();
+    const $route = useRoute();
 
     const loggedUser = computed(() => $store.state.main.loggedUser);
     const userProfile = computed(() => $store.state.userProfile.userProfile);
 
     const trainer = computed(() => (get(userProfile.value, '_id') ? userProfile.value : loggedUser.value));
 
+    const isCollectiveTabDefault = computed(() => !!trainer.value.isCollectiveCourseTrainer &&
+      (!trainer.value.isSingleCourseTrainer || $route.query.defaultSubTab === 'trainerCollectiveSlots'));
+
     const tabsContent = computed(() => [
       ...trainer.value.isSingleCourseTrainer
         ? [{
           label: 'Formations individuelles',
           name: 'trainerSingleSlots',
-          default: true,
+          default: !isCollectiveTabDefault.value,
           component: TrainerSingleCoursesBilling,
         }]
         : [],
@@ -39,7 +44,7 @@ export default {
         ? [{
           label: 'Formations collectives',
           name: 'trainerCollectiveSlots',
-          default: !trainer.value.isSingleCourseTrainer,
+          default: isCollectiveTabDefault.value,
           component: TrainerCollectiveCoursesBilling,
         }]
         : [],
