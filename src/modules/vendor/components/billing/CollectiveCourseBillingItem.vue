@@ -9,7 +9,10 @@
         <div>Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}</div>
         <div>Montant réglé : {{ formatPrice(course.paidAmount) }}</div>
         <div :class="['text-weight-bold', TRAINER_COURSE_BILLING_STATUS_COLORS[course.status]]">
-          {{ TRAINER_COURSE_BILLING_STATUS[course.status] }}
+          <span v-if="formattedBillingDates">
+            {{ TRAINER_COURSE_BILLING_STATUS[course.status] }} le {{ formattedBillingDates }}
+          </span>
+          <span v-else>{{ TRAINER_COURSE_BILLING_STATUS[course.status] }}</span>
         </div>
       </div>
       <ni-primary-button v-if="isTrainer" label="Facturer le groupe" :disabled="isBilled"
@@ -23,7 +26,15 @@ import { computed, toRefs } from 'vue';
 import PrimaryButton from '@components/PrimaryButton';
 import { composeCourseName } from '@helpers/courses';
 import { formatPrice } from '@helpers/utils';
-import { TRAINER_COURSE_BILLING_STATUS, INVOICED, PAID, NOT_INVOICED, PARTIALLY_INVOICED } from '@data/constants';
+import CompaniDate from '@helpers/dates/companiDates';
+import {
+  TRAINER_COURSE_BILLING_STATUS,
+  INVOICED,
+  PAID,
+  NOT_INVOICED,
+  PARTIALLY_INVOICED,
+  DD_MM_YYYY,
+} from '@data/constants';
 
 export default {
   name: 'CollectiveCourseBillingItem',
@@ -55,6 +66,12 @@ export default {
       query: { defaultTab: 'traineeFollowUp' },
     }));
 
+    const formattedBillingDates = computed(() => {
+      if (!course.value.billsSubmissionDates || !course.value.billsSubmissionDates.length) return '';
+      const formattedDates = course.value.billsSubmissionDates.map(date => CompaniDate(date).format(DD_MM_YYYY));
+      return formattedDates.join(', ');
+    });
+
     return {
       // Data
       TRAINER_COURSE_BILLING_STATUS,
@@ -64,6 +81,7 @@ export default {
       hasPlannedSalary,
       isBilled,
       goToCourse,
+      formattedBillingDates,
       // Methods
       formatPrice,
     };
