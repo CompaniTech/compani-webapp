@@ -94,7 +94,7 @@ const routes = [
               'ni management single courses',
             ];
             if (from.name === 'ni management blended courses info' && from.query.defaultTab === 'traineeFollowUp') {
-              to.query.defaultTab = 'vaeiTrainerBillingInfos';
+              to.query.defaultTab = 'trainerBillingInfos';
             } else if (blendedOrSingleCourses.includes(from.name)) {
               to.query.defaultTab = 'contracts';
             }

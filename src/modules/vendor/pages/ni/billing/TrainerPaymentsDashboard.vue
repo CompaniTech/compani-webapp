@@ -36,7 +36,7 @@
         </q-tr>
       </template>
       <template #body="{ props }">
-        <q-tr :props="props">
+        <q-tr :props="props" :class="{ 'text-red-800': isAmountGreaterthanPlannedSalary(props.row) }">
           <q-td v-for="col in props.cols" :key="col.name" :props="props" :class="col.name" :style="col.style">
             <template v-if="col.name === 'status'">
               <div class="chip-container">
@@ -46,7 +46,7 @@
             <a v-else-if="col.name === 'file' && col.value" :href="col.value" target="_blank" rel="noopener">
               Voir la facture
             </a>
-            <router-link v-else-if="col.name === 'trainer'" :to="goToTrainer(props.row.trainerBill.trainer)"
+            <router-link v-else-if="col.name === 'trainer'" :to="goToTrainer(props.row)"
               class="clickable-name cursor-pointer">
               {{ col.value }}
               <q-tooltip v-if="col.value">{{ col.value }}</q-tooltip>
@@ -102,6 +102,7 @@ import { formatIdentity, formatPrice, formatQuantity, formatAndSortIdentityOptio
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
+import { add, isGreaterThan } from '@helpers/numbers';
 import MultiplePaymentEditionModal from 'src/modules/vendor/components/billing/MultiplePaymentEditionModal';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
@@ -148,16 +149,18 @@ export default {
         field: 'date',
         format: value => CompaniDate(value).format(DD_MM_YYYY),
         align: 'left',
-        style: { width: '10%' },
+        style: { width: '7%' },
       },
-      { name: 'number', label: 'Numéro', field: 'number', align: 'left', style: { width: '10%' } },
+      { name: 'number', label: 'Numéro', field: 'number', align: 'left', style: { width: '8%' } },
       {
         name: 'amount',
-        label: 'Montant',
+        label: 'Montant TTC / Montant TTC prévu',
         field: 'amount',
-        format: formatPrice,
+        format: (value, row) => (get(row, 'trainerBill.course.plannedSalary')
+          ? `${formatPrice(value)} / ${formatPrice(row.trainerBill.course.plannedSalary)}`
+          : formatPrice(value)),
         align: 'left',
-        style: { width: '10%' },
+        style: { width: '15%' },
       },
       {
         name: 'trainerBillNumber',
@@ -255,6 +258,17 @@ export default {
 
     const isTrainerSelectable = trainer => trainer.hasBankDetails;
 
+    const isAmountGreaterthanPlannedSalary = (row) => {
+      const { course, trainer } = row.trainerBill;
+      if (!course?.plannedSalary) return false;
+
+      const paidAmount = trainerPayments.value
+        .filter(p => get(p, 'trainerBill.course._id') === course._id && p.trainerBill.trainer._id === trainer._id)
+        .reduce((acc, p) => add(acc, p.amount), 0);
+
+      return isGreaterThan(paidAmount, course.plannedSalary);
+    };
+
     const selectableTrainerPayments = computed(() => filteredPayments.value
       .filter(p => isTrainerSelectable(p.trainerBill.trainer))
       .map(p => p._id));
@@ -293,10 +307,13 @@ export default {
 
     const updateSelectedStatus = (status) => { selectedStatus.value = status; };
 
-    const goToTrainer = trainer => ({
+    const goToTrainer = row => ({
       name: 'ni users trainers info',
-      params: { trainerId: trainer._id },
-      // query: { defaultTab: 'vaeiTrainerBillingInfos' }, à remettre quand on aura créer l'onglet collectif
+      params: { trainerId: row.trainerBill.trainer._id },
+      query: {
+        defaultTab: 'trainerBillingInfos',
+        ...(get(row, 'trainerBill.course') && { defaultSubTab: 'trainerCollectiveSlots' }),
+      },
     });
 
     const onSort = (col) => {
@@ -457,6 +474,7 @@ export default {
       getStatusClass,
       onSort,
       isTrainerSelectable,
+      isAmountGreaterthanPlannedSalary,
       selectPaymentList,
       updateSelectedTrainer,
       resetFilters,
