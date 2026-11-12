@@ -36,7 +36,7 @@
         </q-tr>
       </template>
       <template #body="{ props }">
-        <q-tr :props="props" :class="{ 'text-red-800': isAmountGreaterthanPlannedSalary(props.row) }">
+        <q-tr :props="props" :class="{ 'text-red-800': isTotalAmountGreaterthanPlannedSalary(props.row) }">
           <q-td v-for="col in props.cols" :key="col.name" :props="props" :class="col.name" :style="col.style">
             <template v-if="col.name === 'status'">
               <div class="chip-container">
@@ -102,7 +102,7 @@ import { formatIdentity, formatPrice, formatQuantity, formatAndSortIdentityOptio
 import { ascendingSort } from '@helpers/dates/utils';
 import CompaniDate from '@helpers/dates/companiDates';
 import { downloadFile } from '@helpers/file';
-import { add, isGreaterThan } from '@helpers/numbers';
+import { isGreaterThan } from '@helpers/numbers';
 import MultiplePaymentEditionModal from 'src/modules/vendor/components/billing/MultiplePaymentEditionModal';
 import XmlFileDownloadModal from 'src/modules/vendor/components/billing/XmlFileDownloadModal';
 
@@ -258,15 +258,11 @@ export default {
 
     const isTrainerSelectable = trainer => trainer.hasBankDetails;
 
-    const isAmountGreaterthanPlannedSalary = (row) => {
-      const { course, trainer } = row.trainerBill;
+    const isTotalAmountGreaterthanPlannedSalary = (row) => {
+      const course = get(row, 'trainerBill.course');
       if (!course?.plannedSalary) return false;
 
-      const paidAmount = trainerPayments.value
-        .filter(p => get(p, 'trainerBill.course._id') === course._id && p.trainerBill.trainer._id === trainer._id)
-        .reduce((acc, p) => add(acc, p.amount), 0);
-
-      return isGreaterThan(paidAmount, course.plannedSalary);
+      return isGreaterThan(course.totalPaymentsAmount || 0, course.plannedSalary);
     };
 
     const selectableTrainerPayments = computed(() => filteredPayments.value
@@ -474,7 +470,7 @@ export default {
       getStatusClass,
       onSort,
       isTrainerSelectable,
-      isAmountGreaterthanPlannedSalary,
+      isTotalAmountGreaterthanPlannedSalary,
       selectPaymentList,
       updateSelectedTrainer,
       resetFilters,
