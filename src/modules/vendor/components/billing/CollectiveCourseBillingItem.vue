@@ -6,10 +6,12 @@
           <span class="text-weight-bold text-copper-500 clickable-name">{{ courseName }}</span>
         </router-link>
         <div v-if="hasPlannedSalary">Honoraires prévus : {{ formatPrice(course.plannedSalary) }}</div>
-        <div :class="{ 'text-red-800': course.plannedSalary && course.invoicedAmount > course.plannedSalary }">
-          Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}
-        </div>
-        <div>Montant réglé : {{ formatPrice(course.paidAmount) }}</div>
+        <template v-if="!isPaidBeforeBillingSystem">
+          <div :class="{ 'text-red-800': course.plannedSalary && course.invoicedAmount > course.plannedSalary }">
+            Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}
+          </div>
+          <div>Montant réglé : {{ formatPrice(course.paidAmount) }}</div>
+        </template>
         <div :class="['text-weight-bold', TRAINER_COURSE_BILLING_STATUS_COLORS[course.status]]">
           <span v-if="formattedBillingDates">
             {{ TRAINER_COURSE_BILLING_STATUS[course.status] }} le {{ formattedBillingDates }}
@@ -17,7 +19,7 @@
           <span v-else>{{ TRAINER_COURSE_BILLING_STATUS[course.status] }}</span>
         </div>
       </div>
-      <ni-primary-button v-if="isTrainer" label="Facturer le groupe" :disabled="isBilled"
+      <ni-primary-button v-if="isTrainer" label="Facturer le groupe" :disabled="isBilled || isPaidBeforeBillingSystem"
         @click="$emit('bill', course)" />
     </div>
   </q-card>
@@ -62,6 +64,9 @@ export default {
 
     const isBilled = computed(() => hasPlannedSalary.value && [INVOICED, PAID].includes(course.value.status));
 
+    // Courses ended before trainer billing was tracked in the app (01/10/2026) are paid without any bill
+    const isPaidBeforeBillingSystem = computed(() => course.value.status === PAID && !course.value.invoicedAmount);
+
     const goToCourse = computed(() => ({
       name: isTrainer.value ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId: course.value._id },
@@ -82,6 +87,7 @@ export default {
       courseName,
       hasPlannedSalary,
       isBilled,
+      isPaidBeforeBillingSystem,
       goToCourse,
       formattedBillingDates,
       // Methods

@@ -25,6 +25,7 @@
 import { computed, ref, toRefs } from 'vue';
 import { formatIdentity, formatPrice } from '@helpers/utils';
 import { add, subtract, isGreaterThan, toNumber } from '@helpers/numbers';
+import { PAID } from '@data/constants';
 import CollectiveCourseBillingItem from 'src/modules/vendor/components/billing/CollectiveCourseBillingItem';
 
 export default {
@@ -43,10 +44,11 @@ export default {
     const totals = computed(() => {
       const { invoiced, notInvoiced, paid } = (trainer.value.courses || []).reduce((acc, course) => {
         const remaining = subtract(course.plannedSalary || 0, course.invoicedAmount);
+        const isNotInvoiced = course.status !== PAID && isGreaterThan(remaining, 0);
 
         return {
           invoiced: add(acc.invoiced, course.invoicedAmount),
-          notInvoiced: isGreaterThan(remaining, 0) ? add(acc.notInvoiced, remaining) : acc.notInvoiced,
+          notInvoiced: isNotInvoiced ? add(acc.notInvoiced, remaining) : acc.notInvoiced,
           paid: add(acc.paid, course.paidAmount),
         };
       }, { invoiced: 0, notInvoiced: 0, paid: 0 });
