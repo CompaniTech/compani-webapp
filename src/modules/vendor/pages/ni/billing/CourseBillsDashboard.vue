@@ -104,7 +104,8 @@ import CompanySelect from '@components/form/CompanySelect';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import { useCourseBilling } from '@composables/courseBills';
 import { DASHBOARD, COURSE_TYPES, MONTH, INTERRUPTED_COURSES, NO_HOLDING } from '@data/constants';
-import { composeCourseName, isInterrupted } from '@helpers/courses';
+import { composeCourseName, isInterrupted, isCoursePriceExceeded } from '@helpers/courses';
+import { add } from '@helpers/numbers';
 import CompaniDate from '@helpers/dates/companiDates';
 import { minDate, maxDate, minArrayLength } from '@helpers/vuelidateCustomVal';
 import { formatAndSortOptions, formatAndSortCompanyOptions, formatQuantity, formatName } from '@helpers/utils';
@@ -290,14 +291,25 @@ export default {
         ...courseBillsFromInterruptedCourses.value,
       ].filter(bill => billsToValidate.value._ids.includes(bill._id));
 
-      return bills.map(bill => ({
-        courseType: bill.course.type,
-        companiesName: formatName(bill.companies),
-        courseName: composeCourseName(bill.course),
-        traineesQuantity: bill.course.trainees
-          .filter(trainee => bill.companies.map(c => c._id).includes(trainee.registrationCompany))
-          .length,
-      }));
+      return bills.map((bill) => {
+        const hourlyBillsToValidateAmount = bills
+          .filter(b => b.hourlyPaymentPlan && b.course._id === bill.course._id)
+          .reduce((acc, b) => add(acc, b.netExclTaxes), 0);
+
+        return {
+          courseType: bill.course.type,
+          companiesName: formatName(bill.companies),
+          courseName: composeCourseName(bill.course),
+          traineesQuantity: bill.course.trainees
+            .filter(trainee => bill.companies.map(c => c._id).includes(trainee.registrationCompany))
+            .length,
+          isCoursePriceExceeded: !!bill.hourlyPaymentPlan && isCoursePriceExceeded(
+            bill.course.prices,
+            bill.validatedHourlyBillsAmount || 0,
+            hourlyBillsToValidateAmount
+          ),
+        };
+      });
     });
 
     const refreshValidatedCourseBills = async () => {

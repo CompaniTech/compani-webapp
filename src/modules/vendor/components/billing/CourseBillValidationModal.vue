@@ -14,6 +14,12 @@
         icon-color="secondary" class="bg-orange-100 text-orange-500">
         <template #message>Aucun stagiaire des structures sélectionnées n'est inscrit à la formation</template>
       </ni-banner>
+      <ni-banner v-if="info.isCoursePriceExceeded" icon="info_outline" icon-color="secondary"
+        class="bg-orange-100 text-orange-500">
+        <template #message>
+          Le montant des factures validées au réel de cette formation dépasserait le prix de la formation
+        </template>
+      </ni-banner>
     </div>
    <ni-date-input caption="Date de facture" :model-value="billToValidate.billedAt" :error="validations.billedAt.$error"
       @blur="validations.billedAt.$touch" in-modal required-field @update:model-value="update($event, 'billedAt')" />

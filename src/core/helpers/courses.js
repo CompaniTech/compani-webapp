@@ -10,8 +10,10 @@ import {
   SELF_POSITIONNING,
   TRAINER_ROLE_OPTIONS,
 } from '@data/constants';
+import get from 'lodash/get';
 import CompaniDate from '@helpers/dates/companiDates';
 import CompaniDuration from '@helpers/dates/companiDurations';
+import { add, isGreaterThan } from '@helpers/numbers';
 import { formatIntervalHourly, getISODuration, getSlotDurationMultiplier } from './dates/utils';
 
 export const happened = sameDaySlots => CompaniDate().isSameOrAfter(sameDaySlots[sameDaySlots.length - 1].endDate);
@@ -73,3 +75,11 @@ export const getQuestionnaireTypeTitle = (types) => {
 };
 
 export const isInterrupted = (interruptionDates = []) => interruptionDates.some(d => !d.endDate);
+
+export const isCoursePriceExceeded = (prices, validatedBillsAmount, billsToValidateAmount) => {
+  if (!get(prices, '[0].global')) return false;
+
+  const coursePrice = add(get(prices, '[0].global'), get(prices, '[0].trainerFees', 0));
+
+  return isGreaterThan(add(validatedBillsAmount, billsToValidateAmount), coursePrice);
+};

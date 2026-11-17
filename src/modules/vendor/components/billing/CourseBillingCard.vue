@@ -211,7 +211,7 @@ import CompaniDuration from '@helpers/dates/companiDurations';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { add, toFixedToFloat } from '@helpers/numbers';
 import { formatPrice, formatName, formatIdentity } from '@helpers/utils';
-import { composeCourseName, isInterrupted } from '@helpers/courses';
+import { composeCourseName, isInterrupted, isCoursePriceExceeded } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import CourseBillEditionModal from 'src/modules/vendor/components/billing/CourseBillEditionModal';
 import CourseFeeEditionModal from 'src/modules/vendor/components/billing/CourseFeeEditionModal';
@@ -270,7 +270,6 @@ export default {
       const eLearningPrice = plan.elearningPrice
         ? [`E-learning : ${formatPrice(plan.elearningPrice)}/h${eLearningLimit}`]
         : [];
-
 
       return [...stepPrices, ...eLearningPrice].join(' - ');
     };
@@ -399,12 +398,25 @@ export default {
       return `${value} %`;
     });
 
-    const courseInfos = computed(() => ([{
-      courseType: course.value.type,
-      companiesName,
-      courseName,
-      traineesQuantity: Number(traineesQuantity.value),
-    }]));
+    const courseInfos = computed(() => {
+      const billToValidateWithPlan = courseBills.value
+        .find(bill => bill._id === billToValidate.value._id && bill.hourlyPaymentPlan);
+      const validatedHourlyBillsAmount = courseBills.value
+        .filter(bill => bill.billedAt && bill.hourlyPaymentPlan && !bill.courseCreditNote)
+        .reduce((acc, bill) => add(acc, bill.netExclTaxes), 0);
+
+      return [{
+        courseType: course.value.type,
+        companiesName,
+        courseName,
+        traineesQuantity: Number(traineesQuantity.value),
+        isCoursePriceExceeded: !!billToValidateWithPlan && isCoursePriceExceeded(
+          course.value.prices,
+          validatedHourlyBillsAmount,
+          billToValidateWithPlan.netExclTaxes
+        ),
+      }];
+    });
 
     const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
 
