@@ -6,7 +6,9 @@
           <span class="text-weight-bold text-copper-500 clickable-name">{{ courseName }}</span>
         </router-link>
         <div v-if="hasPlannedSalary">Honoraires prévus : {{ formatPrice(course.plannedSalary) }}</div>
-        <div>Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}</div>
+        <div :class="{ 'text-red-800': course.plannedSalary && course.invoicedAmount > course.plannedSalary }">
+          Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}
+        </div>
         <div>Montant réglé : {{ formatPrice(course.paidAmount) }}</div>
         <div :class="['text-weight-bold', TRAINER_COURSE_BILLING_STATUS_COLORS[course.status]]">
           <span v-if="formattedBillingDates">
