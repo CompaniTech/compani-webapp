@@ -4,7 +4,7 @@
       <template #header>
         <div class="full-width items-center">
           <span class="text-copper-500">{{ formatIdentity(trainer.identity, 'FL') }}</span>
-          <div class="q-py-sm">
+          <div class="q-py-sm" v-if="displayTotals">
             <span class="text-weight-bold text-orange-500">
               Non facturé : {{ formatPrice(totals.notInvoiced) }}
               <template v-if="hasMissingPlannedSalary">&nbsp;(honoraires manquants)</template>
@@ -56,6 +56,9 @@ export default {
       return { invoiced: toNumber(invoiced), notInvoiced: toNumber(notInvoiced), paid: toNumber(paid) };
     });
 
+    const displayTotals = computed(() => Object.values(trainer.value.courses || {})
+      .some(course => course.status !== PAID));
+
     const hasMissingPlannedSalary = computed(() => (trainer.value.courses || []).some(c => !c.plannedSalary));
 
     return {
@@ -64,6 +67,7 @@ export default {
       // Computed
       totals,
       hasMissingPlannedSalary,
+      displayTotals,
       // Methods
       formatIdentity,
       formatPrice,

@@ -39,6 +39,7 @@ import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup
 import TrainerBills from '@api/TrainerBills';
 import { formatPrice, formatStringToPrice } from '@helpers/utils';
 import { add } from '@helpers/numbers';
+import { PAID } from '@data/constants';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import { useTrainerCollectiveCoursesBillingInfos } from '@composables/trainerCollectiveCoursesBillingInfos';
 import CollectiveCourseBillingItem from 'src/modules/vendor/components/billing/CollectiveCourseBillingItem';
@@ -80,11 +81,17 @@ export default {
 
     const filteredCourses = computed(() => get(filteredData.value, '[0].courses') || []);
 
-    const totals = computed(() => trainerCourses.value.reduce((acc, course) => ({
-      plannedSalary: add(acc.plannedSalary, course.plannedSalary || 0),
-      invoiced: add(acc.invoiced, course.invoicedAmount),
-      paid: add(acc.paid, course.paidAmount),
-    }), { plannedSalary: 0, invoiced: 0, paid: 0 }));
+    const totals = computed(() => trainerCourses.value.reduce((acc, course) => {
+      const isPaidBeforeBillingSystem = course.status === PAID && !course.invoicedAmount;
+
+      return {
+        plannedSalary: isPaidBeforeBillingSystem
+          ? acc.plannedSalary
+          : add(acc.plannedSalary, course.plannedSalary || 0),
+        invoiced: add(acc.invoiced, course.invoicedAmount),
+        paid: add(acc.paid, course.paidAmount),
+      };
+    }, { plannedSalary: 0, invoiced: 0, paid: 0 }));
 
     const billModal = ref(false);
     const billLoading = ref(false);

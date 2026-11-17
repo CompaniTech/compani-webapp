@@ -5,8 +5,10 @@
         <router-link :to="goToCourse" @click.stop>
           <span class="text-weight-bold text-copper-500 clickable-name">{{ courseName }}</span>
         </router-link>
-        <div v-if="hasPlannedSalary">Honoraires prévus : {{ formatPrice(course.plannedSalary) }}</div>
         <template v-if="!isPaidBeforeBillingSystem">
+          <div v-if="hasPlannedSalary">
+            Honoraires prévus : {{ formatPrice(course.plannedSalary) }}
+          </div>
           <div :class="{ 'text-red-800': course.plannedSalary && course.invoicedAmount > course.plannedSalary }">
             Montant déjà facturé : {{ formatPrice(course.invoicedAmount) }}
           </div>
