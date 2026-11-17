@@ -206,7 +206,8 @@ import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
-import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT, LIST } from '@data/constants';
+import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT, LIST, SHORT_DURATION_H_MM } from '@data/constants';
+import CompaniDuration from '@helpers/dates/companiDurations';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { add, toFixedToFloat } from '@helpers/numbers';
 import { formatPrice, formatName, formatIdentity } from '@helpers/utils';
@@ -264,7 +265,12 @@ export default {
       if (!plan) return '';
 
       const stepPrices = plan.prices.map(p => `${get(p, 'step.name', '')} : ${formatPrice(p.hourlyAmount)}/h`);
-      const eLearningPrice = plan.elearningPrice ? [`E-learning : ${formatPrice(plan.elearningPrice)}/h`] : [];
+      const limit = plan.elearningLimit && CompaniDuration(plan.elearningLimit).format(SHORT_DURATION_H_MM);
+      const eLearningLimit = limit ? ` (limite : ${limit})` : '';
+      const eLearningPrice = plan.elearningPrice
+        ? [`E-learning : ${formatPrice(plan.elearningPrice)}/h${eLearningLimit}`]
+        : [];
+
 
       return [...stepPrices, ...eLearningPrice].join(' - ');
     };

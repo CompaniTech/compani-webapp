@@ -20,7 +20,10 @@
         <div v-for="price in plan.prices" :key="price.step" class="q-py-xs">
           {{ getStepName(price.step) }} : {{ price.hourlyAmount }} € / h
         </div>
-        <div v-if="plan.elearningPrice" class="q-py-xs">E-learning : {{ plan.elearningPrice }} €</div>
+        <div v-if="plan.elearningPrice" class="q-py-xs">
+          E-learning : {{ plan.elearningPrice }} € / h
+          <span v-if="plan.elearningLimit">(limite : {{ formatLimit(plan.elearningLimit) }})</span>
+        </div>
       </div>
     </q-expansion-item>
   </ni-modal>
@@ -32,6 +35,8 @@ import { useQuasar } from 'quasar';
 import { NotifyPositive } from '@components/popup/notify';
 import Modal from '@components/modal/Modal';
 import Button from '@components/Button';
+import CompaniDuration from '@helpers/dates/companiDurations';
+import { SHORT_DURATION_H_MM } from '@data/constants';
 
 export default {
   name: 'HourlyPaymentPlanListModal',
@@ -55,6 +60,8 @@ export default {
 
     const getStepName = stepId => (subProgram.value.steps || []).find(s => s._id === stepId)?.name || '';
 
+    const formatLimit = limit => CompaniDuration(limit).format(SHORT_DURATION_H_MM);
+
     const validateDeletion = (hourlyPaymentPlanId) => {
       $q.dialog({
         title: 'Confirmation',
@@ -73,6 +80,7 @@ export default {
       hide,
       input,
       getStepName,
+      formatLimit,
       validateDeletion,
     };
   },
