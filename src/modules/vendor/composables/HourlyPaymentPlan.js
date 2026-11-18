@@ -17,7 +17,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
   const newHourlyPaymentPlan = ref(emptyPlan());
   const editedHourlyPaymentPlan = ref({ planId: '', ...emptyPlan() });
 
-  const positiveIntDuration = value => !value || /^PT\d+H\d+M$/.test(value);
+  const positiveIntDuration = value => !value || /^(PT\d+H\d+M|PT\d+S)$/.test(value);
 
   const planRules = {
     prices: { $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }) },
@@ -60,7 +60,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
       subProgram: { _id: subProgram._id, steps, hourlyPaymentPlansCount: subProgram.hourlyPaymentPlans?.length },
       prices: steps.map(s => ({ step: s._id, hourlyAmount: 0 })),
       hasELearning,
-      ...hasELearning && { elearningPrice: 0 },
+      ...hasELearning && { elearningPrice: 0, elearningLimit: PT0S },
     };
     hourlyPaymentPlanAdditionModal.value = true;
   };

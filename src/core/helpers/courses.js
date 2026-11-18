@@ -77,9 +77,10 @@ export const getQuestionnaireTypeTitle = (types) => {
 export const isInterrupted = (interruptionDates = []) => interruptionDates.some(d => !d.endDate);
 
 export const isCoursePriceExceeded = (prices, validatedBillsAmount, billsToValidateAmount) => {
-  if (!get(prices, '[0].global')) return false;
+  const globalPrice = get(prices, '[0].global');
+  if (!globalPrice) return false;
 
-  const coursePrice = add(get(prices, '[0].global'), get(prices, '[0].trainerFees', 0));
+  const coursePrice = add(globalPrice, get(prices, '[0].trainerFees', 0));
 
   return isGreaterThan(add(validatedBillsAmount, billsToValidateAmount), coursePrice);
 };
