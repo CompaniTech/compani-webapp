@@ -3,7 +3,8 @@ import useVuelidate from '@vuelidate/core';
 import { required, helpers } from '@vuelidate/validators';
 import { strictPositiveNumber } from '@helpers/vuelidateCustomVal';
 import SubPrograms from '@api/SubPrograms';
-import { E_LEARNING } from '@data/constants';
+import { E_LEARNING, PT0S } from '@data/constants';
+import CompaniDuration from '@helpers/dates/companiDurations';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 
 export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
@@ -12,9 +13,11 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
   const hourlyPaymentPlanListModal = ref(false);
   const selectedSubProgramForHourlyPlan = ref({});
 
-  const emptyPlan = () => ({ subProgram: {}, prices: [], elearningPrice: '' });
+  const emptyPlan = () => ({ subProgram: {}, prices: [], elearningPrice: '', elearningLimit: PT0S });
   const newHourlyPaymentPlan = ref(emptyPlan());
   const editedHourlyPaymentPlan = ref({ planId: '', ...emptyPlan() });
+
+  const positiveIntDuration = value => !value || /^(PT\d+H\d+M|PT\d+S)$/.test(value);
 
   const planRules = {
     prices: { $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }) },
@@ -22,6 +25,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
       required: (value, plan) => !plan.hasELearning || required.$validator(value),
       strictPositiveNumber: (value, plan) => !plan.hasELearning || strictPositiveNumber(value),
     },
+    elearningLimit: { positiveIntDuration: (value, plan) => !plan.hasELearning || positiveIntDuration(value) },
   };
   const rules = computed(() => ({
     newHourlyPaymentPlan: planRules,
@@ -42,6 +46,8 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
       ...plan.planId && { hourlyPaymentPlanId: plan.planId },
       prices,
       ...plan.hasELearning && { elearningPrice: Number(plan.elearningPrice) },
+      ...plan.hasELearning && !CompaniDuration(plan.elearningLimit).isEquivalentTo(PT0S) &&
+        { elearningLimit: plan.elearningLimit },
     };
   };
 
@@ -54,7 +60,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
       subProgram: { _id: subProgram._id, steps, hourlyPaymentPlansCount: subProgram.hourlyPaymentPlans?.length },
       prices: steps.map(s => ({ step: s._id, hourlyAmount: 0 })),
       hasELearning,
-      ...hasELearning && { elearningPrice: 0 },
+      ...hasELearning && { elearningPrice: 0, elearningLimit: PT0S },
     };
     hourlyPaymentPlanAdditionModal.value = true;
   };
@@ -79,6 +85,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
       prices: plan.prices.map(p => ({ step: p.step, hourlyAmount: p.hourlyAmount })),
       hasELearning: subProgram.steps.some(s => s.type === E_LEARNING),
       elearningPrice: plan.elearningPrice,
+      elearningLimit: plan.elearningLimit || PT0S,
     };
     hourlyPaymentPlanListModal.value = false;
     hourlyPaymentPlanEditionModal.value = true;

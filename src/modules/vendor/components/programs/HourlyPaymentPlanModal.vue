@@ -19,6 +19,19 @@
       <ni-input in-modal type="number" :model-value="plan.elearningPrice" suffix="€ / h" required-field
         caption="Tarif e-learning" :error-message="getElearningPriceError()" :error="!!getElearningPriceError()"
         @update:model-value="updateElearningPrice" />
+      <div class="row justify-between">
+        <p class="q-mb-none input-caption">Limite d'heures e-learning facturables (optionnelle)</p>
+        <q-icon v-if="getElearningLimitError()" name="error_outline" color="secondary" />
+      </div>
+      <q-field class="duration-field" dense :error="!!getElearningLimitError()"
+        :error-message="getElearningLimitError()" borderless>
+        <div class="duration-container row items-end">
+          <ni-input in-modal :model-value="limitHours" suffix="h" class="flex-1 q-pr-sm"
+            @update:model-value="updateTmp($event, 'hours')" @blur="updateElearningLimit()" />
+          <ni-input in-modal :model-value="limitMinutes" suffix="min" class="flex-1 q-pl-sm"
+            @update:model-value="updateTmp($event, 'minutes')" @blur="updateElearningLimit()" />
+        </div>
+      </q-field>
     </div>
     <template #footer>
       <q-btn no-caps class="full-width modal-btn" color="primary" icon-right="add" :loading="loading"
@@ -28,8 +41,9 @@
 </template>
 
 <script>
-import { toRefs, ref, computed } from 'vue';
-import { REQUIRED_LABEL } from '@data/constants';
+import { toRefs, ref, computed, watch } from 'vue';
+import { REQUIRED_LABEL, PT0S } from '@data/constants';
+import CompaniDuration from '@helpers/dates/companiDurations';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Banner from '@components/Banner';
@@ -76,6 +90,37 @@ export default {
 
     const updateElearningPrice = (value) => { emit('update:plan', { ...plan.value, elearningPrice: value }); };
 
+    const limitHours = ref(0);
+    const limitMinutes = ref(0);
+    const currentEditedField = ref({});
+
+    watch(
+      () => plan.value.elearningLimit,
+      () => {
+        const durationObject = CompaniDuration(plan.value.elearningLimit || PT0S).toHoursAndMinutesObject();
+        limitHours.value = durationObject.hours;
+        limitMinutes.value = durationObject.minutes;
+      },
+      { immediate: true }
+    );
+
+    const updateTmp = (event, path) => { currentEditedField.value = { path, event: event || '0' }; };
+
+    const updateElearningLimit = () => {
+      const { path, event } = currentEditedField.value;
+
+      if (event) {
+        const parsedEvent = parseFloat(event);
+        const value = path === 'hours'
+          ? `PT${parsedEvent || 0}H${limitMinutes.value}M`
+          : `PT${limitHours.value}H${parsedEvent || 0}M`;
+
+        const { hours, minutes } = CompaniDuration(value).toHoursAndMinutesObject();
+        emit('update:plan', { ...plan.value, elearningLimit: `PT${hours}H${minutes}M` });
+        currentEditedField.value = {};
+      }
+    };
+
     const getAmountError = (index) => {
       if (!showErrors.value) return '';
       const validation = validations.value.prices.$each.$response.$data[index].hourlyAmount;
@@ -85,6 +130,12 @@ export default {
       return '';
     };
 
+    const getElearningLimitError = () => {
+      if (!showErrors.value || !validations.value.elearningLimit.$error) return '';
+
+      return 'Durée non valide';
+    };
+
     const getElearningPriceError = () => {
       if (!showErrors.value || !validations.value.elearningPrice.$error) return '';
       if (validations.value.elearningPrice.required.$invalid) return REQUIRED_LABEL;
@@ -92,6 +143,9 @@ export default {
     };
 
     return {
+      // Data
+      limitHours,
+      limitMinutes,
       // Computed
       hourlyPaymentPlansCount,
       // Methods
@@ -102,9 +156,25 @@ export default {
       getStepName,
       updateHourlyAmount,
       updateElearningPrice,
+      updateTmp,
+      updateElearningLimit,
       getAmountError,
       getElearningPriceError,
+      getElearningLimitError,
     };
   },
 };
 </script>
+
+<style lang="sass" scoped>
+.duration-field
+  :deep(.q-field__control)
+    border: none !important
+
+.duration-container
+  :deep(.q-field__control)
+    border: 1px solid $copper-grey-300 !important
+    border-radius: 3px !important
+  :deep(.q-field__bottom)
+    display: none
+</style>

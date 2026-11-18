@@ -206,11 +206,12 @@ import CourseCreditNotes from '@api/CourseCreditNotes';
 import { NotifyNegative, NotifyPositive, NotifyWarning } from '@components/popup/notify';
 import Button from '@components/Button';
 import { useCourseBilling } from '@composables/courseBills';
-import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT, LIST } from '@data/constants';
+import { COMPANY, INTRA, SINGLE, DD_MM_YYYY, GROUP, COUNT_UNIT, LIST, SHORT_DURATION_H_MM } from '@data/constants';
+import CompaniDuration from '@helpers/dates/companiDurations';
 import { strictPositiveNumber, integerNumber, minDate } from '@helpers/vuelidateCustomVal';
 import { add, toFixedToFloat } from '@helpers/numbers';
 import { formatPrice, formatName, formatIdentity } from '@helpers/utils';
-import { composeCourseName, isInterrupted } from '@helpers/courses';
+import { composeCourseName, isInterrupted, isCoursePriceExceeded } from '@helpers/courses';
 import CompaniDate from '@helpers/dates/companiDates';
 import CourseBillEditionModal from 'src/modules/vendor/components/billing/CourseBillEditionModal';
 import CourseFeeEditionModal from 'src/modules/vendor/components/billing/CourseFeeEditionModal';
@@ -264,7 +265,11 @@ export default {
       if (!plan) return '';
 
       const stepPrices = plan.prices.map(p => `${get(p, 'step.name', '')} : ${formatPrice(p.hourlyAmount)}/h`);
-      const eLearningPrice = plan.elearningPrice ? [`E-learning : ${formatPrice(plan.elearningPrice)}/h`] : [];
+      const limit = plan.elearningLimit && CompaniDuration(plan.elearningLimit).format(SHORT_DURATION_H_MM);
+      const eLearningLimit = limit ? ` (limite : ${limit})` : '';
+      const eLearningPrice = plan.elearningPrice
+        ? [`E-learning : ${formatPrice(plan.elearningPrice)}/h${eLearningLimit}`]
+        : [];
 
       return [...stepPrices, ...eLearningPrice].join(' - ');
     };
@@ -393,12 +398,25 @@ export default {
       return `${value} %`;
     });
 
-    const courseInfos = computed(() => ([{
-      courseType: course.value.type,
-      companiesName,
-      courseName,
-      traineesQuantity: Number(traineesQuantity.value),
-    }]));
+    const courseInfos = computed(() => {
+      const billToValidateWithPlan = courseBills.value
+        .find(bill => bill._id === billToValidate.value._id && bill.hourlyPaymentPlan);
+      const validatedHourlyBillsAmount = courseBills.value
+        .filter(bill => bill.billedAt && bill.hourlyPaymentPlan && !bill.courseCreditNote)
+        .reduce((acc, bill) => add(acc, bill.netExclTaxes), 0);
+
+      return [{
+        courseType: course.value.type,
+        companiesName,
+        courseName,
+        traineesQuantity: Number(traineesQuantity.value),
+        isCoursePriceExceeded: !!billToValidateWithPlan && isCoursePriceExceeded(
+          course.value.prices,
+          validatedHourlyBillsAmount,
+          billToValidateWithPlan.netExclTaxes
+        ),
+      }];
+    });
 
     const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
 

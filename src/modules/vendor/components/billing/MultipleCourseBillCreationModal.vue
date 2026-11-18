@@ -39,7 +39,8 @@
                   {{ price.step.name }} : {{ formatPrice(price.hourlyAmount) }} / h
                 </div>
                 <div v-if="opt.elearningPrice" class="text-caption q-py-xs">
-                  E-learning : {{ formatPrice(opt.elearningPrice) }}
+                  E-learning : {{ formatPrice(opt.elearningPrice) }} / h
+                  <span v-if="opt.elearningLimit">(limite : {{ formatLimit(opt.elearningLimit) }})</span>
                 </div>
               </q-card>
             </q-expansion-item>
@@ -65,7 +66,8 @@ import Button from '@components/Button';
 import ButtonToggle from '@components/ButtonToggle';
 import OptionGroup from '@components/form/OptionGroup';
 import { formatPrice } from '@helpers/utils';
-import { MANUAL, PAYMENT_PLAN, HOURLY_PAYMENT_PLAN } from '@data/constants';
+import CompaniDuration from '@helpers/dates/companiDurations';
+import { MANUAL, PAYMENT_PLAN, HOURLY_PAYMENT_PLAN, SHORT_DURATION_H_MM } from '@data/constants';
 
 export default {
   name: 'MultipleCourseBillCreationModal',
@@ -124,7 +126,10 @@ export default {
       value: plan._id,
       prices: plan.prices,
       elearningPrice: plan.elearningPrice,
+      elearningLimit: plan.elearningLimit,
     })));
+
+    const formatLimit = limit => CompaniDuration(limit).format(SHORT_DURATION_H_MM);
 
     const quantityErrorMessage = computed(() => {
       if (validations.value.newBillsQuantity.strictPositiveNumber.$response === false ||
@@ -176,6 +181,7 @@ export default {
       selectPlan,
       selectHourlyPlan,
       formatPrice,
+      formatLimit,
     };
   },
 };
