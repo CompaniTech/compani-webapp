@@ -53,10 +53,15 @@ export default {
     const $store = useStore();
     const course = computed(() => $store.state.course.course);
     const courseName = computed(() => get(course.value, 'tradeName'));
-    const headerInfo = computed(() => [{
-      icon: 'hourglass_empty',
-      label: `Durée : ${CompaniDuration(course.value.totalTheoreticalDuration).format(LONG_DURATION_H_MM)}`,
-    }]);
+    const headerInfo = computed(() => [
+      {
+        icon: 'hourglass_empty',
+        label: `Durée : ${CompaniDuration(course.value.totalTheoreticalDuration).format(LONG_DURATION_H_MM)}`,
+      },
+      ...(get(course.value, 'subProgram.archivedAt')
+        ? [{ icon: 'circle', label: 'Archivé', iconClass: 'info-archived' }]
+        : []),
+    ]);
 
     const refreshCourse = async () => {
       try {
