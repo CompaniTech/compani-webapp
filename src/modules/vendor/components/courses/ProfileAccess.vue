@@ -10,7 +10,8 @@
               :style="col.style">
               <template v-if="col.name === 'actions'">
                 <div class="row no-wrap table-actions">
-                  <ni-button icon="close" @click="validateAccessRuleDeletion(col.value)" />
+                  <ni-button icon="close" :disable="isSubProgramArchived"
+                    @click="validateAccessRuleDeletion(col.value)" />
                 </div>
               </template>
               <template v-else>{{ col.value }}</template>
@@ -19,7 +20,7 @@
         </template>
       </ni-responsive-table>
       <q-card-actions align="right">
-        <ni-button color="primary" icon="add" label="Ajouter une règle" :disable="tableLoading"
+        <ni-button color="primary" icon="add" label="Ajouter une règle" :disable="tableLoading || isSubProgramArchived"
           @click="openAddAccessRuleModal" />
       </q-card-actions>
     </q-card>
@@ -34,6 +35,7 @@
 import { ref, computed, toRefs } from 'vue';
 import { useQuasar } from 'quasar';
 import { useStore } from 'vuex';
+import get from 'lodash/get';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import { DIRECTORY } from '@data/constants';
@@ -80,6 +82,8 @@ export default {
     const course = computed(() => $store.state.course.course);
 
     const accessRules = computed(() => course.value.accessRules || []);
+
+    const isSubProgramArchived = computed(() => !!get(course.value, 'subProgram.archivedAt'));
 
     const refreshCourse = async () => {
       try {
@@ -173,6 +177,7 @@ export default {
       validateAccessRuleDeletion,
       // Computed
       accessRules,
+      isSubProgramArchived,
     };
   },
 };
