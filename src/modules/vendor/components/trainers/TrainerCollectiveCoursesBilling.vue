@@ -9,6 +9,7 @@
     <ni-banner icon="warning" class="bg-peach-200">
       <template #message>
       Les groupes de formation terminés et archivés avant le 01/09/2026 sont considérés réglés dans l'outil.
+      Si vous ne les avez pas encore facturés, merci d’envoyer vos factures à {{ BILLING_COMPANI_EMAIL }}.
       </template>
     </ni-banner>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
@@ -63,7 +64,7 @@ export default {
 
     const $store = useStore();
     const $q = useQuasar();
-
+    const { BILLING_COMPANI_EMAIL } = process.env;
     const loggedUser = computed(() => $store.state.main.loggedUser);
     const userProfile = computed(() => $store.state.userProfile.userProfile);
 
@@ -173,6 +174,7 @@ export default {
       selectedCourse,
       bill,
       validations,
+      BILLING_COMPANI_EMAIL,
       // Computed
       filteredCourses,
       programOptions,
