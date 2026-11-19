@@ -1,5 +1,10 @@
 <template>
   <div>
+    <ni-banner icon="warning" class="bg-peach-200">
+      <template #message>
+        Les groupes de formation terminés et archivés avant le 01/09/2026 sont considérés réglés dans l'outil.
+      </template>
+    </ni-banner>
     <div class="row justify-end">
       <ni-button icon="chevron_left" class="no-shadow" @click="goToPreviousMonth" />
       <ni-date-range class="col-md-6 col-xs-12" caption="Période" v-model="dateRange" :error="v$.dateRange.$error"
@@ -29,6 +34,7 @@ import useVuelidate from '@vuelidate/core';
 import DateRange from '@components/form/DateRange';
 import Select from '@components/form/Select';
 import Button from '@components/Button';
+import Banner from '@components/Banner';
 import { NotifyWarning } from '@components/popup/notify';
 import { MONTH } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
@@ -42,6 +48,7 @@ export default {
     'ni-date-range': DateRange,
     'ni-select': Select,
     'ni-button': Button,
+    'ni-banner': Banner,
     'collective-courses-billing-card': CollectiveCoursesBillingCard,
   },
   setup () {

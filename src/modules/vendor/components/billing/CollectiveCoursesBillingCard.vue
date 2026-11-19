@@ -4,7 +4,7 @@
       <template #header>
         <div class="full-width items-center">
           <span class="text-copper-500">{{ formatIdentity(trainer.identity, 'FL') }}</span>
-          <div class="q-py-sm">
+          <div class="q-py-sm" v-if="displayTotals">
             <span class="text-weight-bold text-orange-500">
               Non facturé : {{ formatPrice(totals.notInvoiced) }}
               <template v-if="hasMissingPlannedSalary">&nbsp;(honoraires manquants)</template>
@@ -25,6 +25,7 @@
 import { computed, ref, toRefs } from 'vue';
 import { formatIdentity, formatPrice } from '@helpers/utils';
 import { add, subtract, isGreaterThan, toNumber } from '@helpers/numbers';
+import { PAID } from '@data/constants';
 import CollectiveCourseBillingItem from 'src/modules/vendor/components/billing/CollectiveCourseBillingItem';
 
 export default {
@@ -43,16 +44,20 @@ export default {
     const totals = computed(() => {
       const { invoiced, notInvoiced, paid } = (trainer.value.courses || []).reduce((acc, course) => {
         const remaining = subtract(course.plannedSalary || 0, course.invoicedAmount);
+        const isNotInvoiced = course.status !== PAID && isGreaterThan(remaining, 0);
 
         return {
           invoiced: add(acc.invoiced, course.invoicedAmount),
-          notInvoiced: isGreaterThan(remaining, 0) ? add(acc.notInvoiced, remaining) : acc.notInvoiced,
+          notInvoiced: isNotInvoiced ? add(acc.notInvoiced, remaining) : acc.notInvoiced,
           paid: add(acc.paid, course.paidAmount),
         };
       }, { invoiced: 0, notInvoiced: 0, paid: 0 });
 
       return { invoiced: toNumber(invoiced), notInvoiced: toNumber(notInvoiced), paid: toNumber(paid) };
     });
+
+    const displayTotals = computed(() => Object.values(trainer.value.courses || {})
+      .some(course => course.status !== PAID));
 
     const hasMissingPlannedSalary = computed(() => (trainer.value.courses || []).some(c => !c.plannedSalary));
 
@@ -62,6 +67,7 @@ export default {
       // Computed
       totals,
       hasMissingPlannedSalary,
+      displayTotals,
       // Methods
       formatIdentity,
       formatPrice,
