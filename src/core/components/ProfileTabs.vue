@@ -36,7 +36,7 @@ export default {
       : false);
 
     const created = () => {
-      selectedTab.value = tabsContent.value.find(tab => tab.default).name;
+      selectedTab.value = tabsContent.value.find(tab => tab.default)?.name;
     };
 
     created();

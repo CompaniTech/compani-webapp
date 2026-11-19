@@ -16,21 +16,45 @@
         <ni-button class="q-ml-sm" icon="delete" @click="validateSubProgramDeletion(subProgram)"
           :disable="isPublished(subProgram) || isArchived || !!subProgram.archivedAt" />
       </div>
-      <div v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning"
-        class="row q-my-md justify-between">
-        <div class="row">
-          <ni-secondary-button class="q-mr-md" label="Éditer les tarifs des intervenants"
-            :disable="!!subProgram.archivedAt" @click="openPriceVersionCreationModal(subProgram)" />
-          <ni-bi-color-button class="button-history" icon="history" label="Historique"
-            @click="openHistoryModal(subProgram)" />
-        </div>
-        <div class="row">
-          <ni-secondary-button class="q-mr-md" label="Ajouter un échéancier"
-            :disable="!!subProgram.archivedAt" @click="openPaymentPlanAdditionModal(subProgram)" />
-          <ni-bi-color-button class="button-history" icon="visibility" label="Afficher les échéanciers"
-            @click="openPaymentPlanListModal(subProgram)" />
-        </div>
-      </div>
+      <q-card v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning"
+        flat class="pricing-card q-my-md q-px-md bg-peach-200">
+        <q-item-section @click="togglePricing(subProgram._id)" class="pricing-toggle cursor-pointer copper-grey-700">
+          <span>{{ showPricing[subProgram._id] ? 'Masquer' : 'Afficher' }} les tarifs et la facturation</span>
+          <q-icon size="xs" :name="showPricing[subProgram._id] ? 'expand_less' : 'expand_more'"
+            color="copper-grey-700" />
+        </q-item-section>
+        <q-slide-transition>
+          <div v-show="showPricing[subProgram._id]" class="q-pb-md" :class="$q.screen.gt.md ? 'row' : 'column'">
+            <div class="col">
+              <span class="text-bold">Tarification intervenants</span>
+              <div class="row no-wrap q-mt-sm">
+                <ni-secondary-button class="q-mr-md pricing-btn" label="Éditer les tarifs des intervenants"
+                  :disable="!!subProgram.archivedAt" @click="openTrainerPriceVersionCreationModal(subProgram)" />
+                <ni-bi-color-button v-if="subProgram.trainerPriceVersions?.length" class="button-history"
+                  icon="history" @click="openHistoryModal(subProgram)" />
+              </div>
+            </div>
+            <q-separator :vertical="$q.screen.gt.md" :class="$q.screen.gt.md ? 'q-mx-md' : 'q-my-md'" />
+            <div class="col">
+              <span class="text-bold">Facturation client</span>
+              <div class="row no-wrap q-mt-sm">
+                <ni-secondary-button class="q-mr-md pricing-btn" label="Ajouter un échéancier"
+                  :disable="!!subProgram.archivedAt || !!(subProgram.hourlyPaymentPlans || []).length"
+                  @click="openPaymentPlanAdditionModal(subProgram)" />
+                <ni-bi-color-button v-if="subProgram.paymentPlans?.length" class="button-history" icon="visibility"
+                  @click="openPaymentPlanListModal(subProgram)" />
+              </div>
+              <div class="row no-wrap q-mt-sm">
+                <ni-secondary-button class="q-mr-md pricing-btn" label="Ajouter une tarification au réel"
+                  :disable="!!subProgram.archivedAt || !!(subProgram.paymentPlans || []).length"
+                  @click="openHourlyPaymentPlanAdditionModal(subProgram)" />
+                <ni-bi-color-button v-if="subProgram.hourlyPaymentPlans?.length" class="button-history"
+                  icon="visibility" @click="openHourlyPaymentPlanListModal(subProgram)" />
+              </div>
+            </div>
+          </div>
+        </q-slide-transition>
+      </q-card>
       <q-checkbox :model-value="!!program.subPrograms[index].subjectToVat"
         label="La TVA s'applique à ce sous-programme" :disable="!!subProgram.archivedAt"
         @update:model-value="updateSubProgramSubjectToVat(index, $event)" />
@@ -141,11 +165,12 @@
       :sub-programs-grouped-by-program="subProgramsReusingStepToBeUnlocked" @hide="resetValidateUnlockingEditionModal"
       @confirm="confirmUnlocking" :is-step-published="stepToBeUnlocked.status === PUBLISHED" />
 
-    <sub-program-price-version-creation-modal v-model="subProgramPriceVersionCreationModal"
-      :validations="v$.newSubProgramPriceVersion" v-model:new-sub-program-price-version="newSubProgramPriceVersion"
-      @submit="addSubProgramPriceVersion" @hide="resetSubProgramPriceVersionCreationModal" :loading="modalLoading" />
+    <sub-program-trainer-price-version-creation-modal v-model="subProgramTrainerPriceVersionCreationModal"
+      :validations="v$.newSubProgramTrainerPriceVersion" :loading="modalLoading"
+      v-model:new-sub-program-trainer-price-version="newSubProgramTrainerPriceVersion"
+      @submit="addSubProgramTrainerPriceVersion" @hide="resetSubProgramTrainerPriceVersionCreationModal" />
 
-    <sub-program-price-version-history-modal v-model="subProgramPriceVersionHistoryModal"
+    <sub-program-trainer-price-version-history-modal v-model="subProgramTrainerPriceVersionHistoryModal"
       :sub-program="selectedSubProgram" />
 
     <payment-plan-addition-modal v-model="paymentPlanAdditionModal" :loading="modalLoading"
@@ -156,8 +181,19 @@
       v-model:edited-payment-plan="editedPaymentPlan" :validations="paymentPlanValidations.editedPaymentPlan"
       @hide="resetPaymentPlanEditionModal" @submit="editPaymentPlan" />
 
-    <payment-plan-list-modal v-model="paymentPlanListModal" :sub-program="currentPlanSubProgram"
+    <payment-plan-list-modal v-model="paymentPlanListModal" :sub-program="selectedSubProgramForPlan"
       @edit="openPaymentPlanEditionModal" @delete="deletePaymentPlan" />
+
+    <hourly-payment-plan-modal v-model="hourlyPaymentPlanAdditionModal" :loading="modalLoading"
+      v-model:plan="newHourlyPaymentPlan" :validations="hourlyPaymentPlanValidations.newHourlyPaymentPlan"
+      @hide="resetHourlyPaymentPlanAdditionModal" @submit="addHourlyPaymentPlan" />
+
+    <hourly-payment-plan-modal v-model="hourlyPaymentPlanEditionModal" :loading="modalLoading" is-edition
+      v-model:plan="editedHourlyPaymentPlan" :validations="hourlyPaymentPlanValidations.editedHourlyPaymentPlan"
+      @hide="resetHourlyPaymentPlanEditionModal" @submit="editHourlyPaymentPlan" />
+
+    <hourly-payment-plan-list-modal v-model="hourlyPaymentPlanListModal" :sub-program="selectedSubProgramForHourlyPlan"
+      @edit="openHourlyPaymentPlanEditionModal" @delete="deleteHourlyPaymentPlan" />
   </div>
 </template>
 
@@ -199,13 +235,15 @@ import { formatQuantity, getLastVersion } from '@helpers/utils';
 import CompaniDuration from '@helpers/dates/companiDurations';
 import CompaniDate from '@helpers/dates/companiDates';
 import SubProgramCreationModal from 'src/modules/vendor/components/programs/SubProgramCreationModal';
-import SubProgramPriceVersionCreationModal from
-  'src/modules/vendor/components/programs/SubProgramPriceVersionCreationModal';
-import SubProgramPriceVersionHistoryModal from
-  'src/modules/vendor/components/programs/SubProgramPriceVersionHistoryModal';
+import SubProgramTrainerPriceVersionCreationModal from
+  'src/modules/vendor/components/programs/SubProgramTrainerPriceVersionCreationModal';
+import SubProgramTrainerPriceVersionHistoryModal from
+  'src/modules/vendor/components/programs/SubProgramTrainerPriceVersionHistoryModal';
 import PaymentPlanAdditionModal from 'src/modules/vendor/components/programs/PaymentPlanAdditionModal';
 import PaymentPlanEditionModal from 'src/modules/vendor/components/programs/PaymentPlanEditionModal';
 import PaymentPlanListModal from 'src/modules/vendor/components/programs/PaymentPlanListModal';
+import HourlyPaymentPlanModal from 'src/modules/vendor/components/programs/HourlyPaymentPlanModal';
+import HourlyPaymentPlanListModal from 'src/modules/vendor/components/programs/HourlyPaymentPlanListModal';
 import StepAdditionModal from 'src/modules/vendor/components/programs/StepAdditionModal';
 import StepEditionModal from 'src/modules/vendor/components/programs/StepEditionModal';
 import ActivityCreationModal from 'src/modules/vendor/components/programs/ActivityCreationModal';
@@ -221,6 +259,7 @@ import { useActivityCreationModal } from 'src/modules/vendor/composables/Activit
 import { useActivityReuseModal } from 'src/modules/vendor/composables/ActivityReuseModal';
 import { useValidateUnlockingStepModal } from 'src/modules/vendor/composables/ValidateUnlockingStepModal';
 import { usePaymentPlan } from 'src/modules/vendor/composables/PaymentPlan';
+import { useHourlyPaymentPlan } from 'src/modules/vendor/composables/HourlyPaymentPlan';
 
 export default {
   name: 'ProfileContent',
@@ -242,11 +281,13 @@ export default {
     'published-dot': PublishedDot,
     'ni-secondary-button': SecondaryButton,
     'ni-bi-color-button': BiColorButton,
-    'sub-program-price-version-creation-modal': SubProgramPriceVersionCreationModal,
-    'sub-program-price-version-history-modal': SubProgramPriceVersionHistoryModal,
+    'sub-program-trainer-price-version-creation-modal': SubProgramTrainerPriceVersionCreationModal,
+    'sub-program-trainer-price-version-history-modal': SubProgramTrainerPriceVersionHistoryModal,
     'payment-plan-addition-modal': PaymentPlanAdditionModal,
     'payment-plan-edition-modal': PaymentPlanEditionModal,
     'payment-plan-list-modal': PaymentPlanListModal,
+    'hourly-payment-plan-modal': HourlyPaymentPlanModal,
+    'hourly-payment-plan-list-modal': HourlyPaymentPlanListModal,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -257,11 +298,12 @@ export default {
     const areActivitiesVisible = ref({});
     const tmpInput = ref('');
     const modalLoading = ref(false);
+    const showPricing = ref({});
     const areStepsLocked = ref({});
     const currentStepId = ref('');
-    const newSubProgramPriceVersion = ref({ prices: [], subProgram: {}, effectiveDate: '' });
-    const subProgramPriceVersionCreationModal = ref(false);
-    const subProgramPriceVersionHistoryModal = ref(false);
+    const newSubProgramTrainerPriceVersion = ref({ prices: [], subProgram: {}, effectiveDate: '' });
+    const subProgramTrainerPriceVersionCreationModal = ref(false);
+    const subProgramTrainerPriceVersionHistoryModal = ref(false);
     const selectedSubProgram = ref({});
 
     // SubProgram Creation
@@ -355,8 +397,23 @@ export default {
       deletePaymentPlan,
     } = usePaymentPlan(modalLoading, refreshProgram, program);
 
-    const currentPlanSubProgram = computed(() => (program.value.subPrograms || [])
-      .find(sp => sp._id === selectedSubProgramForPlan.value._id) || {});
+    const {
+      hourlyPaymentPlanAdditionModal,
+      hourlyPaymentPlanEditionModal,
+      hourlyPaymentPlanListModal,
+      selectedSubProgramForHourlyPlan,
+      newHourlyPaymentPlan,
+      editedHourlyPaymentPlan,
+      v$: hourlyPaymentPlanValidations,
+      openHourlyPaymentPlanAdditionModal,
+      resetHourlyPaymentPlanAdditionModal,
+      openHourlyPaymentPlanListModal,
+      openHourlyPaymentPlanEditionModal,
+      resetHourlyPaymentPlanEditionModal,
+      addHourlyPaymentPlan,
+      editHourlyPaymentPlan,
+      deleteHourlyPaymentPlan,
+    } = useHourlyPaymentPlan(modalLoading, refreshProgram, program);
 
     const hasConsistentRoles = (prices) => {
       const pricesByStep = groupBy(prices, 'step');
@@ -365,7 +422,7 @@ export default {
 
     const rules = computed(() => ({
       program: { subPrograms: { $each: helpers.forEach({ name: { required } }) } },
-      newSubProgramPriceVersion: {
+      newSubProgramTrainerPriceVersion: {
         prices: {
           $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }),
           hasConsistentRoles,
@@ -374,42 +431,42 @@ export default {
       },
     }));
 
-    const v$ = useVuelidate(rules, { program, newSubProgramPriceVersion });
+    const v$ = useVuelidate(rules, { program, newSubProgramTrainerPriceVersion });
 
     // SubProgram price version creation
-    const openPriceVersionCreationModal = (subProgram) => {
+    const openTrainerPriceVersionCreationModal = (subProgram) => {
       const steps = subProgram.steps.filter(s => s.type !== E_LEARNING);
-      const lastSubProgramPriceVersion = getLastVersion(subProgram.trainerPriceVersions || [], 'effectiveDate');
+      const lastSubProgramTrainerPriceVersion = getLastVersion(subProgram.trainerPriceVersions || [], 'effectiveDate');
 
-      newSubProgramPriceVersion.value = {
-        subProgram: { _id: subProgram._id, steps },
-        prices: lastSubProgramPriceVersion
-          ? lastSubProgramPriceVersion.prices
+      newSubProgramTrainerPriceVersion.value = {
+        subProgram: { _id: subProgram._id, steps, trainerPriceVersionsCount: subProgram.trainerPriceVersions?.length },
+        prices: lastSubProgramTrainerPriceVersion
+          ? lastSubProgramTrainerPriceVersion.prices
           : steps.map(s => ({ step: s._id, hourlyAmount: 100 })),
         effectiveDate: CompaniDate().startOf(DAY).toISO(),
-        minEffectiveDate: lastSubProgramPriceVersion
-          ? CompaniDate(lastSubProgramPriceVersion.effectiveDate).add('P1D').toISO()
+        minEffectiveDate: lastSubProgramTrainerPriceVersion
+          ? CompaniDate(lastSubProgramTrainerPriceVersion.effectiveDate).add('P1D').toISO()
           : '',
       };
-      subProgramPriceVersionCreationModal.value = true;
+      subProgramTrainerPriceVersionCreationModal.value = true;
     };
 
-    const resetSubProgramPriceVersionCreationModal = () => {
-      newSubProgramPriceVersion.value = { prices: [], subProgram: {}, effectiveDate: '' };
-      v$.value.newSubProgramPriceVersion.$reset();
+    const resetSubProgramTrainerPriceVersionCreationModal = () => {
+      newSubProgramTrainerPriceVersion.value = { prices: [], subProgram: {}, effectiveDate: '' };
+      v$.value.newSubProgramTrainerPriceVersion.$reset();
     };
 
-    const addSubProgramPriceVersion = async (subProgramId) => {
+    const addSubProgramTrainerPriceVersion = async (subProgramId) => {
       try {
         modalLoading.value = true;
-        v$.value.newSubProgramPriceVersion.$touch();
-        if (v$.value.newSubProgramPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
+        v$.value.newSubProgramTrainerPriceVersion.$touch();
+        if (v$.value.newSubProgramTrainerPriceVersion.$error) return NotifyWarning('Champ(s) invalide(s).');
 
         await SubPrograms.update(
           subProgramId,
-          { ...omit(newSubProgramPriceVersion.value, ['subProgram', 'minEffectiveDate']) }
+          { ...omit(newSubProgramTrainerPriceVersion.value, ['subProgram', 'minEffectiveDate']) }
         );
-        subProgramPriceVersionCreationModal.value = false;
+        subProgramTrainerPriceVersionCreationModal.value = false;
       } catch (e) {
         console.error(e);
         if (e.data.statusCode === 403 && e.data.message) return NotifyWarning(e.data.message);
@@ -423,7 +480,7 @@ export default {
     // SubProgram price version history
     const openHistoryModal = (subProgram) => {
       selectedSubProgram.value = subProgram;
-      subProgramPriceVersionHistoryModal.value = true;
+      subProgramTrainerPriceVersionHistoryModal.value = true;
     };
 
     // Unlocking step validation
@@ -718,6 +775,10 @@ export default {
 
     created();
 
+    const togglePricing = (subProgramId) => {
+      showPricing.value = { ...showPricing.value, [subProgramId]: !showPricing.value[subProgramId] };
+    };
+
     return {
       // Data
       PUBLISHED,
@@ -750,9 +811,9 @@ export default {
       validateUnlockingEditionModal,
       subProgramsReusingStepToBeUnlocked,
       stepToBeUnlocked,
-      subProgramPriceVersionCreationModal,
-      newSubProgramPriceVersion,
-      subProgramPriceVersionHistoryModal,
+      subProgramTrainerPriceVersionCreationModal,
+      newSubProgramTrainerPriceVersion,
+      subProgramTrainerPriceVersionHistoryModal,
       selectedSubProgram,
       // Computed
       v$,
@@ -809,9 +870,9 @@ export default {
       getStepTypeIcon,
       CompaniDuration,
       getStepSubTitle,
-      openPriceVersionCreationModal,
-      resetSubProgramPriceVersionCreationModal,
-      addSubProgramPriceVersion,
+      openTrainerPriceVersionCreationModal,
+      resetSubProgramTrainerPriceVersionCreationModal,
+      addSubProgramTrainerPriceVersion,
       openHistoryModal,
       paymentPlanAdditionModal,
       paymentPlanEditionModal,
@@ -819,7 +880,24 @@ export default {
       newPaymentPlan,
       editedPaymentPlan,
       paymentPlanValidations,
-      currentPlanSubProgram,
+      selectedSubProgramForPlan,
+      showPricing,
+      togglePricing,
+      selectedSubProgramForHourlyPlan,
+      hourlyPaymentPlanAdditionModal,
+      hourlyPaymentPlanEditionModal,
+      hourlyPaymentPlanListModal,
+      newHourlyPaymentPlan,
+      editedHourlyPaymentPlan,
+      hourlyPaymentPlanValidations,
+      openHourlyPaymentPlanAdditionModal,
+      resetHourlyPaymentPlanAdditionModal,
+      openHourlyPaymentPlanListModal,
+      openHourlyPaymentPlanEditionModal,
+      resetHourlyPaymentPlanEditionModal,
+      addHourlyPaymentPlan,
+      editHourlyPaymentPlan,
+      deleteHourlyPaymentPlan,
       openPaymentPlanAdditionModal,
       resetPaymentPlanAdditionModal,
       openPaymentPlanListModal,
@@ -834,6 +912,22 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.pricing-btn
+  // flex: 0 0 320px
+  // width: 320px
+  min-width: 320px
+  // max-width: 100%
+  @media screen and (max-width: 767px)
+    flex: 0 1 260px
+    width: 260px
+    min-width: 0
+    font-size: 11px
+    // margin-right: 8px
+.pricing-toggle
+  flex-direction: row
+  align-items: center
+  justify-content: space-between
+  padding: 16px 0px
 .sub-program-container
   display: flex
   flex-direction: column

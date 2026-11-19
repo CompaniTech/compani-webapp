@@ -71,11 +71,14 @@
       @submit="validateBillCreation" :validations="v$.newBill" @hide="resetBillCreationModal"
       :loading="billCreationLoading" :payer-options="payerList" :error-messages="newBillErrorMessages"
       :trainees-quantity="traineesQuantity" :course="course" :companies-to-bill="companiesToBill"
-      :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity" />
+      :total-price-to-bill="totalPriceToBill" :bills-quantity="newBillsQuantity"
+      :has-hourly-payment-plan="!!selectedHourlyPlanId" :has-payment-plan="!!selectedPlanId" />
 
     <ni-multiple-course-bill-creation-modal :validations="v$"
       v-model="multipleBillCreationModal" v-model:new-bills-quantity="newBillsQuantity" v-model:new-prices="newPrices"
       :payment-plan-options="paymentPlans" v-model:selected-plan-id="selectedPlanId" v-model:mode="mode"
+      :hourly-payment-plan-options="hourlyPaymentPlans" v-model:selected-hourly-plan-id="selectedHourlyPlanId"
+      :is-global-certification-course="isGlobalCertificationCourse"
       :loading="billCreationLoading" @submit="validateBillsQuantity" @hide="resetBillsQuantity" />
 
     <ni-companies-selection-modal v-model="companiesSelectionModal" v-model:companies-to-bill="companiesToBill"
@@ -128,6 +131,8 @@ import {
   EDITION,
   MANUAL,
   PAYMENT_PLAN,
+  HOURLY_PAYMENT_PLAN,
+  GLOBAL,
 } from '@data/constants';
 import CourseBillingCard from 'src/modules/vendor/components/billing/CourseBillingCard';
 import BillCreationModal from 'src/modules/vendor/components/billing/CourseBillCreationModal';
@@ -164,6 +169,7 @@ export default {
     const newBillsQuantity = ref(1);
     const newPrices = ref([]);
     const selectedPlanId = ref(null);
+    const selectedHourlyPlanId = ref(null);
     const mode = ref(MANUAL);
     const billsToUpdate = ref({ _ids: [] });
     const multipleCourseBillEditionModal = ref(false);
@@ -194,6 +200,15 @@ export default {
       return get(course.value, 'subProgram.paymentPlans', []);
     });
 
+    const hourlyPaymentPlans = computed(() => (
+      isSingleCourse.value ? get(course.value, 'subProgram.hourlyPaymentPlans', []) : []
+    ));
+
+    const isGlobalCertificationCourse = computed(() => course.value.certificateGenerationMode === GLOBAL);
+
+    const hasOtherHourlyPaymentPlan = computed(() => !!selectedHourlyPlanId.value && courseBills.value
+      .some(bill => bill.hourlyPaymentPlan && bill.hourlyPaymentPlan !== selectedHourlyPlanId.value));
+
     const rules = computed(() => ({
       course: {
         expectedBillsCount: {
@@ -212,7 +227,8 @@ export default {
       newBill: {
         payer: { required },
         mainFee: {
-          ...(newBillsQuantity.value === 1 && { price: { strictPositiveNumber, required } }),
+          ...(newBillsQuantity.value === 1 && !selectedHourlyPlanId.value &&
+            !selectedPlanId.value && { price: { strictPositiveNumber, required } }),
           count: { required, strictPositiveNumber, integerNumber },
           ...(course.value.type !== SINGLE && everyCompaniesToBillHasPrice.value && {
             ...(newBillsQuantity.value === 1 &&
@@ -225,6 +241,7 @@ export default {
       companiesToBill: { minArrayLength: minArrayLength(1) },
       newBillsQuantity: { strictPositiveNumber, integerNumber, required },
       selectedPlanId: { required: requiredIf(() => mode.value === PAYMENT_PLAN) },
+      selectedHourlyPlanId: { required: requiredIf(() => mode.value === HOURLY_PAYMENT_PLAN) },
       billsToUpdate: {
         _ids: { minArrayLength: minArrayLength(1) },
         payer: { required: requiredIf(Object.keys(billsToUpdate.value).includes('payer')) },
@@ -237,7 +254,7 @@ export default {
 
     const v$ = useVuelidate(
       rules,
-      { course, newBill, companiesToBill, newBillsQuantity, billsToUpdate, selectedPlanId }
+      { course, newBill, companiesToBill, newBillsQuantity, billsToUpdate, selectedPlanId, selectedHourlyPlanId }
     );
 
     const defaultDescription = computed(() => {
@@ -425,10 +442,11 @@ export default {
       mainFee: {
         ...isSingleCourse.value && newBillsQuantity.value > 1
           ? omit(newBill.value.mainFee, 'description')
-          : newBill.value.mainFee,
+          : omit(newBill.value.mainFee, selectedHourlyPlanId.value ? ['price'] : []),
         ...(newPrices.value.length && { price: newPrices.value }),
       },
       ...((newBillsQuantity.value === 1 || isSingleCourse.value) && { maturityDate: newBill.value.maturityDate }),
+      ...selectedHourlyPlanId.value && { hourlyPaymentPlanId: selectedHourlyPlanId.value },
     });
 
     const validateBillCreation = async () => {
@@ -455,6 +473,16 @@ export default {
             billCreationModal.value = false;
             companiesSelectionModal.value = true;
           });
+      } else if (hasOtherHourlyPaymentPlan.value) {
+        $q.dialog({
+          title: 'Confirmation',
+          message: 'Une autre tarification au réel est déjà utilisée sur une facture de cette formation, '
+            + 'souhaitez-vous continuer&nbsp;?',
+          html: true,
+          ok: true,
+          cancel: 'Annuler',
+          persistent: true,
+        }).onOk(() => addBill());
       } else {
         await addBill();
       }
@@ -464,9 +492,15 @@ export default {
       if (mode.value === MANUAL) {
         v$.value.newBillsQuantity.$touch();
         if (v$.value.newBillsQuantity.$error) return NotifyWarning('Champ invalide.');
-      } else {
+      } else if (mode.value === PAYMENT_PLAN) {
         v$.value.selectedPlanId.$touch();
         if (v$.value.selectedPlanId.$error) return NotifyWarning('Champ invalide.');
+      } else {
+        v$.value.newBillsQuantity.$touch();
+        v$.value.selectedHourlyPlanId.$touch();
+        if (v$.value.newBillsQuantity.$error || v$.value.selectedHourlyPlanId.$error) {
+          return NotifyWarning('Champ invalide.');
+        }
       }
 
       const courseBillsWithoutCreditNote = courseBills.value.filter(bill => !bill.courseCreditNote);
@@ -495,7 +529,7 @@ export default {
         resetCompaniesSelectionModal();
       } catch (e) {
         console.error(e);
-        if (e.status === 409) return NotifyNegative(e.data.message);
+        if ([403, 409].includes(e.status) && e.data.message) return NotifyNegative(e.data.message);
         NotifyNegative('Erreur lors de la création de la facture.');
       } finally {
         billCreationLoading.value = false;
@@ -507,9 +541,11 @@ export default {
         newBillsQuantity.value = 1;
         newPrices.value = [];
         selectedPlanId.value = null;
+        selectedHourlyPlanId.value = null;
         mode.value = MANUAL;
         v$.value.newBillsQuantity.$reset();
         v$.value.selectedPlanId.$reset();
+        v$.value.selectedHourlyPlanId.$reset();
       }
     };
 
@@ -723,9 +759,11 @@ export default {
     watch(mode, (newMode) => {
       v$.value.newBillsQuantity.$reset();
       v$.value.selectedPlanId.$reset();
+      v$.value.selectedHourlyPlanId.$reset();
       if (newMode === MANUAL) {
         selectedPlanId.value = null;
-      } else {
+        selectedHourlyPlanId.value = null;
+      } else if (newMode === PAYMENT_PLAN || (newMode === HOURLY_PAYMENT_PLAN && isGlobalCertificationCourse.value)) {
         newBillsQuantity.value = 1;
       }
     });
@@ -754,8 +792,11 @@ export default {
       newBillsQuantity,
       newPrices,
       selectedPlanId,
+      selectedHourlyPlanId,
       mode,
       paymentPlans,
+      hourlyPaymentPlans,
+      isGlobalCertificationCourse,
       // Validation
       v$,
       // Data

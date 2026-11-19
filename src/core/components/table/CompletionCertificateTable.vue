@@ -9,7 +9,7 @@
               <div v-if="has(props, 'row.file.link')">
                 <ni-button icon="file_download" color="primary" type="a" :href="get(props.row, 'file.link')" />
                 <ni-button v-if="isVendorInterface" icon="delete" color="primary" type="a"
-                  @click="removeFile(props.row._id)" />
+                  @click="removeFile(props.row)" />
               </div>
               <div v-else>
                 <ni-primary-button v-if="isVendorInterface" label="Générer" icon="add" @click="generate(props.row._id)"

@@ -19,10 +19,12 @@
     <div class="q-mb-xl">
       <p class="text-weight-bold">Coordonnées bancaires</p>
       <div class="row gutter-profile">
-        <ni-input caption="IBAN" v-model="company.iban" :error="v$.company.iban.$error" required-field
-          :error-message="ibanErrorMessage" @focus="saveTmp('iban')" @blur="updateCompany('iban')" />
-        <ni-input caption="BIC" v-model="company.bic" :error="v$.company.bic.$error" required-field
-          :error-message="bicErrorMessage" @focus="saveTmp('bic')" @blur="updateCompany('bic')" />
+        <ni-bank-detail-input caption="IBAN" name="ibanInput" v-model="company.iban" :error="v$.company.iban.$error"
+          required-field :error-message="ibanErrorMessage" @save="updateCompany('iban')"
+          @update:locked="resetBankInfoValidation('iban', $event)" />
+        <ni-bank-detail-input caption="BIC" name="bicInput" v-model="company.bic" :error="v$.company.bic.$error"
+          required-field :error-message="bicErrorMessage" @save="updateCompany('bic')"
+          @update:locked="resetBankInfoValidation('bic', $event)" />
       </div>
     </div>
     <div class="q-mb-xl">
@@ -83,6 +85,7 @@ import VendorCompanies from '@api/VendorCompanies';
 import GoogleDrive from '@api/GoogleDrive';
 import SearchAddress from '@components/form/SearchAddress';
 import Input from '@components/form/Input';
+import BankDetailInput from '@components/form/BankDetailInput';
 import CoachList from '@components/table/CoachList';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 import InterlocutorCell from '@components/courses/InterlocutorCell';
@@ -106,6 +109,7 @@ export default {
   },
   components: {
     'ni-input': Input,
+    'ni-bank-detail-input': BankDetailInput,
     'ni-button': Button,
     'ni-coach-list': CoachList,
     'ni-search-address': SearchAddress,
@@ -190,11 +194,15 @@ export default {
       await updateCompany(path);
     };
 
+    const resetBankInfoValidation = (path, isLocked) => {
+      if (!isLocked) v$.value.company[path].$reset();
+    };
+
     const updateCompany = async (path) => {
       try {
         const value = get(company.value, path);
         if (path === 'address' && tmpInput.value === get(company.value, 'address.fullAddress')) return;
-        if (tmpInput.value === value) return;
+        if (!['iban', 'bic'].includes(path) && tmpInput.value === value) return;
 
         let payload;
         if (path === 'salesRepresentative') {
@@ -335,6 +343,7 @@ export default {
       saveTmp,
       trimAndUpdateCompany,
       updateCompany,
+      resetBankInfoValidation,
       refreshSalesRepresentativeOptions,
       openSalesRepresentativeModal,
       resetSalesRepresentative,

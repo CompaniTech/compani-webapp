@@ -3,6 +3,11 @@
     <template #title>
       Ajouter un <span class="text-weight-bold">échéancier</span>
     </template>
+    <ni-banner v-if="newPaymentPlan.paymentPlansCount" class="bg-copper-grey-100 q-mt-sm" icon="info_outline">
+      <template #message>
+        Il existe déjà {{ formatQuantity('échéancier', newPaymentPlan.paymentPlansCount) }}.
+      </template>
+    </ni-banner>
     <div v-for="(line, index) in newPaymentPlan.priceLines" :key="index" class="price-line">
       <ni-input class="price-input" in-modal type="number" :suffix="'€'" required-field
         :caption="`Échéance ${index + 1}`" :model-value="line.amount" :error-message="getAmountError(index)"
@@ -30,6 +35,8 @@ import { REQUIRED_LABEL } from '@data/constants';
 import Modal from '@components/modal/Modal';
 import Input from '@components/form/Input';
 import Button from '@components/Button';
+import Banner from '@components/Banner';
+import { formatQuantity } from '@helpers/utils';
 
 export default {
   name: 'PaymentPlanAdditionModal',
@@ -43,6 +50,7 @@ export default {
     'ni-modal': Modal,
     'ni-input': Input,
     'ni-button': Button,
+    'ni-banner': Banner,
   },
   emits: ['hide', 'update:model-value', 'update:new-payment-plan', 'submit'],
   setup (props, { emit }) {
@@ -101,6 +109,7 @@ export default {
       updateAmount,
       getAmountError,
       submit,
+      formatQuantity,
     };
   },
 };

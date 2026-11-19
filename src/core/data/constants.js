@@ -472,6 +472,7 @@ export const NO_DATA = 'Aucune donnée';
 // MULTIPLE COURSE BILL CREATION MODES
 export const MANUAL = 'manual';
 export const PAYMENT_PLAN = 'paymentPlan';
+export const HOURLY_PAYMENT_PLAN = 'hourlyPaymentPlan';
 
 // COURSE SLOT STATUS
 export const PRESENT = 'present';
@@ -479,6 +480,13 @@ export const MISSING = 'missing';
 export const NOT_INVOICED = 'not_invoiced';
 export const INVOICED = 'invoiced';
 export const PAID = 'paid';
+export const PARTIALLY_INVOICED = 'partially_invoiced';
+export const TRAINER_COURSE_BILLING_STATUS = {
+  [NOT_INVOICED]: 'Non facturé',
+  [PARTIALLY_INVOICED]: 'Partiellement facturé',
+  [INVOICED]: 'Facturé',
+  [PAID]: 'Réglé',
+};
 export const SLOT_STATUS = { [NOT_INVOICED]: 'Non facturé', [INVOICED]: 'Facturé', [PAID]: 'Réglé' };
 export const TRAINER_PAYMENT_STATUS_OPTIONS = [
   { label: 'En attente', value: PENDING },

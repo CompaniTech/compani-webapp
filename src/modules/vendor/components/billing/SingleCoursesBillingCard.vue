@@ -209,7 +209,7 @@ import CourseSlotBillModal from 'src/modules/vendor/components/billing/CourseSlo
 import TrainerBills from '@api/TrainerBills';
 
 export default {
-  name: 'TrainerBillingInfosCard',
+  name: 'SingleCoursesBillingCard',
   props: {
     trainerInfos: { type: Object, default: () => ({}) },
     isTrainer: { type: Boolean, default: false },

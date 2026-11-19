@@ -94,7 +94,7 @@ const routes = [
               'ni management single courses',
             ];
             if (from.name === 'ni management blended courses info' && from.query.defaultTab === 'traineeFollowUp') {
-              to.query.defaultTab = 'vaeiTrainerBillingInfos';
+              to.query.defaultTab = 'trainerBillingInfos';
             } else if (blendedOrSingleCourses.includes(from.name)) {
               to.query.defaultTab = 'contracts';
             }
@@ -320,10 +320,19 @@ const routes = [
       {
         path: 'trainers/billing',
         name: 'trainers billing',
-        component: () => import('src/modules/vendor/pages/trainers/administrative/Billing'),
+        component: () => import('src/modules/vendor/pages/trainers/billing/TrainerBillsDashboard'),
         meta: {
           cookies: ['alenvi_token', 'refresh_token'],
-          parent: 'administrative',
+          parent: 'billing',
+        },
+      },
+      {
+        path: 'trainers/billing/history',
+        name: 'trainers billing history',
+        component: () => import('src/modules/vendor/pages/trainers/billing/TrainerBillsHistory'),
+        meta: {
+          cookies: ['alenvi_token', 'refresh_token'],
+          parent: 'billing',
         },
       },
       {

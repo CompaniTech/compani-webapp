@@ -3,7 +3,7 @@
     <template #title>
       Historique <span class="text-weight-bold">des tarifs des intervenants</span>
     </template>
-    <ni-responsive-table :data="subProgramPrices" :columns="subProgramPricesColumns" :hide-bottom="false"
+    <ni-responsive-table :data="subProgramTrainerPrices" :columns="subProgramTrainerPricesColumns" :hide-bottom="false"
       no-data-label="Pas de tarifs renseignés pour ce sous-programme." v-model:pagination="pagination"
       :rows-per-page-options="rowsPerPageOptions" />
   </ni-modal>
@@ -19,7 +19,7 @@ import ResponsiveTable from '@components/table/ResponsiveTable';
 import { E_LEARNING, DD_MM_YYYY } from '@data/constants';
 
 export default {
-  name: 'SubProgramPriceVersionHistoryModal',
+  name: 'SubProgramTrainerPriceVersionHistoryModal',
   props: {
     modelValue: { type: Boolean, default: false },
     subProgram: { type: Object, default: () => ({}) },
@@ -39,7 +39,7 @@ export default {
     const input = (event) => { emit('update:model-value', event); };
     const submit = () => { emit('submit'); };
 
-    const subProgramPrices = computed(() => (subProgram.value.trainerPriceVersions || [])
+    const subProgramTrainerPrices = computed(() => (subProgram.value.trainerPriceVersions || [])
       .sort(descendingSortBy('effectiveDate'))
       .map((version) => {
         const pricesByStep = groupBy(version.prices, 'step');
@@ -51,7 +51,7 @@ export default {
         };
       }));
 
-    const subProgramPricesColumns = computed(() => [
+    const subProgramTrainerPricesColumns = computed(() => [
       {
         name: 'effectiveDate',
         label: 'Date d\'effet',
@@ -73,8 +73,8 @@ export default {
       pagination,
       rowsPerPageOptions,
       // Computed
-      subProgramPrices,
-      subProgramPricesColumns,
+      subProgramTrainerPrices,
+      subProgramTrainerPricesColumns,
       // Methods
       hide,
       input,
