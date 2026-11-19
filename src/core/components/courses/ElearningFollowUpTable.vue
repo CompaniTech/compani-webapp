@@ -13,7 +13,7 @@
           </template>
           <template v-else-if="col.name === 'connectionInfos'">
             <a v-if="col.value">{{ col.value }}</a>
-            <connected-dot v-else />
+            <connected-dot v-else-if="props.row.firstMobileConnectionDate" />
           </template>
           <template v-else>
             <div v-if="canAccessTrainee" class="name clickable-name" @click="$event.stopPropagation()">
