@@ -6,6 +6,11 @@
         Facturé : {{ formatStringToPrice(totals.invoiced) }} / Réglé : {{ formatStringToPrice(totals.paid) }}
       </template>
     </ni-banner>
+    <ni-banner icon="warning" class="bg-peach-200">
+      <template #message>
+      Les groupes de formation terminés et archivés avant le 01/09/2026 sont considérés réglés dans l'outil.
+      </template>
+    </ni-banner>
     <div class="reset-filters" @click="resetFilters">Effacer les filtres</div>
     <div class="filters-container">
       <ni-select caption="Programme de formation" clearable :options="programOptions" v-model="selectedProgram" />
