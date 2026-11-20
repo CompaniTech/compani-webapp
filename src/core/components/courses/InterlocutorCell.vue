@@ -12,13 +12,13 @@
             </span>
           </div>
           <div class="text-copper-grey-500 text-14">{{ interlocutor.local.email }}</div>
-          <div v-if="get(interlocutor, 'contact.phone')" class="phone">
-            {{ formatPhone(interlocutor.contact) }}
-          </div>
-          <div v-else class="row items-center text-14">
-            <div class="dot dot-orange" />
-            <div class="text-orange-500">numéro manquant</div>
-          </div>
+          <template v-if="displayPhoneInfos">
+            <div v-if="get(interlocutor, 'contact.phone')" class="phone">{{ formatPhone(interlocutor.contact) }}</div>
+            <div v-else class="row items-center text-14">
+              <div class="dot dot-orange" />
+              <div class="text-orange-500">numéro manquant</div>
+            </div>
+          </template>
           <div v-if="contact._id === interlocutor._id" class="contact">
             <q-icon size="xxs" name="person" class="q-mr-xs" />
             <span>Contact donné aux stagiaires</span>
@@ -63,6 +63,7 @@ export default {
     interlocutorIsNonEditable: { type: Boolean, default: false },
     displayConnectionInfos: { type: Boolean, default: false },
     roleLabels: { type: Array, default: () => [] },
+    displayPhoneInfos: { type: Boolean, default: true },
   },
   components: {
     'ni-button': Button,
