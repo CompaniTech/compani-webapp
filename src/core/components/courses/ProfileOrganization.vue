@@ -29,7 +29,7 @@
       <div class="interlocutor-container">
         <interlocutor-cell :interlocutor="course.operationsRepresentative" caption="Chargé des opérations"
           :can-update="canUpdateInterlocutor" :contact="course.contact" :disable="isArchived"
-          @open-modal="openOperationsRepresentativeModal" />
+          @open-modal="openOperationsRepresentativeModal" :display-phone-infos="!isSingleCourse" />
         <interlocutor-cell :interlocutor="course.companyRepresentative" caption="Chargé de formation structure"
           :contact="course.contact" :can-update="canUpdateCompanyRepresentative" :disable="isArchived"
           label="Ajouter un chargé de formation structure" @open-modal="openCompanyRepresentativeModal" />
