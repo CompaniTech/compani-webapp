@@ -8,6 +8,8 @@
         Il existe déjà {{ formatQuantity('tarification', hourlyPaymentPlansCount) }} au réel.
       </template>
     </ni-banner>
+    <ni-input in-modal :model-value="plan.name" caption="Nom" required-field :error="!!getNameError()"
+      :error-message="getNameError()" @update:model-value="updateName" />
     <div v-for="(price, index) in plan.prices" :key="price.step" class="q-mb-md">
       <p class="text-weight-bold q-mb-none">{{ getStepName(price.step) }}</p>
       <ni-input in-modal type="number" :model-value="price.hourlyAmount" suffix="€ / h" required-field
@@ -81,6 +83,8 @@ export default {
 
     const getStepName = stepId => (plan.value.subProgram.steps || []).find(s => s._id === stepId)?.name || '';
 
+    const updateName = (value) => { emit('update:plan', { ...plan.value, name: value }); };
+
     const updateHourlyAmount = (value, index) => {
       emit('update:plan', {
         ...plan.value,
@@ -121,6 +125,12 @@ export default {
       }
     };
 
+    const getNameError = () => {
+      if (!showErrors.value || !validations.value.name.$error) return '';
+
+      return REQUIRED_LABEL;
+    };
+
     const getAmountError = (index) => {
       if (!showErrors.value) return '';
       const validation = validations.value.prices.$each.$response.$data[index].hourlyAmount;
@@ -154,10 +164,12 @@ export default {
       input,
       submit,
       getStepName,
+      updateName,
       updateHourlyAmount,
       updateElearningPrice,
       updateTmp,
       updateElearningLimit,
+      getNameError,
       getAmountError,
       getElearningPriceError,
       getElearningLimitError,

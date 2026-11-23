@@ -13,13 +13,14 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
   const hourlyPaymentPlanListModal = ref(false);
   const selectedSubProgramForHourlyPlan = ref({});
 
-  const emptyPlan = () => ({ subProgram: {}, prices: [], elearningPrice: '', elearningLimit: PT0S });
+  const emptyPlan = () => ({ subProgram: {}, name: '', prices: [], elearningPrice: '', elearningLimit: PT0S });
   const newHourlyPaymentPlan = ref(emptyPlan());
   const editedHourlyPaymentPlan = ref({ planId: '', ...emptyPlan() });
 
   const positiveIntDuration = value => !value || /^(PT\d+H\d+M|PT\d+S)$/.test(value);
 
   const planRules = {
+    name: { required },
     prices: { $each: helpers.forEach({ step: { required }, hourlyAmount: { required, strictPositiveNumber } }) },
     elearningPrice: {
       required: (value, plan) => !plan.hasELearning || required.$validator(value),
@@ -44,6 +45,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
 
     return {
       ...plan.planId && { hourlyPaymentPlanId: plan.planId },
+      name: plan.name.trim(),
       prices,
       ...plan.hasELearning && { elearningPrice: Number(plan.elearningPrice) },
       ...plan.hasELearning && !CompaniDuration(plan.elearningLimit).isEquivalentTo(PT0S) &&
@@ -58,6 +60,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
     selectedSubProgramForHourlyPlan.value = subProgram;
     newHourlyPaymentPlan.value = {
       subProgram: { _id: subProgram._id, steps, hourlyPaymentPlansCount: subProgram.hourlyPaymentPlans?.length },
+      name: '',
       prices: steps.map(s => ({ step: s._id, hourlyAmount: 0 })),
       hasELearning,
       ...hasELearning && { elearningPrice: 0, elearningLimit: PT0S },
@@ -82,6 +85,7 @@ export const useHourlyPaymentPlan = (modalLoading, refreshProgram, program) => {
     editedHourlyPaymentPlan.value = {
       planId: plan._id,
       subProgram: { _id: subProgram._id, steps },
+      name: plan.name,
       prices: plan.prices.map(p => ({ step: p.step, hourlyAmount: p.hourlyAmount })),
       hasELearning: subProgram.steps.some(s => s.type === E_LEARNING),
       elearningPrice: plan.elearningPrice,

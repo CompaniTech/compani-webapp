@@ -207,7 +207,7 @@ export default {
     const isGlobalCertificationCourse = computed(() => course.value.certificateGenerationMode === GLOBAL);
 
     const hasOtherHourlyPaymentPlan = computed(() => !!selectedHourlyPlanId.value && courseBills.value
-      .some(bill => bill.hourlyPaymentPlan && bill.hourlyPaymentPlan !== selectedHourlyPlanId.value));
+      .some(bill => bill.hourlyPaymentPlan && bill.hourlyPaymentPlan._id !== selectedHourlyPlanId.value));
 
     const rules = computed(() => ({
       course: {
