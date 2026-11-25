@@ -121,8 +121,8 @@ export default {
       prices: plan.prices,
     })));
 
-    const hourlyPlanOptions = computed(() => hourlyPaymentPlanOptions.value.map((plan, i) => ({
-      label: `Tarification au réel ${i + 1}`,
+    const hourlyPlanOptions = computed(() => hourlyPaymentPlanOptions.value.map(plan => ({
+      label: plan.name,
       value: plan._id,
       prices: plan.prices,
       elearningPrice: plan.elearningPrice,

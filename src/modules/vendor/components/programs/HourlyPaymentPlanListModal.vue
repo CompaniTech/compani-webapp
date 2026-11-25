@@ -6,10 +6,10 @@
     <div v-if="!hourlyPaymentPlans.length" class="no-data text-italic q-my-md">
       Aucune tarification au réel renseignée pour ce sous-programme.
     </div>
-    <q-expansion-item v-for="(plan, index) in hourlyPaymentPlans" :key="plan._id" class="q-mb-md">
+    <q-expansion-item v-for="plan in hourlyPaymentPlans" :key="plan._id" class="q-mb-md">
       <template #header>
         <div class="full-width row items-center justify-between">
-          <span class="text-weight-bold">Tarification au réel {{ index + 1 }}</span>
+          <span class="text-weight-bold">{{ plan.name }}</span>
           <div class="plan-actions">
             <ni-button icon="edit" @click.stop="$emit('edit', plan)" />
             <ni-button icon="close" @click.stop="validateDeletion(plan._id)" />
