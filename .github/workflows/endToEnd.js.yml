@@ -60,3 +60,5 @@ jobs:
           MANAGEMENT_FEES_BILLING_ITEM : ${{ secrets.MANAGEMENT_FEES_BILLING_ITEM }}
           ALENVI_TOKEN: ${{ secrets.ALENVI_TOKEN }}
           REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+          WEBSITE_HOSTNAME: ${{ vars.WEBSITE_HOSTNAME }}
+          MOBILE_WEBSITE_HOSTNAME: ${{ vars.MOBILE_WEBSITE_HOSTNAME }}

@@ -301,7 +301,11 @@ export default {
     const getProgramOptions = async () => {
       try {
         const programs = await Programs.list();
-        programOptions.value = [{ label: 'Tous les programmes', value: '' }, ...formatAndSortOptions(programs, 'name')];
+        const archivedPrograms = await Programs.list({ isArchived: true });
+        programOptions.value = [
+          { label: 'Tous les programmes', value: '' },
+          ...formatAndSortOptions([...programs, ...archivedPrograms], 'name'),
+        ];
       } catch (e) {
         programOptions.value = [];
         console.error(e);
