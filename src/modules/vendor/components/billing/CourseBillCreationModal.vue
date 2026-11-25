@@ -145,10 +145,10 @@ export default {
 
       return {
         global: toFixedToFloat(
-          divide(multiply(get(newBill.value, 'mainFee.percentage', 0), totalPriceToBill.value.global), 100)
+          divide(multiply(get(newBill.value, 'mainFee.percentage') || 0, totalPriceToBill.value.global), 100)
         ),
         trainerFees: toFixedToFloat(
-          divide(multiply(get(newBill.value, 'mainFee.percentage', 0), totalPriceToBill.value.trainerFees), 100)
+          divide(multiply(get(newBill.value, 'mainFee.percentage') || 0, totalPriceToBill.value.trainerFees), 100)
         ),
       };
     });
