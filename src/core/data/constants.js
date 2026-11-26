@@ -328,6 +328,18 @@ export const OFFICIAL = 'official';
 // Email
 export const TRAINEE = 'trainee';
 
+// STUDY TRACK
+export const DEFAULT_STUDY_TRACK_MONTHS = 12;
+export const MAX_STUDY_TRACK_MONTHS = 36;
+export const MILESTONE_TARGET_OPTIONS = [
+  { label: 'Apprenant·e', value: TRAINEE },
+  { label: 'Coach', value: VAEI_COACH },
+  { label: 'Tuteur·rice', value: TUTOR },
+  { label: 'Architecte de parcours', value: ARCHITECT },
+  { label: 'Animateur.rice CODEV', value: CODEV_REPRESENTATIVE },
+];
+export const STEP_TARGET_OPTIONS = MILESTONE_TARGET_OPTIONS.filter(option => option.value !== TRAINEE);
+
 // QUESTIONNAIRE
 export const EXPECTATIONS = 'expectations';
 export const END_OF_COURSE = 'end_of_course';

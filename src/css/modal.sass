@@ -5,6 +5,12 @@
       min-width: 65vw
     @media screen and (min-width: 768px)
       width: 45vw
+  &-container-lg
+    background-color: white
+    @media screen and (max-width: 767px)
+      min-width: 90vw
+    @media screen and (min-width: 768px)
+      width: 92vw
   &-container-sm
     background-color: white
     min-width: 30vw
@@ -51,3 +57,7 @@
       .q-field__control-container
         overflow: hidden
         flex-wrap: nowrap
+
+// Quasar limite par défaut la largeur du contenu d'une modale (560px) : on la lève pour les grandes modales
+.q-dialog__inner--minimized > .modal-container-lg
+  max-width: 92vw
