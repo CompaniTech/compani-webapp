@@ -9,7 +9,7 @@
   </ni-profile-header>
 
   <course-interruption-modal v-model="courseInterruptionModal" v-model:interruption-date="interruptionDate"
-    :is-course-interrupted="isCourseInterrupted" :min="minInterruptionDate" :loading="interruptionLoading"
+    :has-ongoing-interruption="hasOngoingInterruption" :min="minInterruptionDate" :loading="interruptionLoading"
     :validations="v$.interruptionDate" @submit="interruptOrRestartCourse" @hide="resetCourseInterruptionModal" />
 </template>
 
@@ -62,13 +62,13 @@ export default {
 
     const v$ = useVuelidate({ interruptionDate: { required } }, { interruptionDate });
 
-    const isCourseInterrupted = computed(() => (course.value.interruptionDates || []).some(d => !d.endDate));
+    const hasOngoingInterruption = computed(() => (course.value.interruptionDates || []).some(d => !d.endDate));
 
     const minInterruptionDate = computed(() => {
       const interruptionDates = course.value.interruptionDates || [];
       if (!interruptionDates.length) return '';
 
-      if (isCourseInterrupted.value) {
+      if (hasOngoingInterruption.value) {
         return CompaniDate(interruptionDates.find(d => !d.endDate).startDate).startOf(DAY).toISO();
       }
 
@@ -79,7 +79,7 @@ export default {
       return CompaniDate(lastEndDate).startOf(DAY).toISO();
     });
 
-    const interruptionButtonLabel = computed(() => (!isCourseInterrupted.value ? 'Mettre en pause' : 'Reprendre'));
+    const interruptionButtonLabel = computed(() => (!hasOngoingInterruption.value ? 'Mettre en pause' : 'Reprendre'));
 
     const deleteCourse = () => emit('delete');
 
@@ -157,14 +157,14 @@ export default {
         interruptionLoading.value = true;
         await Courses.update(course.value._id, { interruptionDate: interruptionDate.value });
 
-        NotifyPositive(!isCourseInterrupted.value ? 'Formation mise en pause.' : 'Reprise de la formation.');
+        NotifyPositive(!hasOngoingInterruption.value ? 'Formation mise en pause.' : 'Reprise de la formation.');
         courseInterruptionModal.value = false;
         await refreshCourse();
       } catch (e) {
         console.error(e);
         if (e.status === 400 && e.data?.message) return NotifyNegative(e.data.message);
         NotifyNegative(
-          `Erreur lors de la ${!isCourseInterrupted.value ? 'mise en pause' : 'reprise'} de la formation.`
+          `Erreur lors de la ${!hasOngoingInterruption.value ? 'mise en pause' : 'reprise'} de la formation.`
         );
       } finally {
         interruptionLoading.value = false;
@@ -182,7 +182,7 @@ export default {
       archiveLabel,
       course,
       interruptionButtonLabel,
-      isCourseInterrupted,
+      hasOngoingInterruption,
       minInterruptionDate,
       v$,
       // methods

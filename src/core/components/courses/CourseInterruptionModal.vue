@@ -1,8 +1,8 @@
 <template>
   <ni-modal :model-value="modelValue" @hide="hide" @update:model-value="input">
     <template #title><span class="text-weight-bold">{{ title }}</span></template>
-    <ni-banner v-if="!isCourseInterrupted" class="bg-copper-grey-100">
-      <template #message>Vous ne pourrez plus créer de factures lorsque la formation est en pause.</template>
+    <ni-banner v-if="!hasOngoingInterruption" class="bg-copper-grey-100">
+      <template #message>Vous ne pourrez plus créer de factures une fois la formation en pause.</template>
     </ni-banner>
     <ni-date-input :caption="caption" :model-value="interruptionDate" @update:model-value="update" in-modal
       required-field :min="min" :error="validations.$error" @blur="validations.$touch" last />
@@ -24,7 +24,7 @@ export default {
   name: 'CourseInterruptionModal',
   props: {
     modelValue: { type: Boolean, default: false },
-    isCourseInterrupted: { type: Boolean, default: false },
+    hasOngoingInterruption: { type: Boolean, default: false },
     min: { type: String, default: '' },
     interruptionDate: { type: String, default: '' },
     validations: { type: Object, default: () => ({}) },
@@ -38,13 +38,13 @@ export default {
   },
   emits: ['hide', 'update:model-value', 'submit', 'update:interruption-date'],
   setup (props, { emit }) {
-    const { isCourseInterrupted } = toRefs(props);
+    const { hasOngoingInterruption } = toRefs(props);
 
     const title = computed(() => (
-      isCourseInterrupted.value ? 'Reprendre la formation' : 'Mettre en pause la formation'
+      hasOngoingInterruption.value ? 'Reprendre la formation' : 'Mettre en pause la formation'
     ));
 
-    const caption = computed(() => (isCourseInterrupted.value ? 'Date de reprise' : 'Date de pause'));
+    const caption = computed(() => (hasOngoingInterruption.value ? 'Date de reprise' : 'Date de pause'));
 
     const hide = () => emit('hide');
     const input = event => emit('update:model-value', event);
