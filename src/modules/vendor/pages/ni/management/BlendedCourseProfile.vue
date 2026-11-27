@@ -20,7 +20,7 @@ import ProfileOrganization from '@components/courses/ProfileOrganization';
 import ProfileBilling from '@components/courses/ProfileBilling';
 import CourseBillingItems from '@components/courses/CourseBillingItems';
 import BlendedCourseProfileHeader from '@components/courses/BlendedCourseProfileHeader';
-import ProfileTraineeFollowUp from '@components/courses/ProfileTraineeFollowUp';
+import ProfilePedagogicalFollowUp from '@components/courses/ProfilePedagogicalFollowUp';
 import { VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER, SINGLE } from '@data/constants';
 import { composeCourseName } from '@helpers/courses';
 import { useCourses } from '@composables/courses';
@@ -62,10 +62,10 @@ export default {
           component: ProfileOrganization,
         },
         {
-          label: 'Suivi des stagiaires',
-          name: 'traineeFollowUp',
-          default: defaultTab.value === 'traineeFollowUp',
-          component: ProfileTraineeFollowUp,
+          label: 'Suivi pédagogique',
+          name: 'pedagogicalFollowUp',
+          default: defaultTab.value === 'pedagogicalFollowUp',
+          component: ProfilePedagogicalFollowUp,
         },
         ...(isAdmin
           ? [{

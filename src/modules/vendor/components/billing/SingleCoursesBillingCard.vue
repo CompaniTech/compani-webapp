@@ -431,7 +431,7 @@ export default {
     const goToCourse = courseId => ({
       name: isTrainerSection ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId },
-      query: { defaultTab: 'traineeFollowUp' },
+      query: { defaultTab: 'pedagogicalFollowUp' },
     });
 
     const allSlots = computed(() => [

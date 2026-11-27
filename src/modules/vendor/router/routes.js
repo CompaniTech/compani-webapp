@@ -93,7 +93,7 @@ const routes = [
               'ni management blended courses info',
               'ni management single courses',
             ];
-            if (from.name === 'ni management blended courses info' && from.query.defaultTab === 'traineeFollowUp') {
+            if (from.name === 'ni management blended courses info' && from.query.defaultTab === 'pedagogicalFollowUp') {
               to.query.defaultTab = 'trainerBillingInfos';
             } else if (blendedOrSingleCourses.includes(from.name)) {
               to.query.defaultTab = 'contracts';
@@ -206,7 +206,7 @@ const routes = [
               'ni users learners info',
               'ni pedagogy questionnaire answers',
             ].includes(from.name)) {
-              if (!to.query.defaultTab) to.query.defaultTab = 'traineeFollowUp';
+              if (!to.query.defaultTab) to.query.defaultTab = 'pedagogicalFollowUp';
             } else if (from.name === 'ni users companies info' && from.query.defaultTab === 'bills') {
               to.query.defaultTab = 'billing';
             }
@@ -270,7 +270,7 @@ const routes = [
               'trainers questionnaire answers',
               'ni pedagogy questionnaire answers',
             ].includes(from.name)) {
-              to.query.defaultTab = 'traineeFollowUp';
+              to.query.defaultTab = 'pedagogicalFollowUp';
             }
             await store.dispatch('course/fetchCourse', { courseId: to.params.courseId, path: to.path });
             const { course } = store.state.course;

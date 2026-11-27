@@ -155,7 +155,7 @@ const routes = [
         beforeEnter: async (to, from) => {
           try {
             if (from.name === 'ni courses learners info' && !to.query.defaultTab) {
-              to.query.defaultTab = 'traineeFollowUp';
+              to.query.defaultTab = 'pedagogicalFollowUp';
             }
 
             return true;

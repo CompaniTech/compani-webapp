@@ -170,7 +170,7 @@ import { useTraineeFollowUp } from '@composables/traineeFollowUp';
 import { useCompletionCertificates } from '@composables/completionCertificates';
 
 export default {
-  name: 'ProfileTraineeFollowUp',
+  name: 'ProfilePedagogicalFollowUp',
   components: {
     'elearning-follow-up-table': ElearningFollowUpTable,
     'attendance-table': AttendanceTable,

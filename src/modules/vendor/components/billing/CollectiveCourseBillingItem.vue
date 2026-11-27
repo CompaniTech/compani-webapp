@@ -70,7 +70,7 @@ export default {
     const goToCourse = computed(() => ({
       name: isTrainer.value ? 'trainers courses info' : 'ni management blended courses info',
       params: { courseId: course.value._id },
-      query: { defaultTab: 'traineeFollowUp' },
+      query: { defaultTab: 'pedagogicalFollowUp' },
     }));
 
     const formattedBillingDates = computed(() => {
