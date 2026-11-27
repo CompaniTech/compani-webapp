@@ -232,9 +232,17 @@ export default {
       return from.length ? `Rôle(s) précédent(s) : ${getTrainerRoleLabels(from).join(', ')}` : '';
     };
 
-    const getInterruptionTitle = () => ({ type: 'Mise en pause', post: 'de la formation' });
+    const getInterruptionTitle = () => ({
+      type: 'Mise en pause',
+      post: 'de la formation à partir du',
+      infos: CompaniDate(courseHistory.value.interruptionDate).format(DD_MM_YYYY),
+    });
 
-    const getRestartTitle = () => ({ type: 'Reprise', post: 'de la formation' });
+    const getRestartTitle = () => ({
+      type: 'Reprise',
+      post: 'de la formation le',
+      infos: CompaniDate(courseHistory.value.interruptionDate).format(DD_MM_YYYY),
+    });
 
     const getSlotRestrictionTitle = () => {
       const date = CompaniDate(courseHistory.value.slot.startDate).format(DD_MM_YYYY);

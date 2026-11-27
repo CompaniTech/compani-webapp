@@ -4,22 +4,28 @@
       <ni-button icon="delete" @click="deleteCourse" />
       <ni-button :flat="false" class="q-ml-sm" :label="archiveLabel" @click="validateCourseArchive" />
       <ni-button v-if="!course.archivedAt" :flat="false" class="q-ml-sm" :label="interruptionButtonLabel"
-        @click="validateCourseInterruptionOrRestart" />
+        @click="openCourseInterruptionModal" />
     </template>
   </ni-profile-header>
+
+  <course-interruption-modal v-model="courseInterruptionModal" v-model:interruption-date="interruptionDate"
+    :is-course-interrupted="isCourseInterrupted" :min="minInterruptionDate" :loading="interruptionLoading"
+    :validations="v$.interruptionDate" @submit="interruptOrRestartCourse" @hide="resetCourseInterruptionModal" />
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import Courses from '@api/Courses';
 import ProfileHeader from '@components/ProfileHeader';
 import Button from '@components/Button';
-import { NotifyPositive, NotifyNegative } from '@components/popup/notify';
-import { VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER } from '@data/constants';
-import { isInterrupted } from '@helpers/courses';
+import { NotifyPositive, NotifyNegative, NotifyWarning } from '@components/popup/notify';
+import CourseInterruptionModal from '@components/courses/CourseInterruptionModal';
+import { VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER, DAY } from '@data/constants';
 import CompaniDate from '@helpers/dates/companiDates';
 
 export default {
@@ -31,6 +37,7 @@ export default {
   components: {
     'ni-profile-header': ProfileHeader,
     'ni-button': Button,
+    'course-interruption-modal': CourseInterruptionModal,
   },
   emits: ['delete', 'refresh'],
   setup (_, { emit }) {
@@ -49,7 +56,28 @@ export default {
 
     const archiveLabel = computed(() => (!course.value.archivedAt ? 'Archiver' : 'Désarchiver'));
 
-    const isCourseInterrupted = computed(() => isInterrupted(course.value.interruptionDates));
+    const courseInterruptionModal = ref(false);
+    const interruptionDate = ref('');
+    const interruptionLoading = ref(false);
+
+    const v$ = useVuelidate({ interruptionDate: { required } }, { interruptionDate });
+
+    const isCourseInterrupted = computed(() => (course.value.interruptionDates || []).some(d => !d.endDate));
+
+    const minInterruptionDate = computed(() => {
+      const interruptionDates = course.value.interruptionDates || [];
+      if (!interruptionDates.length) return '';
+
+      if (isCourseInterrupted.value) {
+        return CompaniDate(interruptionDates.find(d => !d.endDate).startDate).startOf(DAY).toISO();
+      }
+
+      const lastEndDate = interruptionDates
+        .map(d => d.endDate)
+        .reduce((acc, date) => (CompaniDate(date).isAfter(acc) ? date : acc));
+
+      return CompaniDate(lastEndDate).startOf(DAY).toISO();
+    });
 
     const interruptionButtonLabel = computed(() => (!isCourseInterrupted.value ? 'Mettre en pause' : 'Reprendre'));
 
@@ -111,49 +139,58 @@ export default {
       }
     };
 
+    const openCourseInterruptionModal = () => {
+      interruptionDate.value = CompaniDate().startOf(DAY).toISO();
+      courseInterruptionModal.value = true;
+    };
+
+    const resetCourseInterruptionModal = () => {
+      interruptionDate.value = '';
+      v$.value.interruptionDate.$reset();
+    };
+
     const interruptOrRestartCourse = async () => {
       try {
-        await Courses.update(course.value._id, { interruptionDate: CompaniDate().toISO() });
+        v$.value.interruptionDate.$touch();
+        if (v$.value.interruptionDate.$error) return NotifyWarning('Champ(s) invalide(s)');
+
+        interruptionLoading.value = true;
+        await Courses.update(course.value._id, { interruptionDate: interruptionDate.value });
 
         NotifyPositive(!isCourseInterrupted.value ? 'Formation mise en pause.' : 'Reprise de la formation.');
+        courseInterruptionModal.value = false;
         await refreshCourse();
       } catch (e) {
         console.error(e);
+        if (e.status === 400 && e.data?.message) return NotifyNegative(e.data.message);
         NotifyNegative(
           `Erreur lors de la ${!isCourseInterrupted.value ? 'mise en pause' : 'reprise'} de la formation.`
         );
+      } finally {
+        interruptionLoading.value = false;
       }
-    };
-
-    const validateCourseInterruptionOrRestart = () => {
-      const message = !isCourseInterrupted.value
-        ? 'Êtes-vous sûr(e) de vouloir mettre en pause cette formation&nbsp;? <br /><br />'
-          + 'Vous ne pourrez plus créer de factures.'
-        : 'Êtes-vous sûr(e) de vouloir reprendre cette formation&nbsp;? <br /><br />'
-          + 'Vous pourrez de nouveau créer des factures.';
-
-      $q.dialog({
-        title: 'Confirmation',
-        message,
-        html: true,
-        ok: 'Oui',
-        cancel: 'Non',
-      }).onOk(interruptOrRestartCourse)
-        .onCancel(() => NotifyPositive(!isCourseInterrupted.value ? 'Mise en pause annulée.' : 'Reprise annulée.'));
     };
 
     return {
       // Data
       isClientInterface,
+      courseInterruptionModal,
+      interruptionDate,
+      interruptionLoading,
       // Computed
       isAdmin,
       archiveLabel,
       course,
       interruptionButtonLabel,
+      isCourseInterrupted,
+      minInterruptionDate,
+      v$,
       // methods
       deleteCourse,
       validateCourseArchive,
-      validateCourseInterruptionOrRestart,
+      openCourseInterruptionModal,
+      resetCourseInterruptionModal,
+      interruptOrRestartCourse,
     };
   },
 };
