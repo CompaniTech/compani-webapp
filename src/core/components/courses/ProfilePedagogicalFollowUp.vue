@@ -1,5 +1,16 @@
 <template>
   <div>
+    <q-card v-if="isSingleCourse" class="q-mt-lg q-pa-md row items-center">
+      <div class="text-weight-bold text-subtitle1">
+        Mois effectif : {{ effectiveMonth ? `M${effectiveMonth}` : '—' }}
+      </div>
+      <div class="row items-center text-copper-grey-800 q-ml-lg">
+        Statut :
+        <div class="chip-container q-ml-sm course-status">
+          <q-chip :class="[courseStatus.class]" :label="courseStatus.label" />
+        </div>
+      </div>
+    </q-card>
     <div class="q-mt-lg q-mb-xl">
       <p class="text-weight-bold">Émargements</p>
       <div v-if="isIntraOrIntraHoldingOrVendor" class="q-mb-md">
@@ -162,7 +173,7 @@ import {
   formatAndSortIdentityOptions,
   readAPIResponseWithTypeArrayBuffer,
 } from '@helpers/utils';
-import { composeCourseName, formatSlotSchedule } from '@helpers/courses';
+import { composeCourseName, formatSlotSchedule, isInterrupted } from '@helpers/courses';
 import { downloadZip } from '@helpers/file';
 import { defineAbilitiesForCourse } from '@helpers/ability';
 import { useCourses } from '@composables/courses';
@@ -247,6 +258,43 @@ export default {
     const { learners, getFollowUp, learnersLoading } = useTraineeFollowUp(profileId);
 
     const isRofOrVendorAdmin = computed(() => [VENDOR_ADMIN, TRAINING_ORGANISATION_MANAGER].includes(vendorRole.value));
+
+    const effectiveMonth = computed(() => {
+      const slotStartDates = course.value.slots.filter(s => !!s.startDate).map(s => s.startDate);
+      if (!slotStartDates.length) return null;
+
+      const firstSlotDate = CompaniDate([...slotStartDates].sort(ascendingSort)[0]);
+      const now = CompaniDate();
+      if (now.isBefore(firstSlotDate)) return null;
+
+      const interruptionsDuration = (course.value.interruptionDates || []).reduce((acc, interruption) => {
+        const start = CompaniDate(interruption.startDate).isAfter(firstSlotDate)
+          ? CompaniDate(interruption.startDate)
+          : firstSlotDate;
+        const end = interruption.endDate && CompaniDate(interruption.endDate).isBefore(now)
+          ? CompaniDate(interruption.endDate)
+          : now;
+        if (!end.isAfter(start)) return acc;
+
+        return acc.add(end.diff(start, 'seconds'));
+      }, CompaniDuration());
+
+      const todayLessInterruptions = now.subtract(interruptionsDuration.toISO());
+      const { year: startYear, month: startMonth } = firstSlotDate.getUnits(['year', 'month']);
+      const { year: endYear, month: endMonth } = todayLessInterruptions.getUnits(['year', 'month']);
+
+      let elapsedMonths = (endYear - startYear) * 12 + (endMonth - startMonth);
+      if (firstSlotDate.add(`P${elapsedMonths}M`).isAfter(todayLessInterruptions)) elapsedMonths -= 1;
+
+      return elapsedMonths + 1;
+    });
+
+    const courseStatus = computed(() => {
+      if (isArchived.value) return { label: 'Archivée', class: '' };
+      if (isInterrupted(course.value.interruptionDates)) return { label: 'En pause', class: 'orange-chip' };
+
+      return { label: 'En cours', class: 'green-chip' };
+    });
 
     const areQuestionnaireAnswersVisible = computed(() => questionnaires.value.length);
 
@@ -644,6 +692,9 @@ export default {
       areQuestionnaireQRCodeVisible,
       isRofOrVendorAdmin,
       canReadCompletionCertificate,
+      effectiveMonth,
+      isSingleCourse,
+      courseStatus,
       filteredQuestionnaires,
       endSelfPositionningQuestionnaireId,
       loggedUserIsCourseTrainer,
@@ -673,6 +724,10 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.course-status
+  width: 7rem
+  height: 2rem
+
 .questionnaires-container
   display: grid
   grid-auto-flow: row
