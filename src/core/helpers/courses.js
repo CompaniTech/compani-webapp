@@ -74,7 +74,12 @@ export const getQuestionnaireTypeTitle = (types) => {
   return labels.join(' et ');
 };
 
-export const isInterrupted = (interruptionDates = []) => interruptionDates.some(d => !d.endDate);
+export const isInterrupted = (interruptionDates = []) => {
+  const now = CompaniDate();
+
+  return interruptionDates
+    .some(d => CompaniDate(d.startDate).isBefore(now) && (!d.endDate || CompaniDate(d.endDate).isAfter(now)));
+};
 
 export const isCoursePriceExceeded = (prices, validatedBillsAmount, billsToValidateAmount) => {
   const globalPrice = get(prices, '[0].global');

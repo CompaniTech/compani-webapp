@@ -267,7 +267,7 @@ export default {
         return {
           name: 'ni courses info',
           params: { courseId: props.row._id },
-          query: { defaultTab: role === TRAINEE ? 'traineeFollowUp' : 'organization' },
+          query: { defaultTab: role === TRAINEE ? 'pedagogicalFollowUp' : 'organization' },
         };
       }
 
@@ -278,7 +278,7 @@ export default {
       return {
         name: 'ni management blended courses info',
         params: { courseId: props.row._id },
-        query: { defaultTab: role === TRAINEE ? 'traineeFollowUp' : 'organization' },
+        query: { defaultTab: role === TRAINEE ? 'pedagogicalFollowUp' : 'organization' },
       };
     };
 

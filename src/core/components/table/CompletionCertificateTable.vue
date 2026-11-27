@@ -63,8 +63,12 @@ export default {
 
     const goToCourseProfile = courseId => (
       isVendorInterface.value
-        ? { name: 'ni management blended courses info', params: { courseId }, query: { defaultTab: 'traineeFollowUp' } }
-        : { name: 'ni courses info', params: { courseId }, query: { defaultTab: 'traineeFollowUp' } }
+        ? {
+          name: 'ni management blended courses info',
+          params: { courseId },
+          query: { defaultTab: 'pedagogicalFollowUp' },
+        }
+        : { name: 'ni courses info', params: { courseId }, query: { defaultTab: 'pedagogicalFollowUp' } }
     );
 
     return {

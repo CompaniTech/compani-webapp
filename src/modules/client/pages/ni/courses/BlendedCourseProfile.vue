@@ -16,7 +16,7 @@ import { useStore } from 'vuex';
 import ProfileTabs from '@components/ProfileTabs';
 import ProfileOrganization from '@components/courses/ProfileOrganization';
 import BlendedCourseProfileHeader from '@components/courses/BlendedCourseProfileHeader';
-import ProfileTraineeFollowUp from '@components/courses/ProfileTraineeFollowUp';
+import ProfilePedagogicalFollowUp from '@components/courses/ProfilePedagogicalFollowUp';
 import { useCourses } from '@composables/courses';
 import { composeCourseName } from '@helpers/courses';
 
@@ -49,10 +49,10 @@ export default {
         component: ProfileOrganization,
       },
       {
-        label: 'Suivi des stagiaires',
-        name: 'traineeFollowUp',
-        default: defaultTab.value === 'traineeFollowUp',
-        component: ProfileTraineeFollowUp,
+        label: 'Suivi pédagogique',
+        name: 'pedagogicalFollowUp',
+        default: defaultTab.value === 'pedagogicalFollowUp',
+        component: ProfilePedagogicalFollowUp,
       },
     ];
 
