@@ -76,6 +76,10 @@ export const integerNumber = (value) => {
 
 export const fractionDigits = digits => value => new RegExp(`^\\d*(\\.\\d{0,${digits}})?$`).test(value);
 
+export const everyFractionDigits = digits => values => (values || []).every(fractionDigits(digits));
+
+export const hasNonZeroValue = values => (values || []).some(value => Number(value) > 0);
+
 export const validHour = value => !value || !!value.match(/^[0-1][0-9]:[0-5][0-9]$|^2[0-3]:[0-5][0-9]$/);
 
 export const strictMinHour = min => helpers.withParams(

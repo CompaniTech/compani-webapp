@@ -55,6 +55,9 @@
           </div>
         </q-slide-transition>
       </q-card>
+      <ni-secondary-button v-if="subProgram.status === PUBLISHED && !subProgram.isStrictlyELearning"
+        class="q-mb-md" label="Ajouter un parcours type" :disable="!!subProgram.archivedAt || !!subProgram.studyTrack"
+        @click="openStudyTrackCreationModal(subProgram)" />
       <q-checkbox :model-value="!!program.subPrograms[index].subjectToVat"
         label="La TVA s'applique à ce sous-programme" :disable="!!subProgram.archivedAt"
         @update:model-value="updateSubProgramSubjectToVat(index, $event)" />
@@ -194,6 +197,10 @@
 
     <hourly-payment-plan-list-modal v-model="hourlyPaymentPlanListModal" :sub-program="selectedSubProgramForHourlyPlan"
       @edit="openHourlyPaymentPlanEditionModal" @delete="deleteHourlyPaymentPlan" />
+
+    <study-track-creation-modal v-model="studyTrackCreationModal" v-model:study-track="newStudyTrack"
+      :validations="studyTrackValidations.newStudyTrack" :loading="modalLoading"
+      @hide="resetStudyTrackCreationModal" @submit="createStudyTrack" />
   </div>
 </template>
 
@@ -244,6 +251,7 @@ import PaymentPlanEditionModal from 'src/modules/vendor/components/programs/Paym
 import PaymentPlanListModal from 'src/modules/vendor/components/programs/PaymentPlanListModal';
 import HourlyPaymentPlanModal from 'src/modules/vendor/components/programs/HourlyPaymentPlanModal';
 import HourlyPaymentPlanListModal from 'src/modules/vendor/components/programs/HourlyPaymentPlanListModal';
+import StudyTrackCreationModal from 'src/modules/vendor/components/programs/StudyTrackCreationModal';
 import StepAdditionModal from 'src/modules/vendor/components/programs/StepAdditionModal';
 import StepEditionModal from 'src/modules/vendor/components/programs/StepEditionModal';
 import ActivityCreationModal from 'src/modules/vendor/components/programs/ActivityCreationModal';
@@ -260,6 +268,7 @@ import { useActivityReuseModal } from 'src/modules/vendor/composables/ActivityRe
 import { useValidateUnlockingStepModal } from 'src/modules/vendor/composables/ValidateUnlockingStepModal';
 import { usePaymentPlan } from 'src/modules/vendor/composables/PaymentPlan';
 import { useHourlyPaymentPlan } from 'src/modules/vendor/composables/HourlyPaymentPlan';
+import { useStudyTrackCreation } from 'src/modules/vendor/composables/StudyTrackCreation';
 
 export default {
   name: 'ProfileContent',
@@ -288,6 +297,7 @@ export default {
     'payment-plan-list-modal': PaymentPlanListModal,
     'hourly-payment-plan-modal': HourlyPaymentPlanModal,
     'hourly-payment-plan-list-modal': HourlyPaymentPlanListModal,
+    'study-track-creation-modal': StudyTrackCreationModal,
   },
   setup (props) {
     const { profileId } = toRefs(props);
@@ -414,6 +424,15 @@ export default {
       editHourlyPaymentPlan,
       deleteHourlyPaymentPlan,
     } = useHourlyPaymentPlan(modalLoading, refreshProgram, program);
+
+    const {
+      studyTrackCreationModal,
+      newStudyTrack,
+      v$: studyTrackValidations,
+      openStudyTrackCreationModal,
+      resetStudyTrackCreationModal,
+      createStudyTrack,
+    } = useStudyTrackCreation(modalLoading, refreshProgram);
 
     const hasConsistentRoles = (prices) => {
       const pricesByStep = groupBy(prices, 'step');
@@ -898,6 +917,12 @@ export default {
       addHourlyPaymentPlan,
       editHourlyPaymentPlan,
       deleteHourlyPaymentPlan,
+      studyTrackCreationModal,
+      newStudyTrack,
+      studyTrackValidations,
+      openStudyTrackCreationModal,
+      resetStudyTrackCreationModal,
+      createStudyTrack,
       openPaymentPlanAdditionModal,
       resetPaymentPlanAdditionModal,
       openPaymentPlanListModal,
