@@ -70,7 +70,7 @@
             </td>
           </tr>
           <tr class="total-row">
-            <th scope="row" class="row-head">Total par mois</th>
+            <th scope="row" class="row-head">Total</th>
             <td class="total-col">{{ formatHours(totalHours) }} h</td>
             <td v-for="(total, monthIndex) in monthTotals" :key="monthIndex">{{ formatHours(total) }}</td>
           </tr>
@@ -110,6 +110,7 @@
 import { toRefs, computed } from 'vue';
 import { REQUIRED_LABEL, MILESTONE_TARGET_OPTIONS, STEP_TARGET_OPTIONS, MAX_STUDY_TRACK_MONTHS } from '@data/constants';
 import { everyFractionDigits, hasNonZeroValue } from '@helpers/vuelidateCustomVal';
+import { toFixedToFloat } from '@helpers/numbers';
 import Input from '@components/form/Input';
 import Select from '@components/form/Select';
 import OptionGroup from '@components/form/OptionGroup';
@@ -174,7 +175,7 @@ export default {
 
     const sumHours = durations => (durations || []).reduce((acc, duration) => acc + Number(duration || 0), 0);
 
-    const formatHours = hours => String(Math.round(hours * 10) / 10).replace('.', ',');
+    const formatHours = hours => String(toFixedToFloat(hours, 1)).replace('.', ',');
 
     const monthTotals = computed(() => Array.from({ length: columnsCount.value }, (_, i) => (
       sumHours(rows.value.map(r => r.durations[i]))
@@ -182,14 +183,16 @@ export default {
 
     const totalHours = computed(() => sumHours(monthTotals.value));
 
-    const targetTotals = computed(() => STEP_TARGET_OPTIONS
-      .map(option => ({
-        ...option,
-        hours: sumHours((studyTrack.value.detailsPerStep || [])
-          .filter(d => d.targets.includes(option.value))
-          .flatMap(d => d.durations)),
-      }))
-      .filter(item => (studyTrack.value.detailsPerStep || []).some(d => d.targets.includes(item.value))));
+    const targetTotals = computed(() => {
+      const details = studyTrack.value.detailsPerStep || [];
+
+      return STEP_TARGET_OPTIONS
+        .filter(option => details.some(d => d.targets.includes(option.value)))
+        .map(option => ({
+          ...option,
+          hours: sumHours(details.filter(d => d.targets.includes(option.value)).flatMap(d => d.durations)),
+        }));
+    });
 
     const getTargetLabel = value => MILESTONE_TARGET_OPTIONS.find(option => option.value === value)?.label || value;
 
@@ -200,8 +203,6 @@ export default {
     const getDisplayedDuration = duration => (duration === 0 ? '' : duration);
     const toStoredDuration = value => (value === '' || value === null || Number(value) === 0 ? 0 : value);
 
-    const roundHours = value => Math.round(Number(value) * 10) / 10;
-
     const updateStudyTrack = (event) => { emit('update:study-track', { ...studyTrack.value, ...event }); };
 
     const updateMonthsCount = (value) => { updateStudyTrack({ monthsCount: value }); };
@@ -209,8 +210,7 @@ export default {
     const applyMonthsCount = () => {
       validations.value.monthsCount.$touch();
       const count = Number(studyTrack.value.monthsCount);
-      const isValid = Number.isInteger(count) && count >= 1 && count <= MAX_STUDY_TRACK_MONTHS;
-      if (!isValid || count === columnsCount.value) return;
+      if (validations.value.monthsCount.$invalid || count === columnsCount.value) return;
 
       const resize = durations => (
         count > durations.length
@@ -242,7 +242,7 @@ export default {
 
     const roundDuration = (rowIndex, monthIndex) => {
       const value = rows.value[rowIndex].durations[monthIndex];
-      if (value !== 0) updateDuration(roundHours(value), rowIndex, monthIndex);
+      if (value !== 0) updateDuration(toFixedToFloat(value, 1), rowIndex, monthIndex);
     };
 
     const updateStepTargets = (targets, rowIndex) => {

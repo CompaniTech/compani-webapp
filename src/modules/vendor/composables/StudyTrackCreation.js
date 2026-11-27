@@ -3,6 +3,7 @@ import useVuelidate from '@vuelidate/core';
 import { required, helpers } from '@vuelidate/validators';
 import { strictPositiveNumber, integerNumber, everyFractionDigits, hasNonZeroValue } from '@helpers/vuelidateCustomVal';
 import StudyTracks from '@api/StudyTracks';
+import { multiply, toNumber } from '@helpers/numbers';
 import { E_LEARNING, DEFAULT_STUDY_TRACK_MONTHS, MAX_STUDY_TRACK_MONTHS } from '@data/constants';
 import { NotifyNegative, NotifyWarning, NotifyPositive } from '@components/popup/notify';
 
@@ -38,7 +39,7 @@ export const useStudyTrackCreation = (modalLoading, refreshProgram) => {
   }));
   const v$ = useVuelidate(rules, { newStudyTrack });
 
-  const toSeconds = hours => Math.round(Number(hours || 0) * 3600);
+  const toSeconds = hours => toNumber(multiply(hours || 0, 3600));
 
   const formatPayload = (studyTrack) => {
     const { detailsPerStep, eLearningDurations, milestones } = studyTrack;
